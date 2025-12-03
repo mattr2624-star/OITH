@@ -1,0 +1,17 @@
+# AWS Configuration for OITH Admin Backend
+# Rename this file to .env and fill in your values
+
+# AWS Credentials
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
+AWS_REGION=us-east-1
+
+# S3 Bucket for document storage
+AWS_S3_BUCKET=oith-admin-documents
+
+# DynamoDB table for data storage
+AWS_DYNAMODB_TABLE=oith-admin-data
+
+# Server port
+PORT=3001
+

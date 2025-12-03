@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OITH - Screen Overview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Overview Page Styles */
+        :root {
+            --overview-bg: #1a1a2e;
+            --overview-card-bg: #16213e;
+            --overview-text: #eaeaea;
+            --overview-accent: #c4584a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--overview-bg);
+            color: var(--overview-text);
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        .overview-header {
+            background: linear-gradient(135deg, var(--overview-card-bg) 0%, #1a1a2e 100%);
+            padding: 40px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .overview-header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #c4584a 0%, #e07a6a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .overview-header p {
+            color: rgba(255,255,255,0.6);
+            font-size: 1rem;
+        }
+        
+        .overview-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--overview-accent);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .overview-nav {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-pill {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .nav-pill:hover, .nav-pill.active {
+            background: var(--overview-accent);
+            border-color: var(--overview-accent);
+            color: white;
+        }
+        
+        .screens-container {
+            padding: 40px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 28px;
+            background: var(--overview-accent);
+            border-radius: 2px;
+        }
+        
+        .screens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .screen-card {
+            background: var(--overview-card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .screen-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--overview-accent);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .screen-preview {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+            background: #fff;
+        }
+        
+        .screen-preview iframe {
+            width: 390px;
+            height: 844px;
+            border: none;
+            transform: scale(0.59);
+            transform-origin: top left;
+            pointer-events: none;
+        }
+        
+        .screen-info {
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .screen-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        
+        .screen-id {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            font-family: monospace;
+        }
+        
+        .screen-tags {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .screen-tag {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .screen-tag.flow-auth {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+        
+        .screen-tag.flow-main {
+            background: rgba(196, 88, 74, 0.2);
+            color: #e07a6a;
+        }
+        
+        .screen-tag.flow-settings {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+        
+        .screen-tag.modal {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+        }
+        
+        .last-updated {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255,255,255,0.3);
+            font-size: 0.85rem;
+        }
+        
+        .flow-diagram {
+            background: var(--overview-card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 60px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .flow-diagram h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+        }
+        
+        .flow-steps {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .flow-step {
+            background: rgba(255,255,255,0.05);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        
+        .flow-arrow {
+            color: var(--overview-accent);
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .overview-header {
+                padding: 24px;
+            }
+            
+            .overview-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .overview-stats {
+                gap: 24px;
+            }
+            
+            .screens-container {
+                padding: 20px;
+            }
+            
+            .screens-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="overview-header">
+        <h1>OITH Dating App</h1>
+        <p>Screen Overview & Visual Documentation</p>
+        <div class="overview-stats">
+            <div class="stat-item">
+                <div class="stat-value" id="screenCount">0</div>
+                <div class="stat-label">Screens</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="modalCount">0</div>
+                <div class="stat-label">Modals</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="flowCount">4</div>
+                <div class="stat-label">User Flows</div>
+            </div>
+        </div>
+        <nav class="overview-nav">
+            <a href="#auth" class="nav-pill">Authentication</a>
+            <a href="#onboarding" class="nav-pill">Onboarding</a>
+            <a href="#main" class="nav-pill">Main App</a>
+            <a href="#profile" class="nav-pill">Profile</a>
+            <a href="#settings" class="nav-pill">Settings</a>
+            <a href="#modals" class="nav-pill">Modals</a>
+        </nav>
+    </header>
+    
+    <main class="screens-container">
+        <!-- User Flow Diagram -->
+        <div class="flow-diagram">
+            <h3>🔄 Primary User Flow</h3>
+            <div class="flow-steps">
+                <span class="flow-step">Splash</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Login/Signup</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Onboarding</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Match</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Chat</span>
+                <span class="flow-arrow">→</span>
+                <span class="flow-step">Date Plan</span>
+            </div>
+        </div>
+        
+        <!-- Authentication Screens -->
+        <section id="auth">
+            <h2 class="section-title">Authentication</h2>
+            <div class="screens-grid" id="authScreens"></div>
+        </section>
+        
+        <!-- Onboarding Screens -->
+        <section id="onboarding">
+            <h2 class="section-title">Onboarding</h2>
+            <div class="screens-grid" id="onboardingScreens"></div>
+        </section>
+        
+        <!-- Main App Screens -->
+        <section id="main">
+            <h2 class="section-title">Main Application</h2>
+            <div class="screens-grid" id="mainScreens"></div>
+        </section>
+        
+        <!-- Profile Screens -->
+        <section id="profile">
+            <h2 class="section-title">Profile & Settings</h2>
+            <div class="screens-grid" id="profileScreens"></div>
+        </section>
+        
+        <!-- Settings Screens -->
+        <section id="settings">
+            <h2 class="section-title">Settings & Preferences</h2>
+            <div class="screens-grid" id="settingsScreens"></div>
+        </section>
+        
+        <!-- Modals -->
+        <section id="modals">
+            <h2 class="section-title">Modals & Overlays</h2>
+            <div class="screens-grid" id="modalScreens"></div>
+        </section>
+    </main>
+    
+    <footer class="last-updated">
+        <p>Last updated: <span id="lastUpdated"></span></p>
+        <p style="margin-top: 8px;">This document automatically reflects changes made to the app styles and layout.</p>
+    </footer>
+    
+    <script>
+        // Screen definitions with metadata
+        const screens = {
+            auth: [
+                { id: 'splash', name: 'Splash Screen', tags: ['flow-auth', 'entry'] },
+                { id: 'login', name: 'Login', tags: ['flow-auth'] },
+                { id: 'signup', name: 'Sign Up', tags: ['flow-auth'] }
+            ],
+            onboarding: [
+                { id: 'onboarding-1', name: 'Welcome', tags: ['flow-auth', 'onboarding'] },
+                { id: 'onboarding-2', name: 'How It Works', tags: ['flow-auth', 'onboarding'] },
+                { id: 'onboarding-3', name: 'Get Started', tags: ['flow-auth', 'onboarding'] },
+                { id: 'profile-setup', name: 'Profile Setup', tags: ['flow-auth', 'setup'] },
+                { id: 'preferences', name: 'Preferences', tags: ['flow-auth', 'setup'] },
+                { id: 'notifications', name: 'Notifications', tags: ['flow-auth', 'setup'] }
+            ],
+            main: [
+                { id: 'match', name: 'Match Screen', tags: ['flow-main', 'core'] },
+                { id: 'waiting-match', name: 'Waiting for Match', tags: ['flow-main'] },
+                { id: 'no-matches', name: 'No Matches', tags: ['flow-main'] },
+                { id: 'chat-list', name: 'Chat List', tags: ['flow-main', 'core'] },
+                { id: 'chat', name: 'Chat Conversation', tags: ['flow-main', 'core'] },
+                { id: 'profile-view', name: 'Match Profile View', tags: ['flow-main'] },
+                { id: 'date-plan', name: 'Date Planning', tags: ['flow-main'] }
+            ],
+            profile: [
+                { id: 'my-profile', name: 'My Profile', tags: ['flow-settings', 'core'] },
+                { id: 'edit-profile', name: 'Edit Profile', tags: ['flow-settings'] },
+                { id: 'manage-photos', name: 'Manage Photos', tags: ['flow-settings'] },
+                { id: 'profile-preview', name: 'Profile Preview', tags: ['flow-settings'] }
+            ],
+            settings: [
+                { id: 'settings', name: 'Settings', tags: ['flow-settings'] },
+                { id: 'match-preferences', name: 'Match Preferences', tags: ['flow-settings'] },
+                { id: 'adjust-preferences', name: 'Adjust Preferences', tags: ['flow-settings'] },
+                { id: 'manage-subscription', name: 'Manage Subscription', tags: ['flow-settings'] }
+            ],
+            modals: [
+                { id: 'compatibility-modal', name: 'Compatibility Breakdown', tags: ['modal'], isModal: true },
+                { id: 'end-match-modal', name: 'End Match', tags: ['modal'], isModal: true },
+                { id: 'calendar-modal', name: 'Add to Calendar', tags: ['modal'], isModal: true },
+                { id: 'image-viewer', name: 'Image Viewer', tags: ['modal'], isModal: true }
+            ]
+        };
+        
+        // Generate screen cards
+        function createScreenCard(screen) {
+            const card = document.createElement('div');
+            card.className = 'screen-card';
+            card.innerHTML = `
+                <div class="screen-preview">
+                    <iframe src="index.html?screen=${screen.id}" loading="lazy"></iframe>
+                </div>
+                <div class="screen-info">
+                    <div class="screen-name">${screen.name}</div>
+                    <div class="screen-id">#${screen.id}</div>
+                    <div class="screen-tags">
+                        ${screen.tags.map(tag => `<span class="screen-tag ${tag}">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+        
+        // Initialize the overview page
+        function init() {
+            // Render screens in each section
+            Object.entries(screens).forEach(([section, screenList]) => {
+                const container = document.getElementById(`${section}Screens`);
+                if (container) {
+                    screenList.forEach(screen => {
+                        container.appendChild(createScreenCard(screen));
+                    });
+                }
+            });
+            
+            // Update stats
+            const totalScreens = Object.values(screens).flat().filter(s => !s.isModal).length;
+            const totalModals = screens.modals.length;
+            
+            document.getElementById('screenCount').textContent = totalScreens;
+            document.getElementById('modalCount').textContent = totalModals;
+            
+            // Update timestamp
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+        }
+        
+        // Activate screen in iframe when hash changes
+        function activateScreen(screenId) {
+            const iframes = document.querySelectorAll('.screen-preview iframe');
+            iframes.forEach(iframe => {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    const screens = iframeDoc.querySelectorAll('.screen');
+                    screens.forEach(screen => screen.classList.remove('active'));
+                    
+                    const targetScreen = iframeDoc.getElementById(screenId);
+                    if (targetScreen) {
+                        targetScreen.classList.add('active');
+                    }
+                } catch (e) {
+                    // Cross-origin restriction, use URL hash instead
+                }
+            });
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Refresh iframes periodically to catch updates (every 30 seconds)
+        setInterval(() => {
+            const iframes = document.querySelectorAll('.screen-preview iframe');
+            iframes.forEach(iframe => {
+                const src = iframe.src;
+                iframe.src = '';
+                setTimeout(() => { iframe.src = src; }, 100);
+            });
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleString();
+        }, 30000);
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OITH - AI-Enhanced Dating</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================
+           OITH - AI-Enhanced Dating App
+           ========================================== */
+
+        :root {
+            --accent: #C4584A;
+            --accent-dark: #A84639;
+            --accent-light: #F5E6E3;
+            --accent-gradient: linear-gradient(135deg, #C4584A 0%, #D4756A 100%);
+            
+            --ai-purple: #7C5CFF;
+            --ai-purple-light: #EDE9FF;
+            --ai-gradient: linear-gradient(135deg, #7C5CFF 0%, #9D7FFF 100%);
+            
+            --bg-primary: #FDF9F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #F8F4F2;
+            
+            --text-primary: #2D2926;
+            --text-secondary: #5A524E;
+            --text-muted: #9A918C;
+            --text-light: #FFFFFF;
+            
+            --border: #E8E2DE;
+            --border-light: #F2EDE9;
+            
+            --success: #4CAF50;
+            --warning: #FF9800;
+            
+            --shadow-sm: 0 2px 8px rgba(45, 41, 38, 0.06);
+            --shadow-md: 0 4px 20px rgba(45, 41, 38, 0.1);
+            --shadow-lg: 0 8px 40px rgba(45, 41, 38, 0.15);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --radius-full: 9999px;
+            
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, #E8E2DE 0%, #D4CCC7 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .phone-frame {
+            width: 100%;
+            max-width: 390px;
+            height: 844px;
+            background: var(--bg-primary);
+            border-radius: 44px;
+            box-shadow: 0 0 0 12px #2D2926, 0 0 0 14px #3D3936, var(--shadow-lg);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .phone-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 28px;
+            background: #2D2926;
+            border-radius: 0 0 20px 20px;
+            z-index: 100;
+        }
+
+        .app-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(20px);
+            transition: all var(--transition-normal);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0);
+        }
+
+        .screen::-webkit-scrollbar { display: none; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 32px;
+            border: none;
+            border-radius: var(--radius-full);
+            font-family: var(--font-body);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: var(--text-light);
+            box-shadow: 0 4px 16px rgba(196, 88, 74, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(196, 88, 74, 0.45);
+        }
+
+        .btn-ai {
+            background: var(--ai-gradient);
+            color: var(--text-light);
+            box-shadow: 0 4px 16px rgba(124, 92, 255, 0.35);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1.5px solid var(--border);
+        }
+
+        .btn-text {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 12px 24px;
+        }
+
+        /* Headers */
+        .screen-header {
+            display: flex;
+            align-items: center;
+            padding: 60px 24px 20px;
+            gap: 16px;
+        }
+
+        .back-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border: none;
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .header-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 60px 24px 16px;
+        }
+
+        .logo-small {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+        }
+
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+        }
+
+        /* ==========================================
+           AI-Enhanced Chat Screen
+           ========================================== */
+        .chat-screen {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 60px 16px 16px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .chat-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .chat-user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chat-user-info h4 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .online-status {
+            font-size: 0.75rem;
+            color: var(--success);
+        }
+
+        /* AI Insights Banner */
+        .ai-insights-banner {
+            background: var(--ai-purple-light);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border-bottom: 1px solid rgba(124, 92, 255, 0.2);
+        }
+
+        .ai-insights-banner:hover {
+            background: rgba(124, 92, 255, 0.15);
+        }
+
+        .ai-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--ai-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .ai-insights-text {
+            flex: 1;
+        }
+
+        .ai-insights-text h5 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--ai-purple);
+        }
+
+        .ai-insights-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .ai-arrow {
+            color: var(--ai-purple);
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 20px 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message-date {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 8px 0;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: var(--radius-lg);
+            position: relative;
+        }
+
+        .message p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            display: block;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            background: var(--accent);
+            color: var(--text-light);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.sent .message-time {
+            color: rgba(255, 255, 255, 0.7);
+            text-align: right;
+        }
+
+        .message.received {
+            align-self: flex-start;
+            background: var(--bg-tertiary);
+            border-bottom-left-radius: 4px;
+        }
+
+        /* AI Suggestion Card in Chat */
+        .ai-suggestion-card {
+            background: linear-gradient(135deg, var(--ai-purple-light) 0%, #F5F0FF 100%);
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin: 16px 0;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-suggestion-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .ai-suggestion-header .ai-icon {
+            width: 24px;
+            height: 24px;
+            font-size: 0.7rem;
+        }
+
+        .ai-suggestion-header span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--ai-purple);
+        }
+
+        .ai-suggestion-content h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .ai-suggestion-content p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .ai-date-suggestion {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .ai-date-suggestion img {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+        }
+
+        .ai-date-info h5 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .ai-date-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .ai-date-reason {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            color: var(--ai-purple);
+            background: var(--ai-purple-light);
+            padding: 4px 8px;
+            border-radius: var(--radius-full);
+        }
+
+        .ai-suggestion-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .ai-action-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border: none;
+            font-family: var(--font-body);
+        }
+
+        .ai-action-btn.primary {
+            background: var(--ai-gradient);
+            color: white;
+        }
+
+        .ai-action-btn.secondary {
+            background: white;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        /* Smart Prompts */
+        .smart-prompts {
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .smart-prompts-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .smart-prompts-header .ai-icon {
+            width: 20px;
+            height: 20px;
+            font-size: 0.6rem;
+        }
+
+        .smart-prompts-header span {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--ai-purple);
+        }
+
+        .prompts-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .prompts-scroll::-webkit-scrollbar { display: none; }
+
+        .smart-prompt-btn {
+            flex-shrink: 0;
+            padding: 10px 16px;
+            background: var(--ai-purple-light);
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            border-radius: var(--radius-full);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--ai-purple);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .smart-prompt-btn:hover {
+            background: var(--ai-purple);
+            color: white;
+        }
+
+        .smart-prompt-btn.date-prompt {
+            background: var(--accent-light);
+            border-color: rgba(196, 88, 74, 0.2);
+            color: var(--accent);
+        }
+
+        .smart-prompt-btn.date-prompt:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px 32px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            background: var(--bg-tertiary);
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent);
+            color: var(--text-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        /* ==========================================
+           AI Insights Panel
+           ========================================== */
+        .ai-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -4px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 50;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .ai-panel.active {
+            transform: translateY(0);
+        }
+
+        .ai-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+
+        .ai-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .ai-panel-title h3 {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-panel {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-panel-content {
+            padding: 24px;
+        }
+
+        .insight-section {
+            margin-bottom: 28px;
+        }
+
+        .insight-section h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .topic-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .topic-tag {
+            padding: 8px 14px;
+            background: var(--ai-purple-light);
+            border-radius: var(--radius-full);
+            font-size: 0.85rem;
+            color: var(--ai-purple);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .topic-tag .count {
+            background: var(--ai-purple);
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .compatibility-meter {
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .meter-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .meter-header span {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .meter-header strong {
+            font-size: 1.25rem;
+            color: var(--ai-purple);
+        }
+
+        .meter-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: var(--ai-gradient);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .date-readiness {
+            background: linear-gradient(135deg, var(--accent-light) 0%, #FFF5F3 100%);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .readiness-score {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .readiness-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .readiness-tip {
+            font-size: 0.85rem;
+            color: var(--accent-dark);
+            background: white;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+        }
+
+        .ai-recommendations {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ai-rec-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .ai-rec-card:hover {
+            border-color: var(--ai-purple);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .ai-rec-card img {
+            width: 70px;
+            height: 70px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+        }
+
+        .ai-rec-info {
+            flex: 1;
+        }
+
+        .ai-rec-info h5 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .ai-rec-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .ai-rec-reasons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .ai-reason {
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            background: var(--ai-purple-light);
+            color: var(--ai-purple);
+            border-radius: var(--radius-full);
+        }
+
+        .ai-rec-match {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-rec-match .score {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--ai-purple);
+        }
+
+        .ai-rec-match .label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        /* ==========================================
+           AI-Enhanced Date Planning
+           ========================================== */
+        .date-plan-ai {
+            background: var(--ai-purple-light);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .date-plan-ai-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .date-plan-ai-header h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--ai-purple);
+        }
+
+        .conversation-context {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .context-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .context-item:last-child {
+            border-bottom: none;
+        }
+
+        .context-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--ai-purple-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .context-text {
+            flex: 1;
+        }
+
+        .context-text strong {
+            font-size: 0.85rem;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .context-text span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Overlay */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+            z-index: 40;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 24px 28px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all var(--transition-fast);
+            padding: 8px 16px;
+        }
+
+        .nav-btn span {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .nav-btn.active {
+            color: var(--accent);
+        }
+
+        /* Animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .ai-icon.pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Responsive */
+        @media (max-width: 420px) {
+            body { padding: 0; }
+            .phone-frame {
+                max-width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            .phone-frame::before { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+        <div class="app-container">
+            <!-- AI-Enhanced Chat Screen -->
+            <div class="screen active" id="chat">
+                <div class="chat-header">
+                    <button class="back-btn" onclick="showScreen('chat-list')">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <div class="chat-user-info">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" alt="Sarah" class="chat-user-avatar">
+                        <div>
+                            <h4>Sarah</h4>
+                            <span class="online-status">Online now</span>
+                        </div>
+                    </div>
+                    <button class="icon-btn" onclick="showScreen('date-plan')">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- AI Insights Banner -->
+                <div class="ai-insights-banner" onclick="toggleAIPanel()">
+                    <div class="ai-icon pulse">🧠</div>
+                    <div class="ai-insights-text">
+                        <h5>AI found 3 perfect date ideas</h5>
+                        <p>Based on your conversation about coffee & photography</p>
+                    </div>
+                    <span class="ai-arrow">→</span>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message-date">Today</div>
+                    
+                    <div class="message received">
+                        <p>Hey! I noticed you're into photography too. What kind of shots do you usually take? 📸</p>
+                        <span class="message-time">2:34 PM</span>
+                    </div>
+                    
+                    <div class="message sent">
+                        <p>Hey Sarah! Mostly landscape and street photography. I love capturing golden hour moments ☀️</p>
+                        <span class="message-time">2:36 PM</span>
+                    </div>
+                    
+                    <div class="message received">
+                        <p>Oh that's amazing! There's this coffee shop downtown with incredible natural lighting. We should check it out sometime!</p>
+                        <span class="message-time">2:38 PM</span>
+                    </div>
+                    
+                    <div class="message sent">
+                        <p>That sounds perfect! I'm always looking for new spots with good light. Which one?</p>
+                        <span class="message-time">2:40 PM</span>
+                    </div>
+                    
+                    <div class="message received">
+                        <p>It's called "The Golden Bean" on Main Street. They have these huge windows that let in the most beautiful light in the afternoon 🌅</p>
+                        <span class="message-time">2:41 PM</span>
+                    </div>
+
+                    <!-- AI Suggestion Card -->
+                    <div class="ai-suggestion-card" id="aiSuggestionCard">
+                        <div class="ai-suggestion-header">
+                            <div class="ai-icon">✨</div>
+                            <span>OITH AI suggests</span>
+                        </div>
+                        <div class="ai-suggestion-content">
+                            <h4>Perfect moment to plan a date!</h4>
+                            <p>Sarah mentioned "The Golden Bean" - a place you both seem interested in. Here's a personalized suggestion:</p>
+                            
+                            <div class="ai-date-suggestion">
+                                <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200&h=200&fit=crop" alt="The Golden Bean">
+                                <div class="ai-date-info">
+                                    <h5>The Golden Bean</h5>
+                                    <p>Coffee Shop • 0.8 mi away</p>
+                                    <span class="ai-date-reason">
+                                        <span>🎯</span> Mentioned in conversation
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="ai-suggestion-actions">
+                                <button class="ai-action-btn primary" onclick="sendDateSuggestion()">Suggest This Date</button>
+                                <button class="ai-action-btn secondary" onclick="hideAISuggestion()">Maybe Later</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart AI Prompts -->
+                <div class="smart-prompts">
+                    <div class="smart-prompts-header">
+                        <div class="ai-icon">🧠</div>
+                        <span>AI-powered suggestions</span>
+                    </div>
+                    <div class="prompts-scroll">
+                        <button class="smart-prompt-btn date-prompt" onclick="sendPrompt('Want to check out The Golden Bean this Saturday?')">
+                            📅 Suggest Saturday date
+                        </button>
+                        <button class="smart-prompt-btn" onclick="sendPrompt('I\'d love to see some of your photography!')">
+                            📸 Ask about photos
+                        </button>
+                        <button class="smart-prompt-btn" onclick="sendPrompt('What\'s your favorite coffee drink?')">
+                            ☕ Coffee question
+                        </button>
+                        <button class="smart-prompt-btn date-prompt" onclick="sendPrompt('The afternoon light sounds perfect - are you free this week?')">
+                            🌅 Plan golden hour date
+                        </button>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <button class="icon-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <path d="M21 15l-5-5L5 21"/>
+                        </svg>
+                    </button>
+                    <input type="text" class="chat-input" placeholder="Type a message..." id="messageInput" onkeypress="handleKeypress(event)">
+                    <button class="send-btn" onclick="sendMessage()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- AI Panel Overlay -->
+                <div class="overlay" id="overlay" onclick="toggleAIPanel()"></div>
+
+                <!-- AI Insights Panel -->
+                <div class="ai-panel" id="aiPanel">
+                    <div class="ai-panel-header">
+                        <div class="ai-panel-title">
+                            <div class="ai-icon">🧠</div>
+                            <h3>AI Conversation Insights</h3>
+                        </div>
+                        <button class="close-panel" onclick="toggleAIPanel()">✕</button>
+                    </div>
+                    
+                    <div class="ai-panel-content">
+                        <!-- Date Readiness Score -->
+                        <div class="insight-section">
+                            <h4>Date Readiness</h4>
+                            <div class="date-readiness">
+                                <div class="readiness-score">87%</div>
+                                <div class="readiness-label">Ready to meet in person!</div>
+                                <div class="readiness-tip">
+                                    💡 <strong>Tip:</strong> Sarah mentioned a specific venue. This is a great sign she's interested in meeting!
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Topics Discussed -->
+                        <div class="insight-section">
+                            <h4>Topics You've Connected On</h4>
+                            <div class="topic-tags">
+                                <span class="topic-tag">📸 Photography <span class="count">5</span></span>
+                                <span class="topic-tag">☕ Coffee <span class="count">3</span></span>
+                                <span class="topic-tag">🌅 Golden Hour <span class="count">2</span></span>
+                                <span class="topic-tag">📍 Local Spots <span class="count">2</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Conversation Quality -->
+                        <div class="insight-section">
+                            <h4>Conversation Quality</h4>
+                            <div class="compatibility-meter">
+                                <div class="meter-header">
+                                    <span>Engagement Level</span>
+                                    <strong>High</strong>
+                                </div>
+                                <div class="meter-bar">
+                                    <div class="meter-fill" style="width: 85%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Recommendations -->
+                        <div class="insight-section">
+                            <h4>AI-Recommended Date Ideas</h4>
+                            <div class="ai-recommendations">
+                                <div class="ai-rec-card" onclick="selectDateVenue(0)">
+                                    <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200&h=200&fit=crop" alt="Venue">
+                                    <div class="ai-rec-info">
+                                        <h5>The Golden Bean</h5>
+                                        <p>Coffee Shop • Mentioned by Sarah</p>
+                                        <div class="ai-rec-reasons">
+                                            <span class="ai-reason">☕ Coffee</span>
+                                            <span class="ai-reason">📸 Great lighting</span>
+                                            <span class="ai-reason">💬 Discussed</span>
+                                        </div>
+                                    </div>
+                                    <div class="ai-rec-match">
+                                        <span class="score">98%</span>
+                                        <span class="label">match</span>
+                                    </div>
+                                </div>
+
+                                <div class="ai-rec-card" onclick="selectDateVenue(1)">
+                                    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop" alt="Venue">
+                                    <div class="ai-rec-info">
+                                        <h5>Sunset Point Trail</h5>
+                                        <p>Photo spot • Golden hour views</p>
+                                        <div class="ai-rec-reasons">
+                                            <span class="ai-reason">📸 Photography</span>
+                                            <span class="ai-reason">🌅 Golden hour</span>
+                                        </div>
+                                    </div>
+                                    <div class="ai-rec-match">
+                                        <span class="score">92%</span>
+                                        <span class="label">match</span>
+                                    </div>
+                                </div>
+
+                                <div class="ai-rec-card" onclick="selectDateVenue(2)">
+                                    <img src="https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=200&h=200&fit=crop" alt="Venue">
+                                    <div class="ai-rec-info">
+                                        <h5>Photography Walk + Coffee</h5>
+                                        <p>Combined activity • 2-3 hours</p>
+                                        <div class="ai-rec-reasons">
+                                            <span class="ai-reason">📸 + ☕ Combo</span>
+                                            <span class="ai-reason">🚶 Active</span>
+                                        </div>
+                                    </div>
+                                    <div class="ai-rec-match">
+                                        <span class="score">95%</span>
+                                        <span class="label">match</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-ai" onclick="showScreen('date-plan'); toggleAIPanel();">
+                            Plan a Date with AI Help →
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI-Enhanced Date Planning Screen -->
+            <div class="screen" id="date-plan">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="showScreen('chat')">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h2 class="header-title">Plan a Date</h2>
+                </div>
+
+                <div style="padding: 0 24px; padding-bottom: 120px;">
+                    <!-- AI Context Section -->
+                    <div class="date-plan-ai">
+                        <div class="date-plan-ai-header">
+                            <div class="ai-icon">🧠</div>
+                            <h4>AI learned from your conversation</h4>
+                        </div>
+                        <div class="conversation-context">
+                            <div class="context-item">
+                                <div class="context-icon">📍</div>
+                                <div class="context-text">
+                                    <strong>The Golden Bean</strong>
+                                    <span>Sarah mentioned this coffee shop with great lighting</span>
+                                </div>
+                            </div>
+                            <div class="context-item">
+                                <div class="context-icon">🌅</div>
+                                <div class="context-text">
+                                    <strong>Afternoon preferred</strong>
+                                    <span>You both love golden hour lighting</span>
+                                </div>
+                            </div>
+                            <div class="context-item">
+                                <div class="context-icon">📸</div>
+                                <div class="context-text">
+                                    <strong>Shared interest: Photography</strong>
+                                    <span>Great activity to do together!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Options -->
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="font-size: 1rem; margin-bottom: 12px;">When works for you?</h4>
+                        <div style="display: flex; gap: 10px; overflow-x: auto;">
+                            <button class="smart-prompt-btn date-prompt" style="padding: 12px 16px;">
+                                <span style="display: block; font-size: 0.7rem;">Sat</span>
+                                <span style="font-size: 1.125rem; font-weight: 600;">15</span>
+                            </button>
+                            <button class="smart-prompt-btn" style="padding: 12px 16px;">
+                                <span style="display: block; font-size: 0.7rem;">Sun</span>
+                                <span style="font-size: 1.125rem; font-weight: 600;">16</span>
+                            </button>
+                            <button class="smart-prompt-btn" style="padding: 12px 16px;">
+                                <span style="display: block; font-size: 0.7rem;">Mon</span>
+                                <span style="font-size: 1.125rem; font-weight: 600;">17</span>
+                            </button>
+                            <button class="smart-prompt-btn" style="padding: 12px 16px;">
+                                <span style="display: block; font-size: 0.7rem;">Tue</span>
+                                <span style="font-size: 1.125rem; font-weight: 600;">18</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="font-size: 1rem; margin-bottom: 12px;">
+                            Best time 
+                            <span style="font-size: 0.75rem; color: var(--ai-purple); background: var(--ai-purple-light); padding: 2px 8px; border-radius: 10px; margin-left: 8px;">AI recommended</span>
+                        </h4>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="smart-prompt-btn" style="flex: 1;">Morning</button>
+                            <button class="smart-prompt-btn date-prompt" style="flex: 1; border: 2px solid var(--ai-purple); background: var(--ai-purple-light); color: var(--ai-purple);">
+                                Afternoon ✨
+                            </button>
+                            <button class="smart-prompt-btn" style="flex: 1;">Evening</button>
+                        </div>
+                    </div>
+
+                    <!-- AI Recommended Venue -->
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="font-size: 1rem; margin-bottom: 12px;">
+                            Top pick for you two
+                            <span style="font-size: 0.75rem; color: var(--ai-purple); background: var(--ai-purple-light); padding: 2px 8px; border-radius: 10px; margin-left: 8px;">98% match</span>
+                        </h4>
+                        <div class="ai-rec-card" style="border: 2px solid var(--ai-purple);">
+                            <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200&h=200&fit=crop" alt="Venue">
+                            <div class="ai-rec-info">
+                                <h5>The Golden Bean ⭐</h5>
+                                <p>Coffee Shop • 0.8 mi • Mentioned by Sarah</p>
+                                <div class="ai-rec-reasons">
+                                    <span class="ai-reason">☕ Coffee lover</span>
+                                    <span class="ai-reason">📸 Great for photos</span>
+                                    <span class="ai-reason">💬 In conversation</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other Options -->
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="font-size: 1rem; margin-bottom: 12px;">Other AI suggestions</h4>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="ai-rec-card">
+                                <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&h=200&fit=crop" alt="Venue">
+                                <div class="ai-rec-info">
+                                    <h5>Sunset Point Trail</h5>
+                                    <p>Photo spot • 2.5 mi</p>
+                                    <div class="ai-rec-reasons">
+                                        <span class="ai-reason">📸 Photography</span>
+                                        <span class="ai-reason">🌅 Sunset views</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; padding: 20px 24px 36px; background: linear-gradient(to top, var(--bg-primary) 80%, transparent);">
+                    <button class="btn btn-ai" onclick="confirmAIDate()">
+                        ✨ Send AI-Crafted Date Invite
+                    </button>
+                </div>
+            </div>
+
+            <!-- Date Sent Confirmation -->
+            <div class="screen" id="date-sent">
+                <div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center;">
+                    <div style="font-size: 4rem; margin-bottom: 24px;">🎉</div>
+                    <h2 style="font-family: var(--font-display); font-size: 2rem; margin-bottom: 12px;">Date Invite Sent!</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 32px;">
+                        Your personalized date suggestion has been sent to Sarah. We'll notify you when she responds!
+                    </p>
+                    <div style="background: var(--ai-purple-light); border-radius: 16px; padding: 20px; width: 100%; margin-bottom: 32px;">
+                        <p style="font-size: 0.85rem; color: var(--ai-purple); margin-bottom: 8px;">📅 Saturday, March 15 • Afternoon</p>
+                        <p style="font-weight: 600;">The Golden Bean</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted);">Coffee & Photography Date</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showScreen('chat')">Back to Chat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Screen Navigation
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // AI Panel Toggle
+        function toggleAIPanel() {
+            const panel = document.getElementById('aiPanel');
+            const overlay = document.getElementById('overlay');
+            panel.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Send Message
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            if (message) {
+                addMessage(message, 'sent');
+                input.value = '';
+                
+                // Simulate AI analyzing and responding
+                setTimeout(() => {
+                    analyzeAndRespond(message);
+                }, 1000);
+            }
+        }
+
+        function handleKeypress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        // Send AI Prompt
+        function sendPrompt(text) {
+            addMessage(text, 'sent');
+            
+            // Show AI suggestion after date-related prompts
+            if (text.includes('Saturday') || text.includes('free')) {
+                setTimeout(() => {
+                    addMessage("That sounds perfect! I'm free Saturday afternoon. The Golden Bean around 3pm? ☕📸", 'received');
+                    showDateConfirmation();
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    const responses = [
+                        "I'd love that! My favorite is a good oat milk latte. What's yours?",
+                        "Oh I have so many to share! I mostly do nature and urban shots. Here's one from last week...",
+                        "The afternoon light there is incredible! We should definitely check it out together."
+                    ];
+                    addMessage(responses[Math.floor(Math.random() * responses.length)], 'received');
+                }, 1500);
+            }
+        }
+
+        // Add message to chat
+        function addMessage(text, type) {
+            const container = document.getElementById('chatMessages');
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            msg.innerHTML = `<p>${text}</p><span class="message-time">${time}</span>`;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // AI Analysis & Response (simulated)
+        function analyzeAndRespond(userMessage) {
+            const keywords = {
+                coffee: ['coffee', 'cafe', 'latte', 'espresso', 'bean'],
+                photography: ['photo', 'camera', 'shot', 'picture', 'lens'],
+                date: ['meet', 'saturday', 'sunday', 'free', 'available', 'when'],
+                location: ['place', 'spot', 'where', 'location', 'restaurant']
+            };
+
+            let detected = [];
+            const lowerMsg = userMessage.toLowerCase();
+            
+            for (const [topic, words] of Object.entries(keywords)) {
+                if (words.some(w => lowerMsg.includes(w))) {
+                    detected.push(topic);
+                }
+            }
+
+            // Generate contextual response
+            let response;
+            if (detected.includes('date')) {
+                response = "I'd love to! What day were you thinking? I'm pretty flexible this week 😊";
+                setTimeout(showDateConfirmation, 2000);
+            } else if (detected.includes('coffee')) {
+                response = "Ooh I love talking about coffee! I'm obsessed with pour-overs lately. Have you tried The Golden Bean? Their house blend is amazing!";
+            } else if (detected.includes('photography')) {
+                response = "That's so cool! I've been wanting to get better at street photography. Do you have any tips? Maybe we could go shoot together sometime! 📸";
+            } else {
+                response = "That's really interesting! Tell me more about that.";
+            }
+
+            addMessage(response, 'received');
+            updateAIInsights(detected);
+        }
+
+        // Update AI Insights based on conversation
+        function updateAIInsights(topics) {
+            // This would update the AI panel with new insights
+            console.log('AI detected topics:', topics);
+        }
+
+        // Show date confirmation prompt
+        function showDateConfirmation() {
+            const container = document.getElementById('chatMessages');
+            const card = document.createElement('div');
+            card.className = 'ai-suggestion-card';
+            card.innerHTML = `
+                <div class="ai-suggestion-header">
+                    <div class="ai-icon">✨</div>
+                    <span>Perfect timing!</span>
+                </div>
+                <div class="ai-suggestion-content">
+                    <h4>Ready to make it official?</h4>
+                    <p>Sarah seems interested in meeting! Send a date invite now.</p>
+                    <div class="ai-suggestion-actions">
+                        <button class="ai-action-btn primary" onclick="showScreen('date-plan')">Plan the Date</button>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Send Date Suggestion from AI card
+        function sendDateSuggestion() {
+            hideAISuggestion();
+            addMessage("Hey, since you mentioned The Golden Bean - want to check it out together this Saturday afternoon? I'd love to see those windows you talked about! ☕📸", 'sent');
+            
+            setTimeout(() => {
+                addMessage("Yes! That would be amazing! I was hoping you'd suggest that 😊 Does 3pm work for you?", 'received');
+                showDateConfirmation();
+            }, 1500);
+        }
+
+        // Hide AI Suggestion
+        function hideAISuggestion() {
+            const card = document.getElementById('aiSuggestionCard');
+            if (card) card.style.display = 'none';
+        }
+
+        // Confirm AI Date
+        function confirmAIDate() {
+            showScreen('date-sent');
+        }
+
+        // Select venue from AI recommendations
+        function selectDateVenue(index) {
+            toggleAIPanel();
+            showScreen('date-plan');
+        }
+    </script>
+</body>
+</html>
+

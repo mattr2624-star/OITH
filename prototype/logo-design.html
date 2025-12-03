@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OITH - Logo Design Concepts</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #C4584A;
+            --accent-dark: #A84639;
+            --accent-light: #F5E6E3;
+            --bg-primary: #FDF9F7;
+            --text-primary: #2D2926;
+            --text-secondary: #5A524E;
+            --text-muted: #9A918C;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tagline {
+            font-style: italic;
+            color: var(--accent);
+            margin-top: 8px;
+        }
+
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .logo-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 4px 24px rgba(45, 41, 38, 0.08);
+            text-align: center;
+        }
+
+        .logo-card h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .logo-card p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .logo-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .logo-display svg {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: var(--text-primary);
+        }
+
+        .logo-tagline {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+        }
+
+        .dark-bg {
+            background: var(--text-primary);
+        }
+
+        .dark-bg .logo-text {
+            color: white;
+        }
+
+        .dark-bg .logo-tagline {
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Application Examples */
+        .application-section {
+            margin-top: 80px;
+        }
+
+        .application-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .phone-mockup {
+            max-width: 350px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            border-radius: 44px;
+            padding: 60px 24px 40px;
+            box-shadow: 
+                0 0 0 12px #2D2926,
+                0 0 0 14px #3D3936,
+                0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .phone-mockup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 28px;
+            background: #2D2926;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .splash-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .splash-logo {
+            margin-bottom: 32px;
+        }
+
+        .splash-logo svg {
+            width: 120px;
+            height: auto;
+        }
+
+        .splash-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .splash-tagline {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .splash-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+        }
+
+        .cta-btn {
+            background: linear-gradient(135deg, #C4584A 0%, #D4756A 100%);
+            color: white;
+            padding: 16px 48px;
+            border-radius: 100px;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(196, 88, 74, 0.35);
+        }
+
+        /* Meaning Explanation */
+        .meaning-section {
+            margin-top: 80px;
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 4px 24px rgba(45, 41, 38, 0.08);
+        }
+
+        .meaning-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .meaning-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+        }
+
+        .meaning-item {
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .meaning-item svg {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 16px;
+        }
+
+        .meaning-item h4 {
+            font-size: 1.125rem;
+            margin-bottom: 8px;
+        }
+
+        .meaning-item p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .vs-badge {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .logo-grid {
+                grid-template-columns: 1fr;
+            }
+            .meaning-visual {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>OITH Logo Design</h1>
+            <p>Logo concepts based on the proverb "A bird in the hand is worth two in the bush"</p>
+            <p class="tagline">"One In The Hand" - Focus on the match you have, not endless options</p>
+        </header>
+
+        <!-- Logo Concepts -->
+        <div class="logo-grid">
+            <!-- Primary Logo - Hand Holding Bird -->
+            <div class="logo-card">
+                <h3>Primary Logo</h3>
+                <p>Hand cradling a single bird - representing the focused match</p>
+                <div class="logo-display">
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Circular background -->
+                        <circle cx="100" cy="100" r="95" stroke="#C4584A" stroke-width="2" stroke-dasharray="4 4" opacity="0.3"/>
+                        
+                        <!-- Hand silhouette -->
+                        <path d="M60 140 C50 130, 45 115, 50 100 C55 85, 65 75, 80 70 C85 68, 90 68, 95 70 L100 72 C105 70, 110 68, 115 68 C125 68, 135 75, 140 85 C145 95, 145 105, 140 115 C135 125, 125 135, 115 140 L105 145 C100 148, 90 150, 80 148 C70 146, 60 143, 60 140Z" 
+                              fill="#F5E6E3" stroke="#C4584A" stroke-width="2"/>
+                        
+                        <!-- Bird body -->
+                        <ellipse cx="100" cy="85" rx="25" ry="20" fill="#C4584A"/>
+                        
+                        <!-- Bird head -->
+                        <circle cx="115" cy="70" r="12" fill="#C4584A"/>
+                        
+                        <!-- Bird beak -->
+                        <path d="M127 70 L135 68 L127 72Z" fill="#A84639"/>
+                        
+                        <!-- Bird eye -->
+                        <circle cx="118" cy="68" r="2" fill="white"/>
+                        
+                        <!-- Bird wing detail -->
+                        <path d="M85 80 Q100 75, 110 85" stroke="#A84639" stroke-width="2" fill="none"/>
+                        
+                        <!-- Bird tail -->
+                        <path d="M75 85 L60 80 L65 90 L75 88Z" fill="#A84639"/>
+                        
+                        <!-- Gentle holding fingers -->
+                        <path d="M75 95 C70 100, 72 110, 78 115" stroke="#C4584A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        <path d="M125 95 C130 100, 128 110, 122 115" stroke="#C4584A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        
+                        <!-- Small heart accent -->
+                        <path d="M100 115 C98 112, 94 112, 94 116 C94 118, 100 124, 100 124 C100 124, 106 118, 106 116 C106 112, 102 112, 100 115Z" fill="#C4584A" opacity="0.6"/>
+                    </svg>
+                    <div class="logo-text">OITH</div>
+                    <div class="logo-tagline">One In The Hand</div>
+                </div>
+            </div>
+
+            <!-- Icon Only Version -->
+            <div class="logo-card">
+                <h3>Icon Mark</h3>
+                <p>Simplified version for app icons and small displays</p>
+                <div class="logo-display">
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Background circle -->
+                        <circle cx="100" cy="100" r="90" fill="#C4584A"/>
+                        
+                        <!-- Hand outline (simplified) -->
+                        <path d="M55 145 C45 135, 40 115, 48 95 C56 75, 75 60, 100 58 C125 60, 144 75, 152 95 C160 115, 155 135, 145 145 C130 158, 110 160, 100 158 C90 160, 70 158, 55 145Z" 
+                              fill="white" opacity="0.2"/>
+                        
+                        <!-- Bird (prominent) -->
+                        <ellipse cx="100" cy="90" rx="30" ry="22" fill="white"/>
+                        <circle cx="118" cy="75" r="14" fill="white"/>
+                        <path d="M132 75 L145 72 L132 80Z" fill="#F5E6E3"/>
+                        <circle cx="122" cy="73" r="3" fill="#C4584A"/>
+                        <path d="M80 85 Q100 78, 115 90" stroke="#C4584A" stroke-width="2.5" fill="none" opacity="0.3"/>
+                        <path d="M70 90 L50 82 L58 98 L70 94Z" fill="#F5E6E3"/>
+                        
+                        <!-- Cupping hands suggestion -->
+                        <path d="M65 110 C58 118, 62 130, 75 138" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
+                        <path d="M135 110 C142 118, 138 130, 125 138" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
+                    </svg>
+                    <div class="logo-text" style="color: var(--accent);">OITH</div>
+                </div>
+            </div>
+
+            <!-- Minimal Line Art -->
+            <div class="logo-card">
+                <h3>Minimal Line Art</h3>
+                <p>Elegant single-line style for premium feel</p>
+                <div class="logo-display">
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Outer ring -->
+                        <circle cx="100" cy="100" r="90" stroke="#C4584A" stroke-width="1.5"/>
+                        
+                        <!-- Hand outline - continuous line -->
+                        <path d="M50 130 
+                                 C45 120, 45 105, 52 92 
+                                 C58 80, 72 70, 88 68
+                                 L88 68 
+                                 C88 60, 95 52, 105 52 
+                                 C115 52, 122 58, 124 66
+                                 C135 68, 148 78, 152 92
+                                 C158 108, 155 122, 148 132
+                                 C140 142, 125 150, 100 150
+                                 C75 150, 60 142, 50 130Z" 
+                              stroke="#C4584A" stroke-width="2" fill="none"/>
+                        
+                        <!-- Bird outline -->
+                        <path d="M75 95 
+                                 C70 85, 80 72, 95 70
+                                 C105 68, 115 70, 120 75
+                                 L130 72 
+                                 M120 75 
+                                 C128 80, 130 90, 125 98
+                                 C120 105, 108 108, 95 106
+                                 C82 104, 72 98, 75 95Z" 
+                              stroke="#C4584A" stroke-width="2" fill="none"/>
+                        
+                        <!-- Bird eye -->
+                        <circle cx="112" cy="78" r="2.5" fill="#C4584A"/>
+                        
+                        <!-- Small heart -->
+                        <path d="M100 120 C97 116, 92 116, 92 120 C92 123, 100 130, 100 130 C100 130, 108 123, 108 120 C108 116, 103 116, 100 120Z" 
+                              stroke="#C4584A" stroke-width="1.5" fill="none"/>
+                    </svg>
+                    <div class="logo-text">OITH</div>
+                    <div class="logo-tagline">One In The Hand</div>
+                </div>
+            </div>
+
+            <!-- Dark Version -->
+            <div class="logo-card dark-bg">
+                <h3 style="color: white;">Dark Mode</h3>
+                <p style="color: rgba(255,255,255,0.6);">For dark backgrounds and app themes</p>
+                <div class="logo-display">
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Glow effect -->
+                        <circle cx="100" cy="100" r="85" fill="#C4584A" opacity="0.15"/>
+                        
+                        <!-- Hand silhouette -->
+                        <path d="M55 140 C45 130, 42 112, 50 95 C58 78, 75 65, 100 62 C125 65, 142 78, 150 95 C158 112, 155 130, 145 140 C130 153, 110 158, 100 156 C90 158, 70 153, 55 140Z" 
+                              fill="#3D3936" stroke="#C4584A" stroke-width="2"/>
+                        
+                        <!-- Bird -->
+                        <ellipse cx="100" cy="88" rx="28" ry="20" fill="#C4584A"/>
+                        <circle cx="117" cy="73" r="13" fill="#C4584A"/>
+                        <path d="M130 73 L142 70 L130 78Z" fill="#D4756A"/>
+                        <circle cx="120" cy="71" r="2.5" fill="white"/>
+                        <path d="M82 83 Q100 76, 115 88" stroke="#A84639" stroke-width="2" fill="none"/>
+                        <path d="M72 88 L55 82 L62 95 L72 91Z" fill="#D4756A"/>
+                        
+                        <!-- Holding gesture -->
+                        <path d="M70 105 C62 115, 68 128, 80 135" stroke="#C4584A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        <path d="M130 105 C138 115, 132 128, 120 135" stroke="#C4584A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                    <div class="logo-text">OITH</div>
+                    <div class="logo-tagline">One In The Hand</div>
+                </div>
+            </div>
+
+            <!-- Horizontal Layout -->
+            <div class="logo-card" style="grid-column: span 2;">
+                <h3>Horizontal Layout</h3>
+                <p>For headers, marketing materials, and wide formats</p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 24px; padding: 20px;">
+                    <svg viewBox="0 0 100 100" width="80" height="80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" stroke="#C4584A" stroke-width="1.5"/>
+                        <path d="M28 70 C23 63, 22 52, 28 42 C34 32, 45 25, 55 25 C65 25, 76 32, 82 42 C88 52, 87 63, 82 70 C75 78, 62 82, 55 81 C48 82, 35 78, 28 70Z" 
+                              fill="#F5E6E3" stroke="#C4584A" stroke-width="1.5"/>
+                        <ellipse cx="55" cy="42" rx="15" ry="11" fill="#C4584A"/>
+                        <circle cx="63" cy="35" r="7" fill="#C4584A"/>
+                        <path d="M70 35 L78 33 L70 38Z" fill="#A84639"/>
+                        <circle cx="65" cy="34" r="1.5" fill="white"/>
+                        <path d="M45 40 Q55 36, 62 42" stroke="#A84639" stroke-width="1.5" fill="none"/>
+                        <path d="M40 42 L30 38 L35 48 L40 45Z" fill="#A84639"/>
+                    </svg>
+                    <div>
+                        <div style="font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 600; letter-spacing: 0.1em; color: var(--text-primary);">OITH</div>
+                        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.25em; color: var(--text-muted);">One In The Hand</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meaning Explanation -->
+        <div class="meaning-section">
+            <h2>The Symbolism</h2>
+            <div class="meaning-visual">
+                <div class="meaning-item">
+                    <svg viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Hand with one bird - highlighted -->
+                        <circle cx="75" cy="75" r="70" fill="#F5E6E3"/>
+                        <path d="M40 100 C32 90, 30 75, 38 60 C46 45, 60 35, 80 35 C100 35, 114 45, 122 60 C130 75, 128 90, 120 100 C108 113, 88 118, 80 116 C72 118, 52 113, 40 100Z" 
+                              fill="white" stroke="#C4584A" stroke-width="2"/>
+                        <ellipse cx="80" cy="62" rx="22" ry="16" fill="#C4584A"/>
+                        <circle cx="95" cy="50" r="10" fill="#C4584A"/>
+                        <path d="M105 50 L115 47 L105 54Z" fill="#A84639"/>
+                        <circle cx="97" cy="48" r="2" fill="white"/>
+                        <path d="M65 58 Q80 52, 92 62" stroke="#A84639" stroke-width="2" fill="none"/>
+                        <path d="M58 62 L45 56 L52 70 L58 66Z" fill="#A84639"/>
+                        
+                        <!-- Holding hands -->
+                        <path d="M55 78 C48 88, 55 100, 68 108" stroke="#C4584A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        <path d="M105 78 C112 88, 105 100, 92 108" stroke="#C4584A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                        
+                        <!-- Heart -->
+                        <path d="M80 90 C77 86, 72 86, 72 90 C72 93, 80 100, 80 100 C80 100, 88 93, 88 90 C88 86, 83 86, 80 90Z" fill="#C4584A"/>
+                    </svg>
+                    <h4 style="color: var(--accent);">One in the Hand</h4>
+                    <p>Your current match deserves your full attention. They're real, they're here, and they're interested in YOU.</p>
+                </div>
+                
+                <div class="vs-badge">vs</div>
+                
+                <div class="meaning-item">
+                    <svg viewBox="0 0 150 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Bush with distant birds - faded -->
+                        <circle cx="75" cy="75" r="70" fill="#F8F4F2"/>
+                        
+                        <!-- Bush shape -->
+                        <ellipse cx="75" cy="100" rx="50" ry="30" fill="#E8E2DE"/>
+                        <ellipse cx="60" cy="85" rx="25" ry="20" fill="#E8E2DE"/>
+                        <ellipse cx="90" cy="85" rx="25" ry="20" fill="#E8E2DE"/>
+                        <ellipse cx="75" cy="70" rx="20" ry="18" fill="#E8E2DE"/>
+                        
+                        <!-- Distant bird 1 -->
+                        <ellipse cx="55" cy="55" rx="12" ry="8" fill="#D4CCC7"/>
+                        <circle cx="62" cy="50" r="5" fill="#D4CCC7"/>
+                        <path d="M67 50 L72 48 L67 52Z" fill="#C4BFB9"/>
+                        
+                        <!-- Distant bird 2 -->
+                        <ellipse cx="95" cy="50" rx="12" ry="8" fill="#D4CCC7"/>
+                        <circle cx="102" cy="45" r="5" fill="#D4CCC7"/>
+                        <path d="M107 45 L112 43 L107 47Z" fill="#C4BFB9"/>
+                        
+                        <!-- Question marks -->
+                        <text x="45" y="40" font-size="16" fill="#9A918C">?</text>
+                        <text x="105" y="35" font-size="16" fill="#9A918C">?</text>
+                    </svg>
+                    <h4 style="color: var(--text-muted);">Two in the Bush</h4>
+                    <p>Endless swiping for "better" options that may never materialize. Uncertainty, ghosting, and wasted time.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- App Mockup -->
+        <div class="application-section">
+            <h2>Logo in Application</h2>
+            <div class="phone-mockup">
+                <div class="splash-content">
+                    <div class="splash-logo">
+                        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="100" cy="100" r="95" stroke="#C4584A" stroke-width="2" stroke-dasharray="4 4" opacity="0.3"/>
+                            <path d="M60 140 C50 130, 45 115, 50 100 C55 85, 65 75, 80 70 C85 68, 90 68, 95 70 L100 72 C105 70, 110 68, 115 68 C125 68, 135 75, 140 85 C145 95, 145 105, 140 115 C135 125, 125 135, 115 140 L105 145 C100 148, 90 150, 80 148 C70 146, 60 143, 60 140Z" 
+                                  fill="#F5E6E3" stroke="#C4584A" stroke-width="2"/>
+                            <ellipse cx="100" cy="85" rx="25" ry="20" fill="#C4584A"/>
+                            <circle cx="115" cy="70" r="12" fill="#C4584A"/>
+                            <path d="M127 70 L135 68 L127 72Z" fill="#A84639"/>
+                            <circle cx="118" cy="68" r="2" fill="white"/>
+                            <path d="M85 80 Q100 75, 110 85" stroke="#A84639" stroke-width="2" fill="none"/>
+                            <path d="M75 85 L60 80 L65 90 L75 88Z" fill="#A84639"/>
+                            <path d="M75 95 C70 100, 72 110, 78 115" stroke="#C4584A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                            <path d="M125 95 C130 100, 128 110, 122 115" stroke="#C4584A" stroke-width="2" fill="none" stroke-linecap="round"/>
+                            <path d="M100 115 C98 112, 94 112, 94 116 C94 118, 100 124, 100 124 C100 124, 106 118, 106 116 C106 112, 102 112, 100 115Z" fill="#C4584A" opacity="0.6"/>
+                        </svg>
+                    </div>
+                    <div class="splash-title">OITH</div>
+                    <div class="splash-tagline">One In The Hand</div>
+                    <p class="splash-subtitle">Quality dates, not endless swipes</p>
+                    <button class="cta-btn">Get Started</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Brand Colors Reference -->
+        <div style="margin-top: 80px; background: white; border-radius: 24px; padding: 40px; box-shadow: 0 4px 24px rgba(45, 41, 38, 0.08);">
+            <h2 style="font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; margin-bottom: 24px; text-align: center;">Brand Colors</h2>
+            <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <div style="width: 80px; height: 80px; background: #C4584A; border-radius: 12px; margin-bottom: 8px;"></div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Primary</div>
+                    <div style="font-size: 0.85rem; font-weight: 600;">#C4584A</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 80px; height: 80px; background: #A84639; border-radius: 12px; margin-bottom: 8px;"></div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Dark</div>
+                    <div style="font-size: 0.85rem; font-weight: 600;">#A84639</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 80px; height: 80px; background: #F5E6E3; border-radius: 12px; margin-bottom: 8px; border: 1px solid #E8E2DE;"></div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Light</div>
+                    <div style="font-size: 0.85rem; font-weight: 600;">#F5E6E3</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 80px; height: 80px; background: #2D2926; border-radius: 12px; margin-bottom: 8px;"></div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Text</div>
+                    <div style="font-size: 0.85rem; font-weight: 600;">#2D2926</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

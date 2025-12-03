@@ -1,0 +1,47 @@
+# OITH Payment Configuration
+# Rename this file to .env and fill in your values
+
+# ===========================================
+# STRIPE CONFIGURATION
+# ===========================================
+
+# Get these from: https://dashboard.stripe.com/apikeys
+# Use sk_test_xxx for testing, sk_live_xxx for production
+STRIPE_SECRET_KEY=sk_test_YOUR_SECRET_KEY_HERE
+
+# Publishable key (safe to expose in frontend)
+STRIPE_PUBLISHABLE_KEY=pk_test_YOUR_PUBLISHABLE_KEY_HERE
+
+# Webhook secret - Get from: Dashboard > Developers > Webhooks
+STRIPE_WEBHOOK_SECRET=whsec_YOUR_WEBHOOK_SECRET_HERE
+
+# Price IDs (optional - server will create products if not set)
+# Create products in Stripe Dashboard and paste IDs here
+STRIPE_PRICE_MONTHLY=price_xxxxx
+STRIPE_PRICE_YEARLY=price_xxxxx
+
+# ===========================================
+# SERVER CONFIGURATION
+# ===========================================
+
+# Server port
+PORT=3000
+
+# Your domain (for Stripe redirects)
+DOMAIN=http://localhost:3000
+
+# Environment: development or production
+NODE_ENV=development
+
+# ===========================================
+# BANK ACCOUNT SETUP
+# ===========================================
+# Bank account is configured directly in Stripe Dashboard:
+# 1. Go to: https://dashboard.stripe.com/settings/payouts
+# 2. Click "Add bank account"
+# 3. Enter your routing number and account number
+# 4. Complete verification (micro-deposits)
+#
+# Payout schedule can be configured at:
+# https://dashboard.stripe.com/settings/payouts
+

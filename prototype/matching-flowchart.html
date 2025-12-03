@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OITH - Why One Match at a Time Works</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #C4584A;
+            --accent-dark: #A84639;
+            --accent-light: #F5E6E3;
+            --bg-primary: #FDF9F7;
+            --bg-dark: #2D2926;
+            --text-primary: #2D2926;
+            --text-secondary: #5A524E;
+            --text-muted: #9A918C;
+            --blue: #4A90A4;
+            --pink: #D4756A;
+            --green: #5B9A6F;
+            --red: #C4584A;
+            --yellow: #D4A84A;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .header h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Problem Section */
+        .section {
+            margin-bottom: 80px;
+        }
+
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 40px;
+            color: var(--text-primary);
+        }
+
+        .section-title span {
+            color: var(--accent);
+        }
+
+        /* The Problem Flowchart */
+        .problem-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .flow-row {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 60px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .flow-box {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(45, 41, 38, 0.08);
+            text-align: center;
+            max-width: 280px;
+            position: relative;
+        }
+
+        .flow-box.problem {
+            border: 2px solid var(--red);
+        }
+
+        .flow-box.solution {
+            border: 2px solid var(--green);
+        }
+
+        .flow-box.neutral {
+            border: 2px solid var(--blue);
+        }
+
+        .flow-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .flow-box h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .flow-box p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .flow-box .stat {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 8px;
+        }
+
+        .arrow-down {
+            width: 40px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        .arrow-down svg {
+            width: 24px;
+            height: 40px;
+        }
+
+        .arrow-horizontal {
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+        }
+
+        /* Comparison Section */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 80px 1fr;
+            gap: 24px;
+            align-items: start;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+            .vs-divider {
+                display: none;
+            }
+        }
+
+        .comparison-side {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 4px 24px rgba(45, 41, 38, 0.1);
+        }
+
+        .comparison-side.problem-side {
+            border-top: 4px solid var(--red);
+        }
+
+        .comparison-side.solution-side {
+            border-top: 4px solid var(--green);
+        }
+
+        .comparison-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .comparison-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+
+        .problem-side .comparison-icon {
+            background: rgba(196, 88, 74, 0.1);
+        }
+
+        .solution-side .comparison-icon {
+            background: rgba(91, 154, 111, 0.1);
+        }
+
+        .comparison-header h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .comparison-header .badge {
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .problem-side .badge {
+            background: rgba(196, 88, 74, 0.1);
+            color: var(--red);
+        }
+
+        .solution-side .badge {
+            background: rgba(91, 154, 111, 0.1);
+            color: var(--green);
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            position: relative;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 18px;
+            top: 52px;
+            bottom: -16px;
+            width: 2px;
+            background: var(--text-muted);
+            opacity: 0.3;
+        }
+
+        .step-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .problem-side .step-number {
+            background: var(--red);
+            color: white;
+        }
+
+        .solution-side .step-number {
+            background: var(--green);
+            color: white;
+        }
+
+        .step-content h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .vs-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vs-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Stats Comparison */
+        .stats-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-top: 60px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(45, 41, 38, 0.08);
+        }
+
+        .stat-card.improved {
+            border: 2px solid var(--green);
+            background: rgba(91, 154, 111, 0.05);
+        }
+
+        .stat-card .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .stat-card .metric-values {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-card .old-value {
+            font-size: 1.5rem;
+            color: var(--red);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .stat-card .arrow {
+            color: var(--green);
+        }
+
+        .stat-card .new-value {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .stat-card .metric-description {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        /* Visual Balance Diagram */
+        .balance-section {
+            background: var(--bg-dark);
+            border-radius: 24px;
+            padding: 48px;
+            color: white;
+            margin: 60px 0;
+        }
+
+        .balance-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .balance-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .balance-side {
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .balance-avatars {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .avatar-stack {
+            display: flex;
+        }
+
+        .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 3px solid var(--bg-dark);
+            background: var(--accent-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .avatar:not(:first-child) {
+            margin-left: -16px;
+        }
+
+        .balance-side h4 {
+            font-size: 1.125rem;
+            margin-bottom: 8px;
+        }
+
+        .balance-side p {
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        .balance-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .scale-beam {
+            width: 200px;
+            height: 4px;
+            background: white;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .scale-beam.imbalanced {
+            transform: rotate(-15deg);
+        }
+
+        .scale-beam.balanced {
+            transform: rotate(0deg);
+        }
+
+        .scale-fulcrum {
+            width: 20px;
+            height: 30px;
+            background: white;
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+        }
+
+        .balance-label {
+            font-size: 0.875rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .balance-label.bad {
+            background: rgba(196, 88, 74, 0.2);
+            color: #F5B0A8;
+        }
+
+        .balance-label.good {
+            background: rgba(91, 154, 111, 0.2);
+            color: #9FD4AF;
+        }
+
+        /* Key Insight Box */
+        .insight-box {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            color: white;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .insight-box h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .insight-box p {
+            font-size: 1.125rem;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Final Flow */
+        .final-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        .final-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .final-step-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 20px rgba(45, 41, 38, 0.1);
+            margin-bottom: 12px;
+        }
+
+        .final-step h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .final-step p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            max-width: 120px;
+        }
+
+        .flow-arrow {
+            color: var(--accent);
+            font-size: 1.5rem;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                max-width: 100%;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .flow-row {
+                flex-direction: column;
+                align-items: center;
+                gap: 0;
+            }
+            
+            .arrow-horizontal {
+                transform: rotate(90deg);
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .balance-diagram {
+                flex-direction: column;
+            }
+            
+            .final-flow {
+                flex-direction: column;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">OITH</div>
+            <h1>Why One Match at a Time Works</h1>
+            <p>Traditional dating apps create a power imbalance that leads to poor outcomes for everyone. Here's how OITH fixes this with a simple but powerful constraint.</p>
+        </header>
+
+        <!-- The Problem Section -->
+        <section class="section">
+            <h2 class="section-title">The <span>Problem</span> with Traditional Dating Apps</h2>
+            
+            <div class="comparison">
+                <!-- Problem Side -->
+                <div class="comparison-side problem-side">
+                    <div class="comparison-header">
+                        <div class="comparison-icon">📱</div>
+                        <div>
+                            <h3>Traditional Apps</h3>
+                            <span class="badge">Unlimited Matches</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Women receive 100+ matches</h4>
+                                <p>Unlimited right-swipes create an overwhelming inbox for women</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Decision paralysis sets in</h4>
+                                <p>Too many options = impossible to evaluate each person fairly</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Response rates plummet</h4>
+                                <p>Most messages go unanswered (industry avg: 10-25% response)</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4>Men over-compensate</h4>
+                                <p>Swipe right on everyone, send generic messages</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h4>Cycle continues</h4>
+                                <p>Quality decreases, frustration increases, dates stay rare</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VS Divider -->
+                <div class="vs-divider">
+                    <div class="vs-circle">VS</div>
+                </div>
+
+                <!-- Solution Side -->
+                <div class="comparison-side solution-side">
+                    <div class="comparison-header">
+                        <div class="comparison-icon">💎</div>
+                        <div>
+                            <h3>OITH Approach</h3>
+                            <span class="badge">One at a Time</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Both see ONE match</h4>
+                                <p>AI-calibrated suggestion based on compatibility</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Full attention on this person</h4>
+                                <p>No distractions, no "better options" waiting</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Mutual decision required</h4>
+                                <p>Must decide (yes/no) before seeing anyone else</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4>Conversations are valued</h4>
+                                <p>Both parties invested → higher response rates</p>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h4>More dates happen</h4>
+                                <p>Focused engagement → faster progression to meeting</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Balance Diagram -->
+        <section class="balance-section">
+            <h2 class="balance-title">Restoring Balance in Dating</h2>
+            
+            <div class="balance-diagram">
+                <!-- Before -->
+                <div class="balance-side">
+                    <h4>Before: Imbalanced</h4>
+                    <div class="balance-avatars">
+                        <div class="avatar-stack">
+                            <div class="avatar">👨</div>
+                            <div class="avatar">👨</div>
+                            <div class="avatar">👨</div>
+                            <div class="avatar">👨</div>
+                            <div class="avatar">👨</div>
+                        </div>
+                    </div>
+                    <p>5+ men competing for attention</p>
+                    <div style="margin: 16px 0;">⬇️</div>
+                    <div class="avatar-stack" style="justify-content: center;">
+                        <div class="avatar">👩</div>
+                    </div>
+                    <p style="margin-top: 8px;">1 woman overwhelmed</p>
+                </div>
+
+                <div class="balance-center">
+                    <span class="balance-label bad">❌ Power Imbalance</span>
+                    <div class="scale-beam imbalanced"></div>
+                    <div class="scale-fulcrum"></div>
+                    <p style="font-size: 0.75rem; opacity: 0.7;">Traditional apps tip the scale</p>
+                </div>
+
+                <!-- Arrow -->
+                <div style="font-size: 3rem;">➡️</div>
+
+                <!-- After -->
+                <div class="balance-side">
+                    <h4>After: Balanced</h4>
+                    <div class="balance-avatars">
+                        <div class="avatar-stack">
+                            <div class="avatar">👨</div>
+                        </div>
+                    </div>
+                    <p>1 focused man</p>
+                    <div style="margin: 16px 0;">🤝</div>
+                    <div class="avatar-stack" style="justify-content: center;">
+                        <div class="avatar">👩</div>
+                    </div>
+                    <p style="margin-top: 8px;">1 focused woman</p>
+                </div>
+
+                <div class="balance-center">
+                    <span class="balance-label good">✓ Equal Attention</span>
+                    <div class="scale-beam balanced"></div>
+                    <div class="scale-fulcrum"></div>
+                    <p style="font-size: 0.75rem; opacity: 0.7;">OITH restores equality</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Key Insight -->
+        <div class="insight-box">
+            <h3>💡 The Key Insight</h3>
+            <p>When you can only see one match at a time, every interaction matters. There's no "I'll respond later" because there's nothing else to scroll to. This simple constraint transforms dating from a numbers game into genuine human connection.</p>
+        </div>
+
+        <!-- Stats Comparison -->
+        <section class="section">
+            <h2 class="section-title">The <span>Results</span> Speak for Themselves</h2>
+            
+            <div class="stats-comparison">
+                <div class="stat-card improved">
+                    <div class="metric-label">Response Rate</div>
+                    <div class="metric-values">
+                        <span class="old-value">25%</span>
+                        <span class="arrow">→</span>
+                        <span class="new-value">85%</span>
+                    </div>
+                    <div class="metric-description">When there's only one match, you respond</div>
+                </div>
+                
+                <div class="stat-card improved">
+                    <div class="metric-label">Date Probability</div>
+                    <div class="metric-values">
+                        <span class="old-value">1.8%</span>
+                        <span class="arrow">→</span>
+                        <span class="new-value">10%</span>
+                    </div>
+                    <div class="metric-description">5x more likely to go on an actual date</div>
+                </div>
+                
+                <div class="stat-card improved">
+                    <div class="metric-label">Time to First Message</div>
+                    <div class="metric-values">
+                        <span class="old-value">24h</span>
+                        <span class="arrow">→</span>
+                        <span class="new-value">2h</span>
+                    </div>
+                    <div class="metric-description">No more waiting days for a response</div>
+                </div>
+                
+                <div class="stat-card improved">
+                    <div class="metric-label">Time on App</div>
+                    <div class="metric-values">
+                        <span class="old-value">51m</span>
+                        <span class="arrow">→</span>
+                        <span class="new-value">30m</span>
+                    </div>
+                    <div class="metric-description">Less scrolling, more connecting</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Flow -->
+        <section class="section">
+            <h2 class="section-title">The OITH <span>Journey</span></h2>
+            
+            <div class="final-flow">
+                <div class="final-step">
+                    <div class="final-step-icon">🎯</div>
+                    <h4>AI Match</h4>
+                    <p>One carefully selected match</p>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="final-step">
+                    <div class="final-step-icon">👀</div>
+                    <h4>Full Focus</h4>
+                    <p>Give them your attention</p>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="final-step">
+                    <div class="final-step-icon">✅</div>
+                    <h4>Decide</h4>
+                    <p>Yes or No, then next</p>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="final-step">
+                    <div class="final-step-icon">💬</div>
+                    <h4>Connect</h4>
+                    <p>Meaningful conversation</p>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="final-step">
+                    <div class="final-step-icon">📅</div>
+                    <h4>Plan</h4>
+                    <p>Built-in date planner</p>
+                </div>
+                
+                <div class="flow-arrow">→</div>
+                
+                <div class="final-step">
+                    <div class="final-step-icon">❤️</div>
+                    <h4>Meet</h4>
+                    <p>Go on a real date!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom CTA -->
+        <div class="insight-box" style="margin-top: 60px;">
+            <h3>One in the Hand > Two in the Bush</h3>
+            <p>Stop chasing endless options. Start making real connections.<br>Quality dates, not endless swipes.</p>
+        </div>
+
+    </div>
+</body>
+</html>
+
