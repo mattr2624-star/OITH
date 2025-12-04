@@ -8020,6 +8020,10 @@ function updateMatchingStats() {
     const prefs = appState.user.preferences || {};
     const currentUserEmail = appState.user?.email?.toLowerCase();
     
+    // Get test bots for display
+    const testBots = JSON.parse(localStorage.getItem('oith_test_bots') || '[]');
+    const activeBots = testBots.filter(bot => bot.active);
+    
     // Get all available profiles from the database (users + active bots)
     const allProfiles = getAvailableProfilesFromDatabase(currentUserEmail);
     
@@ -10719,6 +10723,27 @@ window.resetPassword = function(email, newPassword) {
 // ==========================================
 // Cross-Tab Sync (Real-time sync with Admin Dashboard)
 // ==========================================
+
+// Helper function to update UI for logged-in user (used by crawler)
+function updateUIForLoggedInUser() {
+    // Update any logged-in indicators
+    const user = appState.user;
+    if (!user) return;
+    
+    // Update profile displays if they exist
+    const profileNameEls = document.querySelectorAll('[data-user-name]');
+    profileNameEls.forEach(el => el.textContent = user.name || 'User');
+    
+    const profileAgeEls = document.querySelectorAll('[data-user-age]');
+    profileAgeEls.forEach(el => el.textContent = user.age || '');
+    
+    // Update nav tabs if visible
+    const navTabs = document.querySelector('.bottom-nav');
+    if (navTabs) navTabs.style.display = 'flex';
+    
+    console.log('🎨 UI updated for logged-in user:', user.name || user.email);
+}
+
 const oithSyncChannel = new BroadcastChannel('oith_sync');
 
 // Listen for changes from admin dashboard or other tabs
@@ -10727,6 +10752,146 @@ oithSyncChannel.onmessage = (event) => {
     
     // Skip messages from self
     if (event.data.source === 'app') return;
+    
+    // Respond to ping requests from admin
+    if (event.data.type === 'ping') {
+        console.log('📡 Ping received from admin, sending pong...');
+        oithSyncChannel.postMessage({
+            source: 'app',
+            type: 'pong',
+            timestamp: Date.now(),
+            appReady: true,
+            currentScreen: document.querySelector('.screen.active')?.id || 'unknown'
+        });
+        return;
+    }
+    
+    // Handle crawler login - simulate logged-in user for testing
+    if (event.data.type === 'crawler_login') {
+        console.log('🔐 Crawler login request - setting up test user...');
+        const { email, userData, testMatch, testConnection } = event.data;
+        
+        // Set up app state as if user is logged in with full data
+        appState.user = userData.user;
+        appState.user.loggedIn = true;
+        appState.isLoggedIn = true;
+        appState.profileComplete = userData.profileComplete || true;
+        
+        // Set up match state
+        appState.oneMatch = userData.oneMatch || { current: null, status: null };
+        
+        // Set up active connection with all required properties
+        appState.activeConnection = userData.activeConnection;
+        
+        // Set up connection metrics for chat screens
+        appState.connectionMetrics = userData.connectionMetrics || {
+            messageCount: 6,
+            avgResponseTime: '5m',
+            compatibility: 92,
+            dateReadiness: 65,
+            connectedAt: new Date().toISOString()
+        };
+        
+        // Set up conversation state
+        appState.conversation = userData.conversation || {
+            messages: [],
+            dateReadiness: 65,
+            datePlanned: false,
+            conversationStarted: true
+        };
+        
+        // Set up connections list for chat-list screen
+        appState.connections = userData.connections || [];
+        
+        // Set up match pool and history
+        appState.matchPool = userData.matchPool || [];
+        appState.matchHistory = userData.matchHistory || [];
+        appState.passedMatches = userData.passedMatches || [];
+        
+        // Store in localStorage
+        localStorage.setItem('oith_current_user', email);
+        localStorage.setItem(`oith_user_${email}`, JSON.stringify(userData));
+        
+        // Update UI to show logged-in state
+        try {
+            updateUIForLoggedInUser();
+        } catch (e) {
+            console.log('⚠️ Could not update UI:', e.message);
+        }
+        
+        console.log('✅ Crawler test user logged in:', email);
+        console.log('   oneMatch:', appState.oneMatch);
+        console.log('   activeConnection:', appState.activeConnection ? 'present' : 'none');
+        console.log('   connections:', appState.connections?.length || 0);
+        
+        oithSyncChannel.postMessage({
+            source: 'app',
+            type: 'crawler_login_success',
+            email: email,
+            timestamp: Date.now()
+        });
+        return;
+    }
+    
+    // Handle crawler logout
+    if (event.data.type === 'crawler_logout') {
+        console.log('🔐 Crawler logout - cleaning up test user...');
+        appState.user = { loggedIn: false };
+        appState.oneMatch = { current: null, status: null, decisionMade: false };
+        appState.activeConnection = null;
+        appState.chatMessages = {};
+        localStorage.removeItem('oith_current_user');
+        console.log('✅ Crawler test user logged out');
+        return;
+    }
+    
+    // Handle config updates from admin
+    if (event.data.type === 'config_update' && event.data.config) {
+        console.log('📡 Received config update from admin:', event.data.config);
+        localStorage.setItem('oith_index_config', JSON.stringify(event.data.config));
+        
+        // Apply maintenance mode if enabled
+        if (event.data.config.maintenanceMode) {
+            alert('App is in maintenance mode. Some features may be unavailable.');
+        }
+        return;
+    }
+    
+    // Handle full data sync from admin
+    if (event.data.type === 'full_data_sync' && event.data.data) {
+        console.log('📡 Received full data sync from admin');
+        // Store test bots if provided
+        if (event.data.data.testBots) {
+            localStorage.setItem('oith_test_bots', JSON.stringify(event.data.data.testBots));
+            syncUsersToMatchPool();
+        }
+        return;
+    }
+    
+    // Handle data request from admin
+    if (event.data.type === 'request_data' && event.data.from === 'admin') {
+        console.log('📡 Admin requested data');
+        if (appState.user) {
+            const storageKey = getUserStorageKey(appState.user.email);
+            const userData = localStorage.getItem(storageKey);
+            oithSyncChannel.postMessage({
+                source: 'app',
+                type: 'data_response',
+                currentUser: { email: appState.user.email },
+                userData: userData ? JSON.parse(userData) : null
+            });
+        }
+        return;
+    }
+    
+    // Handle reset to defaults from admin
+    if (event.data.type === 'reset_to_defaults' && event.data.from === 'admin') {
+        console.log('📡 Admin requested reset to defaults');
+        if (confirm('Admin has requested to reset the app. This will log you out. Continue?')) {
+            handleLogout();
+        }
+        return;
+    }
     
     if (event.data.type === 'user_updated') {
         console.log('📡 Received user_updated for:', event.data.email);
@@ -10815,12 +10980,35 @@ oithSyncChannel.onmessage = (event) => {
     if (event.data.type === 'run_diagnostics') {
         const screens = event.data.screens || [];
         const isComprehensive = event.data.comprehensive || false;
-        console.log('🧪 Running diagnostics for screens:', screens, 'comprehensive:', isComprehensive);
+        const simulateLogin = event.data.simulateLogin || false;
+        console.log('🧪 Running diagnostics for screens:', screens, 'comprehensive:', isComprehensive, 'simulateLogin:', simulateLogin);
+        
+        // If simulate login is enabled and we have a logged-in test user, ensure state is ready
+        if (simulateLogin && appState.user?.loggedIn) {
+            console.log('🔐 Using logged-in test user for diagnostics:', appState.user.email || appState.user.name);
+        }
+        
+        // Send immediate acknowledgment
+        oithSyncChannel.postMessage({
+            source: 'app',
+            type: 'diagnostics_started',
+            screenCount: screens.length,
+            loggedIn: appState.user?.loggedIn || false,
+            timestamp: Date.now()
+        });
         
         // Run diagnostics with delay between screens for better accuracy
         let index = 0;
         const runNextTest = () => {
-            if (index >= screens.length) return;
+            if (index >= screens.length) {
+                // Send completion signal
+                oithSyncChannel.postMessage({
+                    source: 'app',
+                    type: 'diagnostics_complete',
+                    timestamp: Date.now()
+                });
+                return;
+            }
             
             const screenId = screens[index];
             let ok = true;
@@ -10872,8 +11060,8 @@ oithSyncChannel.onmessage = (event) => {
             });
             
             index++;
-            // Delay between tests for comprehensive mode
-            setTimeout(runNextTest, isComprehensive ? 200 : 50);
+            // Delay between tests - reduced for faster completion
+            setTimeout(runNextTest, isComprehensive ? 100 : 30);
         };
         
         runNextTest();
