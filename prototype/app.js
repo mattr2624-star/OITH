@@ -2638,6 +2638,8 @@ function closeDeclineModal() {
  * User likes their ONE match (legacy - now uses acceptMatch)
  */
 function likeMatch() {
+    // Track swipe right
+    if (typeof trackSwipe === 'function') trackSwipe('right');
     acceptMatch();
 }
 
@@ -2645,6 +2647,9 @@ function likeMatch() {
  * User passes on their ONE match
  */
 function declineMatch() {
+    // Track swipe left
+    if (typeof trackSwipe === 'function') trackSwipe('left');
+    
     if (appState.oneMatch.decisionMade) return;
     
     const matchName = appState.oneMatch.current?.name || 'this match';
@@ -3281,6 +3286,11 @@ function showNotMutualYetModal() {
 // Screen Navigation
 // ==========================================
 function showScreen(screenId) {
+    // Track screen entry for behavior analytics
+    if (typeof trackScreenEnter === 'function') {
+        trackScreenEnter(screenId);
+    }
+    
     // Store history for back navigation
     if (appState.currentScreen !== screenId) {
         appState.screenHistory.push(appState.currentScreen);
@@ -10745,6 +10755,150 @@ function updateUIForLoggedInUser() {
 }
 
 const oithSyncChannel = new BroadcastChannel('oith_sync');
+
+// ==========================================
+// User Behavior Tracking
+// ==========================================
+const userBehavior = {
+    sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    sessionStart: Date.now(),
+    screenTime: {},          // { screenId: totalMs }
+    screenVisits: {},        // { screenId: count }
+    buttonClicks: {},        // { buttonId/text: count }
+    navigationPath: [],      // Array of screen transitions
+    currentScreenStart: null,
+    lastActivity: Date.now(),
+    scrollDepth: {},         // { screenId: maxScrollPercent }
+    formInteractions: 0,
+    swipeActions: { left: 0, right: 0 }
+};
+
+// Track screen time
+function trackScreenEnter(screenId) {
+    const now = Date.now();
+    
+    // End previous screen tracking
+    if (userBehavior.currentScreenStart && appState.currentScreen) {
+        const prevScreen = appState.currentScreen;
+        const timeSpent = now - userBehavior.currentScreenStart;
+        userBehavior.screenTime[prevScreen] = (userBehavior.screenTime[prevScreen] || 0) + timeSpent;
+    }
+    
+    // Start new screen tracking
+    userBehavior.currentScreenStart = now;
+    userBehavior.screenVisits[screenId] = (userBehavior.screenVisits[screenId] || 0) + 1;
+    userBehavior.navigationPath.push({ screen: screenId, timestamp: now });
+    userBehavior.lastActivity = now;
+    
+    // Keep navigation path manageable (last 100 transitions)
+    if (userBehavior.navigationPath.length > 100) {
+        userBehavior.navigationPath = userBehavior.navigationPath.slice(-100);
+    }
+    
+    // Send real-time update to admin
+    sendBehaviorUpdate('screen_view', { screen: screenId });
+}
+
+// Track button clicks
+function trackButtonClick(buttonInfo) {
+    const key = buttonInfo.id || buttonInfo.text || buttonInfo.class || 'unknown';
+    userBehavior.buttonClicks[key] = (userBehavior.buttonClicks[key] || 0) + 1;
+    userBehavior.lastActivity = Date.now();
+    
+    // Send real-time update to admin
+    sendBehaviorUpdate('button_click', { 
+        button: key, 
+        screen: appState.currentScreen,
+        text: buttonInfo.text
+    });
+}
+
+// Track swipe actions
+function trackSwipe(direction) {
+    if (direction === 'left') {
+        userBehavior.swipeActions.left++;
+    } else if (direction === 'right') {
+        userBehavior.swipeActions.right++;
+    }
+    userBehavior.lastActivity = Date.now();
+    
+    sendBehaviorUpdate('swipe', { direction, screen: appState.currentScreen });
+}
+
+// Send behavior update to admin
+function sendBehaviorUpdate(eventType, data) {
+    try {
+        oithSyncChannel.postMessage({
+            source: 'app',
+            type: 'behavior_event',
+            eventType: eventType,
+            data: data,
+            user: appState.user?.email || 'anonymous',
+            sessionId: userBehavior.sessionId,
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        // Ignore broadcast errors
+    }
+}
+
+// Send full behavior summary periodically
+function sendBehaviorSummary() {
+    // Calculate current screen time
+    if (userBehavior.currentScreenStart && appState.currentScreen) {
+        const now = Date.now();
+        const currentTime = now - userBehavior.currentScreenStart;
+        userBehavior.screenTime[appState.currentScreen] = 
+            (userBehavior.screenTime[appState.currentScreen] || 0) + currentTime;
+        userBehavior.currentScreenStart = now;
+    }
+    
+    try {
+        oithSyncChannel.postMessage({
+            source: 'app',
+            type: 'behavior_summary',
+            sessionId: userBehavior.sessionId,
+            sessionDuration: Date.now() - userBehavior.sessionStart,
+            screenTime: { ...userBehavior.screenTime },
+            screenVisits: { ...userBehavior.screenVisits },
+            buttonClicks: { ...userBehavior.buttonClicks },
+            navigationPath: userBehavior.navigationPath.slice(-20),
+            swipeActions: { ...userBehavior.swipeActions },
+            formInteractions: userBehavior.formInteractions,
+            user: appState.user?.email || 'anonymous',
+            currentScreen: appState.currentScreen,
+            timestamp: Date.now()
+        });
+    } catch (e) {
+        // Ignore broadcast errors
+    }
+}
+
+// Set up global click tracking
+document.addEventListener('click', (e) => {
+    const target = e.target.closest('button, .btn, .nav-item, [onclick], a');
+    if (target) {
+        trackButtonClick({
+            id: target.id || null,
+            text: target.textContent?.trim().substring(0, 30) || null,
+            class: target.className || null
+        });
+    }
+    
+    // Track form interactions
+    if (e.target.matches('input, select, textarea')) {
+        userBehavior.formInteractions++;
+        userBehavior.lastActivity = Date.now();
+    }
+}, true);
+
+// Send behavior summary every 30 seconds
+setInterval(sendBehaviorSummary, 30000);
+
+// Send summary when page is about to unload
+window.addEventListener('beforeunload', () => {
+    sendBehaviorSummary();
+});
 
 // Listen for changes from admin dashboard or other tabs
 oithSyncChannel.onmessage = (event) => {

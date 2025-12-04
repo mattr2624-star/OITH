@@ -2192,40 +2192,131 @@
                 <div class="page-header">
                     <div>
                         <h2 class="page-title">Real-time Activity</h2>
-                        <p class="page-subtitle">Live user actions and platform events</p>
+                        <p class="page-subtitle">Live user actions and behavior analytics from index.html</p>
+                    </div>
+                    <div class="header-actions">
+                        <span id="behaviorConnectionStatus" class="status-badge" style="font-size: 0.7rem;">Waiting...</span>
+                        <button class="btn btn-secondary" onclick="clearBehaviorData()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                            Clear Data
+                        </button>
                     </div>
                 </div>
 
+                <!-- Live Stats -->
                 <div class="stats-grid">
                     <div class="stat-card users">
                         <div class="stat-icon users">👁️</div>
-                        <div class="stat-value" id="activeNow">1</div>
-                        <div class="stat-label">Active Now</div>
+                        <div class="stat-value" id="activeNow">0</div>
+                        <div class="stat-label">Active Sessions</div>
                     </div>
                     <div class="stat-card matches">
-                        <div class="stat-icon matches">💕</div>
-                        <div class="stat-value" id="matchesToday">0</div>
-                        <div class="stat-label">Matches Today</div>
+                        <div class="stat-icon matches">📱</div>
+                        <div class="stat-value" id="totalScreenViews">0</div>
+                        <div class="stat-label">Screen Views</div>
                     </div>
                     <div class="stat-card messages">
-                        <div class="stat-icon messages">💬</div>
-                        <div class="stat-value" id="messagesToday">0</div>
-                        <div class="stat-label">Messages Today</div>
+                        <div class="stat-icon messages">👆</div>
+                        <div class="stat-value" id="totalButtonClicks">0</div>
+                        <div class="stat-label">Button Clicks</div>
                     </div>
                     <div class="stat-card dates">
-                        <div class="stat-icon dates">📅</div>
-                        <div class="stat-value" id="datesToday">0</div>
-                        <div class="stat-label">Dates Planned Today</div>
+                        <div class="stat-icon dates">👈👉</div>
+                        <div class="stat-value" id="totalSwipes">0</div>
+                        <div class="stat-label">Swipe Actions</div>
                     </div>
                 </div>
 
-                <div class="card">
+                <!-- Behavior Analytics Cards -->
+                <div class="cards-grid" style="margin-bottom: 20px;">
+                    <!-- Most Visited Screens -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📊 Screen Time Analytics</h3>
+                            <span class="status-badge active" style="font-size: 0.65rem;">LIVE</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="screenTimeChart" style="min-height: 200px;">
+                                <div style="color: var(--text-muted); text-align: center; padding: 40px;">
+                                    Waiting for user activity on index.html...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Most Clicked Buttons -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🖱️ Button Click Heatmap</h3>
+                            <span class="status-badge active" style="font-size: 0.65rem;">LIVE</span>
+                        </div>
+                        <div class="card-body">
+                            <div id="buttonClicksChart" style="min-height: 200px;">
+                                <div style="color: var(--text-muted); text-align: center; padding: 40px;">
+                                    Waiting for user activity on index.html...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Flow & Live Feed -->
+                <div class="cards-grid">
+                    <!-- User Navigation Path -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🗺️ Navigation Flow</h3>
+                        </div>
+                        <div class="card-body">
+                            <div id="navigationFlow" style="min-height: 150px; max-height: 300px; overflow-y: auto;">
+                                <div style="color: var(--text-muted); text-align: center; padding: 40px;">
+                                    User navigation path will appear here...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Activity Feed -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🔴 Live Activity Feed</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="clearLiveFeed()" style="font-size: 0.7rem; padding: 4px 8px;">Clear</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-feed" id="liveFeed" style="max-height: 300px; overflow-y: auto;">
+                                <div style="color: var(--text-muted); text-align: center; padding: 20px;">
+                                    Live events will appear here...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Details -->
+                <div class="card" style="margin-top: 20px;">
                     <div class="card-header">
-                        <h3 class="card-title">🔴 Live Feed</h3>
+                        <h3 class="card-title">📋 Active Session Details</h3>
                     </div>
                     <div class="card-body">
-                        <div class="activity-feed" id="liveFeed">
-                            <!-- Populated by JS -->
+                        <div id="sessionDetails" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Session ID</div>
+                                <div id="currentSessionId" style="font-family: monospace; font-size: 0.85rem;">—</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Session Duration</div>
+                                <div id="sessionDuration" style="font-size: 1.1rem; font-weight: 600;">—</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Current Screen</div>
+                                <div id="currentUserScreen" style="font-size: 1.1rem; font-weight: 600;">—</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">User</div>
+                                <div id="currentUser" style="font-size: 0.9rem;">—</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -6397,6 +6488,15 @@
                 showToast('📊 Received data from app', 'info');
             }
             
+            // Handle behavior tracking events
+            if (event.data.type === 'behavior_event') {
+                processBehaviorEvent(event.data);
+            }
+            
+            if (event.data.type === 'behavior_summary') {
+                processBehaviorSummary(event.data);
+            }
+            
             updateBroadcastStats();
         };
         
@@ -6695,6 +6795,339 @@
         // Track current section
         let currentSection = 'dashboard';
         
+        // ==========================================
+        // User Behavior Tracking Storage
+        // ==========================================
+        let behaviorData = {
+            activeSessions: {},      // { sessionId: { lastSeen, user, currentScreen, ... } }
+            aggregateScreenTime: {}, // { screenId: totalMs }
+            aggregateScreenVisits: {}, // { screenId: count }
+            aggregateButtonClicks: {}, // { buttonText: count }
+            aggregateSwipes: { left: 0, right: 0 },
+            liveEvents: [],          // Last 50 events for live feed
+            totalEvents: 0
+        };
+        
+        // Process behavior events from app
+        function processBehaviorEvent(data) {
+            behaviorData.totalEvents++;
+            
+            // Add to live feed
+            const eventItem = {
+                type: data.eventType,
+                data: data.data,
+                user: data.user,
+                timestamp: data.timestamp,
+                sessionId: data.sessionId
+            };
+            behaviorData.liveEvents.unshift(eventItem);
+            if (behaviorData.liveEvents.length > 50) {
+                behaviorData.liveEvents = behaviorData.liveEvents.slice(0, 50);
+            }
+            
+            // Track session
+            if (data.sessionId) {
+                behaviorData.activeSessions[data.sessionId] = {
+                    lastSeen: data.timestamp,
+                    user: data.user,
+                    currentScreen: data.data?.screen || 'unknown'
+                };
+            }
+            
+            // Update aggregate data based on event type
+            if (data.eventType === 'screen_view' && data.data?.screen) {
+                behaviorData.aggregateScreenVisits[data.data.screen] = 
+                    (behaviorData.aggregateScreenVisits[data.data.screen] || 0) + 1;
+            }
+            
+            if (data.eventType === 'button_click' && data.data?.button) {
+                const btnKey = data.data.text || data.data.button;
+                behaviorData.aggregateButtonClicks[btnKey] = 
+                    (behaviorData.aggregateButtonClicks[btnKey] || 0) + 1;
+            }
+            
+            if (data.eventType === 'swipe') {
+                if (data.data?.direction === 'left') behaviorData.aggregateSwipes.left++;
+                if (data.data?.direction === 'right') behaviorData.aggregateSwipes.right++;
+            }
+            
+            // Update connection status
+            updateBehaviorConnectionStatus(true);
+            
+            // Update UI if on realtime section
+            if (currentSection === 'realtime') {
+                updateBehaviorUI();
+            }
+        }
+        
+        // Process behavior summary from app
+        function processBehaviorSummary(data) {
+            // Update session info
+            if (data.sessionId) {
+                behaviorData.activeSessions[data.sessionId] = {
+                    lastSeen: data.timestamp,
+                    user: data.user,
+                    currentScreen: data.currentScreen,
+                    sessionDuration: data.sessionDuration,
+                    screenTime: data.screenTime,
+                    screenVisits: data.screenVisits,
+                    buttonClicks: data.buttonClicks,
+                    swipeActions: data.swipeActions
+                };
+            }
+            
+            // Merge aggregate data
+            if (data.screenTime) {
+                Object.entries(data.screenTime).forEach(([screen, time]) => {
+                    behaviorData.aggregateScreenTime[screen] = 
+                        Math.max(behaviorData.aggregateScreenTime[screen] || 0, time);
+                });
+            }
+            
+            updateBehaviorConnectionStatus(true);
+            
+            if (currentSection === 'realtime') {
+                updateBehaviorUI();
+            }
+        }
+        
+        // Update connection status badge
+        function updateBehaviorConnectionStatus(connected) {
+            const badge = document.getElementById('behaviorConnectionStatus');
+            if (badge) {
+                badge.textContent = connected ? 'Connected' : 'Waiting...';
+                badge.className = `status-badge ${connected ? 'active' : ''}`;
+            }
+        }
+        
+        // Update behavior UI
+        function updateBehaviorUI() {
+            // Clean up stale sessions (not seen in 60 seconds)
+            const now = Date.now();
+            Object.entries(behaviorData.activeSessions).forEach(([id, session]) => {
+                if (now - session.lastSeen > 60000) {
+                    delete behaviorData.activeSessions[id];
+                }
+            });
+            
+            // Update stats
+            const activeSessions = Object.keys(behaviorData.activeSessions).length;
+            document.getElementById('activeNow').textContent = activeSessions;
+            document.getElementById('totalScreenViews').textContent = 
+                Object.values(behaviorData.aggregateScreenVisits).reduce((a, b) => a + b, 0);
+            document.getElementById('totalButtonClicks').textContent = 
+                Object.values(behaviorData.aggregateButtonClicks).reduce((a, b) => a + b, 0);
+            document.getElementById('totalSwipes').textContent = 
+                behaviorData.aggregateSwipes.left + behaviorData.aggregateSwipes.right;
+            
+            // Update screen time chart
+            renderScreenTimeChart();
+            
+            // Update button clicks chart
+            renderButtonClicksChart();
+            
+            // Update navigation flow
+            renderNavigationFlow();
+            
+            // Update live feed
+            renderBehaviorLiveFeed();
+            
+            // Update session details
+            renderSessionDetails();
+        }
+        
+        function renderScreenTimeChart() {
+            const container = document.getElementById('screenTimeChart');
+            if (!container) return;
+            
+            const screenData = Object.entries(behaviorData.aggregateScreenTime)
+                .map(([screen, time]) => ({ screen, time, visits: behaviorData.aggregateScreenVisits[screen] || 0 }))
+                .sort((a, b) => b.time - a.time)
+                .slice(0, 8);
+            
+            if (screenData.length === 0) {
+                container.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 40px;">
+                    Waiting for user activity on index.html...
+                </div>`;
+                return;
+            }
+            
+            const maxTime = Math.max(...screenData.map(d => d.time));
+            
+            container.innerHTML = screenData.map(d => {
+                const percentage = (d.time / maxTime * 100).toFixed(0);
+                const timeStr = d.time >= 60000 
+                    ? `${(d.time / 60000).toFixed(1)}m` 
+                    : `${(d.time / 1000).toFixed(1)}s`;
+                
+                return `
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <div style="width: 120px; font-size: 0.85rem; color: var(--text-secondary);">${d.screen}</div>
+                        <div style="flex: 1; height: 24px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, var(--coral), var(--purple)); transition: width 0.3s;"></div>
+                        </div>
+                        <div style="width: 60px; text-align: right; font-size: 0.85rem; font-weight: 600;">${timeStr}</div>
+                        <div style="width: 50px; text-align: right; font-size: 0.75rem; color: var(--text-muted);">${d.visits} visits</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderButtonClicksChart() {
+            const container = document.getElementById('buttonClicksChart');
+            if (!container) return;
+            
+            const buttonData = Object.entries(behaviorData.aggregateButtonClicks)
+                .map(([button, count]) => ({ button: button.substring(0, 25), count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 8);
+            
+            if (buttonData.length === 0) {
+                container.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 40px;">
+                    Waiting for user activity on index.html...
+                </div>`;
+                return;
+            }
+            
+            const maxClicks = Math.max(...buttonData.map(d => d.count));
+            
+            container.innerHTML = buttonData.map(d => {
+                const percentage = (d.count / maxClicks * 100).toFixed(0);
+                const hue = 340 + (buttonData.indexOf(d) * 20); // Color gradient
+                
+                return `
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                        <div style="width: 150px; font-size: 0.8rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${d.button}">${d.button}</div>
+                        <div style="flex: 1; height: 20px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                            <div style="width: ${percentage}%; height: 100%; background: hsl(${hue}, 70%, 50%); transition: width 0.3s;"></div>
+                        </div>
+                        <div style="width: 40px; text-align: right; font-weight: 600; font-size: 0.9rem;">${d.count}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderNavigationFlow() {
+            const container = document.getElementById('navigationFlow');
+            if (!container) return;
+            
+            // Get recent navigation from active sessions
+            let allPaths = [];
+            Object.values(behaviorData.activeSessions).forEach(session => {
+                if (session.screenVisits) {
+                    Object.entries(session.screenVisits).forEach(([screen, count]) => {
+                        allPaths.push({ screen, count, user: session.user });
+                    });
+                }
+            });
+            
+            // Also show from live events
+            const recentScreens = behaviorData.liveEvents
+                .filter(e => e.type === 'screen_view')
+                .slice(0, 15);
+            
+            if (recentScreens.length === 0) {
+                container.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 40px;">
+                    User navigation path will appear here...
+                </div>`;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                    ${recentScreens.map((e, i) => `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="padding: 6px 12px; background: var(--bg-tertiary); border-radius: 16px; font-size: 0.8rem; border: 1px solid var(--border);">
+                                ${e.data?.screen || 'unknown'}
+                            </span>
+                            ${i < recentScreens.length - 1 ? '<span style="color: var(--text-muted);">→</span>' : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        function renderBehaviorLiveFeed() {
+            const container = document.getElementById('liveFeed');
+            if (!container) return;
+            
+            if (behaviorData.liveEvents.length === 0) {
+                container.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 20px;">
+                    Live events will appear here...
+                </div>`;
+                return;
+            }
+            
+            const eventIcons = {
+                'screen_view': { emoji: '📱', color: 'var(--blue)' },
+                'button_click': { emoji: '👆', color: 'var(--coral)' },
+                'swipe': { emoji: '👈', color: 'var(--purple)' }
+            };
+            
+            container.innerHTML = behaviorData.liveEvents.slice(0, 15).map(e => {
+                const icon = eventIcons[e.type] || { emoji: '📌', color: 'var(--text-muted)' };
+                let text = '';
+                
+                if (e.type === 'screen_view') {
+                    text = `Viewed <strong>${e.data?.screen}</strong>`;
+                } else if (e.type === 'button_click') {
+                    text = `Clicked <strong>${(e.data?.text || e.data?.button || 'button').substring(0, 30)}</strong>`;
+                } else if (e.type === 'swipe') {
+                    text = `Swiped <strong>${e.data?.direction}</strong> on ${e.data?.screen}`;
+                }
+                
+                const timeAgo = formatTimeAgo(new Date(e.timestamp).toISOString());
+                
+                return `
+                    <div class="activity-item" style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+                        <div class="activity-icon" style="background: ${icon.color}22;">${icon.emoji}</div>
+                        <div class="activity-content">
+                            <div class="activity-text" style="font-size: 0.85rem;">${text}</div>
+                            <div class="activity-time" style="font-size: 0.7rem;">${timeAgo}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function renderSessionDetails() {
+            const sessions = Object.entries(behaviorData.activeSessions);
+            if (sessions.length === 0) return;
+            
+            const [sessionId, session] = sessions[0]; // Show first active session
+            
+            const el = (id, val) => {
+                const elem = document.getElementById(id);
+                if (elem) elem.textContent = val;
+            };
+            
+            el('currentSessionId', sessionId.substring(0, 20) + '...');
+            el('sessionDuration', session.sessionDuration 
+                ? `${Math.floor(session.sessionDuration / 60000)}m ${Math.floor((session.sessionDuration % 60000) / 1000)}s`
+                : '—');
+            el('currentUserScreen', session.currentScreen || '—');
+            el('currentUser', session.user || 'anonymous');
+        }
+        
+        function clearBehaviorData() {
+            behaviorData = {
+                activeSessions: {},
+                aggregateScreenTime: {},
+                aggregateScreenVisits: {},
+                aggregateButtonClicks: {},
+                aggregateSwipes: { left: 0, right: 0 },
+                liveEvents: [],
+                totalEvents: 0
+            };
+            updateBehaviorUI();
+            showToast('Behavior data cleared', 'success');
+        }
+        
+        function clearLiveFeed() {
+            behaviorData.liveEvents = [];
+            renderBehaviorLiveFeed();
+        }
+
         // Debug function to verify localStorage data - call debugStorage() in browser console
         window.debugStorage = function(email) {
             const targetEmail = email || Object.keys(registeredUsers)[0];
@@ -9761,6 +10194,9 @@
         // ==========================================
         
         function renderRealtime() {
+            // Update behavior tracking UI
+            updateBehaviorUI();
+            
             // Calculate real-time metrics from actual data
             const today = new Date();
             today.setHours(0, 0, 0, 0);
