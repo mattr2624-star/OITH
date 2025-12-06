@@ -248,9 +248,15 @@ function getUserStorageKey(email) {
  * Data is stored per-user based on their email
  */
 // API Server URL for syncing (adjust based on deployment)
-const API_BASE_URL = window.location.hostname.includes('amplifyapp.com') 
-    ? 'https://your-api-server.com/api'  // TODO: Replace with actual API URL when deployed
-    : 'http://localhost:3001/api';
+// AWS API Gateway URL - Set this after deploying the Lambda function
+// Format: https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod
+const AWS_API_URL = localStorage.getItem('oith_aws_api_url') || '';
+
+const API_BASE_URL = AWS_API_URL || (
+    window.location.hostname.includes('amplifyapp.com') 
+        ? ''  // Will use AWS API if configured
+        : 'http://localhost:3001/api'
+);
 
 /**
  * Sync user data to the backend server
@@ -258,13 +264,22 @@ const API_BASE_URL = window.location.hostname.includes('amplifyapp.com')
  */
 async function syncToServer(email, userData, registeredUserData) {
     try {
-        // Only attempt server sync if we have a proper API server configured
-        if (API_BASE_URL.includes('your-api-server')) {
-            console.log('⚠️ Server API not configured, skipping server sync');
+        // Check if AWS API is configured
+        const apiUrl = AWS_API_URL || API_BASE_URL;
+        
+        if (!apiUrl) {
+            console.log('⚠️ No API configured, skipping cloud sync');
             return false;
         }
         
-        const response = await fetch(`${API_BASE_URL}/users`, {
+        // Determine the endpoint
+        const endpoint = apiUrl.includes('execute-api') 
+            ? `${apiUrl}/users`  // AWS API Gateway
+            : `${apiUrl}/users`; // Local server
+        
+        console.log('☁️ Syncing to:', endpoint);
+        
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -278,17 +293,35 @@ async function syncToServer(email, userData, registeredUserData) {
         });
         
         if (response.ok) {
-            console.log('☁️ User data synced to server for:', email);
+            const result = await response.json();
+            console.log('☁️ User data synced to AWS:', email, result);
             return true;
         } else {
-            console.log('⚠️ Server sync failed:', response.status);
+            console.log('⚠️ AWS sync failed:', response.status);
             return false;
         }
     } catch (error) {
         // Server sync is optional - don't fail if server is unavailable
-        console.log('⚠️ Server sync unavailable (offline mode):', error.message);
+        console.log('⚠️ Cloud sync unavailable (offline mode):', error.message);
         return false;
     }
+}
+
+/**
+ * Configure AWS API URL for cloud sync
+ * Call this from browser console: setAWSApiUrl('https://xxx.execute-api.us-east-1.amazonaws.com/prod')
+ */
+function setAWSApiUrl(url) {
+    if (url) {
+        localStorage.setItem('oith_aws_api_url', url);
+        console.log('✅ AWS API URL configured:', url);
+        showToast('AWS API configured!', 'success');
+    } else {
+        localStorage.removeItem('oith_aws_api_url');
+        console.log('🗑️ AWS API URL removed');
+    }
+    // Reload to apply
+    window.location.reload();
 }
 
 function saveUserData() {
@@ -5685,6 +5718,62 @@ function isProfileComplete() {
 function redirectToProfileSetup() {
     showToast('Please complete your profile to continue', 'info');
     showScreen('profile-setup');
+}
+
+/**
+ * Export user's profile data as a downloadable JSON file
+ * This allows users to share their data with admin or backup their profile
+ */
+function exportMyProfile() {
+    try {
+        const email = appState.user?.email;
+        if (!email) {
+            showToast('Please log in to export your profile', 'error');
+            return;
+        }
+        
+        // Get registered user data
+        const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
+        const registeredData = registeredUsers[email] || {};
+        
+        // Get full user data
+        const storageKey = getUserStorageKey(email);
+        const savedData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        // Create export package
+        const exportData = {
+            exportedAt: new Date().toISOString(),
+            exportedFrom: window.location.href,
+            version: '1.0',
+            registeredUsers: {
+                [email]: registeredData
+            },
+            userData: {
+                [email]: savedData
+            }
+        };
+        
+        // Create downloadable file
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `oith_profile_${email.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showToast('Profile exported! Send this file to admin.', 'success');
+        console.log('📤 Profile exported for:', email);
+        
+    } catch (error) {
+        console.error('Failed to export profile:', error);
+        showToast('Failed to export profile', 'error');
+    }
 }
 
 /**
