@@ -247,6 +247,50 @@ function getUserStorageKey(email) {
  * Call this whenever important state changes
  * Data is stored per-user based on their email
  */
+// API Server URL for syncing (adjust based on deployment)
+const API_BASE_URL = window.location.hostname.includes('amplifyapp.com') 
+    ? 'https://your-api-server.com/api'  // TODO: Replace with actual API URL when deployed
+    : 'http://localhost:3001/api';
+
+/**
+ * Sync user data to the backend server
+ * This allows admin dashboard to see users regardless of domain
+ */
+async function syncToServer(email, userData, registeredUserData) {
+    try {
+        // Only attempt server sync if we have a proper API server configured
+        if (API_BASE_URL.includes('your-api-server')) {
+            console.log('⚠️ Server API not configured, skipping server sync');
+            return false;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/users`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                email: email,
+                name: userData.user?.firstName || registeredUserData?.firstName,
+                password: registeredUserData?.password,
+                userData: userData
+            })
+        });
+        
+        if (response.ok) {
+            console.log('☁️ User data synced to server for:', email);
+            return true;
+        } else {
+            console.log('⚠️ Server sync failed:', response.status);
+            return false;
+        }
+    } catch (error) {
+        // Server sync is optional - don't fail if server is unavailable
+        console.log('⚠️ Server sync unavailable (offline mode):', error.message);
+        return false;
+    }
+}
+
 function saveUserData() {
     try {
         const email = appState.user?.email;
@@ -283,6 +327,7 @@ function saveUserData() {
             feedbackGiven: appState.feedbackGiven || []
         };
         
+        // Save to localStorage
         localStorage.setItem(storageKey, JSON.stringify(dataToSave));
         console.log('💾 User data saved for:', email);
         console.log('   Age:', dataToSave.user?.age);
@@ -297,6 +342,10 @@ function saveUserData() {
         if (typeof broadcastSync === 'function') {
             broadcastSync('user_updated', { email });
         }
+        
+        // Also sync to server for cross-domain access (async, don't wait)
+        const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
+        syncToServer(email, dataToSave, registeredUsers[email]);
         
         return true;
     } catch (error) {
