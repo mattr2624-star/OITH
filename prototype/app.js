@@ -11334,9 +11334,160 @@ function broadcastSync(type, data = {}) {
 }
 
 // ==========================================
+// Default Test Bots (seeded if none exist)
+// ==========================================
+const DEFAULT_TEST_BOTS = [
+    {
+        id: 'bot_1',
+        name: 'Emma',
+        age: 26,
+        gender: 'female',
+        location: 'New York, NY',
+        occupation: 'UX Designer',
+        education: 'bachelors',
+        bio: 'Creative soul who loves hiking and coffee. Looking for genuine connections.',
+        photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop',
+        active: true,
+        createdAt: new Date().toISOString()
+    },
+    {
+        id: 'bot_2',
+        name: 'Sophie',
+        age: 24,
+        gender: 'female',
+        location: 'Los Angeles, CA',
+        occupation: 'Marketing Manager',
+        education: 'bachelors',
+        bio: 'Beach lover and yoga enthusiast. Let\'s explore the city together!',
+        photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=500&fit=crop',
+        active: true,
+        createdAt: new Date().toISOString()
+    },
+    {
+        id: 'bot_3',
+        name: 'Alex',
+        age: 28,
+        gender: 'male',
+        location: 'Chicago, IL',
+        occupation: 'Software Engineer',
+        education: 'masters',
+        bio: 'Tech nerd with a passion for music and travel. Always up for an adventure.',
+        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop',
+        active: true,
+        createdAt: new Date().toISOString()
+    },
+    {
+        id: 'bot_4',
+        name: 'Mia',
+        age: 25,
+        gender: 'female',
+        location: 'Miami, FL',
+        occupation: 'Nurse',
+        education: 'bachelors',
+        bio: 'Caring and compassionate. Love dancing and good food!',
+        photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop',
+        active: true,
+        createdAt: new Date().toISOString()
+    },
+    {
+        id: 'bot_5',
+        name: 'James',
+        age: 30,
+        gender: 'male',
+        location: 'Austin, TX',
+        occupation: 'Entrepreneur',
+        education: 'bachelors',
+        bio: 'Building something cool. Looking for someone to share the journey.',
+        photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=500&fit=crop',
+        active: true,
+        createdAt: new Date().toISOString()
+    }
+];
+
+// ==========================================
+// Auto-load Sync Data (Test Bots & Users)
+// ==========================================
+async function autoLoadSyncData() {
+    try {
+        // Check if we already have test bots
+        const existingBots = localStorage.getItem('oith_test_bots');
+        const existingUsers = localStorage.getItem('oith_registered_users');
+        
+        if (existingBots && JSON.parse(existingBots).length > 0) {
+            console.log('📦 Test bots already loaded:', JSON.parse(existingBots).length);
+            return true;
+        }
+        
+        // Try to fetch sync data file
+        console.log('🔄 No test bots found, attempting to load sync data...');
+        
+        let botsLoaded = false;
+        
+        try {
+            const response = await fetch('data/oith_sync_data.json');
+            if (response.ok) {
+                const syncData = await response.json();
+                console.log('📥 Sync data loaded successfully');
+                
+                // Load test bots if available
+                if (syncData.testBots && syncData.testBots.length > 0) {
+                    localStorage.setItem('oith_test_bots', JSON.stringify(syncData.testBots));
+                    console.log(`   ✅ Loaded ${syncData.testBots.length} test bots from sync file`);
+                    botsLoaded = true;
+                }
+                
+                // Load registered users if we don't have any
+                if (syncData.registeredUsers && Object.keys(syncData.registeredUsers).length > 0) {
+                    const currentUsers = JSON.parse(existingUsers || '{}');
+                    if (Object.keys(currentUsers).length === 0) {
+                        localStorage.setItem('oith_registered_users', JSON.stringify(syncData.registeredUsers));
+                        console.log(`   ✅ Loaded ${Object.keys(syncData.registeredUsers).length} registered users`);
+                    }
+                }
+                
+                // Load user data if available
+                if (syncData.userData) {
+                    Object.entries(syncData.userData).forEach(([email, data]) => {
+                        const key = 'oith_user_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                        if (!localStorage.getItem(key)) {
+                            localStorage.setItem(key, JSON.stringify(data));
+                        }
+                    });
+                    console.log(`   ✅ Loaded user data for ${Object.keys(syncData.userData).length} users`);
+                }
+            }
+        } catch (fetchError) {
+            console.log('⚠️ Could not load sync data file:', fetchError.message);
+        }
+        
+        // If no test bots were loaded from sync file, seed default ones
+        if (!botsLoaded) {
+            console.log('🤖 Seeding default test bots...');
+            localStorage.setItem('oith_test_bots', JSON.stringify(DEFAULT_TEST_BOTS));
+            console.log(`   ✅ Seeded ${DEFAULT_TEST_BOTS.length} default test bots`);
+        }
+        
+        return true;
+    } catch (error) {
+        console.log('⚠️ Auto-load sync data failed:', error.message);
+        // Still try to seed default test bots
+        try {
+            localStorage.setItem('oith_test_bots', JSON.stringify(DEFAULT_TEST_BOTS));
+            console.log(`   ✅ Seeded ${DEFAULT_TEST_BOTS.length} default test bots (fallback)`);
+        } catch (e) {
+            console.log('❌ Could not seed default test bots');
+        }
+        return false;
+    }
+}
+
+// ==========================================
 // Initialize App
 // ==========================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Auto-load sync data (test bots & users) if localStorage is empty
+    await autoLoadSyncData();
+    
     // Seed demo accounts for cross-device access
     const demoEmails = seedDemoAccounts();
     // Check if URL has a query parameter for direct screen navigation (used by overview page)
