@@ -2282,7 +2282,12 @@
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">🔴 Live Activity Feed</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="clearLiveFeed()" style="font-size: 0.7rem; padding: 4px 8px;">Clear</button>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <select id="liveFeedUserFilter" onchange="filterLiveFeed()" style="padding: 4px 8px; font-size: 0.7rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); cursor: pointer;">
+                                    <option value="all">All Users</option>
+                                </select>
+                                <button class="btn btn-secondary btn-sm" onclick="clearLiveFeed()" style="font-size: 0.7rem; padding: 4px 8px;">Clear</button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <div class="activity-feed" id="liveFeed" style="max-height: 300px; overflow-y: auto;">
@@ -7125,7 +7130,12 @@
         
         function clearLiveFeed() {
             behaviorData.liveEvents = [];
+            allLiveActivities = [];
+            liveFeedUserFilter = 'all';
+            const filterSelect = document.getElementById('liveFeedUserFilter');
+            if (filterSelect) filterSelect.value = 'all';
             renderBehaviorLiveFeed();
+            renderLiveFeedActivities();
         }
 
         // Debug function to verify localStorage data - call debugStorage() in browser console
@@ -10193,6 +10203,77 @@
         // REAL-TIME
         // ==========================================
         
+        // Store all live activities globally for filtering
+        let allLiveActivities = [];
+        let liveFeedUserFilter = 'all';
+        
+        function filterLiveFeed() {
+            const filterSelect = document.getElementById('liveFeedUserFilter');
+            liveFeedUserFilter = filterSelect ? filterSelect.value : 'all';
+            renderLiveFeedActivities();
+        }
+        
+        function renderLiveFeedActivities() {
+            // Filter activities based on selected user
+            let filteredActivities = allLiveActivities;
+            if (liveFeedUserFilter !== 'all') {
+                filteredActivities = allLiveActivities.filter(a => a.userEmail === liveFeedUserFilter);
+            }
+            
+            const topActivities = filteredActivities.slice(0, 20);
+            
+            // Render live feed
+            if (topActivities.length === 0) {
+                const filterLabel = liveFeedUserFilter === 'all' ? '' : ` for ${liveFeedUserFilter}`;
+                document.getElementById('liveFeed').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="font-size: 2rem; margin-bottom: 8px;">⏳</div>
+                        <div>No activity${filterLabel}...</div>
+                        <div style="font-size: 0.8rem; margin-top: 4px;">Real-time events will appear here</div>
+                    </div>
+                `;
+                return;
+            }
+
+            document.getElementById('liveFeed').innerHTML = topActivities.map(a => `
+                <div class="activity-item" data-user-email="${a.userEmail || ''}">
+                    <div class="activity-icon ${a.icon}">${a.emoji}</div>
+                    <div class="activity-content">
+                        <div class="activity-text">${a.text}</div>
+                        <div class="activity-time">${a.time}${liveFeedUserFilter === 'all' && a.userName ? ` • ${a.userName}` : ''}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateLiveFeedUserFilter() {
+            const filterSelect = document.getElementById('liveFeedUserFilter');
+            if (!filterSelect) return;
+            
+            const currentValue = filterSelect.value;
+            
+            // Build list of users with activity
+            const usersWithActivity = new Set();
+            allLiveActivities.forEach(a => {
+                if (a.userEmail) usersWithActivity.add(a.userEmail);
+            });
+            
+            // Also add all registered users
+            Object.keys(registeredUsers).forEach(email => usersWithActivity.add(email));
+            
+            // Sort users alphabetically by name
+            const sortedUsers = Array.from(usersWithActivity).map(email => {
+                const userData = allUserData[email];
+                const regUser = registeredUsers[email];
+                const name = userData?.user?.firstName || regUser?.firstName || email.split('@')[0];
+                return { email, name };
+            }).sort((a, b) => a.name.localeCompare(b.name));
+            
+            // Update select options
+            filterSelect.innerHTML = '<option value="all">All Users</option>' + 
+                sortedUsers.map(u => `<option value="${u.email}"${u.email === currentValue ? ' selected' : ''}>${u.name} (${u.email})</option>`).join('');
+        }
+        
         function renderRealtime() {
             // Update behavior tracking UI
             updateBehaviorUI();
@@ -10205,7 +10286,7 @@
             let matchesToday = 0;
             let messagesToday = 0;
             let datesToday = 0;
-            const liveActivities = [];
+            allLiveActivities = [];
             
             Object.keys(allUserData).forEach(email => {
                 const userData = allUserData[email];
@@ -10214,12 +10295,14 @@
                 // Count active users
                 if (userData.isLoggedIn) {
                     activeNow++;
-                    liveActivities.push({
+                    allLiveActivities.push({
                         icon: 'login',
                         emoji: '👋',
                         text: `<strong>${userName}</strong> is online`,
                         time: 'Now',
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        userEmail: email,
+                        userName: userName
                     });
                 }
                 
@@ -10228,12 +10311,14 @@
                     const matchDate = new Date(userData.activeConnection.matchedAt);
                     if (matchDate >= today) {
                         matchesToday++;
-                        liveActivities.push({
+                        allLiveActivities.push({
                             icon: 'match',
                             emoji: '💕',
                             text: `<strong>${userName} & ${userData.activeConnection.name}</strong> matched!`,
                             time: formatTimeAgo(userData.activeConnection.matchedAt),
-                            timestamp: matchDate.getTime()
+                            timestamp: matchDate.getTime(),
+                            userEmail: email,
+                            userName: userName
                         });
                     }
                 }
@@ -10245,12 +10330,14 @@
                             const msgDate = new Date(msg.timestamp);
                             if (msgDate >= today) {
                                 messagesToday++;
-                                liveActivities.push({
+                                allLiveActivities.push({
                                     icon: 'message',
                                     emoji: '💬',
                                     text: `<strong>${msg.sender === 'user' ? userName : (userData.activeConnection?.name || 'Match')}</strong> sent a message`,
                                     time: formatTimeAgo(msg.timestamp),
-                                    timestamp: msgDate.getTime()
+                                    timestamp: msgDate.getTime(),
+                                    userEmail: email,
+                                    userName: userName
                                 });
                             }
                         }
@@ -10262,12 +10349,14 @@
                     const dateConfirmed = new Date(userData.plannedDate.confirmedAt);
                     if (dateConfirmed >= today) {
                         datesToday++;
-                        liveActivities.push({
+                        allLiveActivities.push({
                             icon: 'date',
                             emoji: '📅',
-                            text: `<strong>Date planned</strong> at ${userData.plannedDate.venue || 'a venue'}`,
+                            text: `<strong>${userName}</strong> planned a date at ${userData.plannedDate.venue || 'a venue'}`,
                             time: formatTimeAgo(userData.plannedDate.confirmedAt),
-                            timestamp: dateConfirmed.getTime()
+                            timestamp: dateConfirmed.getTime(),
+                            userEmail: email,
+                            userName: userName
                         });
                     }
                 }
@@ -10280,30 +10369,13 @@
             document.getElementById('datesToday').textContent = datesToday || platformData.datesPlanned;
             
             // Sort activities by timestamp
-            liveActivities.sort((a, b) => b.timestamp - a.timestamp);
-            const topActivities = liveActivities.slice(0, 10);
+            allLiveActivities.sort((a, b) => b.timestamp - a.timestamp);
             
-            // Render live feed
-            if (topActivities.length === 0) {
-                document.getElementById('liveFeed').innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                        <div style="font-size: 2rem; margin-bottom: 8px;">⏳</div>
-                        <div>Waiting for live activity...</div>
-                        <div style="font-size: 0.8rem; margin-top: 4px;">Real-time events will appear here</div>
-                    </div>
-                `;
-                return;
-            }
-
-            document.getElementById('liveFeed').innerHTML = topActivities.map(a => `
-                <div class="activity-item">
-                    <div class="activity-icon ${a.icon}">${a.emoji}</div>
-                    <div class="activity-content">
-                        <div class="activity-text">${a.text}</div>
-                        <div class="activity-time">${a.time}</div>
-                    </div>
-                </div>
-            `).join('');
+            // Update user filter dropdown
+            updateLiveFeedUserFilter();
+            
+            // Render filtered live feed
+            renderLiveFeedActivities();
         }
 
         // ==========================================
