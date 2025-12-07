@@ -6552,8 +6552,9 @@
             
             initHierarchy(); // Initialize system hierarchy
             
-            // Try to auto-sync from shared file first
-            const synced = await tryAutoSync();
+            // ALWAYS fetch from AWS on page load (AWS is source of truth)
+            console.log('☁️ Fetching data from DynamoDB...');
+            await fetchFromAWSSilent();
             
             loadAllData();
             platformData = calculatePlatformStats();
@@ -6564,11 +6565,7 @@
             
             startAutoRefresh(); // Start auto-refresh
             
-            if (!synced && Object.keys(registeredUsers).length === 0) {
-                console.log('💡 Tip: Use Export/Import buttons in header to sync data between devices');
-            }
-            
-            console.log('✅ OITH Manager ready');
+            console.log('✅ OITH Manager ready (data from DynamoDB)');
         });
 
         // Helper function to create storage key (must match app.js format)
@@ -14845,10 +14842,8 @@
             }
         }
 
-        // Initialize bots on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadTestBots();
-        });
+        // Test bots are loaded on-demand when viewing Test Bots section
+        // NOT on page load (AWS mode = no automatic bot loading)
 
         // ==========================================
         // LEGAL / PATENTS & IP
