@@ -5544,40 +5544,60 @@
                                 </div>
                             </div>
 
-                            <!-- Server Actions -->
-                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
-                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">SERVER ACTIONS</div>
-                                <div style="display: flex; flex-direction: column; gap: 10px;">
-                                    <button class="btn btn-secondary" onclick="showConnectServerModal()" style="justify-content: flex-start; gap: 10px;">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M12 5v14M5 12h14"/>
-                                        </svg>
-                                        Connect to New Server
+                            <!-- Data Preview Panel -->
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border); grid-column: span 2;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">DATA PREVIEW</div>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <span id="previewEntityType" style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Select an entity type →</span>
+                                        <button class="btn btn-secondary btn-sm" onclick="refreshDataPreview()" id="refreshPreviewBtn" style="padding: 4px 8px; font-size: 0.7rem;" disabled>
+                                            🔄 Refresh
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Entity Type Selector -->
+                                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+                                    <button class="entity-preview-btn" data-entity="PROFILE" onclick="loadEntityPreview('PROFILE')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        👤 Profiles
                                     </button>
-                                    <button class="btn btn-secondary" onclick="showMigrateDataModal()" style="justify-content: flex-start; gap: 10px;">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                                            <polyline points="14 2 14 8 20 8"/>
-                                            <path d="M12 18v-6"/>
-                                            <path d="M9 15l3 3 3-3"/>
-                                        </svg>
-                                        Migrate Data to Server
+                                    <button class="entity-preview-btn" data-entity="MATCH" onclick="loadEntityPreview('MATCH')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        💕 Matches
                                     </button>
-                                    <button class="btn btn-danger" onclick="disconnectServer()" style="justify-content: flex-start; gap: 10px;" id="disconnectBtn" disabled>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path d="M18.36 6.64a9 9 0 11-12.73 0"/>
-                                            <line x1="12" y1="2" x2="12" y2="12"/>
-                                        </svg>
-                                        Disconnect Server
+                                    <button class="entity-preview-btn" data-entity="LIKE" onclick="loadEntityPreview('LIKE')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        💗 Likes
+                                    </button>
+                                    <button class="entity-preview-btn" data-entity="CHAT" onclick="loadEntityPreview('CHAT')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        💬 Messages
+                                    </button>
+                                    <button class="entity-preview-btn" data-entity="SUBSCRIPTION" onclick="loadEntityPreview('SUBSCRIPTION')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        💳 Subscriptions
+                                    </button>
+                                    <button class="entity-preview-btn" data-entity="CONFIG" onclick="loadEntityPreview('CONFIG')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        ⚙️ Config
+                                    </button>
+                                    <button class="entity-preview-btn" data-entity="CRAWLER_LOG" onclick="loadEntityPreview('CRAWLER_LOG')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        🕷️ Crawler Logs
                                     </button>
                                 </div>
-                            </div>
-
-                            <!-- Available Servers -->
-                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
-                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">AVAILABLE SERVERS</div>
-                                <div id="availableServersList" style="display: flex; flex-direction: column; gap: 8px;">
-                                    <!-- Populated by JS -->
+                                
+                                <!-- Data Table Preview -->
+                                <div id="dataPreviewContainer" style="height: 280px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border);">
+                                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
+                                        <div style="font-size: 2rem; margin-bottom: 8px;">📊</div>
+                                        <div style="font-size: 0.85rem;">Click an entity type above to preview data</div>
+                                        <div style="font-size: 0.7rem; margin-top: 4px; opacity: 0.7;">Data is loaded directly from AWS DynamoDB</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Row Count & Actions -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
+                                    <span id="previewRowCount" style="font-size: 0.7rem; color: var(--text-muted);">0 rows</span>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button class="btn btn-secondary btn-sm" onclick="exportPreviewData()" id="exportPreviewBtn" style="padding: 4px 8px; font-size: 0.65rem;" disabled>
+                                            📥 Export CSV
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -18971,6 +18991,208 @@
             // Document counts
             updateEl('dynamoPatentDocsCount', dynamoDBStats.patentDocs || '--');
             updateEl('dynamoComplianceDocsCount', dynamoDBStats.complianceDocs || '--');
+        }
+        
+        // ==========================================
+        // DATA PREVIEW FUNCTIONS
+        // ==========================================
+        let currentPreviewEntity = null;
+        let currentPreviewData = [];
+        
+        async function loadEntityPreview(entityType) {
+            const container = document.getElementById('dataPreviewContainer');
+            const entityLabel = document.getElementById('previewEntityType');
+            const rowCount = document.getElementById('previewRowCount');
+            const refreshBtn = document.getElementById('refreshPreviewBtn');
+            const exportBtn = document.getElementById('exportPreviewBtn');
+            
+            // Update active button styling
+            document.querySelectorAll('.entity-preview-btn').forEach(btn => {
+                btn.style.background = btn.dataset.entity === entityType ? 'var(--accent)' : 'var(--bg-secondary)';
+                btn.style.color = btn.dataset.entity === entityType ? 'white' : 'inherit';
+            });
+            
+            currentPreviewEntity = entityType;
+            entityLabel.textContent = `Loading ${entityType}...`;
+            container.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);"><div class="loading-spinner"></div> Loading data from DynamoDB...</div>';
+            
+            try {
+                const response = await fetch(`${AWS_API_URL}/data/preview/${entityType}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch ${entityType} data`);
+                }
+                
+                const data = await response.json();
+                currentPreviewData = data.items || [];
+                
+                // Update UI
+                const entityNames = {
+                    PROFILE: '👤 Profiles',
+                    MATCH: '💕 Matches',
+                    LIKE: '💗 Likes',
+                    CHAT: '💬 Messages',
+                    SUBSCRIPTION: '💳 Subscriptions',
+                    CONFIG: '⚙️ Config',
+                    CRAWLER_LOG: '🕷️ Crawler Logs'
+                };
+                
+                entityLabel.textContent = entityNames[entityType] || entityType;
+                rowCount.textContent = `${currentPreviewData.length} rows`;
+                refreshBtn.disabled = false;
+                exportBtn.disabled = currentPreviewData.length === 0;
+                
+                renderDataPreviewTable(currentPreviewData, entityType);
+                
+            } catch (error) {
+                console.error('Error loading entity preview:', error);
+                entityLabel.textContent = `Error loading ${entityType}`;
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--danger);">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;">❌</div>
+                        <div style="font-size: 0.85rem;">Failed to load data</div>
+                        <div style="font-size: 0.7rem; margin-top: 4px; opacity: 0.7;">${error.message}</div>
+                    </div>
+                `;
+                rowCount.textContent = '0 rows';
+            }
+        }
+        
+        function refreshDataPreview() {
+            if (currentPreviewEntity) {
+                loadEntityPreview(currentPreviewEntity);
+            }
+        }
+        
+        function renderDataPreviewTable(items, entityType) {
+            const container = document.getElementById('dataPreviewContainer');
+            
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;">📭</div>
+                        <div style="font-size: 0.85rem;">No ${entityType} records found</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Determine columns based on entity type
+            const columnConfigs = {
+                PROFILE: ['email', 'name', 'age', 'location', 'gender', 'createdAt'],
+                MATCH: ['pk', 'sk', 'user1', 'user2', 'matchedAt', 'status'],
+                LIKE: ['pk', 'sk', 'fromUser', 'toUser', 'timestamp'],
+                CHAT: ['pk', 'sk', 'from', 'to', 'text', 'timestamp'],
+                SUBSCRIPTION: ['email', 'plan', 'status', 'startDate', 'endDate'],
+                CONFIG: ['sk', 'type', 'updatedAt', 'updatedBy'],
+                CRAWLER_LOG: ['sk', 'passed', 'failed', 'warnings', 'duration', 'timestamp']
+            };
+            
+            // Get columns - use config or infer from first item
+            let columns = columnConfigs[entityType];
+            if (!columns && items.length > 0) {
+                columns = Object.keys(items[0]).filter(k => !k.startsWith('_'));
+            }
+            
+            // Build table HTML
+            let html = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                    <thead style="position: sticky; top: 0; background: var(--bg-tertiary); z-index: 1;">
+                        <tr>
+                            ${columns.map(col => `
+                                <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid var(--border); font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.65rem; white-space: nowrap;">
+                                    ${col}
+                                </th>
+                            `).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            items.forEach((item, index) => {
+                html += `<tr style="background: ${index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)'}; cursor: pointer;" onclick="showItemDetail(${index})" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='${index % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)'}'">`
+                columns.forEach(col => {
+                    let value = item[col];
+                    
+                    // Format value based on type
+                    if (value === undefined || value === null) {
+                        value = '<span style="color: var(--text-muted); font-style: italic;">--</span>';
+                    } else if (typeof value === 'object') {
+                        value = '<span style="color: var(--info);">[Object]</span>';
+                    } else if (typeof value === 'boolean') {
+                        value = value ? '✅' : '❌';
+                    } else if (col.toLowerCase().includes('date') || col.toLowerCase().includes('time') || col.toLowerCase().includes('at')) {
+                        // Format dates
+                        const date = new Date(value);
+                        if (!isNaN(date)) {
+                            value = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        }
+                    } else if (typeof value === 'string' && value.length > 40) {
+                        value = value.substring(0, 40) + '...';
+                    }
+                    
+                    html += `<td style="padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;">${value}</td>`;
+                });
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function showItemDetail(index) {
+            const item = currentPreviewData[index];
+            if (!item) return;
+            
+            // Show item detail in a modal
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            
+            const content = document.createElement('div');
+            content.style.cssText = 'background: var(--bg-secondary); border-radius: 12px; padding: 24px; max-width: 600px; max-height: 80vh; overflow-y: auto; width: 90%;';
+            
+            content.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="margin: 0;">📄 Item Detail</h3>
+                    <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+                </div>
+                <pre style="background: var(--bg-primary); padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.75rem; white-space: pre-wrap; word-break: break-all;">${JSON.stringify(item, null, 2)}</pre>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        }
+        
+        function exportPreviewData() {
+            if (!currentPreviewData || currentPreviewData.length === 0) return;
+            
+            // Convert to CSV
+            const headers = Object.keys(currentPreviewData[0]);
+            let csv = headers.join(',') + '\\n';
+            
+            currentPreviewData.forEach(item => {
+                csv += headers.map(h => {
+                    let val = item[h];
+                    if (val === null || val === undefined) return '';
+                    if (typeof val === 'object') val = JSON.stringify(val);
+                    if (typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\\n'))) {
+                        val = '"' + val.replace(/"/g, '""') + '"';
+                    }
+                    return val;
+                }).join(',') + '\\n';
+            });
+            
+            // Download
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `oith_${currentPreviewEntity.toLowerCase()}_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast(`📥 Exported ${currentPreviewData.length} ${currentPreviewEntity} records`, 'success');
         }
         
         function renderDynamoDBEntities() {

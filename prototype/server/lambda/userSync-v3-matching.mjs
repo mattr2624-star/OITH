@@ -979,6 +979,154 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify(stats) };
         }
         
+        // ============ DATA PREVIEW ============
+        
+        // GET /data/preview/{entityType} - Get preview data for an entity type
+        if (method === 'GET' && path.includes('/data/preview/')) {
+            const entityType = path.split('/data/preview/')[1]?.toUpperCase();
+            console.log(`📋 Fetching preview for entity: ${entityType}`);
+            
+            if (!entityType) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Entity type required' }) };
+            }
+            
+            let items = [];
+            
+            try {
+                switch (entityType) {
+                    case 'PROFILE': {
+                        // Scan for all profiles
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'sk = :sk',
+                            ExpressionAttributeValues: { ':sk': 'PROFILE' },
+                            Limit: 100
+                        }));
+                        items = result.Items?.map(item => ({
+                            email: item.email,
+                            name: item.firstName || item.name,
+                            age: item.age,
+                            location: item.location,
+                            gender: item.gender,
+                            occupation: item.occupation,
+                            createdAt: item.createdAt,
+                            visible: item.visible
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'MATCH': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'begins_with(pk, :pk)',
+                            ExpressionAttributeValues: { ':pk': 'MATCH#' },
+                            Limit: 100
+                        }));
+                        items = result.Items || [];
+                        break;
+                    }
+                    
+                    case 'LIKE': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'begins_with(pk, :pk)',
+                            ExpressionAttributeValues: { ':pk': 'LIKE#' },
+                            Limit: 100
+                        }));
+                        items = result.Items?.map(item => ({
+                            pk: item.pk,
+                            sk: item.sk,
+                            fromUser: item.pk.replace('LIKE#', ''),
+                            toUser: item.sk.replace('TO#', ''),
+                            timestamp: item.timestamp,
+                            mutual: item.mutual
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'CHAT': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'begins_with(pk, :pk)',
+                            ExpressionAttributeValues: { ':pk': 'CHAT#' },
+                            Limit: 100
+                        }));
+                        items = result.Items?.map(item => ({
+                            pk: item.pk,
+                            sk: item.sk,
+                            from: item.from,
+                            to: item.to,
+                            text: item.text?.substring(0, 50) + (item.text?.length > 50 ? '...' : ''),
+                            timestamp: item.timestamp
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'SUBSCRIPTION': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'sk = :sk',
+                            ExpressionAttributeValues: { ':sk': 'SUBSCRIPTION' },
+                            Limit: 100
+                        }));
+                        items = result.Items?.map(item => ({
+                            email: item.pk.replace('USER#', ''),
+                            plan: item.plan,
+                            status: item.status,
+                            startDate: item.startDate,
+                            endDate: item.endDate
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'CONFIG': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'CONFIG' },
+                            Limit: 100
+                        }));
+                        items = result.Items?.map(item => ({
+                            sk: item.sk,
+                            type: item.type,
+                            updatedAt: item.updatedAt,
+                            updatedBy: item.updatedBy
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'CRAWLER_LOG': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'CRAWLER#logs' },
+                            ScanIndexForward: false,
+                            Limit: 50
+                        }));
+                        items = result.Items?.map(item => ({
+                            sk: item.sk,
+                            passed: item.summary?.passed || 0,
+                            failed: item.summary?.failed || 0,
+                            warnings: item.summary?.warnings || 0,
+                            duration: item.duration ? `${Math.round(item.duration / 1000)}s` : '--',
+                            timestamp: item.timestamp
+                        })) || [];
+                        break;
+                    }
+                    
+                    default:
+                        return { statusCode: 400, headers, body: JSON.stringify({ error: `Unknown entity type: ${entityType}` }) };
+                }
+                
+                console.log(`📋 Found ${items.length} ${entityType} items`);
+                return { statusCode: 200, headers, body: JSON.stringify({ items, count: items.length, entityType }) };
+                
+            } catch (error) {
+                console.error(`Error fetching ${entityType}:`, error);
+                return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+            }
+        }
+        
         // ============ ML SETTINGS ============
         
         // POST /ml-settings - Save ML model settings
