@@ -1114,6 +1114,74 @@ export const handler = async (event) => {
                         break;
                     }
                     
+                    case 'EMPLOYEE': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'ORG#employee' }
+                        }));
+                        items = result.Items?.map(item => ({
+                            id: item.id,
+                            name: item.name,
+                            title: item.title,
+                            department: item.department,
+                            email: item.email,
+                            status: item.status,
+                            startDate: item.startDate,
+                            salary: item.salary
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'DEPARTMENT': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'ORG#department' }
+                        }));
+                        items = result.Items?.map(item => ({
+                            id: item.id,
+                            name: item.name,
+                            color: item.color,
+                            updatedAt: item.updatedAt
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'REPORT': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'REPORT#all' }
+                        }));
+                        items = result.Items?.map(item => ({
+                            id: item.reportId,
+                            reportedUser: item.reportedUser,
+                            reportedBy: item.reportedBy,
+                            reason: item.reason,
+                            status: item.status,
+                            createdAt: item.createdAt
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'SUPPORT': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'SUPPORT#all' }
+                        }));
+                        items = result.Items?.map(item => ({
+                            id: item.messageId,
+                            userEmail: item.userEmail,
+                            subject: item.subject,
+                            status: item.status,
+                            priority: item.priority,
+                            createdAt: item.createdAt
+                        })) || [];
+                        break;
+                    }
+                    
                     default:
                         return { statusCode: 400, headers, body: JSON.stringify({ error: `Unknown entity type: ${entityType}` }) };
                 }
@@ -1171,6 +1239,316 @@ export const handler = async (event) => {
             }
             
             return { statusCode: 200, headers, body: JSON.stringify({ settings: null }) };
+        }
+        
+        // ============ REPORTS ============
+        
+        // POST /reports - Save a report
+        if (method === 'POST' && path === '/reports') {
+            const body = JSON.parse(event.body || '{}');
+            const { reportId, reportedUser, reportedBy, reason, details, status } = body;
+            
+            if (!reportedUser || !reportedBy) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'reportedUser and reportedBy required' }) };
+            }
+            
+            const id = reportId || `report_${Date.now()}`;
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'REPORT#all',
+                    sk: `REPORT#${id}`,
+                    reportId: id,
+                    reportedUser: reportedUser,
+                    reportedBy: reportedBy,
+                    reason: reason || 'Not specified',
+                    details: details || '',
+                    status: status || 'pending',
+                    createdAt: new Date().toISOString()
+                }
+            }));
+            
+            console.log(`🚨 Report saved: ${id}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, reportId: id }) };
+        }
+        
+        // GET /reports - Get all reports
+        if (method === 'GET' && path === '/reports') {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'REPORT#all' },
+                ScanIndexForward: false
+            }));
+            
+            const reports = result.Items?.map(item => ({
+                id: item.reportId,
+                reportedUser: item.reportedUser,
+                reportedBy: item.reportedBy,
+                reason: item.reason,
+                details: item.details,
+                status: item.status,
+                createdAt: item.createdAt
+            })) || [];
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ reports }) };
+        }
+        
+        // DELETE /reports/{id} - Delete a report
+        if (method === 'DELETE' && path.includes('/reports/')) {
+            const reportId = path.split('/reports/')[1];
+            
+            await docClient.send(new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'REPORT#all', sk: `REPORT#${reportId}` }
+            }));
+            
+            console.log(`🗑️ Report deleted: ${reportId}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // ============ SUPPORT MESSAGES ============
+        
+        // POST /support - Save a support message
+        if (method === 'POST' && path === '/support') {
+            const body = JSON.parse(event.body || '{}');
+            const { messageId, userEmail, subject, message, status, priority } = body;
+            
+            if (!userEmail || !message) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'userEmail and message required' }) };
+            }
+            
+            const id = messageId || `support_${Date.now()}`;
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'SUPPORT#all',
+                    sk: `MSG#${id}`,
+                    messageId: id,
+                    userEmail: userEmail,
+                    subject: subject || 'Support Request',
+                    message: message,
+                    status: status || 'open',
+                    priority: priority || 'normal',
+                    createdAt: new Date().toISOString()
+                }
+            }));
+            
+            console.log(`💬 Support message saved: ${id}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, messageId: id }) };
+        }
+        
+        // GET /support - Get all support messages
+        if (method === 'GET' && path === '/support') {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'SUPPORT#all' },
+                ScanIndexForward: false
+            }));
+            
+            const messages = result.Items?.map(item => ({
+                id: item.messageId,
+                userEmail: item.userEmail,
+                subject: item.subject,
+                message: item.message,
+                status: item.status,
+                priority: item.priority,
+                createdAt: item.createdAt
+            })) || [];
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ messages }) };
+        }
+        
+        // DELETE /support/{id} - Delete a support message
+        if (method === 'DELETE' && path.includes('/support/')) {
+            const msgId = path.split('/support/')[1];
+            
+            await docClient.send(new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'SUPPORT#all', sk: `MSG#${msgId}` }
+            }));
+            
+            console.log(`🗑️ Support message deleted: ${msgId}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // ============ ORG DATA (EMPLOYEES & DEPARTMENTS) ============
+        
+        // POST /org/employees - Save/update an employee
+        if (method === 'POST' && path === '/org/employees') {
+            const body = JSON.parse(event.body || '{}');
+            const employee = body.employee;
+            
+            if (!employee || !employee.id) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Employee data with id required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'ORG#employee',
+                    sk: `EMP#${employee.id}`,
+                    ...employee,
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            console.log(`👤 Employee saved: ${employee.name} (${employee.id})`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, employeeId: employee.id }) };
+        }
+        
+        // GET /org/employees - Get all employees
+        if (method === 'GET' && path === '/org/employees') {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'ORG#employee' }
+            }));
+            
+            const employees = result.Items?.map(item => {
+                const { pk, sk, ...employee } = item;
+                return employee;
+            }) || [];
+            
+            console.log(`👥 Retrieved ${employees.length} employees`);
+            return { statusCode: 200, headers, body: JSON.stringify({ employees }) };
+        }
+        
+        // DELETE /org/employees/{id} - Delete an employee
+        if (method === 'DELETE' && path.includes('/org/employees/')) {
+            const empId = path.split('/org/employees/')[1];
+            
+            await docClient.send(new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'ORG#employee', sk: `EMP#${empId}` }
+            }));
+            
+            console.log(`🗑️ Employee deleted: ${empId}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // POST /org/departments - Save/update a department
+        if (method === 'POST' && path === '/org/departments') {
+            const body = JSON.parse(event.body || '{}');
+            const department = body.department;
+            
+            if (!department || !department.id) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Department data with id required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'ORG#department',
+                    sk: `DEPT#${department.id}`,
+                    ...department,
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            console.log(`🏢 Department saved: ${department.name}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, departmentId: department.id }) };
+        }
+        
+        // GET /org/departments - Get all departments
+        if (method === 'GET' && path === '/org/departments') {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'ORG#department' }
+            }));
+            
+            const departments = result.Items?.map(item => {
+                const { pk, sk, ...dept } = item;
+                return dept;
+            }) || [];
+            
+            console.log(`🏢 Retrieved ${departments.length} departments`);
+            return { statusCode: 200, headers, body: JSON.stringify({ departments }) };
+        }
+        
+        // POST /org/sync - Sync all org data at once
+        if (method === 'POST' && path === '/org/sync') {
+            const body = JSON.parse(event.body || '{}');
+            const { employees, departments } = body;
+            
+            // Batch write all employees and departments
+            const items = [];
+            
+            if (employees && Array.isArray(employees)) {
+                employees.forEach(emp => {
+                    items.push({
+                        PutRequest: {
+                            Item: {
+                                pk: 'ORG#employee',
+                                sk: `EMP#${emp.id}`,
+                                ...emp,
+                                updatedAt: new Date().toISOString()
+                            }
+                        }
+                    });
+                });
+            }
+            
+            if (departments && Array.isArray(departments)) {
+                departments.forEach(dept => {
+                    items.push({
+                        PutRequest: {
+                            Item: {
+                                pk: 'ORG#department',
+                                sk: `DEPT#${dept.id}`,
+                                ...dept,
+                                updatedAt: new Date().toISOString()
+                            }
+                        }
+                    });
+                });
+            }
+            
+            // Batch write in chunks of 25 (DynamoDB limit)
+            for (let i = 0; i < items.length; i += 25) {
+                const batch = items.slice(i, i + 25);
+                await docClient.send(new BatchWriteCommand({
+                    RequestItems: {
+                        [TABLE_NAME]: batch
+                    }
+                }));
+            }
+            
+            console.log(`🏢 Org sync: ${employees?.length || 0} employees, ${departments?.length || 0} departments`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, employeeCount: employees?.length || 0, departmentCount: departments?.length || 0 }) };
+        }
+        
+        // GET /org/all - Get all org data
+        if (method === 'GET' && path === '/org/all') {
+            // Get employees
+            const empResult = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'ORG#employee' }
+            }));
+            
+            const employees = empResult.Items?.map(item => {
+                const { pk, sk, ...emp } = item;
+                return emp;
+            }) || [];
+            
+            // Get departments
+            const deptResult = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'ORG#department' }
+            }));
+            
+            const departments = deptResult.Items?.map(item => {
+                const { pk, sk, ...dept } = item;
+                return dept;
+            }) || [];
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ employees, departments }) };
         }
         
         // Health check

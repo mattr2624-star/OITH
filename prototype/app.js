@@ -6963,26 +6963,40 @@ function showContactSupport() {
     }
 }
 
-function submitReport(event) {
+async function submitReport(event) {
     event.preventDefault();
     
     const reportType = document.getElementById('reportType').value;
     const description = document.getElementById('reportDescription').value;
     const blockUser = document.getElementById('reportBlock').checked;
     
-    // In production, this would send to a backend
-    console.log('Report submitted:', { reportType, description, blockUser });
-    
-    // Save report to localStorage for demo purposes
-    const reports = JSON.parse(localStorage.getItem('oith_reports') || '[]');
-    reports.push({
-        type: reportType,
-        description: description,
+    const reportData = {
+        reportedUser: appState.activeConnection?.email || appState.oneMatch?.current?.email || 'unknown',
+        reportedBy: appState.user?.email || 'anonymous',
+        reason: reportType,
+        details: description,
         blockUser: blockUser,
-        timestamp: new Date().toISOString(),
         matchId: appState.activeConnection?.id || null
-    });
-    localStorage.setItem('oith_reports', JSON.stringify(reports));
+    };
+    
+    console.log('Report submitted:', reportData);
+    
+    // Sync report to AWS
+    try {
+        const response = await fetch(`${AWS_API_URL}/reports`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reportData)
+        });
+        
+        if (response.ok) {
+            console.log('✅ Report synced to AWS');
+        } else {
+            console.log('⚠️ Failed to sync report to AWS');
+        }
+    } catch (e) {
+        console.log('⚠️ Report AWS sync error:', e.message);
+    }
     
     closeModal();
     showToast('Report submitted. Thank you for helping keep OITH safe!', 'success');
@@ -6993,24 +7007,36 @@ function submitReport(event) {
     }
 }
 
-function submitSupportMessage(event) {
+async function submitSupportMessage(event) {
     event.preventDefault();
     
     const subject = document.getElementById('supportSubject').value;
     const message = document.getElementById('supportMessage').value;
     
-    // In production, this would send to a backend/email
-    console.log('Support message submitted:', { subject, message });
-    
-    // Save message to localStorage for demo purposes
-    const messages = JSON.parse(localStorage.getItem('oith_support_messages') || '[]');
-    messages.push({
+    const supportData = {
+        userEmail: appState.user?.email || 'anonymous',
         subject: subject,
-        message: message,
-        userEmail: appState.user.email,
-        timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('oith_support_messages', JSON.stringify(messages));
+        message: message
+    };
+    
+    console.log('Support message submitted:', supportData);
+    
+    // Sync support message to AWS
+    try {
+        const response = await fetch(`${AWS_API_URL}/support`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(supportData)
+        });
+        
+        if (response.ok) {
+            console.log('✅ Support message synced to AWS');
+        } else {
+            console.log('⚠️ Failed to sync support message to AWS');
+        }
+    } catch (e) {
+        console.log('⚠️ Support message AWS sync error:', e.message);
+    }
     
     closeModal();
     showToast('Message sent! We\'ll get back to you within 24 hours.', 'success');
@@ -13079,152 +13105,10 @@ function broadcastSync(type, data = {}) {
 }
 
 // ==========================================
-// Default Test Bots (seeded if none exist)
+// Test Bots - REMOVED (no longer auto-loaded)
 // ==========================================
-const DEFAULT_TEST_BOTS = [
-    {
-        id: 'bot_1',
-        name: 'Emma',
-        age: 26,
-        gender: 'female',
-        location: 'New York, NY',
-        occupation: 'UX Designer',
-        education: 'bachelors',
-        bio: 'Creative soul who loves hiking and coffee. Looking for genuine connections.',
-        photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop',
-        active: true,
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 'bot_2',
-        name: 'Sophie',
-        age: 24,
-        gender: 'female',
-        location: 'Los Angeles, CA',
-        occupation: 'Marketing Manager',
-        education: 'bachelors',
-        bio: 'Beach lover and yoga enthusiast. Let\'s explore the city together!',
-        photo: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=500&fit=crop',
-        active: true,
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 'bot_3',
-        name: 'Alex',
-        age: 28,
-        gender: 'male',
-        location: 'Chicago, IL',
-        occupation: 'Software Engineer',
-        education: 'masters',
-        bio: 'Tech nerd with a passion for music and travel. Always up for an adventure.',
-        photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop',
-        active: true,
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 'bot_4',
-        name: 'Mia',
-        age: 25,
-        gender: 'female',
-        location: 'Miami, FL',
-        occupation: 'Nurse',
-        education: 'bachelors',
-        bio: 'Caring and compassionate. Love dancing and good food!',
-        photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop',
-        active: true,
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 'bot_5',
-        name: 'James',
-        age: 30,
-        gender: 'male',
-        location: 'Austin, TX',
-        occupation: 'Entrepreneur',
-        education: 'bachelors',
-        bio: 'Building something cool. Looking for someone to share the journey.',
-        photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=500&fit=crop',
-        active: true,
-        createdAt: new Date().toISOString()
-    }
-];
-
-// ==========================================
-// Auto-load Sync Data (Test Bots & Users)
-// ==========================================
-async function autoLoadSyncData() {
-    try {
-        // Check if we already have test bots
-        const existingBots = localStorage.getItem('oith_test_bots');
-        const existingUsers = localStorage.getItem('oith_registered_users');
-        
-        if (existingBots && JSON.parse(existingBots).length > 0) {
-            console.log('📦 Test bots already loaded:', JSON.parse(existingBots).length);
-            return true;
-        }
-        
-        // Try to fetch sync data file
-        console.log('🔄 No test bots found, attempting to load sync data...');
-        
-        let botsLoaded = false;
-        
-        try {
-            const response = await fetch('data/oith_sync_data.json');
-            if (response.ok) {
-                const syncData = await response.json();
-                console.log('📥 Sync data loaded successfully');
-                
-                // Load test bots if available
-                if (syncData.testBots && syncData.testBots.length > 0) {
-                    localStorage.setItem('oith_test_bots', JSON.stringify(syncData.testBots));
-                    console.log(`   ✅ Loaded ${syncData.testBots.length} test bots from sync file`);
-                    botsLoaded = true;
-                }
-                
-                // Load registered users if we don't have any
-                if (syncData.registeredUsers && Object.keys(syncData.registeredUsers).length > 0) {
-                    const currentUsers = JSON.parse(existingUsers || '{}');
-                    if (Object.keys(currentUsers).length === 0) {
-                        localStorage.setItem('oith_registered_users', JSON.stringify(syncData.registeredUsers));
-                        console.log(`   ✅ Loaded ${Object.keys(syncData.registeredUsers).length} registered users`);
-                    }
-                }
-                
-                // Load user data if available
-                if (syncData.userData) {
-                    Object.entries(syncData.userData).forEach(([email, data]) => {
-                        const key = 'oith_user_' + email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-                        if (!localStorage.getItem(key)) {
-                            localStorage.setItem(key, JSON.stringify(data));
-                        }
-                    });
-                    console.log(`   ✅ Loaded user data for ${Object.keys(syncData.userData).length} users`);
-                }
-            }
-        } catch (fetchError) {
-            console.log('⚠️ Could not load sync data file:', fetchError.message);
-        }
-        
-        // If no test bots were loaded from sync file, seed default ones
-        if (!botsLoaded) {
-            console.log('🤖 Seeding default test bots...');
-            localStorage.setItem('oith_test_bots', JSON.stringify(DEFAULT_TEST_BOTS));
-            console.log(`   ✅ Seeded ${DEFAULT_TEST_BOTS.length} default test bots`);
-        }
-        
-        return true;
-    } catch (error) {
-        console.log('⚠️ Auto-load sync data failed:', error.message);
-        // Still try to seed default test bots
-        try {
-            localStorage.setItem('oith_test_bots', JSON.stringify(DEFAULT_TEST_BOTS));
-            console.log(`   ✅ Seeded ${DEFAULT_TEST_BOTS.length} default test bots (fallback)`);
-        } catch (e) {
-            console.log('❌ Could not seed default test bots');
-        }
-        return false;
-    }
-}
+// Test bots have been removed from auto-loading.
+// All user data is now managed through AWS DynamoDB only.
 
 // ==========================================
 // Initialize App
@@ -13280,8 +13164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // NORMAL MODE: Only run data operations when NOT in preview mode
-    // Auto-load sync data (test bots & users) if localStorage is empty
-    await autoLoadSyncData();
+    // All user data comes from AWS DynamoDB - no local test bots
     
     // Fetch AWS users for match pool (so users can match with other AWS users)
     await fetchAWSUsersForMatchPool();

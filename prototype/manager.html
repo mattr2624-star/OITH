@@ -5544,6 +5544,15 @@
                                     <button class="entity-preview-btn" data-entity="CRAWLER_LOG" onclick="loadEntityPreview('CRAWLER_LOG')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
                                         🕷️ Crawler Logs
                                     </button>
+                                    <button class="entity-preview-btn" data-entity="EMPLOYEE" onclick="loadEntityPreview('EMPLOYEE')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        👥 Employees
+                                    </button>
+                                    <button class="entity-preview-btn" data-entity="REPORT" onclick="loadEntityPreview('REPORT')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        🚨 Reports
+                                    </button>
+                                    <button class="entity-preview-btn" data-entity="SUPPORT" onclick="loadEntityPreview('SUPPORT')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
+                                        💬 Support
+                                    </button>
                                 </div>
                                 
                                 <!-- Data Table Preview -->
@@ -6744,7 +6753,7 @@
             console.log('☁️ Fetching data from DynamoDB...');
             await fetchFromAWSSilent();
             
-            loadAllData();
+            await loadAllData();
             platformData = calculatePlatformStats();
             updateBadgeCounts();
             
@@ -6769,7 +6778,7 @@
             return key.replace('oith_user_', '');
         }
 
-        function loadAllData() {
+        async function loadAllData() {
             // Clear existing data before reloading
             allUserData = {};
             registeredUsers = {};
@@ -6805,21 +6814,29 @@
                 }
             });
 
-            // Load reports
+            // Load reports from AWS
             try {
-                const reportsData = localStorage.getItem('oith_reports');
-                if (reportsData) {
-                    reports = JSON.parse(reportsData);
+                const reportsResponse = await fetch(`${AWS_API_URL}/reports`);
+                if (reportsResponse.ok) {
+                    const reportsData = await reportsResponse.json();
+                    reports = reportsData.reports || [];
+                    console.log(`☁️ Loaded ${reports.length} reports from AWS`);
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.log('⚠️ Could not load reports from AWS:', e.message);
+            }
 
-            // Load support messages
+            // Load support messages from AWS
             try {
-                const messagesData = localStorage.getItem('oith_support_messages');
-                if (messagesData) {
-                    supportMessages = JSON.parse(messagesData);
+                const supportResponse = await fetch(`${AWS_API_URL}/support`);
+                if (supportResponse.ok) {
+                    const supportData = await supportResponse.json();
+                    supportMessages = supportData.messages || [];
+                    console.log(`☁️ Loaded ${supportMessages.length} support messages from AWS`);
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.log('⚠️ Could not load support messages from AWS:', e.message);
+            }
 
             // Load blocked users
             try {
@@ -7658,7 +7675,7 @@
             await fetchFromAWSSilent();
             
             // Reload all data from localStorage (now updated from AWS)
-            loadAllData();
+            await loadAllData();
             
             // Recalculate platform stats
             platformData = calculatePlatformStats();
@@ -17463,8 +17480,29 @@
             departments: []
         };
         
-        // Load org data from localStorage
-        function loadOrgData() {
+        // Load org data from AWS (with localStorage fallback)
+        async function loadOrgData() {
+            try {
+                // Try to fetch from AWS first
+                const response = await fetch(`${AWS_API_URL}/org/all`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if ((data.employees && data.employees.length > 0) || (data.departments && data.departments.length > 0)) {
+                        orgData = {
+                            employees: data.employees || [],
+                            departments: data.departments || getDefaultOrgData().departments
+                        };
+                        // Update localStorage with AWS data
+                        localStorage.setItem('oith_org_data', JSON.stringify(orgData));
+                        console.log(`☁️ Loaded org data from AWS: ${orgData.employees.length} employees`);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.log('⚠️ Could not load org data from AWS:', e.message);
+            }
+            
+            // Fallback to localStorage
             try {
                 const saved = localStorage.getItem('oith_org_data');
                 if (saved) {
@@ -17479,9 +17517,29 @@
             }
         }
         
-        // Save org data
-        function saveOrgData() {
+        // Save org data (to localStorage AND AWS)
+        async function saveOrgData() {
             localStorage.setItem('oith_org_data', JSON.stringify(orgData));
+            
+            // Sync to AWS
+            try {
+                const response = await fetch(`${AWS_API_URL}/org/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        employees: orgData.employees || [],
+                        departments: orgData.departments || []
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('☁️ Org data synced to AWS');
+                } else {
+                    console.log('⚠️ Failed to sync org data to AWS');
+                }
+            } catch (e) {
+                console.log('⚠️ Org data AWS sync error:', e.message);
+            }
         }
         
         // Get default org structure - empty by default, no hardcoded employees
@@ -18999,7 +19057,11 @@
                     CHAT: '💬 Messages',
                     SUBSCRIPTION: '💳 Subscriptions',
                     CONFIG: '⚙️ Config',
-                    CRAWLER_LOG: '🕷️ Crawler Logs'
+                    CRAWLER_LOG: '🕷️ Crawler Logs',
+                    EMPLOYEE: '👥 Employees',
+                    DEPARTMENT: '🏢 Departments',
+                    REPORT: '🚨 Reports',
+                    SUPPORT: '💬 Support'
                 };
                 
                 entityLabel.textContent = entityNames[entityType] || entityType;
@@ -19050,7 +19112,11 @@
                 CHAT: ['pk', 'sk', 'from', 'to', 'text', 'timestamp'],
                 SUBSCRIPTION: ['email', 'plan', 'status', 'startDate', 'endDate'],
                 CONFIG: ['sk', 'type', 'updatedAt', 'updatedBy'],
-                CRAWLER_LOG: ['sk', 'passed', 'failed', 'warnings', 'duration', 'timestamp']
+                CRAWLER_LOG: ['sk', 'passed', 'failed', 'warnings', 'duration', 'timestamp'],
+                EMPLOYEE: ['name', 'title', 'department', 'email', 'status', 'startDate', 'salary'],
+                DEPARTMENT: ['id', 'name', 'color', 'updatedAt'],
+                REPORT: ['id', 'reportedUser', 'reportedBy', 'reason', 'status', 'createdAt'],
+                SUPPORT: ['id', 'userEmail', 'subject', 'status', 'priority', 'createdAt']
             };
             
             // Get columns - use config or infer from first item
