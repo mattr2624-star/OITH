@@ -35,6 +35,9 @@
             }
         })();
     </script>
+    <!-- Square Web Payments SDK -->
+    <script src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
+    <!-- For production, change to: https://web.squarecdn.com/v1/square.js -->
 </head>
 <body>
     <div class="phone-frame">
@@ -637,7 +640,7 @@
                         <span id="subscribeBtnPrice" style="opacity: 0.9;"> - $10.00/month</span>
                     </button>
                     <p class="payment-note" style="text-align: center; margin-top: 12px; font-size: 0.8rem; color: var(--text-muted);">
-                        🔒 Secure payment via Stripe • Cancel anytime • 7-day money-back guarantee
+                        🔒 Secure payment via Square • Cancel anytime • 7-day money-back guarantee
                     </p>
                     
                     <!-- Payment Method Icons -->
@@ -676,7 +679,18 @@
                         </div>
                     </div>
                     
-                    <!-- Card Details Form -->
+                    <!-- Square Card Container (for live payments) -->
+                    <div id="square-payment-container" style="display: none;">
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Card Details</label>
+                            <div id="square-card-container" style="min-height: 90px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 12px;"></div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="processSquarePayment()" style="width: 100%; padding: 16px; font-size: 1rem; font-weight: 600;">
+                            Pay $10.00 & Subscribe
+                        </button>
+                    </div>
+                    
+                    <!-- Manual Card Form (for test mode) -->
                     <form id="paymentCardForm" onsubmit="processPayment(event)">
                         <div class="form-group" style="margin-bottom: 16px;">
                             <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Cardholder Name</label>
@@ -705,14 +719,18 @@
                     </form>
                     
                     <p style="text-align: center; margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">
-                        🔒 Your payment is secured with 256-bit encryption
+                        🔒 Powered by Square • Secure payment
                     </p>
                     
                     <!-- Payment Method Icons -->
-                    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 16px; opacity: 0.6;">
-                        <img src="https://cdn.jsdelivr.net/gh/nicehero/nicehero.github.io@master/img/visa.svg" alt="Visa" height="20">
-                        <img src="https://cdn.jsdelivr.net/gh/nicehero/nicehero.github.io@master/img/mastercard.svg" alt="Mastercard" height="20">
-                        <img src="https://cdn.jsdelivr.net/gh/nicehero/nicehero.github.io@master/img/amex.svg" alt="Amex" height="20">
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; opacity: 0.7;">
+                        <svg width="60" height="24" viewBox="0 0 60 24" fill="currentColor" style="color: var(--text-secondary);">
+                            <rect width="24" height="24" rx="4" fill="currentColor"/>
+                            <text x="30" y="16" font-size="10" fill="currentColor">Square</text>
+                        </svg>
+                        <span style="padding: 4px 8px; background: var(--bg-secondary); border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Visa</span>
+                        <span style="padding: 4px 8px; background: var(--bg-secondary); border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Mastercard</span>
+                        <span style="padding: 4px 8px; background: var(--bg-secondary); border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Amex</span>
                     </div>
                 </div>
                 

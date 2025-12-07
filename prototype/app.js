@@ -5901,18 +5901,30 @@ function formatExpiry(input) {
  * Process payment and show success screen
  */
 // ==========================================
-// PAYMENT CONFIGURATION
+// PAYMENT CONFIGURATION - SQUARE
 // ==========================================
 const PAYMENT_CONFIG = {
-    // Set to your Stripe publishable key for production
-    stripePublishableKey: 'pk_test_YOUR_PUBLISHABLE_KEY',
-    apiUrl: 'http://localhost:3000/api',
-    testMode: true, // Set to false when Stripe is configured
+    // Square Configuration - Get these from https://developer.squareup.com/apps
+    squareApplicationId: 'YOUR_SQUARE_APPLICATION_ID', // Replace with your App ID
+    squareLocationId: 'YOUR_SQUARE_LOCATION_ID',       // Replace with your Location ID
+    
+    // Environment: 'sandbox' for testing, 'production' for live payments
+    squareEnvironment: 'sandbox', // Change to 'production' when ready
+    
+    // Backend API URL for processing payments (you'll need a server for this)
+    apiUrl: 'https://your-api-endpoint.com/api',
+    
+    // Test mode - set to false when Square is fully configured
+    testMode: true,
+    
     plans: {
-        monthly: { price: 9.99, interval: 'month', label: '$9.99/month' },
-        yearly: { price: 79.99, interval: 'year', label: '$79.99/year' }
+        monthly: { price: 10.00, interval: 'month', label: '$10.00/month' }
     }
 };
+
+// Square Web Payments SDK instance
+let squarePayments = null;
+let squareCard = null;
 
 // Selected plan (default to yearly for best value)
 let selectedPlan = 'monthly'; // Default to monthly (only option now)
@@ -5995,22 +6007,67 @@ function selectPlan(planId) {
     console.log(`📋 Selected plan: ${planId}`);
 }
 
-// Initialize payment screen
-function initPaymentScreen() {
-    // Check if Stripe is configured
-    const isStripeConfigured = PAYMENT_CONFIG.stripePublishableKey && 
-                               !PAYMENT_CONFIG.stripePublishableKey.includes('YOUR_');
+// Initialize payment screen with Square
+async function initPaymentScreen() {
+    // Check if Square is configured
+    const isSquareConfigured = PAYMENT_CONFIG.squareApplicationId && 
+                               !PAYMENT_CONFIG.squareApplicationId.includes('YOUR_');
     
     // Show/hide test mode banner
     const testBanner = document.getElementById('testModeBanner');
     if (testBanner) {
-        testBanner.style.display = isStripeConfigured ? 'none' : 'block';
+        testBanner.style.display = isSquareConfigured ? 'none' : 'block';
+    }
+    
+    // Show Square container or manual form based on configuration
+    const squareContainer = document.getElementById('square-payment-container');
+    const manualForm = document.getElementById('paymentCardForm');
+    
+    if (isSquareConfigured && typeof Square !== 'undefined') {
+        // Show Square payment, hide manual form
+        if (squareContainer) squareContainer.style.display = 'block';
+        if (manualForm) manualForm.style.display = 'none';
+        
+        // Initialize Square SDK
+        await initializeSquarePayments();
+    } else {
+        // Show manual form, hide Square container
+        if (squareContainer) squareContainer.style.display = 'none';
+        if (manualForm) manualForm.style.display = 'block';
     }
     
     // Select default plan
-    selectPlan('yearly');
+    selectPlan('monthly');
     
-    console.log(`💳 Payment initialized - Mode: ${isStripeConfigured ? 'LIVE' : 'TEST'}`);
+    console.log(`💳 Payment initialized - Mode: ${isSquareConfigured ? 'SQUARE' : 'TEST'}`);
+}
+
+// Initialize Square Web Payments SDK
+async function initializeSquarePayments() {
+    try {
+        if (!window.Square) {
+            console.warn('⚠️ Square SDK not loaded');
+            return;
+        }
+        
+        squarePayments = window.Square.payments(
+            PAYMENT_CONFIG.squareApplicationId,
+            PAYMENT_CONFIG.squareLocationId
+        );
+        
+        // Create card payment method
+        squareCard = await squarePayments.card();
+        
+        // Attach to the container (we'll show this when needed)
+        const container = document.getElementById('square-card-container');
+        if (container) {
+            await squareCard.attach('#square-card-container');
+        }
+        
+        console.log('✅ Square Payments initialized');
+    } catch (error) {
+        console.error('❌ Square initialization error:', error);
+    }
 }
 
 // Process payment from the payment details form
@@ -6041,13 +6098,13 @@ async function processPayment(event) {
     if (processingView) processingView.style.display = 'block';
     
     try {
-        // Check if Stripe is configured
-        const isStripeConfigured = PAYMENT_CONFIG.stripePublishableKey && 
-                                   !PAYMENT_CONFIG.stripePublishableKey.includes('YOUR_');
+        // Check if Square is configured
+        const isSquareConfigured = PAYMENT_CONFIG.squareApplicationId && 
+                                   !PAYMENT_CONFIG.squareApplicationId.includes('YOUR_');
         
-        if (isStripeConfigured) {
-            // Use Stripe Checkout
-            await startStripeCheckout();
+        if (isSquareConfigured && squareCard) {
+            // Use Square Payment
+            await processSquarePayment();
         } else {
             // Use test mode - simulate payment
             await simulateTestPayment();
@@ -6071,32 +6128,93 @@ async function processPayment(event) {
     }
 }
 
-// Start Stripe Checkout session
-async function startStripeCheckout() {
+// Process payment with Square
+async function processSquarePayment() {
     try {
-        const response = await fetch(`${PAYMENT_CONFIG.apiUrl}/create-checkout-session`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                plan: selectedPlan,
-                email: appState.user?.email || '',
-                userId: appState.user?.id || 'unknown'
-            })
-        });
+        console.log('💳 Processing Square payment...');
         
-        const data = await response.json();
+        // Tokenize the card
+        const tokenResult = await squareCard.tokenize();
         
-        if (data.error) {
-            throw new Error(data.error);
-        }
-        
-        // Redirect to Stripe Checkout
-        if (data.url) {
-            window.location.href = data.url;
+        if (tokenResult.status === 'OK') {
+            const token = tokenResult.token;
+            console.log('✅ Card tokenized:', token.substring(0, 20) + '...');
+            
+            // Send token to your backend to create the payment
+            const response = await fetch(`${PAYMENT_CONFIG.apiUrl}/square/create-payment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sourceId: token,
+                    amount: PAYMENT_CONFIG.plans[selectedPlan].price * 100, // Amount in cents
+                    currency: 'USD',
+                    email: appState.user?.email || '',
+                    userId: appState.user?.id || 'unknown',
+                    plan: selectedPlan
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Payment successful
+            await handlePaymentSuccess(data);
+            
+        } else {
+            // Tokenization failed
+            let errorMessage = 'Card validation failed';
+            if (tokenResult.errors) {
+                errorMessage = tokenResult.errors.map(e => e.message).join(', ');
+            }
+            throw new Error(errorMessage);
         }
     } catch (error) {
         throw error;
     }
+}
+
+// Handle successful payment
+async function handlePaymentSuccess(paymentData) {
+    console.log('✅ Payment successful:', paymentData);
+    
+    // Calculate billing dates
+    const plan = PAYMENT_CONFIG.plans[selectedPlan];
+    const nextBilling = new Date();
+    nextBilling.setMonth(nextBilling.getMonth() + 1);
+    
+    // Show success view
+    document.getElementById('paymentProcessingView').style.display = 'none';
+    document.getElementById('paymentSuccessView').style.display = 'block';
+    
+    // Update next billing date display
+    const nextBillingEl = document.getElementById('nextBillingDate');
+    if (nextBillingEl) {
+        nextBillingEl.textContent = nextBilling.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+    }
+    
+    // Update subscription status
+    appState.user.subscription = {
+        type: 'premium',
+        plan: selectedPlan,
+        status: 'active',
+        startDate: new Date().toISOString(),
+        nextBillingDate: nextBilling.toISOString(),
+        amount: plan.price,
+        paymentId: paymentData.paymentId || null,
+        provider: 'square'
+    };
+    
+    // Save user data
+    saveUserData();
+    
+    showToast('🎉 Welcome to OITH Premium!', 'success');
 }
 
 // Simulate test payment (development mode)
