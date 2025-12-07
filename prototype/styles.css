@@ -1857,6 +1857,34 @@ body {
     overflow: hidden;
     box-shadow: var(--shadow-lg);
     position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.match-card:active {
+    transform: scale(0.98);
+}
+
+.view-profile-hint {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 0.75rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    z-index: 10;
+    opacity: 0;
+    animation: fadeInOut 4s ease forwards;
+    pointer-events: none;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
 .match-photo {

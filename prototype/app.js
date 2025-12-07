@@ -4245,6 +4245,28 @@ function updateConnectionInsights() {
 /**
  * Update all match-related displays across the app
  */
+/**
+ * View the full profile of the current match (from screen 3.0)
+ */
+function viewMatchProfile() {
+    const match = appState.activeConnection || appState.oneMatch.current;
+    if (!match) {
+        showToast('No match to view', 'error');
+        return;
+    }
+    
+    console.log('📱 Viewing full profile for:', match.name);
+    
+    // Update the profile view screen with match data
+    updateAllMatchDisplays();
+    
+    // Navigate to profile view
+    showScreen('profile-view');
+    
+    // Track this action
+    trackBehavior('view_full_profile', { matchName: match.name });
+}
+
 function updateAllMatchDisplays() {
     const match = appState.activeConnection || appState.oneMatch.current;
     if (!match) return;
