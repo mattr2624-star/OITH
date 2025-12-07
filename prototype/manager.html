@@ -10518,9 +10518,9 @@
             }
         }
 
-        function renderDashboard() {
+        async function renderDashboard() {
             // Load real org and payroll data for cost calculations
-            loadOrgData();
+            await loadOrgData();
             loadPayrollData();
             
             // Calculate financial metrics from REAL data
@@ -17558,8 +17558,8 @@
             };
         }
         
-        function renderOrgHierarchy() {
-            loadOrgData();
+        async function renderOrgHierarchy() {
+            await loadOrgData();
             
             // Update stats
             const employees = orgData.employees.filter(e => e.status === 'active');
@@ -17765,8 +17765,8 @@
         }
         
         // Show employee modal for add/edit
-        function showEmployeeModal(empId = null) {
-            loadOrgData();
+        async function showEmployeeModal(empId = null) {
+            await loadOrgData();
             const isEdit = empId !== null;
             const emp = isEdit ? orgData.employees.find(e => e.id === empId) : null;
             
@@ -17877,9 +17877,9 @@
             if (modal) modal.remove();
         }
         
-        function saveEmployee(event, empId) {
+        async function saveEmployee(event, empId) {
             event.preventDefault();
-            loadOrgData();
+            await loadOrgData();
             
             const employeeData = {
                 name: document.getElementById('empName').value.trim(),
@@ -17927,8 +17927,8 @@
             showEmployeeModal(empId);
         }
         
-        function deleteEmployee(empId) {
-            loadOrgData();
+        async function deleteEmployee(empId) {
+            await loadOrgData();
             const emp = orgData.employees.find(e => e.id === empId);
             if (!emp) return;
             
@@ -17962,9 +17962,9 @@
             showToast(`🗑️ ${emp.name} has been removed`, 'info');
         }
         
-        function removeEmployee(empId) {
+        async function removeEmployee(empId) {
             // Soft delete - just set status to inactive
-            loadOrgData();
+            await loadOrgData();
             const emp = orgData.employees.find(e => e.id === empId);
             if (!emp) return;
             
@@ -17982,8 +17982,8 @@
             }
         }
         
-        function reactivateEmployee(empId) {
-            loadOrgData();
+        async function reactivateEmployee(empId) {
+            await loadOrgData();
             const empIndex = orgData.employees.findIndex(e => e.id === empId);
             if (empIndex !== -1) {
                 orgData.employees[empIndex].status = 'active';
@@ -18057,8 +18057,8 @@
             };
         }
         
-        function renderPayroll() {
-            loadOrgData();
+        async function renderPayroll() {
+            await loadOrgData();
             loadPayrollData();
             
             const employees = orgData.employees.filter(e => e.status === 'active');
@@ -18239,10 +18239,10 @@
             `;
         }
         
-        function runPayroll() {
+        async function runPayroll() {
             if (!confirm('Run payroll for all active employees?')) return;
             
-            loadOrgData();
+            await loadOrgData();
             loadPayrollData();
             
             const employees = orgData.employees.filter(e => e.status === 'active');
@@ -18270,9 +18270,9 @@
             showToast(`✅ Payroll run complete! ${formatCurrency(totalAmount)} paid to ${employees.length} employees`, 'success');
         }
         
-        function exportPayrollReport() {
+        async function exportPayrollReport() {
             loadPayrollData();
-            loadOrgData();
+            await loadOrgData();
             
             const report = {
                 generatedAt: new Date().toISOString(),
