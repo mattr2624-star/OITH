@@ -17903,14 +17903,17 @@
                 showToast(`✅ ${employeeData.name} added to the organization`, 'success');
             }
             
-            saveOrgData();
+            await saveOrgData();
             closeEmployeeModal();
             
             // Re-render both sections
-            renderOrgHierarchy();
+            await renderOrgHierarchy();
             if (document.getElementById('payroll-section').style.display !== 'none') {
-                renderPayroll();
+                await renderPayroll();
             }
+            
+            // Refresh database schema stats to update employee count
+            await syncDynamoDBSchema();
         }
         
         function addEmployee() {
@@ -17945,13 +17948,16 @@
             
             // Remove employee
             orgData.employees = orgData.employees.filter(e => e.id !== empId);
-            saveOrgData();
+            await saveOrgData();
             
             closeEmployeeModal();
-            renderOrgHierarchy();
+            await renderOrgHierarchy();
             if (document.getElementById('payroll-section').style.display !== 'none') {
-                renderPayroll();
+                await renderPayroll();
             }
+            
+            // Refresh database schema stats to update employee count
+            await syncDynamoDBSchema();
             
             showToast(`🗑️ ${emp.name} has been removed`, 'info');
         }
@@ -17967,11 +17973,12 @@
             const empIndex = orgData.employees.findIndex(e => e.id === empId);
             if (empIndex !== -1) {
                 orgData.employees[empIndex].status = 'inactive';
-                saveOrgData();
-                renderOrgHierarchy();
+                await saveOrgData();
+                await renderOrgHierarchy();
                 if (document.getElementById('payroll-section').style.display !== 'none') {
-                    renderPayroll();
+                    await renderPayroll();
                 }
+                await syncDynamoDBSchema();
                 showToast(`🗑️ ${emp.name} has been deactivated`, 'info');
             }
         }
@@ -17981,8 +17988,9 @@
             const empIndex = orgData.employees.findIndex(e => e.id === empId);
             if (empIndex !== -1) {
                 orgData.employees[empIndex].status = 'active';
-                saveOrgData();
-                renderOrgHierarchy();
+                await saveOrgData();
+                await renderOrgHierarchy();
+                await syncDynamoDBSchema();
                 showToast(`✅ Employee reactivated`, 'success');
             }
         }

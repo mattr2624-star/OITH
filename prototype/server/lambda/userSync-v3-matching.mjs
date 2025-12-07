@@ -1648,12 +1648,52 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ departments }) };
         }
         
-        // POST /org/sync - Sync all org data at once
+        // POST /org/sync - Sync all org data at once (with deletion support)
         if (method === 'POST' && path === '/org/sync') {
             const body = JSON.parse(event.body || '{}');
             const { employees, departments } = body;
             
-            // Batch write all employees and departments
+            // Step 1: Get existing employees from DynamoDB
+            const existingEmpResult = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'ORG#employee' }
+            }));
+            const existingEmpIds = new Set(existingEmpResult.Items?.map(item => item.sk) || []);
+            
+            // Step 2: Get existing departments from DynamoDB
+            const existingDeptResult = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'ORG#department' }
+            }));
+            const existingDeptIds = new Set(existingDeptResult.Items?.map(item => item.sk) || []);
+            
+            // Step 3: Determine which items to delete (exist in DB but not in incoming data)
+            const incomingEmpIds = new Set((employees || []).map(emp => `EMP#${emp.id}`));
+            const incomingDeptIds = new Set((departments || []).map(dept => `DEPT#${dept.id}`));
+            
+            const empsToDelete = [...existingEmpIds].filter(id => !incomingEmpIds.has(id));
+            const deptsToDelete = [...existingDeptIds].filter(id => !incomingDeptIds.has(id));
+            
+            // Step 4: Delete removed items
+            for (const sk of empsToDelete) {
+                await docClient.send(new DeleteCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: 'ORG#employee', sk }
+                }));
+                console.log(`🗑️ Deleted employee: ${sk}`);
+            }
+            
+            for (const sk of deptsToDelete) {
+                await docClient.send(new DeleteCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: 'ORG#department', sk }
+                }));
+                console.log(`🗑️ Deleted department: ${sk}`);
+            }
+            
+            // Step 5: Batch write all employees and departments (add/update)
             const items = [];
             
             if (employees && Array.isArray(employees)) {
@@ -1696,8 +1736,14 @@ export const handler = async (event) => {
                 }));
             }
             
-            console.log(`🏢 Org sync: ${employees?.length || 0} employees, ${departments?.length || 0} departments`);
-            return { statusCode: 200, headers, body: JSON.stringify({ success: true, employeeCount: employees?.length || 0, departmentCount: departments?.length || 0 }) };
+            console.log(`🏢 Org sync: ${employees?.length || 0} employees, ${departments?.length || 0} departments, deleted ${empsToDelete.length} employees`);
+            return { statusCode: 200, headers, body: JSON.stringify({ 
+                success: true, 
+                employeeCount: employees?.length || 0, 
+                departmentCount: departments?.length || 0,
+                deletedEmployees: empsToDelete.length,
+                deletedDepartments: deptsToDelete.length
+            }) };
         }
         
         // GET /org/all - Get all org data
