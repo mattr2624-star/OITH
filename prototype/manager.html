@@ -5384,9 +5384,15 @@
                 <div class="page-header">
                     <div>
                         <h2 class="page-title">🗄️ Database Schema</h2>
-                        <p class="page-subtitle">Visual representation of all data tables and their relationships</p>
+                        <p class="page-subtitle">DynamoDB single-table design - synced with AWS</p>
                     </div>
                     <div class="header-actions">
+                        <button class="btn btn-primary" onclick="syncDynamoDBSchema()" id="syncSchemaBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.66 0 3-4 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4-3-9s1.34-9 3-9"/>
+                            </svg>
+                            Sync from DynamoDB
+                        </button>
                         <button class="btn btn-secondary" onclick="exportDatabaseSchema()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
@@ -5397,40 +5403,40 @@
                     </div>
                 </div>
 
-                <!-- Server Connection Card -->
-                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--info);">
-                    <div class="card-header" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));">
-                        <h3 class="card-title">🖥️ Server Connection</h3>
-                        <span class="status-badge" id="serverStatusBadge" style="background: var(--success); color: white;">CONNECTED</span>
+                <!-- DynamoDB Connection Card -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--warning);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));">
+                        <h3 class="card-title">☁️ AWS DynamoDB Connection</h3>
+                        <span class="status-badge" id="dynamoStatusBadge" style="background: var(--text-muted); color: white;">CHECKING...</span>
                     </div>
                     <div class="card-body">
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-                            <!-- Current Connection Info -->
+                            <!-- DynamoDB Connection Info -->
                             <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
-                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">CURRENT CONNECTION</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">DYNAMODB TABLE</div>
                                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                    <div style="width: 12px; height: 12px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite;"></div>
+                                    <div id="dynamoConnectionDot" style="width: 12px; height: 12px; background: var(--text-muted); border-radius: 50%;"></div>
                                     <div>
-                                        <div style="font-weight: 600;" id="currentServerName">localStorage (Browser)</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);" id="currentServerType">Development Mode - Client-Side Storage</div>
+                                        <div style="font-weight: 600;" id="dynamoTableName">oith-users</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);" id="dynamoRegion">us-east-1</div>
                                     </div>
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem;">
                                     <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                                        <div style="color: var(--text-muted);">Latency</div>
-                                        <div style="font-weight: 600; color: var(--success);" id="serverLatency">&lt;1ms</div>
+                                        <div style="color: var(--text-muted);">Total Items</div>
+                                        <div style="font-weight: 600; color: var(--accent);" id="dynamoItemCount">--</div>
                                     </div>
                                     <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                                        <div style="color: var(--text-muted);">Uptime</div>
-                                        <div style="font-weight: 600; color: var(--success);" id="serverUptime">100%</div>
+                                        <div style="color: var(--text-muted);">Profiles</div>
+                                        <div style="font-weight: 600; color: var(--info);" id="dynamoProfileCount">--</div>
                                     </div>
                                     <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                                        <div style="color: var(--text-muted);">Storage Used</div>
-                                        <div style="font-weight: 600;" id="storageUsed">-- KB</div>
+                                        <div style="color: var(--text-muted);">Matches</div>
+                                        <div style="font-weight: 600; color: var(--danger);" id="dynamoMatchCount">--</div>
                                     </div>
                                     <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                                        <div style="color: var(--text-muted);">Storage Limit</div>
-                                        <div style="font-weight: 600;" id="storageLimit">5 MB</div>
+                                        <div style="color: var(--text-muted);">Messages</div>
+                                        <div style="font-weight: 600; color: var(--success);" id="dynamoMessageCount">--</div>
                                     </div>
                                 </div>
                             </div>
@@ -5581,16 +5587,27 @@
                     </div>
                 </div>
 
-                <!-- Entity Relationship Diagram -->
+                <!-- DynamoDB Entity Diagram -->
                 <div class="card" style="margin-top: 20px;">
                     <div class="card-header">
-                        <h3 class="card-title">📐 Entity Relationship Diagram</h3>
-                        <span class="status-badge active" style="font-size: 0.7rem;">INTERACTIVE</span>
+                        <h3 class="card-title">📐 DynamoDB Entities (Single-Table Design)</h3>
+                        <span class="status-badge active" style="font-size: 0.7rem;">LIVE</span>
                     </div>
                     <div class="card-body" style="overflow-x: auto; padding: 24px;">
                         <div id="erdDiagram" style="min-width: 900px;">
-                            <!-- ERD will be rendered by JS -->
+                            <!-- DynamoDB entities will be rendered by JS -->
                         </div>
+                    </div>
+                </div>
+
+                <!-- Access Patterns -->
+                <div class="card" style="margin-top: 20px; border: 1px solid var(--accent);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.02));">
+                        <h3 class="card-title">🔍 DynamoDB Access Patterns</h3>
+                        <span class="status-badge" style="background: var(--accent); font-size: 0.7rem;">7 PATTERNS</span>
+                    </div>
+                    <div class="card-body" id="accessPatternsContainer">
+                        <!-- Access patterns will be rendered by JS -->
                     </div>
                 </div>
 
@@ -17851,151 +17868,218 @@
         }
 
         // ==========================================
-        // DATABASE SCHEMA
+        // DATABASE SCHEMA - DynamoDB Single-Table Design
         // ==========================================
         
-        // Database schema definition
-        const databaseSchema = {
-            tables: [
+        // Live DynamoDB stats (updated from AWS)
+        let dynamoDBStats = {
+            connected: false,
+            totalItems: 0,
+            profiles: 0,
+            matches: 0,
+            likes: 0,
+            messages: 0,
+            configs: 0,
+            subscriptions: 0,
+            emergencyContacts: 0,
+            lastSync: null
+        };
+        
+        // DynamoDB Single-Table Schema Definition
+        // Table: oith-users (pk, sk as composite key)
+        const dynamoDBSchema = {
+            tableName: 'oith-users',
+            region: 'us-east-1',
+            keySchema: {
+                pk: { type: 'String', description: 'Partition Key - Entity type prefix + identifier' },
+                sk: { type: 'String', description: 'Sort Key - Sub-entity type or identifier' }
+            },
+            entities: [
                 {
-                    name: 'users',
+                    name: 'USER_PROFILE',
                     color: '#3B82F6',
                     icon: '👤',
-                    description: 'Core user account data',
-                    fields: [
-                        { name: 'user_id', type: 'UUID', primary: true, description: 'Unique identifier' },
-                        { name: 'email', type: 'VARCHAR(255)', unique: true, description: 'User email address' },
-                        { name: 'password_hash', type: 'VARCHAR(255)', description: 'Encrypted password' },
-                        { name: 'first_name', type: 'VARCHAR(100)', description: 'First name' },
-                        { name: 'last_name', type: 'VARCHAR(100)', description: 'Last name' },
-                        { name: 'birthday', type: 'DATE', description: 'Date of birth' },
-                        { name: 'age', type: 'INT', description: 'Calculated age' },
-                        { name: 'gender', type: 'ENUM', description: 'male, female, other' },
-                        { name: 'location', type: 'VARCHAR(255)', description: 'City, State' },
-                        { name: 'created_at', type: 'TIMESTAMP', description: 'Registration date' },
-                        { name: 'last_login', type: 'TIMESTAMP', description: 'Last activity' },
-                        { name: 'is_active', type: 'BOOLEAN', description: 'Account status' },
-                        { name: 'profile_complete', type: 'BOOLEAN', description: 'Setup completed' }
+                    pkPattern: 'USER#{email}',
+                    skPattern: 'PROFILE',
+                    description: 'User profile data - core account info',
+                    usedBy: ['index.html: signup, login, profile edit'],
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'USER#john@email.com', primary: true },
+                        { name: 'sk', type: 'String', example: 'PROFILE', primary: true },
+                        { name: 'email', type: 'String', description: 'User email (lowercase)' },
+                        { name: 'firstName', type: 'String', description: 'First name' },
+                        { name: 'age', type: 'Number', description: 'User age' },
+                        { name: 'gender', type: 'String', description: 'male/female/other' },
+                        { name: 'location', type: 'String', description: 'City, State' },
+                        { name: 'occupation', type: 'String', description: 'Job title' },
+                        { name: 'bio', type: 'String', description: 'Bio (max 500 chars)' },
+                        { name: 'photo', type: 'String', description: 'Primary photo URL' },
+                        { name: 'photos', type: 'List', description: 'Array of photo URLs' },
+                        { name: 'education', type: 'String', description: 'Education level' },
+                        { name: 'height', type: 'String', description: 'Height value' },
+                        { name: 'bodyType', type: 'String', description: 'Body type' },
+                        { name: 'politics', type: 'String', description: 'Political views' },
+                        { name: 'matchPreferences', type: 'Map', description: 'Age/distance/gender prefs' },
+                        { name: 'profileVisibility', type: 'Map', description: '{isHidden, reason}' },
+                        { name: 'subscription', type: 'Map', description: 'Subscription info' },
+                        { name: 'emergencyContact', type: 'Map', description: 'Emergency contact' },
+                        { name: 'settings', type: 'Map', description: 'User settings' },
+                        { name: 'online', type: 'Boolean', description: 'Online status' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
                     ]
                 },
                 {
-                    name: 'profiles',
-                    color: '#8B5CF6',
-                    icon: '📋',
-                    description: 'Extended user profile information',
-                    fields: [
-                        { name: 'profile_id', type: 'UUID', primary: true, description: 'Unique identifier' },
-                        { name: 'user_id', type: 'UUID', foreign: 'users.user_id', description: 'Reference to user' },
-                        { name: 'bio', type: 'TEXT', description: 'User biography' },
-                        { name: 'occupation', type: 'VARCHAR(100)', description: 'Job title' },
-                        { name: 'education', type: 'ENUM', description: 'Education level' },
-                        { name: 'height', type: 'VARCHAR(10)', description: 'Height value' },
-                        { name: 'body_type', type: 'ENUM', description: 'Body type preference' },
-                        { name: 'ethnicity', type: 'ENUM', description: 'Ethnic background' },
-                        { name: 'religion', type: 'ENUM', description: 'Religious preference' },
-                        { name: 'drinking', type: 'ENUM', description: 'Drinking habits' },
-                        { name: 'smoking', type: 'ENUM', description: 'Smoking habits' },
-                        { name: 'exercise', type: 'ENUM', description: 'Exercise frequency' },
-                        { name: 'children', type: 'ENUM', description: 'Children preference' },
-                        { name: 'looking_for', type: 'ENUM', description: 'Relationship goal' }
-                    ]
-                },
-                {
-                    name: 'photos',
+                    name: 'LIKE',
                     color: '#EC4899',
-                    icon: '📸',
-                    description: 'User profile photos',
-                    fields: [
-                        { name: 'photo_id', type: 'UUID', primary: true, description: 'Unique identifier' },
-                        { name: 'user_id', type: 'UUID', foreign: 'users.user_id', description: 'Photo owner' },
-                        { name: 'photo_url', type: 'VARCHAR(500)', description: 'Storage URL' },
-                        { name: 'is_primary', type: 'BOOLEAN', description: 'Main profile photo' },
-                        { name: 'display_order', type: 'INT', description: 'Photo position' },
-                        { name: 'uploaded_at', type: 'TIMESTAMP', description: 'Upload date' }
+                    icon: '💗',
+                    pkPattern: 'LIKE#{fromEmail}',
+                    skPattern: 'TO#{toEmail}',
+                    description: 'User likes another user',
+                    usedBy: ['index.html: acceptMatch()'],
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'LIKE#john@email.com', primary: true },
+                        { name: 'sk', type: 'String', example: 'TO#jane@email.com', primary: true },
+                        { name: 'fromEmail', type: 'String', description: 'Liker email' },
+                        { name: 'toEmail', type: 'String', description: 'Liked email' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' }
                     ]
                 },
                 {
-                    name: 'matches',
+                    name: 'MATCH',
                     color: '#EF4444',
                     icon: '💕',
-                    description: 'Match connections between users',
-                    fields: [
-                        { name: 'match_id', type: 'UUID', primary: true, description: 'Unique identifier' },
-                        { name: 'user_a_id', type: 'UUID', foreign: 'users.user_id', description: 'First user' },
-                        { name: 'user_b_id', type: 'UUID', foreign: 'users.user_id', description: 'Second user' },
-                        { name: 'user_a_action', type: 'ENUM', description: 'accept, decline, pending' },
-                        { name: 'user_b_action', type: 'ENUM', description: 'accept, decline, pending' },
-                        { name: 'compatibility', type: 'INT', description: 'Compatibility score %' },
-                        { name: 'is_mutual', type: 'BOOLEAN', description: 'Both accepted' },
-                        { name: 'matched_at', type: 'TIMESTAMP', description: 'Presented date' },
-                        { name: 'expires_at', type: 'TIMESTAMP', description: '24hr deadline' }
+                    pkPattern: 'MATCH#{email}',
+                    skPattern: 'WITH#{matchedEmail}',
+                    description: 'Mutual match between two users',
+                    usedBy: ['index.html: checkBackgroundMatches(), matchesList'],
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'MATCH#john@email.com', primary: true },
+                        { name: 'sk', type: 'String', example: 'WITH#jane@email.com', primary: true },
+                        { name: 'matchId', type: 'String', description: 'Unique match ID (sorted emails)' },
+                        { name: 'matchedAt', type: 'String', description: 'ISO timestamp' }
                     ]
                 },
                 {
-                    name: 'messages',
+                    name: 'CHAT_MESSAGE',
                     color: '#10B981',
                     icon: '💬',
+                    pkPattern: 'CHAT#{matchId}',
+                    skPattern: 'MSG#{timestamp}#{messageId}',
                     description: 'Chat messages between matched users',
-                    fields: [
-                        { name: 'message_id', type: 'UUID', primary: true, description: 'Unique identifier' },
-                        { name: 'match_id', type: 'UUID', foreign: 'matches.match_id', description: 'Match context' },
-                        { name: 'sender_id', type: 'UUID', foreign: 'users.user_id', description: 'Message author' },
-                        { name: 'content', type: 'TEXT', description: 'Message content' },
-                        { name: 'sent_at', type: 'TIMESTAMP', description: 'Send time' },
-                        { name: 'read_at', type: 'TIMESTAMP', description: 'Read receipt' }
+                    usedBy: ['index.html: sendMessage(), loadChatFromAWS()'],
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'CHAT#jane_john', primary: true },
+                        { name: 'sk', type: 'String', example: 'MSG#2024-12-07T...#abc123', primary: true },
+                        { name: 'matchId', type: 'String', description: 'Match identifier' },
+                        { name: 'fromEmail', type: 'String', description: 'Sender email' },
+                        { name: 'message', type: 'String', description: 'Message content (max 1000)' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' }
                     ]
                 },
                 {
-                    name: 'dates',
-                    color: '#F59E0B',
-                    icon: '📅',
-                    description: 'Planned dates between users',
-                    fields: [
-                        { name: 'date_id', type: 'UUID', primary: true, description: 'Unique identifier' },
-                        { name: 'match_id', type: 'UUID', foreign: 'matches.match_id', description: 'Match context' },
-                        { name: 'venue_name', type: 'VARCHAR(255)', description: 'Venue name' },
-                        { name: 'venue_address', type: 'VARCHAR(500)', description: 'Full address' },
-                        { name: 'scheduled_at', type: 'TIMESTAMP', description: 'Date/time' },
-                        { name: 'status', type: 'ENUM', description: 'pending, confirmed, completed, cancelled' },
-                        { name: 'created_by', type: 'UUID', foreign: 'users.user_id', description: 'Planner' },
-                        { name: 'created_at', type: 'TIMESTAMP', description: 'Creation date' }
-                    ]
-                },
-                {
-                    name: 'subscriptions',
+                    name: 'SUBSCRIPTION',
                     color: '#6366F1',
                     icon: '💳',
-                    description: 'User subscription data',
-                    fields: [
-                        { name: 'subscription_id', type: 'UUID', primary: true, description: 'Unique identifier' },
-                        { name: 'user_id', type: 'UUID', foreign: 'users.user_id', description: 'Subscriber' },
-                        { name: 'plan_type', type: 'ENUM', description: 'free, monthly, annual' },
-                        { name: 'status', type: 'ENUM', description: 'active, cancelled, expired' },
-                        { name: 'started_at', type: 'TIMESTAMP', description: 'Start date' },
-                        { name: 'renews_at', type: 'TIMESTAMP', description: 'Next billing' },
-                        { name: 'payment_method', type: 'VARCHAR(50)', description: 'Payment type' },
-                        { name: 'amount', type: 'DECIMAL(10,2)', description: 'Monthly cost' }
+                    pkPattern: 'USER#{email}',
+                    skPattern: 'SUBSCRIPTION',
+                    description: 'User subscription/payment data',
+                    usedBy: ['index.html: handlePaymentSuccess()'],
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'USER#john@email.com', primary: true },
+                        { name: 'sk', type: 'String', example: 'SUBSCRIPTION', primary: true },
+                        { name: 'plan', type: 'String', description: 'free/monthly/annual' },
+                        { name: 'status', type: 'String', description: 'active/cancelled/expired' },
+                        { name: 'startedAt', type: 'String', description: 'Start date' },
+                        { name: 'expiresAt', type: 'String', description: 'Expiry date' },
+                        { name: 'paymentMethod', type: 'String', description: 'square/test' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'EMERGENCY_CONTACT',
+                    color: '#F59E0B',
+                    icon: '🆘',
+                    pkPattern: 'USER#{email}',
+                    skPattern: 'EMERGENCY_CONTACT',
+                    description: 'User emergency contact info',
+                    usedBy: ['index.html: saveEmergencyContact()'],
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'USER#john@email.com', primary: true },
+                        { name: 'sk', type: 'String', example: 'EMERGENCY_CONTACT', primary: true },
+                        { name: 'name', type: 'String', description: 'Contact name' },
+                        { name: 'phone', type: 'String', description: 'Contact phone' },
+                        { name: 'relationship', type: 'String', description: 'Relationship type' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'USER_SETTINGS',
+                    color: '#8B5CF6',
+                    icon: '⚙️',
+                    pkPattern: 'USER#{email}',
+                    skPattern: 'SETTINGS',
+                    description: 'User app settings/preferences',
+                    usedBy: ['index.html: saveSettings()'],
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'USER#john@email.com', primary: true },
+                        { name: 'sk', type: 'String', example: 'SETTINGS', primary: true },
+                        { name: 'notifications', type: 'Boolean', description: 'Push notifications' },
+                        { name: 'emailAlerts', type: 'Boolean', description: 'Email alerts' },
+                        { name: 'locationSharing', type: 'Boolean', description: 'Share location' },
+                        { name: 'darkMode', type: 'Boolean', description: 'Dark mode enabled' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'CONFIG',
+                    color: '#14B8A6',
+                    icon: '🔧',
+                    pkPattern: 'CONFIG',
+                    skPattern: 'ML#{type}',
+                    description: 'System configuration (ML weights, settings)',
+                    usedBy: ['manager.html: ML model weights'],
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'CONFIG', primary: true },
+                        { name: 'sk', type: 'String', example: 'ML#compatibility_weights', primary: true },
+                        { name: 'type', type: 'String', description: 'Config type' },
+                        { name: 'settings', type: 'Map', description: 'Config values' },
+                        { name: 'updatedBy', type: 'String', description: 'Who updated' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
                     ]
                 }
             ],
-            relationships: [
-                { from: 'profiles', to: 'users', type: 'one-to-one', field: 'user_id' },
-                { from: 'photos', to: 'users', type: 'one-to-many', field: 'user_id' },
-                { from: 'matches', to: 'users', type: 'many-to-many', field: 'user_a_id, user_b_id' },
-                { from: 'messages', to: 'matches', type: 'one-to-many', field: 'match_id' },
-                { from: 'messages', to: 'users', type: 'many-to-one', field: 'sender_id' },
-                { from: 'dates', to: 'matches', type: 'one-to-many', field: 'match_id' },
-                { from: 'dates', to: 'users', type: 'many-to-one', field: 'created_by' },
-                { from: 'subscriptions', to: 'users', type: 'one-to-one', field: 'user_id' }
+            accessPatterns: [
+                { name: 'Get user profile', query: 'pk = USER#{email}, sk = PROFILE' },
+                { name: 'Get all visible profiles', query: 'Scan where sk = PROFILE AND isHidden = false' },
+                { name: 'Get user matches', query: 'pk = MATCH#{email}' },
+                { name: 'Check mutual like', query: 'pk = LIKE#{B}, sk = TO#{A}' },
+                { name: 'Get chat messages', query: 'pk = CHAT#{matchId}, sk begins_with MSG#' },
+                { name: 'Get user full data', query: 'pk = USER#{email} (all sk values)' },
+                { name: 'Get ML config', query: 'pk = CONFIG, sk = ML#{type}' }
+            ]
+        };
+        
+        // Legacy SQL schema for reference/migration
+        const legacySQLSchema = {
+            tables: [
+                { name: 'users', description: 'Migrated to USER_PROFILE entity' },
+                { name: 'profiles', description: 'Merged into USER_PROFILE entity' },
+                { name: 'photos', description: 'Stored as photos[] array in USER_PROFILE' },
+                { name: 'matches', description: 'Split into LIKE + MATCH entities' },
+                { name: 'messages', description: 'Migrated to CHAT_MESSAGE entity' },
+                { name: 'subscriptions', description: 'Migrated to SUBSCRIPTION entity' }
             ]
         };
         
         function renderDatabase() {
-            // Initialize server connection UI
-            initServerConnection();
+            // Sync DynamoDB stats
+            syncDynamoDBSchema();
             
-            // Render ERD Diagram
-            renderERDDiagram();
+            // Render DynamoDB Entity Diagram
+            renderDynamoDBEntities();
+            
+            // Render Access Patterns
+            renderAccessPatterns();
             
             // Render Table Definitions
             renderTableDefinitions();
@@ -18007,53 +18091,206 @@
             renderDataFlow();
         }
         
-        function renderERDDiagram() {
-            const container = document.getElementById('erdDiagram');
+        // Sync schema stats from DynamoDB
+        async function syncDynamoDBSchema() {
+            const statusBadge = document.getElementById('dynamoStatusBadge');
+            const connectionDot = document.getElementById('dynamoConnectionDot');
+            const syncBtn = document.getElementById('syncSchemaBtn');
             
-            // Create visual ERD with CSS Grid
+            if (syncBtn) syncBtn.disabled = true;
+            if (statusBadge) statusBadge.textContent = 'SYNCING...';
+            
+            try {
+                // Fetch schema stats from AWS
+                const response = await fetch(`${AWS_API_URL}/schema/stats`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    dynamoDBStats = {
+                        connected: true,
+                        totalItems: data.totalItems || 0,
+                        profiles: data.profiles || 0,
+                        matches: data.matches || 0,
+                        likes: data.likes || 0,
+                        messages: data.messages || 0,
+                        configs: data.configs || 0,
+                        subscriptions: data.subscriptions || 0,
+                        emergencyContacts: data.emergencyContacts || 0,
+                        lastSync: new Date().toISOString()
+                    };
+                } else {
+                    // Fallback: try to get basic counts from existing endpoints
+                    await fetchBasicDynamoStats();
+                }
+                
+                updateDynamoDBUI();
+                showToast('☁️ DynamoDB schema synced!', 'success');
+                
+            } catch (error) {
+                console.log('Using fallback DynamoDB stats:', error.message);
+                await fetchBasicDynamoStats();
+                updateDynamoDBUI();
+            }
+            
+            if (syncBtn) syncBtn.disabled = false;
+        }
+        
+        // Fallback: get basic stats from existing endpoints
+        async function fetchBasicDynamoStats() {
+            try {
+                // Get users count
+                const usersResponse = await fetch(`${AWS_API_URL}/users`);
+                if (usersResponse.ok) {
+                    const users = await usersResponse.json();
+                    dynamoDBStats.profiles = Object.keys(users).length;
+                    dynamoDBStats.connected = true;
+                }
+                
+                // Estimate total items (profiles + estimated other entities)
+                dynamoDBStats.totalItems = dynamoDBStats.profiles * 3; // Rough estimate
+                dynamoDBStats.lastSync = new Date().toISOString();
+                
+            } catch (e) {
+                dynamoDBStats.connected = false;
+            }
+        }
+        
+        // Update DynamoDB UI elements
+        function updateDynamoDBUI() {
+            const statusBadge = document.getElementById('dynamoStatusBadge');
+            const connectionDot = document.getElementById('dynamoConnectionDot');
+            
+            if (dynamoDBStats.connected) {
+                if (statusBadge) {
+                    statusBadge.textContent = 'CONNECTED';
+                    statusBadge.style.background = 'var(--success)';
+                }
+                if (connectionDot) {
+                    connectionDot.style.background = 'var(--success)';
+                    connectionDot.style.animation = 'pulse 2s infinite';
+                }
+            } else {
+                if (statusBadge) {
+                    statusBadge.textContent = 'DISCONNECTED';
+                    statusBadge.style.background = 'var(--danger)';
+                }
+                if (connectionDot) {
+                    connectionDot.style.background = 'var(--danger)';
+                    connectionDot.style.animation = 'none';
+                }
+            }
+            
+            // Update counts
+            document.getElementById('dynamoItemCount')?.textContent && (document.getElementById('dynamoItemCount').textContent = dynamoDBStats.totalItems || '--');
+            document.getElementById('dynamoProfileCount')?.textContent && (document.getElementById('dynamoProfileCount').textContent = dynamoDBStats.profiles || '--');
+            document.getElementById('dynamoMatchCount')?.textContent && (document.getElementById('dynamoMatchCount').textContent = dynamoDBStats.matches || '--');
+            document.getElementById('dynamoMessageCount')?.textContent && (document.getElementById('dynamoMessageCount').textContent = dynamoDBStats.messages || '--');
+        }
+        
+        function renderDynamoDBEntities() {
+            const container = document.getElementById('erdDiagram');
+            if (!container) return;
+            
+            // Create visual DynamoDB entity diagram
             container.innerHTML = `
-                <div style="position: relative; min-height: 600px;">
-                    <!-- ERD Visual Layout -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; padding: 20px;">
-                        ${databaseSchema.tables.map((table, idx) => `
-                            <div class="db-table-card" style="background: var(--bg-secondary); border: 2px solid ${table.color}; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-                                <div style="background: ${table.color}; padding: 12px 16px; display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 1.2rem;">${table.icon}</span>
-                                    <span style="font-weight: 600; color: white; text-transform: uppercase; letter-spacing: 1px;">${table.name}</span>
+                <div style="margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.02)); border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <span style="font-size: 1.5rem;">☁️</span>
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem;">DynamoDB Single-Table Design</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Table: <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">${dynamoDBSchema.tableName}</code> | Region: ${dynamoDBSchema.region}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                        <div style="padding: 8px 12px; background: var(--bg-secondary); border-radius: 6px; font-size: 0.8rem;">
+                            <span style="color: var(--warning);">pk</span> = Partition Key (String)
+                        </div>
+                        <div style="padding: 8px 12px; background: var(--bg-secondary); border-radius: 6px; font-size: 0.8rem;">
+                            <span style="color: var(--info);">sk</span> = Sort Key (String)
+                        </div>
+                        <div style="padding: 8px 12px; background: var(--bg-secondary); border-radius: 6px; font-size: 0.8rem;">
+                            Composite key: <code>pk + sk</code> = Unique item
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                    ${dynamoDBSchema.entities.map(entity => `
+                        <div class="db-entity-card" style="background: var(--bg-secondary); border: 2px solid ${entity.color}; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                            <div style="background: ${entity.color}; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 1.3rem;">${entity.icon}</span>
+                                    <span style="font-weight: 600; color: white; letter-spacing: 0.5px;">${entity.name}</span>
                                 </div>
-                                <div style="padding: 12px; max-height: 250px; overflow-y: auto;">
-                                    ${table.fields.map(f => `
-                                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: ${f.primary ? 'rgba(245, 158, 11, 0.15)' : f.foreign ? 'rgba(168, 85, 247, 0.1)' : 'transparent'}; border-radius: 4px; margin-bottom: 4px; font-size: 0.8rem;">
-                                            ${f.primary ? '<span style="color: var(--warning);" title="Primary Key">🔑</span>' : ''}
-                                            ${f.foreign ? '<span style="color: var(--purple);" title="Foreign Key">🔗</span>' : ''}
-                                            ${f.unique ? '<span style="color: var(--info);" title="Unique">✦</span>' : ''}
-                                            <span style="font-family: monospace; color: var(--text-primary);">${f.name}</span>
-                                            <span style="color: var(--text-muted); font-size: 0.7rem; margin-left: auto;">${f.type}</span>
+                                <span class="entity-count" data-entity="${entity.name}" style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; color: white;">--</span>
+                            </div>
+                            <div style="padding: 12px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">${entity.description}</div>
+                                
+                                <!-- Key Pattern -->
+                                <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 6px; margin-bottom: 12px; font-family: monospace; font-size: 0.75rem;">
+                                    <div style="color: var(--warning);">pk: ${entity.pkPattern}</div>
+                                    <div style="color: var(--info);">sk: ${entity.skPattern}</div>
+                                </div>
+                                
+                                <!-- Attributes -->
+                                <div style="max-height: 200px; overflow-y: auto;">
+                                    ${entity.attributes.map(attr => `
+                                        <div style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: ${attr.primary ? 'rgba(245, 158, 11, 0.1)' : 'transparent'}; border-radius: 4px; margin-bottom: 3px; font-size: 0.75rem;">
+                                            ${attr.primary ? '<span style="color: var(--warning);" title="Key Attribute">🔑</span>' : '<span style="width: 16px;"></span>'}
+                                            <span style="font-family: monospace; color: var(--text-primary); min-width: 100px;">${attr.name}</span>
+                                            <span style="color: var(--accent); font-size: 0.65rem;">${attr.type}</span>
+                                            ${attr.description ? `<span style="color: var(--text-muted); font-size: 0.65rem; margin-left: auto;" title="${attr.description}">ℹ️</span>` : ''}
                                         </div>
                                     `).join('')}
                                 </div>
+                                
+                                <!-- Used By -->
+                                ${entity.usedBy ? `
+                                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
+                                        <div style="font-size: 0.65rem; color: var(--text-muted);">Used by:</div>
+                                        <div style="font-size: 0.7rem; color: var(--info);">${entity.usedBy.join(', ')}</div>
+                                    </div>
+                                ` : ''}
                             </div>
-                        `).join('')}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- Legend -->
+                <div style="display: flex; gap: 24px; justify-content: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        <span>🔑</span> Key Attribute
                     </div>
-                    
-                    <!-- Legend -->
-                    <div style="display: flex; gap: 24px; justify-content: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px;">
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
-                            <span>🔑</span> Primary Key
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
-                            <span>🔗</span> Foreign Key
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
-                            <span>✦</span> Unique Constraint
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
-                            <div style="width: 12px; height: 12px; background: rgba(245, 158, 11, 0.3); border-radius: 2px;"></div> PK Row
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
-                            <div style="width: 12px; height: 12px; background: rgba(168, 85, 247, 0.2); border-radius: 2px;"></div> FK Row
-                        </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        <div style="width: 12px; height: 12px; background: rgba(245, 158, 11, 0.2); border-radius: 2px;"></div> Key Row
                     </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        <span style="color: var(--warning);">pk</span> Partition Key
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        <span style="color: var(--info);">sk</span> Sort Key
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Render access patterns
+        function renderAccessPatterns() {
+            const container = document.getElementById('accessPatternsContainer');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div style="display: grid; gap: 12px;">
+                    ${dynamoDBSchema.accessPatterns.map((pattern, idx) => `
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-tertiary); border-radius: 8px; border-left: 3px solid var(--accent);">
+                            <span style="background: var(--accent); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600;">${idx + 1}</span>
+                            <div>
+                                <div style="font-weight: 500; margin-bottom: 2px;">${pattern.name}</div>
+                                <code style="font-size: 0.75rem; color: var(--text-muted); background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px;">${pattern.query}</code>
+                            </div>
+                        </div>
+                    `).join('')}
                 </div>
             `;
         }

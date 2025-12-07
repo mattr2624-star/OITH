@@ -732,6 +732,54 @@ export const handler = async (event) => {
             };
         }
         
+        // ============ SCHEMA STATS ============
+        
+        // GET /schema/stats - Get DynamoDB table statistics
+        if (method === 'GET' && path.includes('/schema/stats')) {
+            console.log('📊 Fetching schema statistics...');
+            
+            // Scan for all items and count by type
+            let lastEvaluatedKey;
+            let stats = {
+                totalItems: 0,
+                profiles: 0,
+                likes: 0,
+                matches: 0,
+                messages: 0,
+                subscriptions: 0,
+                emergencyContacts: 0,
+                settings: 0,
+                configs: 0
+            };
+            
+            do {
+                const scanResult = await docClient.send(new ScanCommand({
+                    TableName: TABLE_NAME,
+                    ProjectionExpression: 'pk, sk',
+                    ExclusiveStartKey: lastEvaluatedKey
+                }));
+                
+                scanResult.Items?.forEach(item => {
+                    stats.totalItems++;
+                    
+                    // Count by pk/sk patterns
+                    if (item.pk.startsWith('USER#') && item.sk === 'PROFILE') stats.profiles++;
+                    else if (item.pk.startsWith('LIKE#')) stats.likes++;
+                    else if (item.pk.startsWith('MATCH#')) stats.matches++;
+                    else if (item.pk.startsWith('CHAT#')) stats.messages++;
+                    else if (item.pk.startsWith('USER#') && item.sk === 'SUBSCRIPTION') stats.subscriptions++;
+                    else if (item.pk.startsWith('USER#') && item.sk === 'EMERGENCY_CONTACT') stats.emergencyContacts++;
+                    else if (item.pk.startsWith('USER#') && item.sk === 'SETTINGS') stats.settings++;
+                    else if (item.pk === 'CONFIG') stats.configs++;
+                });
+                
+                lastEvaluatedKey = scanResult.LastEvaluatedKey;
+            } while (lastEvaluatedKey);
+            
+            console.log('📊 Schema stats:', stats);
+            return { statusCode: 200, headers, body: JSON.stringify(stats) };
+        }
+        
         // ============ ML SETTINGS ============
         
         // POST /ml-settings - Save ML model settings
