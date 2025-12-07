@@ -5420,23 +5420,93 @@
                                         <div style="font-weight: 600;" id="dynamoTableName">oith-users</div>
                                         <div style="font-size: 0.75rem; color: var(--text-muted);" id="dynamoRegion">us-east-1</div>
                                     </div>
+                                    <div style="margin-left: auto; text-align: right;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);" id="dynamoItemCount">--</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">Total Items</div>
+                                    </div>
                                 </div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.8rem;">
-                                    <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                                        <div style="color: var(--text-muted);">Total Items</div>
-                                        <div style="font-weight: 600; color: var(--accent);" id="dynamoItemCount">--</div>
+                                
+                                <!-- User Data Section -->
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.7rem; color: var(--info); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">👤 User Data</div>
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 0.75rem;">
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--info);" id="dynamoProfileCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Profiles</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--danger);" id="dynamoMatchCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Matches</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--success);" id="dynamoMessageCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Messages</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--pink);" id="dynamoLikeCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Likes</div>
+                                        </div>
                                     </div>
-                                    <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                                        <div style="color: var(--text-muted);">Profiles</div>
-                                        <div style="font-weight: 600; color: var(--info);" id="dynamoProfileCount">--</div>
+                                </div>
+                                
+                                <!-- Feedback Section -->
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.7rem; color: var(--warning); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">📝 Feedback</div>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 0.75rem;">
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--warning);" id="dynamoFeedbackCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Feedback</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: #FBBF24;" id="dynamoRatingCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Ratings</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--danger);" id="dynamoReportCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Reports</div>
+                                        </div>
                                     </div>
-                                    <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                                        <div style="color: var(--text-muted);">Matches</div>
-                                        <div style="font-weight: 600; color: var(--danger);" id="dynamoMatchCount">--</div>
+                                </div>
+                                
+                                <!-- Activity Section -->
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.7rem; color: var(--success); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">📊 Activity</div>
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 0.75rem;">
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--success);" id="dynamoActivityCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Events</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: #06B6D4;" id="dynamoSessionCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Sessions</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--purple);" id="dynamoMetricsCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Daily Metrics</div>
+                                        </div>
                                     </div>
-                                    <div style="padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
-                                        <div style="color: var(--text-muted);">Messages</div>
-                                        <div style="font-weight: 600; color: var(--success);" id="dynamoMessageCount">--</div>
+                                </div>
+                                
+                                <!-- Company Section -->
+                                <div>
+                                    <div style="font-size: 0.7rem; color: var(--purple); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">🏢 Company</div>
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 0.75rem;">
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--info);" id="dynamoEmployeeCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Employees</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--purple);" id="dynamoDeptCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Depts</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--success);" id="dynamoCompanyMetricsCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Metrics</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--pink);" id="dynamoInvestorCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Investors</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -17875,6 +17945,7 @@
         let dynamoDBStats = {
             connected: false,
             totalItems: 0,
+            // User entities
             profiles: 0,
             matches: 0,
             likes: 0,
@@ -17882,6 +17953,20 @@
             configs: 0,
             subscriptions: 0,
             emergencyContacts: 0,
+            settings: 0,
+            // Feedback entities
+            feedback: 0,
+            ratings: 0,
+            reports: 0,
+            // Activity entities
+            activityEvents: 0,
+            sessions: 0,
+            dailyMetrics: 0,
+            // Company entities
+            employees: 0,
+            departments: 0,
+            companyMetrics: 0,
+            investors: 0,
             lastSync: null
         };
         
@@ -18046,16 +18131,292 @@
                         { name: 'updatedBy', type: 'String', description: 'Who updated' },
                         { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
                     ]
+                },
+                // ========== USER FEEDBACK ENTITIES ==========
+                {
+                    name: 'FEEDBACK',
+                    color: '#F97316',
+                    icon: '📝',
+                    pkPattern: 'FEEDBACK#{feedbackId}',
+                    skPattern: 'META',
+                    description: 'User feedback, bug reports, feature requests',
+                    usedBy: ['index.html: submitFeedback()', 'manager.html: Feedback section'],
+                    category: 'feedback',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'FEEDBACK#fb_123abc', primary: true },
+                        { name: 'sk', type: 'String', example: 'META', primary: true },
+                        { name: 'feedbackId', type: 'String', description: 'Unique feedback ID' },
+                        { name: 'userEmail', type: 'String', description: 'Submitter email' },
+                        { name: 'type', type: 'String', description: 'bug/feature/general/complaint' },
+                        { name: 'category', type: 'String', description: 'matching/chat/profile/payment/other' },
+                        { name: 'subject', type: 'String', description: 'Feedback subject' },
+                        { name: 'message', type: 'String', description: 'Detailed feedback (max 2000)' },
+                        { name: 'rating', type: 'Number', description: 'User rating 1-5 stars' },
+                        { name: 'status', type: 'String', description: 'new/reviewed/resolved/archived' },
+                        { name: 'priority', type: 'String', description: 'low/medium/high/critical' },
+                        { name: 'assignedTo', type: 'String', description: 'Staff member assigned' },
+                        { name: 'resolution', type: 'String', description: 'Resolution notes' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'USER_RATING',
+                    color: '#FBBF24',
+                    icon: '⭐',
+                    pkPattern: 'RATING#{ratedEmail}',
+                    skPattern: 'FROM#{raterEmail}',
+                    description: 'User-to-user ratings after dates',
+                    usedBy: ['index.html: rateDate()', 'manager.html: User reports'],
+                    category: 'feedback',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'RATING#jane@email.com', primary: true },
+                        { name: 'sk', type: 'String', example: 'FROM#john@email.com', primary: true },
+                        { name: 'matchId', type: 'String', description: 'Match context' },
+                        { name: 'overallRating', type: 'Number', description: '1-5 stars' },
+                        { name: 'safetyRating', type: 'Number', description: 'Safety score 1-5' },
+                        { name: 'accuracyRating', type: 'Number', description: 'Profile accuracy 1-5' },
+                        { name: 'comment', type: 'String', description: 'Optional comment' },
+                        { name: 'wouldMeetAgain', type: 'Boolean', description: 'Would meet again?' },
+                        { name: 'reportedIssue', type: 'Boolean', description: 'Flagged for review' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'REPORT',
+                    color: '#EF4444',
+                    icon: '🚩',
+                    pkPattern: 'REPORT#{reportId}',
+                    skPattern: 'META',
+                    description: 'User reports for safety/violations',
+                    usedBy: ['index.html: reportUser()', 'manager.html: Reports section'],
+                    category: 'feedback',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'REPORT#rpt_456def', primary: true },
+                        { name: 'sk', type: 'String', example: 'META', primary: true },
+                        { name: 'reportId', type: 'String', description: 'Unique report ID' },
+                        { name: 'reporterEmail', type: 'String', description: 'Who reported' },
+                        { name: 'reportedEmail', type: 'String', description: 'Who was reported' },
+                        { name: 'reason', type: 'String', description: 'harassment/spam/fake/inappropriate/safety' },
+                        { name: 'description', type: 'String', description: 'Detailed description' },
+                        { name: 'evidence', type: 'List', description: 'Screenshot URLs' },
+                        { name: 'status', type: 'String', description: 'pending/investigating/resolved/dismissed' },
+                        { name: 'action', type: 'String', description: 'warning/suspend/ban/none' },
+                        { name: 'reviewedBy', type: 'String', description: 'Admin who reviewed' },
+                        { name: 'reviewNotes', type: 'String', description: 'Admin notes' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' },
+                        { name: 'resolvedAt', type: 'String', description: 'Resolution timestamp' }
+                    ]
+                },
+                // ========== REAL-TIME ACTIVITY ENTITIES ==========
+                {
+                    name: 'ACTIVITY_EVENT',
+                    color: '#22C55E',
+                    icon: '📊',
+                    pkPattern: 'ACTIVITY#{date}',
+                    skPattern: 'EVENT#{timestamp}#{eventId}',
+                    description: 'Real-time user activity events',
+                    usedBy: ['index.html: trackActivity()', 'manager.html: Real-time Activity'],
+                    category: 'activity',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'ACTIVITY#2024-12-07', primary: true },
+                        { name: 'sk', type: 'String', example: 'EVENT#2024-12-07T10:30:00#evt_789', primary: true },
+                        { name: 'eventId', type: 'String', description: 'Unique event ID' },
+                        { name: 'userEmail', type: 'String', description: 'User who triggered' },
+                        { name: 'eventType', type: 'String', description: 'login/signup/like/match/message/profile_view/date_plan' },
+                        { name: 'eventData', type: 'Map', description: 'Event-specific data' },
+                        { name: 'screenId', type: 'String', description: 'Screen where event occurred' },
+                        { name: 'sessionId', type: 'String', description: 'Session identifier' },
+                        { name: 'deviceInfo', type: 'Map', description: 'Browser/device info' },
+                        { name: 'ipAddress', type: 'String', description: 'User IP (hashed)' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'SESSION',
+                    color: '#06B6D4',
+                    icon: '🔗',
+                    pkPattern: 'SESSION#{sessionId}',
+                    skPattern: 'META',
+                    description: 'User session tracking',
+                    usedBy: ['index.html: initSession()', 'manager.html: Active Users'],
+                    category: 'activity',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'SESSION#sess_abc123', primary: true },
+                        { name: 'sk', type: 'String', example: 'META', primary: true },
+                        { name: 'sessionId', type: 'String', description: 'Unique session ID' },
+                        { name: 'userEmail', type: 'String', description: 'User email' },
+                        { name: 'startedAt', type: 'String', description: 'Session start' },
+                        { name: 'lastActiveAt', type: 'String', description: 'Last activity' },
+                        { name: 'endedAt', type: 'String', description: 'Session end (if ended)' },
+                        { name: 'duration', type: 'Number', description: 'Duration in seconds' },
+                        { name: 'screenViews', type: 'Number', description: 'Screens visited count' },
+                        { name: 'actions', type: 'Number', description: 'Actions performed' },
+                        { name: 'deviceType', type: 'String', description: 'mobile/desktop/tablet' },
+                        { name: 'browser', type: 'String', description: 'Browser name' },
+                        { name: 'platform', type: 'String', description: 'OS platform' }
+                    ]
+                },
+                {
+                    name: 'DAILY_METRICS',
+                    color: '#8B5CF6',
+                    icon: '📈',
+                    pkPattern: 'METRICS#{date}',
+                    skPattern: 'DAILY',
+                    description: 'Aggregated daily platform metrics',
+                    usedBy: ['manager.html: Dashboard, Analytics'],
+                    category: 'activity',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'METRICS#2024-12-07', primary: true },
+                        { name: 'sk', type: 'String', example: 'DAILY', primary: true },
+                        { name: 'date', type: 'String', description: 'Date YYYY-MM-DD' },
+                        { name: 'totalUsers', type: 'Number', description: 'Total registered users' },
+                        { name: 'activeUsers', type: 'Number', description: 'DAU' },
+                        { name: 'newSignups', type: 'Number', description: 'New registrations' },
+                        { name: 'totalMatches', type: 'Number', description: 'Total matches made' },
+                        { name: 'totalMessages', type: 'Number', description: 'Messages sent' },
+                        { name: 'datesPlanned', type: 'Number', description: 'Dates scheduled' },
+                        { name: 'datesCompleted', type: 'Number', description: 'Dates marked complete' },
+                        { name: 'revenue', type: 'Number', description: 'Daily revenue $' },
+                        { name: 'subscriptions', type: 'Number', description: 'New subscriptions' },
+                        { name: 'churnRate', type: 'Number', description: 'Daily churn %' },
+                        { name: 'avgSessionDuration', type: 'Number', description: 'Avg session (seconds)' },
+                        { name: 'updatedAt', type: 'String', description: 'Last calculated' }
+                    ]
+                },
+                // ========== COMPANY/HIERARCHY ENTITIES ==========
+                {
+                    name: 'EMPLOYEE',
+                    color: '#3B82F6',
+                    icon: '👔',
+                    pkPattern: 'ORG#employee',
+                    skPattern: 'EMP#{employeeId}',
+                    description: 'Company employee records',
+                    usedBy: ['manager.html: Hierarchy, Payroll'],
+                    category: 'company',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'ORG#employee', primary: true },
+                        { name: 'sk', type: 'String', example: 'EMP#emp_001', primary: true },
+                        { name: 'employeeId', type: 'String', description: 'Unique employee ID' },
+                        { name: 'email', type: 'String', description: 'Work email' },
+                        { name: 'firstName', type: 'String', description: 'First name' },
+                        { name: 'lastName', type: 'String', description: 'Last name' },
+                        { name: 'title', type: 'String', description: 'Job title' },
+                        { name: 'departmentId', type: 'String', description: 'Department reference' },
+                        { name: 'managerId', type: 'String', description: 'Reports to employee ID' },
+                        { name: 'level', type: 'String', description: 'IC1-IC5/M1-M5/E1-E3' },
+                        { name: 'startDate', type: 'String', description: 'Hire date' },
+                        { name: 'salary', type: 'Number', description: 'Annual salary' },
+                        { name: 'equity', type: 'Number', description: 'Stock options/shares' },
+                        { name: 'status', type: 'String', description: 'active/onleave/terminated' },
+                        { name: 'photoUrl', type: 'String', description: 'Profile photo' },
+                        { name: 'location', type: 'String', description: 'Office location' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'DEPARTMENT',
+                    color: '#6366F1',
+                    icon: '🏢',
+                    pkPattern: 'ORG#department',
+                    skPattern: 'DEPT#{departmentId}',
+                    description: 'Company departments/teams',
+                    usedBy: ['manager.html: Hierarchy, Org Chart'],
+                    category: 'company',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'ORG#department', primary: true },
+                        { name: 'sk', type: 'String', example: 'DEPT#dept_eng', primary: true },
+                        { name: 'departmentId', type: 'String', description: 'Unique department ID' },
+                        { name: 'name', type: 'String', description: 'Department name' },
+                        { name: 'description', type: 'String', description: 'Department description' },
+                        { name: 'headId', type: 'String', description: 'Department head employee ID' },
+                        { name: 'parentDeptId', type: 'String', description: 'Parent department (for sub-teams)' },
+                        { name: 'budget', type: 'Number', description: 'Annual budget $' },
+                        { name: 'headcount', type: 'Number', description: 'Number of employees' },
+                        { name: 'costCenter', type: 'String', description: 'Cost center code' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'COMPANY_METRICS',
+                    color: '#10B981',
+                    icon: '💰',
+                    pkPattern: 'ORG#metrics',
+                    skPattern: 'PERIOD#{period}',
+                    description: 'Company financial/performance metrics',
+                    usedBy: ['manager.html: Revenue, Business Analytics'],
+                    category: 'company',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'ORG#metrics', primary: true },
+                        { name: 'sk', type: 'String', example: 'PERIOD#2024-12', primary: true },
+                        { name: 'period', type: 'String', description: 'YYYY-MM or YYYY-Q1, etc.' },
+                        { name: 'periodType', type: 'String', description: 'monthly/quarterly/yearly' },
+                        { name: 'revenue', type: 'Number', description: 'Total revenue $' },
+                        { name: 'mrr', type: 'Number', description: 'Monthly Recurring Revenue $' },
+                        { name: 'arr', type: 'Number', description: 'Annual Recurring Revenue $' },
+                        { name: 'costs', type: 'Number', description: 'Total costs $' },
+                        { name: 'grossMargin', type: 'Number', description: 'Gross margin %' },
+                        { name: 'netIncome', type: 'Number', description: 'Net income $' },
+                        { name: 'runway', type: 'Number', description: 'Runway in months' },
+                        { name: 'burnRate', type: 'Number', description: 'Monthly burn rate $' },
+                        { name: 'customerCount', type: 'Number', description: 'Total paying customers' },
+                        { name: 'arpu', type: 'Number', description: 'Avg Revenue Per User $' },
+                        { name: 'ltv', type: 'Number', description: 'Lifetime Value $' },
+                        { name: 'cac', type: 'Number', description: 'Customer Acq Cost $' },
+                        { name: 'nps', type: 'Number', description: 'Net Promoter Score' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'INVESTOR',
+                    color: '#EC4899',
+                    icon: '🤝',
+                    pkPattern: 'ORG#investor',
+                    skPattern: 'INV#{investorId}',
+                    description: 'Investor/shareholder records',
+                    usedBy: ['manager.html: Cap Table, Investors'],
+                    category: 'company',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'ORG#investor', primary: true },
+                        { name: 'sk', type: 'String', example: 'INV#inv_001', primary: true },
+                        { name: 'investorId', type: 'String', description: 'Unique investor ID' },
+                        { name: 'name', type: 'String', description: 'Investor/firm name' },
+                        { name: 'type', type: 'String', description: 'vc/angel/strategic/individual' },
+                        { name: 'contactEmail', type: 'String', description: 'Primary contact email' },
+                        { name: 'contactName', type: 'String', description: 'Primary contact name' },
+                        { name: 'investmentAmount', type: 'Number', description: 'Total invested $' },
+                        { name: 'shareCount', type: 'Number', description: 'Shares owned' },
+                        { name: 'ownershipPercent', type: 'Number', description: 'Ownership %' },
+                        { name: 'boardSeat', type: 'Boolean', description: 'Has board seat?' },
+                        { name: 'round', type: 'String', description: 'Investment round (seed/A/B)' },
+                        { name: 'investedAt', type: 'String', description: 'Investment date' },
+                        { name: 'notes', type: 'String', description: 'Additional notes' },
+                        { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
                 }
             ],
             accessPatterns: [
-                { name: 'Get user profile', query: 'pk = USER#{email}, sk = PROFILE' },
-                { name: 'Get all visible profiles', query: 'Scan where sk = PROFILE AND isHidden = false' },
-                { name: 'Get user matches', query: 'pk = MATCH#{email}' },
-                { name: 'Check mutual like', query: 'pk = LIKE#{B}, sk = TO#{A}' },
-                { name: 'Get chat messages', query: 'pk = CHAT#{matchId}, sk begins_with MSG#' },
-                { name: 'Get user full data', query: 'pk = USER#{email} (all sk values)' },
-                { name: 'Get ML config', query: 'pk = CONFIG, sk = ML#{type}' }
+                // User Data Patterns
+                { name: 'Get user profile', query: 'pk = USER#{email}, sk = PROFILE', category: 'user' },
+                { name: 'Get all visible profiles', query: 'Scan where sk = PROFILE AND isHidden = false', category: 'user' },
+                { name: 'Get user matches', query: 'pk = MATCH#{email}', category: 'user' },
+                { name: 'Check mutual like', query: 'pk = LIKE#{B}, sk = TO#{A}', category: 'user' },
+                { name: 'Get chat messages', query: 'pk = CHAT#{matchId}, sk begins_with MSG#', category: 'user' },
+                { name: 'Get user full data', query: 'pk = USER#{email} (all sk values)', category: 'user' },
+                // Feedback Patterns
+                { name: 'Get all feedback', query: 'Scan where pk begins_with FEEDBACK#', category: 'feedback' },
+                { name: 'Get user ratings', query: 'pk = RATING#{email}', category: 'feedback' },
+                { name: 'Get pending reports', query: 'Scan where pk begins_with REPORT# AND status = pending', category: 'feedback' },
+                // Activity Patterns
+                { name: 'Get daily activity', query: 'pk = ACTIVITY#{date}', category: 'activity' },
+                { name: 'Get user sessions', query: 'Scan where pk begins_with SESSION# AND userEmail = X', category: 'activity' },
+                { name: 'Get daily metrics', query: 'pk = METRICS#{date}, sk = DAILY', category: 'activity' },
+                // Company Patterns
+                { name: 'Get all employees', query: 'pk = ORG#employee', category: 'company' },
+                { name: 'Get all departments', query: 'pk = ORG#department', category: 'company' },
+                { name: 'Get company metrics', query: 'pk = ORG#metrics, sk begins_with PERIOD#', category: 'company' },
+                { name: 'Get ML config', query: 'pk = CONFIG, sk = ML#{type}', category: 'config' }
             ]
         };
         
@@ -18180,16 +18541,62 @@
                 }
             }
             
-            // Update counts
-            document.getElementById('dynamoItemCount')?.textContent && (document.getElementById('dynamoItemCount').textContent = dynamoDBStats.totalItems || '--');
-            document.getElementById('dynamoProfileCount')?.textContent && (document.getElementById('dynamoProfileCount').textContent = dynamoDBStats.profiles || '--');
-            document.getElementById('dynamoMatchCount')?.textContent && (document.getElementById('dynamoMatchCount').textContent = dynamoDBStats.matches || '--');
-            document.getElementById('dynamoMessageCount')?.textContent && (document.getElementById('dynamoMessageCount').textContent = dynamoDBStats.messages || '--');
+            // Helper function to update element text
+            const updateEl = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value ?? '--';
+            };
+            
+            // Update total count
+            updateEl('dynamoItemCount', dynamoDBStats.totalItems || '--');
+            
+            // User data counts
+            updateEl('dynamoProfileCount', dynamoDBStats.profiles || '--');
+            updateEl('dynamoMatchCount', dynamoDBStats.matches || '--');
+            updateEl('dynamoMessageCount', dynamoDBStats.messages || '--');
+            updateEl('dynamoLikeCount', dynamoDBStats.likes || '--');
+            
+            // Feedback counts
+            updateEl('dynamoFeedbackCount', dynamoDBStats.feedback || '--');
+            updateEl('dynamoRatingCount', dynamoDBStats.ratings || '--');
+            updateEl('dynamoReportCount', dynamoDBStats.reports || '--');
+            
+            // Activity counts
+            updateEl('dynamoActivityCount', dynamoDBStats.activityEvents || '--');
+            updateEl('dynamoSessionCount', dynamoDBStats.sessions || '--');
+            updateEl('dynamoMetricsCount', dynamoDBStats.dailyMetrics || '--');
+            
+            // Company counts
+            updateEl('dynamoEmployeeCount', dynamoDBStats.employees || '--');
+            updateEl('dynamoDeptCount', dynamoDBStats.departments || '--');
+            updateEl('dynamoCompanyMetricsCount', dynamoDBStats.companyMetrics || '--');
+            updateEl('dynamoInvestorCount', dynamoDBStats.investors || '--');
         }
         
         function renderDynamoDBEntities() {
             const container = document.getElementById('erdDiagram');
             if (!container) return;
+            
+            // Group entities by category
+            const categories = {
+                user: { name: '👤 User Data', color: '#3B82F6', entities: [] },
+                feedback: { name: '📝 User Feedback', color: '#F97316', entities: [] },
+                activity: { name: '📊 Real-time Activity', color: '#22C55E', entities: [] },
+                company: { name: '🏢 Company / Hierarchy', color: '#6366F1', entities: [] },
+                config: { name: '🔧 Configuration', color: '#14B8A6', entities: [] }
+            };
+            
+            // Sort entities into categories
+            dynamoDBSchema.entities.forEach(entity => {
+                const cat = entity.category || 'user';
+                if (categories[cat]) {
+                    categories[cat].entities.push(entity);
+                } else if (entity.name === 'CONFIG') {
+                    categories.config.entities.push(entity);
+                } else {
+                    categories.user.entities.push(entity);
+                }
+            });
             
             // Create visual DynamoDB entity diagram
             container.innerHTML = `
@@ -18198,7 +18605,7 @@
                         <span style="font-size: 1.5rem;">☁️</span>
                         <div>
                             <div style="font-weight: 600; font-size: 1.1rem;">DynamoDB Single-Table Design</div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">Table: <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">${dynamoDBSchema.tableName}</code> | Region: ${dynamoDBSchema.region}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Table: <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">${dynamoDBSchema.tableName}</code> | Region: ${dynamoDBSchema.region} | Entities: ${dynamoDBSchema.entities.length}</div>
                         </div>
                     </div>
                     <div style="display: flex; gap: 16px; flex-wrap: wrap;">
@@ -18214,48 +18621,59 @@
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
-                    ${dynamoDBSchema.entities.map(entity => `
-                        <div class="db-entity-card" style="background: var(--bg-secondary); border: 2px solid ${entity.color}; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                            <div style="background: ${entity.color}; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 1.3rem;">${entity.icon}</span>
-                                    <span style="font-weight: 600; color: white; letter-spacing: 0.5px;">${entity.name}</span>
-                                </div>
-                                <span class="entity-count" data-entity="${entity.name}" style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; color: white;">--</span>
-                            </div>
-                            <div style="padding: 12px;">
-                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">${entity.description}</div>
-                                
-                                <!-- Key Pattern -->
-                                <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 6px; margin-bottom: 12px; font-family: monospace; font-size: 0.75rem;">
-                                    <div style="color: var(--warning);">pk: ${entity.pkPattern}</div>
-                                    <div style="color: var(--info);">sk: ${entity.skPattern}</div>
-                                </div>
-                                
-                                <!-- Attributes -->
-                                <div style="max-height: 200px; overflow-y: auto;">
-                                    ${entity.attributes.map(attr => `
-                                        <div style="display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: ${attr.primary ? 'rgba(245, 158, 11, 0.1)' : 'transparent'}; border-radius: 4px; margin-bottom: 3px; font-size: 0.75rem;">
-                                            ${attr.primary ? '<span style="color: var(--warning);" title="Key Attribute">🔑</span>' : '<span style="width: 16px;"></span>'}
-                                            <span style="font-family: monospace; color: var(--text-primary); min-width: 100px;">${attr.name}</span>
-                                            <span style="color: var(--accent); font-size: 0.65rem;">${attr.type}</span>
-                                            ${attr.description ? `<span style="color: var(--text-muted); font-size: 0.65rem; margin-left: auto;" title="${attr.description}">ℹ️</span>` : ''}
-                                        </div>
-                                    `).join('')}
-                                </div>
-                                
-                                <!-- Used By -->
-                                ${entity.usedBy ? `
-                                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
-                                        <div style="font-size: 0.65rem; color: var(--text-muted);">Used by:</div>
-                                        <div style="font-size: 0.7rem; color: var(--info);">${entity.usedBy.join(', ')}</div>
-                                    </div>
-                                ` : ''}
-                            </div>
+                ${Object.entries(categories).filter(([_, cat]) => cat.entities.length > 0).map(([key, cat]) => `
+                    <div style="margin-bottom: 30px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid ${cat.color};">
+                            <span style="font-size: 1.2rem;">${cat.name.split(' ')[0]}</span>
+                            <h4 style="margin: 0; color: ${cat.color};">${cat.name.split(' ').slice(1).join(' ')}</h4>
+                            <span style="background: ${cat.color}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem;">${cat.entities.length} ENTITIES</span>
                         </div>
-                    `).join('')}
-                </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 16px;">
+                            ${cat.entities.map(entity => `
+                                <div class="db-entity-card" style="background: var(--bg-secondary); border: 2px solid ${entity.color}; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                                    <div style="background: ${entity.color}; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span style="font-size: 1.2rem;">${entity.icon}</span>
+                                            <span style="font-weight: 600; color: white; letter-spacing: 0.5px; font-size: 0.9rem;">${entity.name}</span>
+                                        </div>
+                                        <span class="entity-count" data-entity="${entity.name}" style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; color: white;">--</span>
+                                    </div>
+                                    <div style="padding: 12px;">
+                                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">${entity.description}</div>
+                                        
+                                        <!-- Key Pattern -->
+                                        <div style="background: var(--bg-tertiary); padding: 8px; border-radius: 6px; margin-bottom: 10px; font-family: monospace; font-size: 0.72rem;">
+                                            <div style="color: var(--warning);">pk: ${entity.pkPattern}</div>
+                                            <div style="color: var(--info);">sk: ${entity.skPattern}</div>
+                                        </div>
+                                        
+                                        <!-- Attributes (collapsed by default) -->
+                                        <details style="margin-bottom: 8px;">
+                                            <summary style="cursor: pointer; font-size: 0.75rem; color: var(--accent); user-select: none;">📋 ${entity.attributes.length} attributes</summary>
+                                            <div style="max-height: 180px; overflow-y: auto; margin-top: 8px;">
+                                                ${entity.attributes.map(attr => `
+                                                    <div style="display: flex; align-items: center; gap: 6px; padding: 3px 6px; background: ${attr.primary ? 'rgba(245, 158, 11, 0.1)' : 'transparent'}; border-radius: 4px; margin-bottom: 2px; font-size: 0.7rem;">
+                                                        ${attr.primary ? '<span style="color: var(--warning);" title="Key Attribute">🔑</span>' : '<span style="width: 14px;"></span>'}
+                                                        <span style="font-family: monospace; color: var(--text-primary);">${attr.name}</span>
+                                                        <span style="color: var(--accent); font-size: 0.6rem; margin-left: auto;">${attr.type}</span>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </details>
+                                        
+                                        <!-- Used By -->
+                                        ${entity.usedBy ? `
+                                            <div style="padding-top: 6px; border-top: 1px solid var(--border);">
+                                                <div style="font-size: 0.65rem; color: var(--text-muted);">Used by:</div>
+                                                <div style="font-size: 0.68rem; color: var(--info);">${entity.usedBy.join(', ')}</div>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}
                 
                 <!-- Legend -->
                 <div style="display: flex; gap: 24px; justify-content: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px; flex-wrap: wrap;">
@@ -18275,22 +18693,50 @@
             `;
         }
         
-        // Render access patterns
+        // Render access patterns grouped by category
         function renderAccessPatterns() {
             const container = document.getElementById('accessPatternsContainer');
             if (!container) return;
             
+            // Group patterns by category
+            const categoryConfig = {
+                user: { name: '👤 User Data', color: '#3B82F6' },
+                feedback: { name: '📝 Feedback', color: '#F97316' },
+                activity: { name: '📊 Activity', color: '#22C55E' },
+                company: { name: '🏢 Company', color: '#6366F1' },
+                config: { name: '🔧 Config', color: '#14B8A6' }
+            };
+            
+            const grouped = {};
+            dynamoDBSchema.accessPatterns.forEach(pattern => {
+                const cat = pattern.category || 'user';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(pattern);
+            });
+            
             container.innerHTML = `
-                <div style="display: grid; gap: 12px;">
-                    ${dynamoDBSchema.accessPatterns.map((pattern, idx) => `
-                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-tertiary); border-radius: 8px; border-left: 3px solid var(--accent);">
-                            <span style="background: var(--accent); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600;">${idx + 1}</span>
-                            <div>
-                                <div style="font-weight: 500; margin-bottom: 2px;">${pattern.name}</div>
-                                <code style="font-size: 0.75rem; color: var(--text-muted); background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px;">${pattern.query}</code>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                    ${Object.entries(grouped).map(([cat, patterns]) => {
+                        const cfg = categoryConfig[cat] || { name: cat, color: 'var(--accent)' };
+                        return `
+                            <div style="background: var(--bg-tertiary); border-radius: 12px; overflow: hidden; border: 1px solid ${cfg.color};">
+                                <div style="background: ${cfg.color}; padding: 10px 14px; color: white; font-weight: 600; font-size: 0.85rem;">
+                                    ${cfg.name}
+                                </div>
+                                <div style="padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                                    ${patterns.map((pattern, idx) => `
+                                        <div style="display: flex; align-items: flex-start; gap: 10px; padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
+                                            <span style="background: ${cfg.color}; color: white; min-width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 600;">${idx + 1}</span>
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div style="font-weight: 500; font-size: 0.8rem; margin-bottom: 4px;">${pattern.name}</div>
+                                                <code style="font-size: 0.7rem; color: var(--text-muted); background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; display: block; word-break: break-all;">${pattern.query}</code>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
                             </div>
-                        </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
             `;
         }

@@ -742,6 +742,7 @@ export const handler = async (event) => {
             let lastEvaluatedKey;
             let stats = {
                 totalItems: 0,
+                // User entities
                 profiles: 0,
                 likes: 0,
                 matches: 0,
@@ -749,7 +750,20 @@ export const handler = async (event) => {
                 subscriptions: 0,
                 emergencyContacts: 0,
                 settings: 0,
-                configs: 0
+                configs: 0,
+                // Feedback entities
+                feedback: 0,
+                ratings: 0,
+                reports: 0,
+                // Activity entities
+                activityEvents: 0,
+                sessions: 0,
+                dailyMetrics: 0,
+                // Company entities
+                employees: 0,
+                departments: 0,
+                companyMetrics: 0,
+                investors: 0
             };
             
             do {
@@ -762,7 +776,7 @@ export const handler = async (event) => {
                 scanResult.Items?.forEach(item => {
                     stats.totalItems++;
                     
-                    // Count by pk/sk patterns
+                    // User entities
                     if (item.pk.startsWith('USER#') && item.sk === 'PROFILE') stats.profiles++;
                     else if (item.pk.startsWith('LIKE#')) stats.likes++;
                     else if (item.pk.startsWith('MATCH#')) stats.matches++;
@@ -771,6 +785,19 @@ export const handler = async (event) => {
                     else if (item.pk.startsWith('USER#') && item.sk === 'EMERGENCY_CONTACT') stats.emergencyContacts++;
                     else if (item.pk.startsWith('USER#') && item.sk === 'SETTINGS') stats.settings++;
                     else if (item.pk === 'CONFIG') stats.configs++;
+                    // Feedback entities
+                    else if (item.pk.startsWith('FEEDBACK#')) stats.feedback++;
+                    else if (item.pk.startsWith('RATING#')) stats.ratings++;
+                    else if (item.pk.startsWith('REPORT#')) stats.reports++;
+                    // Activity entities
+                    else if (item.pk.startsWith('ACTIVITY#')) stats.activityEvents++;
+                    else if (item.pk.startsWith('SESSION#')) stats.sessions++;
+                    else if (item.pk.startsWith('METRICS#')) stats.dailyMetrics++;
+                    // Company entities
+                    else if (item.pk === 'ORG#employee') stats.employees++;
+                    else if (item.pk === 'ORG#department') stats.departments++;
+                    else if (item.pk === 'ORG#metrics') stats.companyMetrics++;
+                    else if (item.pk === 'ORG#investor') stats.investors++;
                 });
                 
                 lastEvaluatedKey = scanResult.LastEvaluatedKey;
