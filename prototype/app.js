@@ -2613,9 +2613,9 @@ function renderCurrentMatch() {
     // Update Accepted Match Card
     const card = document.getElementById('matchCard');
     if (card) {
-    // Update photo
-    const photoImg = card.querySelector('.match-photo img');
-    if (photoImg) photoImg.src = match.photo;
+    // Initialize photo carousel for match card
+    const matchPhotos = match.photos || [match.photo];
+    initPhotoCarousel('match', matchPhotos);
     
     // Update name and age
     const nameEl = card.querySelector('.match-name');
@@ -4316,13 +4316,15 @@ function updateAllMatchDisplays() {
     }
     
     // Profile view - Basic info
-    const profileViewPhoto = document.getElementById('profileViewPhoto');
     const profileViewName = document.getElementById('profileViewName');
     const profileViewOccupation = document.getElementById('profileViewOccupation');
     
-    if (profileViewPhoto) profileViewPhoto.src = match.photo;
     if (profileViewName) profileViewName.textContent = `${match.name}, ${match.age}`;
     if (profileViewOccupation) profileViewOccupation.textContent = `${match.occupation || 'Professional'} • ${match.distanceText || match.distance + ' miles'} away`;
+    
+    // Initialize photo carousel for profile view
+    const profilePhotos = match.photos || [match.photo];
+    initPhotoCarousel('profile', profilePhotos);
     
     // Profile view - Bio
     const profileViewBio = document.getElementById('profileViewBio');
@@ -9742,6 +9744,164 @@ function selectVenue(name, address) {
             card.classList.add('selected');
         }
     });
+}
+
+// ==========================================
+// Photo Carousel Functions
+// ==========================================
+
+let carouselState = {
+    match: { currentIndex: 0, photos: [], startX: 0, isDragging: false },
+    profile: { currentIndex: 0, photos: [], startX: 0, isDragging: false }
+};
+
+/**
+ * Initialize photo carousel for a match
+ * @param {string} type - 'match' or 'profile'
+ * @param {array} photos - Array of photo URLs
+ */
+function initPhotoCarousel(type, photos) {
+    if (!photos || photos.length === 0) return;
+    
+    const state = carouselState[type];
+    state.photos = photos.filter(p => p && p.trim() !== '');
+    state.currentIndex = 0;
+    
+    const trackId = type === 'match' ? 'matchCarouselTrack' : 'profileCarouselTrack';
+    const indicatorsId = type === 'match' ? 'matchPhotoIndicators' : 'profilePhotoIndicators';
+    const hintId = type === 'match' ? 'matchSwipeHint' : 'profileSwipeHint';
+    const carouselId = type === 'match' ? 'matchPhotoCarousel' : 'profileViewCarousel';
+    
+    const track = document.getElementById(trackId);
+    const indicators = document.getElementById(indicatorsId);
+    const hint = document.getElementById(hintId);
+    const carousel = document.getElementById(carouselId);
+    
+    if (!track) return;
+    
+    // Build photo elements
+    track.innerHTML = state.photos.map((photo, i) => 
+        `<img src="${photo}" alt="Photo ${i + 1}" class="carousel-photo ${i === 0 ? 'active' : ''}">`
+    ).join('');
+    
+    // Build indicators
+    if (indicators) {
+        indicators.innerHTML = state.photos.map((_, i) => 
+            `<span class="indicator ${i === 0 ? 'active' : ''}" onclick="goToPhoto('${type}', ${i})"></span>`
+        ).join('');
+    }
+    
+    // Show/hide swipe hint
+    if (hint) {
+        hint.style.display = state.photos.length > 1 ? 'block' : 'none';
+        // Auto-hide hint after 3 seconds
+        if (state.photos.length > 1) {
+            setTimeout(() => { hint.style.display = 'none'; }, 3000);
+        }
+    }
+    
+    // Add touch/swipe handlers
+    if (carousel && state.photos.length > 1) {
+        carousel.addEventListener('touchstart', (e) => handleCarouselTouchStart(e, type), { passive: true });
+        carousel.addEventListener('touchmove', (e) => handleCarouselTouchMove(e, type), { passive: true });
+        carousel.addEventListener('touchend', (e) => handleCarouselTouchEnd(e, type));
+        
+        // Mouse support for desktop
+        carousel.addEventListener('mousedown', (e) => handleCarouselMouseDown(e, type));
+        carousel.addEventListener('mousemove', (e) => handleCarouselMouseMove(e, type));
+        carousel.addEventListener('mouseup', (e) => handleCarouselMouseUp(e, type));
+        carousel.addEventListener('mouseleave', (e) => handleCarouselMouseUp(e, type));
+    }
+}
+
+function handleCarouselTouchStart(e, type) {
+    carouselState[type].startX = e.touches[0].clientX;
+    carouselState[type].isDragging = true;
+}
+
+function handleCarouselTouchMove(e, type) {
+    if (!carouselState[type].isDragging) return;
+    // Optional: add visual feedback during drag
+}
+
+function handleCarouselTouchEnd(e, type) {
+    if (!carouselState[type].isDragging) return;
+    
+    const endX = e.changedTouches[0].clientX;
+    const diff = carouselState[type].startX - endX;
+    
+    if (Math.abs(diff) > 50) { // Minimum swipe distance
+        if (diff > 0) {
+            // Swipe left - next photo
+            nextPhoto(type);
+        } else {
+            // Swipe right - previous photo
+            prevPhoto(type);
+        }
+    }
+    
+    carouselState[type].isDragging = false;
+}
+
+function handleCarouselMouseDown(e, type) {
+    carouselState[type].startX = e.clientX;
+    carouselState[type].isDragging = true;
+}
+
+function handleCarouselMouseMove(e, type) {
+    if (!carouselState[type].isDragging) return;
+}
+
+function handleCarouselMouseUp(e, type) {
+    if (!carouselState[type].isDragging) return;
+    
+    const endX = e.clientX;
+    const diff = carouselState[type].startX - endX;
+    
+    if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+            nextPhoto(type);
+        } else {
+            prevPhoto(type);
+        }
+    }
+    
+    carouselState[type].isDragging = false;
+}
+
+function nextPhoto(type) {
+    const state = carouselState[type];
+    if (state.currentIndex < state.photos.length - 1) {
+        goToPhoto(type, state.currentIndex + 1);
+    }
+}
+
+function prevPhoto(type) {
+    const state = carouselState[type];
+    if (state.currentIndex > 0) {
+        goToPhoto(type, state.currentIndex - 1);
+    }
+}
+
+function goToPhoto(type, index) {
+    const state = carouselState[type];
+    state.currentIndex = index;
+    
+    const trackId = type === 'match' ? 'matchCarouselTrack' : 'profileCarouselTrack';
+    const indicatorsId = type === 'match' ? 'matchPhotoIndicators' : 'profilePhotoIndicators';
+    
+    const track = document.getElementById(trackId);
+    const indicators = document.getElementById(indicatorsId);
+    
+    if (track) {
+        track.style.transform = `translateX(-${index * 100}%)`;
+    }
+    
+    if (indicators) {
+        indicators.querySelectorAll('.indicator').forEach((ind, i) => {
+            ind.classList.toggle('active', i === index);
+        });
+    }
 }
 
 /**

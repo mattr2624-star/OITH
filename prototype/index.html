@@ -533,8 +533,8 @@
                         </div>
                         <div class="range-slider">
                             <div class="range-slider-track" id="ageTrack"></div>
-                            <input type="range" id="ageMin" min="18" max="60" value="25" oninput="updateAgeRange()">
-                            <input type="range" id="ageMax" min="18" max="60" value="35" oninput="updateAgeRange()">
+                            <input type="range" id="ageMin" min="18" max="100" value="25" oninput="updateAgeRange()">
+                            <input type="range" id="ageMax" min="18" max="100" value="35" oninput="updateAgeRange()">
                         </div>
                     </div>
                     <div class="preference-section">
@@ -890,7 +890,20 @@
                     
                     <div class="match-card accepted" id="matchCard">
                         <div class="match-photo">
-                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop" alt="Match photo" id="matchAcceptedPhoto">
+                            <!-- Photo Carousel -->
+                            <div class="photo-carousel" id="matchPhotoCarousel">
+                                <div class="carousel-track" id="matchCarouselTrack">
+                                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop" alt="Match photo 1" class="carousel-photo active">
+                                </div>
+                                <!-- Photo indicators -->
+                                <div class="photo-indicators" id="matchPhotoIndicators">
+                                    <span class="indicator active"></span>
+                                </div>
+                                <!-- Swipe hint (shown only when multiple photos) -->
+                                <div class="swipe-hint" id="matchSwipeHint" style="display: none;">
+                                    <span>← Swipe for more photos</span>
+                                </div>
+                            </div>
                             <div class="photo-gradient"></div>
                             <div class="match-status-badge">
                                 <span class="status-dot"></span>
@@ -1084,7 +1097,20 @@
                 </div>
                 <div class="profile-view-content">
                     <div class="profile-hero">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop" alt="Match" id="profileViewPhoto">
+                        <!-- Photo Carousel -->
+                        <div class="photo-carousel profile-carousel" id="profileViewCarousel">
+                            <div class="carousel-track" id="profileCarouselTrack">
+                                <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop" alt="Match photo 1" class="carousel-photo active">
+                            </div>
+                            <!-- Photo indicators -->
+                            <div class="photo-indicators" id="profilePhotoIndicators">
+                                <span class="indicator active"></span>
+                            </div>
+                            <!-- Swipe hint -->
+                            <div class="swipe-hint" id="profileSwipeHint" style="display: none;">
+                                <span>← Swipe for more photos</span>
+                            </div>
+                        </div>
                         <div class="profile-hero-overlay"></div>
                         <div class="profile-hero-info">
                             <h2 id="profileViewName">Sarah, 28</h2>
@@ -3753,8 +3779,8 @@
                             </div>
                             <div class="range-slider dual">
                                 <div class="range-track" id="prefAgeTrack"></div>
-                                <input type="range" id="prefAgeMinSlider" min="18" max="60" value="18" oninput="updatePrefAgeRange()">
-                                <input type="range" id="prefAgeMaxSlider" min="18" max="60" value="60" oninput="updatePrefAgeRange()">
+                                <input type="range" id="prefAgeMinSlider" min="18" max="100" value="18" oninput="updatePrefAgeRange()">
+                                <input type="range" id="prefAgeMaxSlider" min="18" max="100" value="100" oninput="updatePrefAgeRange()">
                             </div>
                         </div>
                         
@@ -3969,8 +3995,8 @@
                         </div>
                         <div class="range-slider">
                             <div class="range-slider-track" id="adjustAgeTrack"></div>
-                            <input type="range" id="adjustAgeMin" min="18" max="60" value="25" oninput="updateAdjustAgeRange()">
-                            <input type="range" id="adjustAgeMax" min="18" max="60" value="35" oninput="updateAdjustAgeRange()">
+                            <input type="range" id="adjustAgeMin" min="18" max="100" value="25" oninput="updateAdjustAgeRange()">
+                            <input type="range" id="adjustAgeMax" min="18" max="100" value="35" oninput="updateAdjustAgeRange()">
                         </div>
                     </div>
                     
