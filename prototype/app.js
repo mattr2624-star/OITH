@@ -5905,8 +5905,8 @@ function formatExpiry(input) {
 // ==========================================
 const PAYMENT_CONFIG = {
     // Square Configuration - Get these from https://developer.squareup.com/apps
-    squareApplicationId: 'YOUR_SQUARE_APPLICATION_ID', // Replace with your App ID
-    squareLocationId: 'YOUR_SQUARE_LOCATION_ID',       // Replace with your Location ID
+    squareApplicationId: 'sandbox-sq0idb-2-fPVsJ-fUH7bXTHPAc6gw', // Your Square App ID
+    squareLocationId: 'LQG727ZKHH6V7',                 // Your Square Location ID
     
     // Environment: 'sandbox' for testing, 'production' for live payments
     squareEnvironment: 'sandbox', // Change to 'production' when ready
