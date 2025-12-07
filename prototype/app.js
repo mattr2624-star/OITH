@@ -2732,7 +2732,10 @@ let matchPollingInterval = null;
 function startMatchPolling(matchEmail) {
     if (matchPollingInterval) clearInterval(matchPollingInterval);
     
+    console.log('🔄 Starting match polling for:', matchEmail);
+    
     matchPollingInterval = setInterval(async () => {
+        console.log('🔍 Checking for match...');
         const matches = await getMyMatches();
         const found = matches.find(m => m.matchedWith === matchEmail);
         
@@ -2741,19 +2744,66 @@ function startMatchPolling(matchEmail) {
             clearInterval(matchPollingInterval);
             matchPollingInterval = null;
             
+            // Play sound/vibrate
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            
             // They matched with us!
             handleMutualMatch(appState.oneMatch.current);
         }
-    }, 10000); // Check every 10 seconds
+    }, 5000); // Check every 5 seconds for faster response
     
-    // Stop polling after 5 minutes
+    // Stop polling after 10 minutes
     setTimeout(() => {
         if (matchPollingInterval) {
             clearInterval(matchPollingInterval);
             matchPollingInterval = null;
+            console.log('⏱️ Match polling timed out');
         }
-    }, 300000);
+    }, 600000);
 }
+
+/**
+ * Check for new matches on app load (background check)
+ */
+async function checkForNewMatches() {
+    const email = appState.user?.email;
+    if (!email) return;
+    
+    try {
+        const matches = await getMyMatches();
+        const knownMatches = appState.knownMatches || [];
+        
+        // Find new matches we haven't seen
+        const newMatches = matches.filter(m => !knownMatches.includes(m.matchedWith));
+        
+        if (newMatches.length > 0) {
+            console.log('🎉 Found new matches:', newMatches);
+            
+            // Store as known
+            appState.knownMatches = [...knownMatches, ...newMatches.map(m => m.matchedWith)];
+            saveUserData();
+            
+            // Notify user
+            newMatches.forEach(match => {
+                showToast(`🎉 You matched with ${match.matchedWith}! Go to messages to chat.`, 'success');
+            });
+            
+            // If waiting for this specific match, trigger the match screen
+            if (appState.oneMatch?.status === 'waiting_for_match') {
+                const waitingFor = appState.oneMatch.current?.email;
+                const found = newMatches.find(m => m.matchedWith === waitingFor);
+                if (found) {
+                    handleMutualMatch(appState.oneMatch.current);
+                }
+            }
+        }
+    } catch (error) {
+        console.log('Match check error:', error);
+    }
+}
+
+// Check for matches every 30 seconds in background
+setInterval(checkForNewMatches, 30000);
 
 /**
  * Show the waiting for mutual match view
@@ -12082,6 +12132,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Update all match displays with saved data
         updateAllMatchDisplays();
+        
+        // Check for new matches from AWS (in case they matched while we were away)
+        checkForNewMatches();
         
         // Restore to appropriate screen based on state
         if (appState.activeConnection) {
