@@ -7287,16 +7287,19 @@
             const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
             const userEmails = Object.keys(registeredUsers);
             
-            if (userEmails.length === 0) {
-                showToast('⚠️ No users to push', 'warning');
+            // Allow pushing even if empty (to clear DynamoDB)
+            const message = userEmails.length === 0 
+                ? '⚠️ Your local database is EMPTY.\n\nThis will DELETE ALL users from DynamoDB!\n\nContinue?'
+                : `⚠️ This will COMPLETELY REPLACE DynamoDB with ${userEmails.length} users from your local database.\n\nAll existing DynamoDB data will be deleted first.\n\nContinue?`;
+            
+            if (!confirm(message)) {
                 return;
             }
             
-            if (!confirm(`⚠️ This will COMPLETELY REPLACE DynamoDB with ${userEmails.length} users from your local database.\n\nAll existing DynamoDB data will be deleted first.\n\nContinue?`)) {
-                return;
-            }
-            
-            showToast(`☁️ Replacing DynamoDB with ${userEmails.length} local users...`, 'info');
+            const actionMsg = userEmails.length === 0 
+                ? '🗑️ Clearing DynamoDB (local database is empty)...'
+                : `☁️ Replacing DynamoDB with ${userEmails.length} local users...`;
+            showToast(actionMsg, 'info');
             
             try {
                 // Step 1: Clear all existing users in DynamoDB
@@ -7340,7 +7343,10 @@
                 }
                 
                 const result = await response.json();
-                showToast(`✅ Replaced DynamoDB with ${result.count || usersToUpload.length} users!`, 'success');
+                const successMsg = usersToUpload.length === 0
+                    ? '✅ DynamoDB cleared! (0 users)'
+                    : `✅ Replaced DynamoDB with ${result.count || usersToUpload.length} users!`;
+                showToast(successMsg, 'success');
                 
             } catch (error) {
                 console.error('Push error:', error);
