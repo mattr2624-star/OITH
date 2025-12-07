@@ -327,7 +327,14 @@ async function syncToServer(email, userData, registeredUserData) {
 function setAWSApiUrl(url) {
     if (url) {
         localStorage.setItem('oith_aws_api_url', url);
+        console.log('✅ AWS API URL configured:', url);
+        showToast('AWS API configured!', 'success');
+    } else {
+        localStorage.removeItem('oith_aws_api_url');
+        console.log('🗑️ AWS API URL removed');
     }
+    // Reload to apply
+    window.location.reload();
 }
 
 // ==========================================
@@ -559,15 +566,6 @@ async function syncAllUserDataToAWS() {
 // ==========================================
 // END ADDITIONAL DATA SYNC
 // ==========================================
-        console.log('✅ AWS API URL configured:', url);
-        showToast('AWS API configured!', 'success');
-    } else {
-        localStorage.removeItem('oith_aws_api_url');
-        console.log('🗑️ AWS API URL removed');
-    }
-    // Reload to apply
-    window.location.reload();
-}
 
 function saveUserData() {
     try {
