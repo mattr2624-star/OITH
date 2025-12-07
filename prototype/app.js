@@ -2372,6 +2372,139 @@ async function getChatMessages(matchId) {
     }
 }
 
+// Chat polling interval reference
+let chatPollingInterval = null;
+let lastMessageTimestamp = null;
+
+/**
+ * Load chat history from AWS and merge with local messages
+ */
+async function loadChatFromAWS(matchId) {
+    if (!matchId) return;
+    
+    console.log('💬 Loading chat history from AWS for match:', matchId);
+    
+    try {
+        const messages = await getChatMessages(matchId);
+        
+        if (messages && messages.length > 0) {
+            console.log(`💬 Loaded ${messages.length} messages from AWS`);
+            
+            const currentUserEmail = appState.user?.email?.toLowerCase();
+            
+            // Clear existing messages and reload from AWS
+            if (!appState.conversation) {
+                appState.conversation = { messages: [] };
+            }
+            
+            // Convert AWS messages to local format
+            const awsMessages = messages.map(msg => ({
+                text: msg.message,
+                type: msg.fromEmail?.toLowerCase() === currentUserEmail ? 'sent' : 'received',
+                timestamp: new Date(msg.createdAt),
+                fromEmail: msg.fromEmail
+            }));
+            
+            // Merge with local messages (avoid duplicates)
+            const existingTexts = new Set(appState.conversation.messages.map(m => m.text + m.timestamp));
+            
+            awsMessages.forEach(msg => {
+                const key = msg.text + msg.timestamp;
+                if (!existingTexts.has(key)) {
+                    appState.conversation.messages.push(msg);
+                }
+            });
+            
+            // Sort by timestamp
+            appState.conversation.messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            
+            // Update last message timestamp for polling
+            if (messages.length > 0) {
+                lastMessageTimestamp = messages[messages.length - 1].createdAt;
+            }
+            
+            // Re-render chat
+            renderChatMessages();
+        }
+    } catch (error) {
+        console.error('Error loading chat from AWS:', error);
+    }
+}
+
+/**
+ * Start polling for new messages
+ */
+function startChatPolling(matchId) {
+    // Clear any existing polling
+    stopChatPolling();
+    
+    console.log('🔄 Starting chat polling for match:', matchId);
+    
+    // Poll every 5 seconds
+    chatPollingInterval = setInterval(async () => {
+        // Only poll if still on chat screen
+        const currentScreen = document.querySelector('.screen.active');
+        if (currentScreen?.id !== 'chat') {
+            stopChatPolling();
+            return;
+        }
+        
+        try {
+            const messages = await getChatMessages(matchId);
+            
+            if (messages && messages.length > 0) {
+                const latestMessage = messages[messages.length - 1];
+                
+                // Check if there's a new message
+                if (latestMessage.createdAt !== lastMessageTimestamp) {
+                    const currentUserEmail = appState.user?.email?.toLowerCase();
+                    
+                    // Only add messages from the OTHER user
+                    if (latestMessage.fromEmail?.toLowerCase() !== currentUserEmail) {
+                        // Find new messages we don't have
+                        const existingTexts = new Set(
+                            appState.conversation.messages.map(m => m.text + new Date(m.timestamp).toISOString())
+                        );
+                        
+                        messages.forEach(msg => {
+                            const key = msg.message + msg.createdAt;
+                            if (!existingTexts.has(key) && msg.fromEmail?.toLowerCase() !== currentUserEmail) {
+                                // New message from match!
+                                appState.conversation.messages.push({
+                                    text: msg.message,
+                                    type: 'received',
+                                    timestamp: new Date(msg.createdAt),
+                                    fromEmail: msg.fromEmail
+                                });
+                                
+                                // Add to UI
+                                addMessageToChat(msg.message, 'received');
+                                
+                                console.log('💬 New message received:', msg.message.substring(0, 30) + '...');
+                            }
+                        });
+                        
+                        lastMessageTimestamp = latestMessage.createdAt;
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('Chat poll error:', error.message);
+        }
+    }, 5000); // Poll every 5 seconds
+}
+
+/**
+ * Stop chat polling
+ */
+function stopChatPolling() {
+    if (chatPollingInterval) {
+        clearInterval(chatPollingInterval);
+        chatPollingInterval = null;
+        console.log('🛑 Chat polling stopped');
+    }
+}
+
 /**
  * Run automatic matching service
  * Finds users who match each other's preferences and creates matches
@@ -4149,6 +4282,16 @@ function showScreen(screenId) {
             renderChatMessages();
             // Update connection insights
             updateConnectionInsights();
+            
+            // ========================================
+            // LOAD CHAT HISTORY FROM AWS
+            // ========================================
+            const matchId = appState.activeConnection?.matchId;
+            if (matchId) {
+                loadChatFromAWS(matchId);
+                // Start polling for new messages every 5 seconds
+                startChatPolling(matchId);
+            }
         }
         
         if (screenId === 'profile-view') {
@@ -9633,6 +9776,24 @@ function sendMessage() {
             timestamp: new Date()
         });
         
+        // ========================================
+        // SAVE MESSAGE TO AWS (for real chat persistence)
+        // ========================================
+        const matchId = appState.activeConnection?.matchId;
+        const fromEmail = appState.user?.email;
+        
+        if (matchId && fromEmail) {
+            // Send to AWS DynamoDB
+            sendMessageToAWS(matchId, fromEmail, message).then(result => {
+                if (result.success) {
+                    console.log('💬 Message saved to AWS');
+                } else {
+                    console.log('⚠️ Message not saved to AWS (local only)');
+                }
+            }).catch(err => console.log('Chat sync:', err.message));
+        }
+        // ========================================
+        
         // Hide "Time to Connect" banner after first message is sent
         hideTimeToConnectBanner();
         
@@ -9646,10 +9807,13 @@ function sendMessage() {
         // Analyze for date readiness
         analyzeConversation(message);
         
-        // Simulate response after delay
-        setTimeout(() => {
-            simulateResponse();
-        }, 1500);
+        // For demo/testing: simulate response if no real match
+        // In production with real users, they'll see each other's messages
+        if (!matchId) {
+            setTimeout(() => {
+                simulateResponse();
+            }, 1500);
+        }
     }
 }
 
