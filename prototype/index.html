@@ -524,7 +524,6 @@
                         <div class="toggle-group">
                             <button class="toggle-btn active" data-value="relationship">Long-term</button>
                             <button class="toggle-btn" data-value="casual">Casual</button>
-                            <button class="toggle-btn" data-value="unsure">Not sure yet</button>
                         </div>
                     </div>
                     <div class="preference-section">
@@ -2761,10 +2760,6 @@
                                 <span class="option-icon">😊</span>
                                 <span class="option-text">Something casual</span>
                             </button>
-                            <button class="looking-option" onclick="selectLookingFor(this, 'unsure')">
-                                <span class="option-icon">🤷</span>
-                                <span class="option-text">Not sure yet</span>
-                            </button>
                         </div>
                     </div>
 
@@ -3902,7 +3897,6 @@
                                 <button class="chip active" onclick="togglePrefChip(this, 'lookingFor')" data-value="any">Any</button>
                                 <button class="chip" onclick="togglePrefChip(this, 'lookingFor')" data-value="relationship">💕 Long-term relationship</button>
                                 <button class="chip" onclick="togglePrefChip(this, 'lookingFor')" data-value="casual">😊 Something casual</button>
-                                <button class="chip" onclick="togglePrefChip(this, 'lookingFor')" data-value="unsure">🤷 Not sure yet</button>
                             </div>
                         </div>
                     </div>
@@ -3950,7 +3944,6 @@
                         <div class="toggle-group" id="lookingForToggle">
                             <button class="toggle-btn active" data-value="relationship" onclick="updatePreference('lookingFor', 'relationship', this)">Long-term relationship</button>
                             <button class="toggle-btn" data-value="casual" onclick="updatePreference('lookingFor', 'casual', this)">Something casual</button>
-                            <button class="toggle-btn" data-value="unsure" onclick="updatePreference('lookingFor', 'unsure', this)">Not sure yet</button>
                         </div>
                     </div>
                     
