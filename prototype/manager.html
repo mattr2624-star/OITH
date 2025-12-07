@@ -6851,6 +6851,8 @@
             // Count active users (users with data)
             let activeCount = 0;
             let premiumCount = 0;
+            let canceledCount = 0;
+            let freeCount = 0;
             let totalMessages = 0;
             let totalMatches = 0;
             let acceptedMatches = 0;
@@ -6885,9 +6887,18 @@
                     // Count as active if they have logged in
                     if (userData.isLoggedIn) activeCount++;
                     
-                    // Check subscription
-                    if (userData.user?.subscription?.type === 'premium') {
-                        premiumCount++;
+                    // Check subscription status
+                    const subscription = userData.user?.subscription || userData.subscription;
+                    if (subscription) {
+                        if (subscription.status === 'canceled' || subscription.status === 'cancelled') {
+                            canceledCount++;
+                        } else if (subscription.type === 'premium' || subscription.plan === 'premium') {
+                            premiumCount++;
+                        } else {
+                            freeCount++;
+                        }
+                    } else {
+                        freeCount++;
                     }
                     
                     // Count messages and track response times
@@ -6988,6 +6999,9 @@
             platformData.totalUsers = userCount;
             platformData.activeUsers = activeCount;
             platformData.premiumUsers = premiumCount;
+            platformData.canceledUsers = canceledCount;
+            platformData.freeUsers = freeCount;
+            platformData.churnRate = (premiumCount + canceledCount) > 0 ? Math.round((canceledCount / (premiumCount + canceledCount)) * 100) : 0;
             platformData.totalMatches = totalMatches;
             platformData.acceptedMatches = acceptedMatches;
             platformData.declinedMatches = totalMatches - acceptedMatches;
@@ -7427,7 +7441,7 @@
                         fromAWS: true
                     };
                     
-                    // Store individual user data
+                    // Store individual user data including subscription
                     const key = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
                     localStorage.setItem(key, JSON.stringify({
                         version: '1.0',
@@ -7444,6 +7458,12 @@
                             photos: userData.photos || [userData.photo].filter(p => p),
                             education: userData.education || ''
                         },
+                        // Include subscription data for dashboard metrics
+                        subscription: userData.subscription || null,
+                        // Include match history for analytics
+                        matchHistory: userData.matchHistory || [],
+                        // Include conversations for message counts
+                        conversations: userData.conversations || {},
                         fromAWS: true
                     }));
                 });

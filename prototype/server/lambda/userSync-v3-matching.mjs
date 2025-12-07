@@ -67,16 +67,37 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ success: true, email }) };
         }
         
-        // GET /users - Get all VISIBLE users (not hidden/matched)
+        // GET /users - Get all VISIBLE users with subscription data (not hidden/matched)
         if (method === 'GET' && path.endsWith('/users')) {
-            const result = await docClient.send(new ScanCommand({ 
+            // Get all profiles
+            const profileResult = await docClient.send(new ScanCommand({ 
                 TableName: TABLE_NAME,
                 FilterExpression: 'sk = :sk AND (attribute_not_exists(isHidden) OR isHidden = :false)',
                 ExpressionAttributeValues: { ':sk': 'PROFILE', ':false': false }
             }));
             
+            // Get all subscriptions
+            const subResult = await docClient.send(new ScanCommand({ 
+                TableName: TABLE_NAME,
+                FilterExpression: 'sk = :sk',
+                ExpressionAttributeValues: { ':sk': 'SUBSCRIPTION' }
+            }));
+            
+            // Build subscription lookup by email
+            const subscriptions = {};
+            subResult.Items?.forEach(item => {
+                const email = item.pk.replace('USER#', '');
+                subscriptions[email] = {
+                    type: item.plan || item.type || 'free',
+                    status: item.status || 'active',
+                    startDate: item.startDate,
+                    endDate: item.endDate,
+                    canceledAt: item.canceledAt
+                };
+            });
+            
             const users = {};
-            result.Items?.forEach(item => {
+            profileResult.Items?.forEach(item => {
                 if (item.email) {
                     users[item.email] = {
                         firstName: item.firstName,
@@ -85,13 +106,19 @@ export const handler = async (event) => {
                         location: item.location,
                         occupation: item.occupation,
                         photo: item.photo,
+                        photos: item.photos,
+                        bio: item.bio,
+                        education: item.education,
                         online: item.online,
                         isHidden: item.isHidden || false,
-                        lastSeen: item.lastSeen
+                        lastSeen: item.lastSeen,
+                        registeredAt: item.createdAt,
+                        // Include subscription data
+                        subscription: subscriptions[item.email] || null
                     };
                 }
             });
-            console.log(`📊 Returning ${Object.keys(users).length} visible users`);
+            console.log(`📊 Returning ${Object.keys(users).length} visible users with subscription data`);
             return { statusCode: 200, headers, body: JSON.stringify(users) };
         }
         
