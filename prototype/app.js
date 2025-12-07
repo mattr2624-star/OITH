@@ -1924,6 +1924,35 @@ function parseHeightToInches(heightStr) {
 }
 
 /**
+ * Reset all profiles - clears passed matches so user can see everyone again
+ */
+function resetAllProfiles() {
+    if (!confirm('This will reset all your passed profiles so you can see them again. Continue?')) {
+        return;
+    }
+    
+    // Clear passed matches
+    appState.passedMatches = [];
+    appState.matchHistory = [];
+    appState.preferencesChanged = true;
+    
+    // Save the change
+    saveUserData();
+    
+    showToast('✅ All profiles reset! Finding matches...', 'success');
+    
+    // Refresh match pool and find new match
+    setTimeout(() => {
+        if (typeof syncMatchPool === 'function') {
+            syncMatchPool();
+        }
+        if (typeof presentMatch === 'function') {
+            presentMatch();
+        }
+    }, 500);
+}
+
+/**
  * Manual refresh from cloud - callable by users via button
  */
 async function refreshFromCloud() {
