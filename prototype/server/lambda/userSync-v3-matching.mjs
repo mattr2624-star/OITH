@@ -35,6 +35,8 @@ export const handler = async (event) => {
             if (!email) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
             
             const user = userData?.user || {};
+            const prefs = user.preferences || user.matchPreferences || {};
+            
             await docClient.send(new PutCommand({
                 TableName: TABLE_NAME,
                 Item: {
@@ -49,7 +51,15 @@ export const handler = async (event) => {
                     bio: (user.bio || '').substring(0, 300),
                     photo: user.photo || '',
                     education: user.education || '',
+                    // Preferences for auto-matching
+                    preferences: {
+                        interestedIn: prefs.interestedIn || 'everyone',
+                        ageMin: prefs.ageMin || 18,
+                        ageMax: prefs.ageMax || 99,
+                        maxDistance: prefs.maxDistance || 100
+                    },
                     online: true,
+                    isHidden: false,
                     lastSeen: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 }
@@ -293,6 +303,126 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ messages }) };
         }
         
+        // POST /match/auto - Automatic matching service
+        // Finds mutual preference matches and creates matches automatically
+        if (method === 'POST' && path.includes('/match/auto')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email } = body;
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            const userEmail = email.toLowerCase();
+            console.log(`🔍 Running auto-match for ${userEmail}...`);
+            
+            // Get the user's profile
+            const userResult = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: `USER#${userEmail}`, sk: 'PROFILE' }
+            }));
+            
+            if (!userResult.Item) {
+                return { statusCode: 404, headers, body: JSON.stringify({ error: 'User not found' }) };
+            }
+            
+            const currentUser = userResult.Item;
+            const userPrefs = currentUser.preferences || {};
+            
+            // Get all other users
+            const allUsersResult = await docClient.send(new ScanCommand({
+                TableName: TABLE_NAME,
+                FilterExpression: 'sk = :sk AND email <> :email AND (attribute_not_exists(isHidden) OR isHidden = :false)',
+                ExpressionAttributeValues: { 
+                    ':sk': 'PROFILE', 
+                    ':email': userEmail,
+                    ':false': false
+                }
+            }));
+            
+            const matches = [];
+            
+            for (const otherUser of (allUsersResult.Items || [])) {
+                const otherPrefs = otherUser.preferences || {};
+                
+                // Check if current user fits other user's preferences
+                const currentFitsOther = checkPreferenceMatch(currentUser, otherPrefs);
+                
+                // Check if other user fits current user's preferences
+                const otherFitsCurrent = checkPreferenceMatch(otherUser, userPrefs);
+                
+                console.log(`Checking ${otherUser.email}: currentFitsOther=${currentFitsOther}, otherFitsCurrent=${otherFitsCurrent}`);
+                
+                // If MUTUAL preference match, create a match!
+                if (currentFitsOther && otherFitsCurrent) {
+                    const matchId = [userEmail, otherUser.email].sort().join('_');
+                    const timestamp = new Date().toISOString();
+                    
+                    // Check if already matched
+                    const existingMatch = await docClient.send(new GetCommand({
+                        TableName: TABLE_NAME,
+                        Key: { pk: `MATCH#${userEmail}`, sk: `WITH#${otherUser.email}` }
+                    }));
+                    
+                    if (!existingMatch.Item) {
+                        // Create match records for both users
+                        await docClient.send(new PutCommand({
+                            TableName: TABLE_NAME,
+                            Item: {
+                                pk: `MATCH#${userEmail}`,
+                                sk: `WITH#${otherUser.email}`,
+                                matchId: matchId,
+                                matchedAt: timestamp,
+                                autoMatched: true
+                            }
+                        }));
+                        
+                        await docClient.send(new PutCommand({
+                            TableName: TABLE_NAME,
+                            Item: {
+                                pk: `MATCH#${otherUser.email}`,
+                                sk: `WITH#${userEmail}`,
+                                matchId: matchId,
+                                matchedAt: timestamp,
+                                autoMatched: true
+                            }
+                        }));
+                        
+                        // Hide BOTH profiles
+                        await docClient.send(new PutCommand({
+                            TableName: TABLE_NAME,
+                            Item: { ...currentUser, isHidden: true, hiddenAt: timestamp, hiddenReason: 'matched' }
+                        }));
+                        
+                        await docClient.send(new PutCommand({
+                            TableName: TABLE_NAME,
+                            Item: { ...otherUser, isHidden: true, hiddenAt: timestamp, hiddenReason: 'matched' }
+                        }));
+                        
+                        matches.push({
+                            matchId: matchId,
+                            matchedWith: otherUser.email,
+                            matchedWithName: otherUser.firstName || otherUser.name,
+                            matchedAt: timestamp
+                        });
+                        
+                        console.log(`💕 AUTO-MATCH: ${userEmail} <-> ${otherUser.email}`);
+                    }
+                }
+            }
+            
+            return { 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ 
+                    success: true, 
+                    email: userEmail,
+                    newMatches: matches,
+                    matchCount: matches.length
+                }) 
+            };
+        }
+        
         // Health check
         return { statusCode: 200, headers, body: JSON.stringify({ status: 'ok' }) };
         
@@ -301,4 +431,32 @@ export const handler = async (event) => {
         return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
     }
 };
+
+// Helper function to check if a user matches preferences
+function checkPreferenceMatch(user, prefs) {
+    // If no preferences set, accept everyone
+    if (!prefs || Object.keys(prefs).length === 0) return true;
+    
+    // Age check
+    const userAge = user.age || 25;
+    const minAge = prefs.ageMin || 18;
+    const maxAge = prefs.ageMax || 99;
+    if (userAge < minAge || userAge > maxAge) return false;
+    
+    // Gender check
+    const interestedIn = (prefs.interestedIn || 'everyone').toLowerCase();
+    if (interestedIn !== 'everyone') {
+        const userGender = (user.gender || '').toLowerCase();
+        const isFemale = ['female', 'woman', 'women', 'f'].includes(userGender);
+        const isMale = ['male', 'man', 'men', 'm'].includes(userGender);
+        
+        if (interestedIn === 'women' && !isFemale) return false;
+        if (interestedIn === 'men' && !isMale) return false;
+    }
+    
+    // Distance check (if both have locations)
+    // For now, skip distance - would need geocoding
+    
+    return true;
+}
 

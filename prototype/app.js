@@ -271,6 +271,7 @@ async function syncToServer(email, userData, registeredUserData) {
         
         // Only send essential profile data to avoid DynamoDB 400KB limit
         const user = userData?.user || {};
+        const prefs = user.matchPreferences || user.preferences || {};
         const minimalPayload = {
             email: email,
             name: user.firstName || registeredUserData?.firstName || '',
@@ -288,7 +289,14 @@ async function syncToServer(email, userData, registeredUserData) {
                     bio: (user.bio || '').substring(0, 500),
                     photo: user.photos?.[0] || '',
                     height: user.height || '',
-                    bodyType: user.bodyType || ''
+                    bodyType: user.bodyType || '',
+                    // Include preferences for auto-matching
+                    preferences: {
+                        interestedIn: prefs.interestedIn || 'everyone',
+                        ageMin: prefs.ageMin || 18,
+                        ageMax: prefs.ageMax || 99,
+                        maxDistance: prefs.maxDistance || 100
+                    }
                 }
             }
         };
@@ -2100,6 +2108,104 @@ async function getChatMessages(matchId) {
     } catch (error) {
         console.error('Get messages error:', error);
         return [];
+    }
+}
+
+/**
+ * Run automatic matching service
+ * Finds users who match each other's preferences and creates matches
+ */
+async function runAutoMatch() {
+    const email = appState.user?.email;
+    if (!email) {
+        console.log('⚠️ Cannot run auto-match - no user logged in');
+        return { success: false };
+    }
+    
+    try {
+        console.log('🔍 Running automatic matching service...');
+        
+        const response = await fetch(`${AWS_API_URL}/match/auto`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        
+        const result = await response.json();
+        console.log('🔍 Auto-match result:', result);
+        
+        if (result.newMatches && result.newMatches.length > 0) {
+            console.log(`💕 Found ${result.newMatches.length} automatic matches!`);
+            
+            // Notify user of new matches
+            result.newMatches.forEach(match => {
+                showToast(`💕 You matched with ${match.matchedWithName}!`, 'success');
+            });
+            
+            // Store matches locally
+            if (!appState.autoMatches) appState.autoMatches = [];
+            appState.autoMatches.push(...result.newMatches);
+            
+            // If we got a match, hide our profile and show match screen
+            if (result.newMatches.length > 0) {
+                appState.profileVisibility = appState.profileVisibility || {};
+                appState.profileVisibility.isHidden = true;
+                appState.profileVisibility.reason = 'matched';
+                appState.profileVisibility.hiddenAt = new Date().toISOString();
+                
+                // Set the first match as active
+                const firstMatch = result.newMatches[0];
+                appState.activeConnection = {
+                    email: firstMatch.matchedWith,
+                    name: firstMatch.matchedWithName,
+                    matchId: firstMatch.matchId,
+                    matchedAt: firstMatch.matchedAt
+                };
+                
+                saveUserData();
+                
+                // Vibrate on match
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 200]);
+                
+                // Show match celebration
+                showScreen('chat');
+            }
+        } else {
+            console.log('🔍 No automatic matches found yet');
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('Auto-match error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Save user preferences to DynamoDB for matching
+ */
+async function savePreferencesToAWS() {
+    const email = appState.user?.email;
+    const prefs = appState.user?.matchPreferences || appState.user?.preferences;
+    
+    if (!email || !prefs) return;
+    
+    try {
+        const userData = {
+            user: {
+                ...appState.user,
+                preferences: prefs,
+                matchPreferences: prefs
+            }
+        };
+        
+        await syncToServer(email, userData, { firstName: appState.user.firstName });
+        console.log('✅ Preferences saved to AWS');
+        
+        // Run auto-match after saving preferences
+        await runAutoMatch();
+    } catch (error) {
+        console.error('Failed to save preferences:', error);
     }
 }
 
@@ -5361,6 +5467,14 @@ function handleLogin(event) {
         showScreen('my-profile');
         
         console.log('✅ Navigation complete, current screen:', appState.currentScreen);
+        
+        // Run auto-match in background after login
+        runAutoMatch().then(result => {
+            if (result.newMatches && result.newMatches.length > 0) {
+                // Found a match! Show celebration
+                console.log('💕 Auto-matched on login!');
+            }
+        }).catch(err => console.log('Auto-match check:', err.message));
     }, 100);
     
     return false; // Prevent form submission
@@ -6028,8 +6142,19 @@ function completeSignup() {
     console.log('   Subscription:', appState.user.subscription);
     showToast('Account created successfully! Welcome to OITH! 🎉', 'success');
     
-    // Present the ONE match
-    presentMatch();
+    // Run automatic matching to find preference-based matches
+    runAutoMatch().then(result => {
+        if (result.newMatches && result.newMatches.length > 0) {
+            // Auto-match found - user is already taken to chat
+            console.log('💕 Auto-matched on signup!');
+        } else {
+            // No auto-match yet - present profiles to browse
+            presentMatch();
+        }
+    }).catch(() => {
+        // If auto-match fails, still present matches
+        presentMatch();
+    });
 }
 
 /**
