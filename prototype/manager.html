@@ -1478,10 +1478,15 @@
                     <line x1="23" y1="11" x2="17" y2="11"/>
                 </svg>
             </button>
-            <button class="btn btn-primary btn-icon" onclick="syncFromAWS()" title="Sync Users from AWS" style="background: #ff9900;">
+            <button class="btn btn-primary btn-icon" onclick="syncFromAWS()" title="Pull Users FROM AWS" style="background: #ff9900;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 12a9 9 0 11-9-9"/>
                     <polyline points="21 3 21 9 15 9"/>
+                </svg>
+            </button>
+            <button class="btn btn-primary btn-icon" onclick="pushAllToAWS()" title="Push Users TO AWS" style="background: #3498db;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 19V5M5 12l7-7 7 7"/>
                 </svg>
             </button>
             <button class="btn btn-secondary btn-icon" onclick="exportSyncData()" title="Export Sync Data">
@@ -7200,36 +7205,37 @@
         
         // Fetch users from AWS DynamoDB
         async function syncFromAWS() {
-            const awsApiUrl = localStorage.getItem('oith_aws_api_url');
-            if (!awsApiUrl) {
-                const url = prompt('Enter your AWS API URL:\n(e.g., https://xxx.execute-api.us-east-1.amazonaws.com)');
-                if (url) {
-                    localStorage.setItem('oith_aws_api_url', url);
-                } else {
-                    showToast('❌ AWS API URL required', 'error');
-                    return;
-                }
-            }
+            const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
             
-            const apiUrl = localStorage.getItem('oith_aws_api_url');
             showToast('☁️ Fetching users from AWS...', 'info');
             
             try {
-                const response = await fetch(`${apiUrl}/users`);
+                const response = await fetch(`${awsApiUrl}/users`);
                 if (!response.ok) throw new Error('Failed to fetch from AWS');
                 
                 const awsUsers = await response.json();
                 console.log('☁️ AWS Users:', awsUsers);
                 
-                // Merge AWS users into local storage
-                const currentUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
-                const mergedUsers = { ...currentUsers, ...awsUsers };
-                localStorage.setItem('oith_registered_users', JSON.stringify(mergedUsers));
+                // Replace local users with AWS users (AWS is source of truth)
+                localStorage.setItem('oith_registered_users', JSON.stringify(awsUsers));
                 
-                const newCount = Object.keys(awsUsers).length;
-                const totalCount = Object.keys(mergedUsers).length;
+                // Also store individual user data
+                Object.entries(awsUsers).forEach(([email, userData]) => {
+                    const key = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+                    localStorage.setItem(key, JSON.stringify({
+                        user: {
+                            email: email,
+                            firstName: userData.firstName || userData.name,
+                            age: userData.age,
+                            gender: userData.gender,
+                            location: userData.location,
+                            photos: userData.photos || [userData.photo]
+                        }
+                    }));
+                });
                 
-                showToast(`☁️ Synced ${newCount} users from AWS (${totalCount} total)`, 'success');
+                const userCount = Object.keys(awsUsers).length;
+                showToast(`☁️ Loaded ${userCount} users from DynamoDB`, 'success');
                 
                 // Reload UI
                 refreshData();
@@ -7238,6 +7244,75 @@
                 console.error('AWS sync error:', error);
                 showToast('❌ Failed to sync from AWS: ' + error.message, 'error');
             }
+        }
+        
+        // Push ALL local users to AWS DynamoDB
+        async function pushAllToAWS() {
+            const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+            
+            const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
+            const userEmails = Object.keys(registeredUsers);
+            
+            if (userEmails.length === 0) {
+                showToast('⚠️ No users to push', 'warning');
+                return;
+            }
+            
+            if (!confirm(`Push ${userEmails.length} users to AWS DynamoDB?`)) {
+                return;
+            }
+            
+            showToast(`☁️ Pushing ${userEmails.length} users to AWS...`, 'info');
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            for (const email of userEmails) {
+                try {
+                    const regUser = registeredUsers[email];
+                    const storageKey = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+                    const userData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                    const user = userData.user || {};
+                    
+                    const payload = {
+                        email: email,
+                        name: user.firstName || regUser.firstName || 'User',
+                        password: regUser.password || '',
+                        userData: {
+                            user: {
+                                email: email,
+                                firstName: user.firstName || regUser.firstName || '',
+                                age: user.age || regUser.age,
+                                gender: user.gender || regUser.gender || '',
+                                location: user.location || regUser.location || '',
+                                occupation: user.occupation || '',
+                                bio: user.bio || '',
+                                photos: user.photos || [],
+                                education: user.education || ''
+                            }
+                        }
+                    };
+                    
+                    const response = await fetch(`${awsApiUrl}/users`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                        console.log(`✅ Pushed: ${email}`);
+                    } else {
+                        errorCount++;
+                        console.error(`❌ Failed: ${email}`);
+                    }
+                } catch (error) {
+                    errorCount++;
+                    console.error(`❌ Error pushing ${email}:`, error);
+                }
+            }
+            
+            showToast(`☁️ Pushed ${successCount} users to AWS (${errorCount} errors)`, successCount > 0 ? 'success' : 'error');
         }
         
         function refreshData() {

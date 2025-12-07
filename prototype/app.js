@@ -2053,18 +2053,18 @@ async function refreshFromCloud() {
 }
 
 /**
- * Fetch users from AWS DynamoDB and merge into local match pool
- * This allows users on AWS to see and match with other AWS users
+ * Fetch users from AWS DynamoDB - this is the PRIMARY source of users
+ * Only AWS/DynamoDB users are shown in the match pool
  */
 async function fetchAWSUsersForMatchPool() {
-    const awsApiUrl = localStorage.getItem('oith_aws_api_url');
+    const awsApiUrl = AWS_API_URL;
     if (!awsApiUrl) {
         console.log('⚠️ No AWS API configured, skipping AWS user fetch');
         return;
     }
     
     try {
-        console.log('☁️ Fetching AWS users for match pool...');
+        console.log('☁️ Fetching users from DynamoDB...');
         const response = await fetch(`${awsApiUrl}/users`);
         
         if (!response.ok) {
@@ -2075,59 +2075,55 @@ async function fetchAWSUsersForMatchPool() {
         const awsUsers = await response.json();
         const awsUserCount = Object.keys(awsUsers).length;
         
+        console.log(`☁️ Found ${awsUserCount} users in DynamoDB`);
+        
         if (awsUserCount === 0) {
-            console.log('☁️ No AWS users found yet');
+            console.log('☁️ No users in DynamoDB yet');
             return;
         }
         
-        // Merge AWS users into local registered users
-        const currentUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
-        let newUsersAdded = 0;
+        // REPLACE local users with AWS users (AWS is the source of truth)
+        const awsRegisteredUsers = {};
         
         Object.entries(awsUsers).forEach(([email, userData]) => {
-            // Add or update user in local storage
-            if (!currentUsers[email]) {
-                newUsersAdded++;
-            }
-            currentUsers[email] = {
-                firstName: userData.firstName || userData.name || 'AWS User',
+            // Add user to registered users
+            awsRegisteredUsers[email] = {
+                firstName: userData.firstName || userData.name || 'User',
                 gender: userData.gender || '',
                 location: userData.location || '',
                 birthday: userData.birthday || '',
+                age: userData.age,
                 registeredAt: userData.registeredAt || new Date().toISOString(),
                 fromAWS: true
             };
             
-            // Also store full user data for matching
+            // Store full user data for matching
             const storageKey = getUserStorageKey(email);
-            const existingData = JSON.parse(localStorage.getItem(storageKey) || '{}');
-            if (!existingData.user || userData.updatedAt > existingData.savedAt) {
-                localStorage.setItem(storageKey, JSON.stringify({
-                    version: '1.0',
-                    savedAt: new Date().toISOString(),
-                    user: {
-                        email: email,
-                        firstName: userData.firstName || userData.name || '',
-                        age: userData.age,
-                        gender: userData.gender || '',
-                        location: userData.location || '',
-                        occupation: userData.occupation || '',
-                        bio: userData.bio || '',
-                        photos: userData.photos || [userData.photo].filter(p => p),
-                        education: userData.education || ''
-                    },
-                    fromAWS: true
-                }));
-            }
+            localStorage.setItem(storageKey, JSON.stringify({
+                version: '1.0',
+                savedAt: new Date().toISOString(),
+                user: {
+                    email: email,
+                    firstName: userData.firstName || userData.name || '',
+                    age: userData.age,
+                    gender: userData.gender || '',
+                    location: userData.location || '',
+                    occupation: userData.occupation || '',
+                    bio: userData.bio || '',
+                    photos: userData.photos || [userData.photo].filter(p => p),
+                    education: userData.education || ''
+                },
+                fromAWS: true
+            }));
         });
         
-        localStorage.setItem('oith_registered_users', JSON.stringify(currentUsers));
+        // Save AWS users as the registered users (replacing any local-only users)
+        localStorage.setItem('oith_registered_users', JSON.stringify(awsRegisteredUsers));
         
-        if (newUsersAdded > 0) {
-            console.log(`☁️ Added ${newUsersAdded} new AWS users to match pool (${awsUserCount} total from AWS)`);
-        } else {
-            console.log(`☁️ Synced ${awsUserCount} AWS users to match pool`);
-        }
+        // Disable test bots when using AWS mode
+        localStorage.setItem('oith_test_bots', JSON.stringify([]));
+        
+        console.log(`✅ Loaded ${awsUserCount} users from DynamoDB (test bots disabled)`);
         
     } catch (error) {
         console.log('⚠️ AWS user fetch failed:', error.message);
