@@ -4758,12 +4758,32 @@ function updateAllMatchDisplays() {
     const profileViewInterests = document.getElementById('profileViewInterests');
     if (profileViewInterests && match.interests) {
         const interestIcons = {
-            'Photography': '📸', 'Hiking': '🥾', 'Coffee': '☕', 'Reading': '📚', 
-            'Cooking': '🍳', 'Travel': '✈️', 'Music': '🎵', 'Art': '🎨',
-            'Yoga': '🧘', 'Dancing': '💃', 'Food': '🍕', 'Movies': '🎬',
-            'Fitness': '💪', 'Wine': '🍷', 'Beach': '🏖️', 'Gaming': '🎮',
-            'Technology': '💻', 'Nature': '🌿', 'Dogs': '🐕', 'Cats': '🐱',
-            'Running': '🏃', 'Golf': '⛳', 'Soccer': '⚽', 'Fashion': '👗'
+            // Sports & Fitness
+            'Podcasts': '🎧', 'Running': '👟', 'Pilates': '💪', 'Dancing': '💃',
+            'Weight lifting': '🏋️', 'Basketball': '🏀', 'Football': '🏈', 'Baseball': '⚾️',
+            'Soccer': '⚽️', 'Tennis/Pickleball': '🎾', 'Volleyball': '🏐', 'Bowling': '🎳',
+            'Hockey': '🏒', 'Lacrosse': '🥍', 'Skiing': '🎿', 'Snowboarding': '🏂',
+            'Swimming': '🏊', 'Biking': '🚴', 'Golf': '⛳️', 'Rock climbing': '🧗',
+            'Surfing': '🏄', 'Martial arts': '🥊', 'Yoga': '🧘', 'Fitness': '💪',
+            // Creative & Arts
+            'Painting': '🎨', 'Drawing': '✍️', 'Writing': '📝', 'Singing': '🎤',
+            'Concerts': '🎸', 'Playing music': '🎶', 'Listening to music': '🎵',
+            'Photography': '📸', 'Art': '🎨', 'Music': '🎵',
+            // Lifestyle & Interests
+            'Nature': '🌳', 'Stand up comedy': '🤣', 'Tech': '💻', 'Science': '🔬',
+            'Gardening': '👩‍🌾', 'Holistic living': '🥕', 'Plants': '🪴',
+            'Fishing': '🎣', 'Hunting': '🏹', 'Politics': '🏛️', 'Advocacy': '🗣️',
+            'Volunteering': '🤝', 'Foodie': '🍜', 'Religion': '🙏', 'Fashion': '👗',
+            'Board games': '🎲', 'DIY': '🔨', 'History': '📜', 'Raves': '⚡️',
+            'Astrology': '🔮', 'Movies': '🍿', 'TV shows': '📺',
+            // Food & Drink
+            'Wine': '🍷', 'Craft Beer': '🍺', 'Baking': '🧁', 'Cooking': '🍳',
+            'Coffee': '☕', 'Food': '🍕',
+            // Outdoor & Adventure
+            'Beach Days': '🏖️', 'Camping': '⛺️', '420': '🍃', 'Hiking': '🥾',
+            'Travel': '✈️', 'Beach': '🏖️',
+            // Other
+            'Reading': '📚', 'Gaming': '🎮', 'Technology': '💻', 'Dogs': '🐕', 'Cats': '🐱'
         };
         profileViewInterests.innerHTML = match.interests.map(interest => {
             const icon = interestIcons[interest] || '⭐';
@@ -7677,6 +7697,12 @@ function continueFromProfileDetails() {
     const politics = document.getElementById('setupPolitics')?.value || '';
     const bio = document.getElementById('setupBio')?.value || '';
     
+    // Collect selected interests (with emojis for display)
+    const selectedInterests = [];
+    document.querySelectorAll('#setupInterestsSelector .interest-chip.selected').forEach(chip => {
+        selectedInterests.push(chip.textContent.trim());
+    });
+    
     // Validate required fields
     if (!gender) {
         showToast('Please select your gender', 'error');
@@ -7697,6 +7723,7 @@ function continueFromProfileDetails() {
     appState.user.religion = religion;
     appState.user.politics = politics;
     appState.user.bio = bio;
+    appState.user.interests = selectedInterests;
     
     // Save progress
     autoSave();
@@ -7847,7 +7874,24 @@ function changePhoto(index) {
  * Toggle interest selection
  */
 function toggleInterest(button) {
-    const selectedCount = document.querySelectorAll('.interest-chip.selected').length;
+    const container = button.closest('.interests-selector');
+    const selectedCount = container ? container.querySelectorAll('.interest-chip.selected').length : document.querySelectorAll('.interest-chip.selected').length;
+    
+    if (button.classList.contains('selected')) {
+        button.classList.remove('selected');
+    } else if (selectedCount < 6) {
+        button.classList.add('selected');
+    } else {
+        showToast('Maximum 6 interests allowed');
+    }
+}
+
+/**
+ * Toggle interest during profile setup
+ */
+function toggleSetupInterest(button) {
+    const container = document.getElementById('setupInterestsSelector');
+    const selectedCount = container ? container.querySelectorAll('.interest-chip.selected').length : 0;
     
     if (button.classList.contains('selected')) {
         button.classList.remove('selected');
