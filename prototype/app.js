@@ -2186,53 +2186,15 @@ async function fetchAWSUsersForMatchPool() {
         
         console.log(`☁️ Found ${awsUserCount} users in DynamoDB`);
         
+        // Store AWS profiles directly in appState (PRIMARY source for matching)
+        appState.awsProfiles = awsUsers;
+        
         if (awsUserCount === 0) {
             console.log('☁️ No users in DynamoDB yet');
             return;
         }
         
-        // REPLACE local users with AWS users (AWS is the source of truth)
-        const awsRegisteredUsers = {};
-        
-        Object.entries(awsUsers).forEach(([email, userData]) => {
-            // Add user to registered users
-            awsRegisteredUsers[email] = {
-                firstName: userData.firstName || userData.name || 'User',
-                gender: userData.gender || '',
-                location: userData.location || '',
-                birthday: userData.birthday || '',
-                age: userData.age,
-                registeredAt: userData.registeredAt || new Date().toISOString(),
-                fromAWS: true
-            };
-            
-            // Store full user data for matching
-            const storageKey = getUserStorageKey(email);
-            localStorage.setItem(storageKey, JSON.stringify({
-                version: '1.0',
-                savedAt: new Date().toISOString(),
-                user: {
-                    email: email,
-                    firstName: userData.firstName || userData.name || '',
-                    age: userData.age,
-                    gender: userData.gender || '',
-                    location: userData.location || '',
-                    occupation: userData.occupation || '',
-                    bio: userData.bio || '',
-                    photos: userData.photos || [userData.photo].filter(p => p),
-                    education: userData.education || ''
-                },
-                fromAWS: true
-            }));
-        });
-        
-        // Save AWS users as the registered users (replacing any local-only users)
-        localStorage.setItem('oith_registered_users', JSON.stringify(awsRegisteredUsers));
-        
-        // Disable test bots when using AWS mode
-        localStorage.setItem('oith_test_bots', JSON.stringify([]));
-        
-        console.log(`✅ Loaded ${awsUserCount} users from DynamoDB (test bots disabled)`);
+        console.log(`✅ Loaded ${awsUserCount} users from DynamoDB for matching`);
         
     } catch (error) {
         console.log('⚠️ AWS user fetch failed:', error.message);
@@ -2240,80 +2202,45 @@ async function fetchAWSUsersForMatchPool() {
 }
 
 /**
- * Get all available profiles from the user database
- * Includes registered users AND active test bots
+ * Get all available profiles from DynamoDB ONLY
+ * No test bots, no localStorage - ONLY real AWS users
  * Excludes the specified email (current user)
  */
 function getAvailableProfilesFromDatabase(excludeEmail) {
     const profiles = [];
     const excludeEmailLower = excludeEmail?.toLowerCase();
     
-    // Get registered users
-    const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
+    // ONLY use AWS profiles (fetched from DynamoDB)
+    const awsProfiles = appState.awsProfiles || {};
     
-    Object.keys(registeredUsers).forEach(email => {
+    Object.entries(awsProfiles).forEach(([email, userData]) => {
         if (email.toLowerCase() === excludeEmailLower) return;
         
-        const regUser = registeredUsers[email];
-        const storageKey = getUserStorageKey(email);
-        const userData = JSON.parse(localStorage.getItem(storageKey) || '{}');
-        const user = userData.user || {};
+        // Skip users without a name
+        if (!userData.firstName && !userData.name) return;
         
-        // Skip users without basic info
-        if (!user.firstName && !regUser.firstName) return;
-        
-        const profileLocation = user.location || regUser.location || 'Unknown';
+        const profileLocation = userData.location || 'Unknown';
         const profileCoords = getCoordinates(profileLocation);
         
         profiles.push({
             email: email,
-            name: user.firstName || regUser.firstName || 'User',
-            age: user.age || calculateAgeFromBirthday(user.birthday || regUser.birthday) || 25,
-            gender: (user.gender || regUser.gender || 'female').toLowerCase(),
-            photo: user.photos?.[0] || 'https://i.pravatar.cc/400?u=' + email,
+            name: userData.firstName || userData.name || 'User',
+            age: userData.age || 25,
+            gender: (userData.gender || 'unknown').toLowerCase(),
+            photo: userData.photo || 'https://i.pravatar.cc/400?u=' + email,
             location: profileLocation,
             coordinates: profileCoords,
             distance: getDistanceToProfile({ location: profileLocation, coordinates: profileCoords }),
-            education: user.education || 'bachelors',
-            occupation: user.occupation || 'Professional',
+            education: userData.education || 'bachelors',
+            occupation: userData.occupation || 'Professional',
+            bio: userData.bio || '',
             isRealUser: true,
-            isTestBot: false
+            isTestBot: false,
+            isAWSUser: true
         });
     });
     
-    // Get active test bots
-    const testBots = JSON.parse(localStorage.getItem('oith_test_bots') || '[]');
-    const activeBots = testBots.filter(bot => bot.active);
-    
-    activeBots.forEach(bot => {
-        const botLocation = bot.location || 'New York, NY';
-        const botCoords = getCoordinates(botLocation);
-        
-        profiles.push({
-            id: bot.id,
-            name: bot.name,
-            age: bot.age || 25,
-            gender: (bot.gender || 'female').toLowerCase(),
-            photo: bot.photo,
-            location: botLocation,
-            coordinates: botCoords,
-            distance: getDistanceToProfile({ location: botLocation, coordinates: botCoords }),
-            education: bot.education || 'bachelors',
-            occupation: bot.occupation || 'Professional',
-            ethnicity: bot.ethnicity,
-            bodyType: bot.bodyType,
-            height: bot.height,
-            drinking: bot.drinking,
-            smoking: bot.smoking,
-            religion: bot.religion,
-            children: bot.wantsKids,
-            exercise: bot.exercise,
-            isRealUser: false,
-            isTestBot: true
-        });
-    });
-    
-    console.log(`📊 Available profiles from database: ${profiles.length} (excluding ${excludeEmail})`);
+    console.log(`☁️ DynamoDB profiles: ${profiles.length} (excluding ${excludeEmail})`);
     return profiles;
 }
 
