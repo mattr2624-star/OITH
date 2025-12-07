@@ -929,8 +929,9 @@ export const handler = async (event) => {
                 // Document entities
                 patentDocs: 0,
                 complianceDocs: 0,
-                // Crawler logs
-                crawlerLogs: 0
+                // System entities
+                crawlerLogs: 0,
+                supportMessages: 0
             };
             
             do {
@@ -968,8 +969,9 @@ export const handler = async (event) => {
                     // Document entities
                     else if (item.pk === 'DOC#patent') stats.patentDocs++;
                     else if (item.pk === 'DOC#compliance') stats.complianceDocs++;
-                    // Crawler logs
+                    // System entities
                     else if (item.pk === 'CRAWLER#logs') stats.crawlerLogs++;
+                    else if (item.pk === 'SUPPORT#all') stats.supportMessages++;
                 });
                 
                 lastEvaluatedKey = scanResult.LastEvaluatedKey;

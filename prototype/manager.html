@@ -18902,9 +18902,11 @@
                 
                 if (response.ok) {
                     const data = await response.json();
+                    
+                    // Populate all stats from API response
                     dynamoDBStats = {
                         connected: true,
-                        totalItems: data.totalItems || 0,
+                        // User entities
                         profiles: data.profiles || 0,
                         matches: data.matches || 0,
                         likes: data.likes || 0,
@@ -18912,8 +18914,41 @@
                         configs: data.configs || 0,
                         subscriptions: data.subscriptions || 0,
                         emergencyContacts: data.emergencyContacts || 0,
+                        settings: data.settings || 0,
+                        // Feedback entities
+                        feedback: data.feedback || 0,
+                        ratings: data.ratings || 0,
+                        reports: data.reports || 0,
+                        // Activity entities
+                        activityEvents: data.activityEvents || 0,
+                        sessions: data.sessions || 0,
+                        dailyMetrics: data.dailyMetrics || 0,
+                        // Company entities
+                        employees: data.employees || 0,
+                        departments: data.departments || 0,
+                        companyMetrics: data.companyMetrics || 0,
+                        investors: data.investors || 0,
+                        // Document entities
+                        patentDocs: data.patentDocs || 0,
+                        complianceDocs: data.complianceDocs || 0,
+                        // System entities
+                        crawlerLogs: data.crawlerLogs || 0,
+                        supportMessages: data.supportMessages || 0,
                         lastSync: new Date().toISOString()
                     };
+                    
+                    // Calculate totalItems by summing all entity counts
+                    dynamoDBStats.totalItems = 
+                        dynamoDBStats.profiles + dynamoDBStats.matches + dynamoDBStats.likes + 
+                        dynamoDBStats.messages + dynamoDBStats.configs + dynamoDBStats.subscriptions +
+                        dynamoDBStats.emergencyContacts + dynamoDBStats.settings +
+                        dynamoDBStats.feedback + dynamoDBStats.ratings + dynamoDBStats.reports +
+                        dynamoDBStats.activityEvents + dynamoDBStats.sessions + dynamoDBStats.dailyMetrics +
+                        dynamoDBStats.employees + dynamoDBStats.departments + dynamoDBStats.companyMetrics + dynamoDBStats.investors +
+                        dynamoDBStats.patentDocs + dynamoDBStats.complianceDocs +
+                        dynamoDBStats.crawlerLogs + dynamoDBStats.supportMessages;
+                    
+                    console.log('📊 DynamoDB stats loaded:', dynamoDBStats);
                 } else {
                     // Fallback: try to get basic counts from existing endpoints
                     await fetchBasicDynamoStats();
