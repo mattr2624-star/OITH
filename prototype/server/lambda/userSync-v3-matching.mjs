@@ -764,7 +764,7 @@ export const handler = async (event) => {
         // POST /crawler/logs - Save crawler run log
         if (method === 'POST' && path.includes('/crawler/logs')) {
             const body = JSON.parse(event.body || '{}');
-            const { runId, logs, summary, options, duration } = body;
+            const { runId, source, logs, summary, options, duration } = body;
             
             if (!runId || !logs) {
                 return { statusCode: 400, headers, body: JSON.stringify({ error: 'runId and logs required' }) };
@@ -776,6 +776,7 @@ export const handler = async (event) => {
                     pk: 'CRAWLER#logs',
                     sk: `RUN#${runId}`,
                     runId: runId,
+                    source: source || 'app', // 'app' or 'site' crawler
                     logs: logs, // Array of log entries
                     summary: summary || {},
                     options: options || {},
@@ -784,8 +785,8 @@ export const handler = async (event) => {
                 }
             }));
             
-            console.log(`📋 Crawler log saved: ${runId}`);
-            return { statusCode: 200, headers, body: JSON.stringify({ success: true, runId }) };
+            console.log(`📋 Crawler log saved: ${runId} (source: ${source || 'app'})`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, runId, source: source || 'app' }) };
         }
         
         // GET /crawler/logs - Get all crawler logs (list)
@@ -800,6 +801,7 @@ export const handler = async (event) => {
             
             const logs = result.Items?.map(item => ({
                 runId: item.runId,
+                source: item.source || 'app', // 'app' or 'site'
                 summary: item.summary,
                 duration: item.duration,
                 createdAt: item.createdAt,
@@ -1154,12 +1156,12 @@ export const handler = async (event) => {
                             Limit: 50
                         }));
                         items = result.Items?.map(item => ({
-                            sk: item.sk,
+                            source: item.source || 'app', // 'app' or 'site' - FIRST column
                             passed: item.summary?.passed || 0,
                             failed: item.summary?.failed || 0,
                             warnings: item.summary?.warnings || 0,
                             duration: item.duration ? `${Math.round(item.duration / 1000)}s` : '--',
-                            timestamp: item.timestamp
+                            timestamp: item.createdAt || item.timestamp
                         })) || [];
                         break;
                     }

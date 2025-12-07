@@ -2295,7 +2295,7 @@
                                 <select id="liveFeedUserFilter" onchange="filterLiveFeed()" style="padding: 4px 8px; font-size: 0.7rem; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); cursor: pointer;">
                                     <option value="all">All Users</option>
                                 </select>
-                                <button class="btn btn-secondary btn-sm" onclick="clearLiveFeed()" style="font-size: 0.7rem; padding: 4px 8px;">Clear</button>
+                            <button class="btn btn-secondary btn-sm" onclick="clearLiveFeed()" style="font-size: 0.7rem; padding: 4px 8px;">Clear</button>
                             </div>
                         </div>
                         <div class="card-body">
@@ -2582,7 +2582,7 @@
                         <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <h3 class="card-title">💕 Compatibility Algorithm</h3>
                             <div style="display: flex; gap: 8px; align-items: center;">
-                                <span class="status-badge active">v1.0</span>
+                            <span class="status-badge active">v1.0</span>
                                 <button class="btn btn-sm" onclick="editCompatibilityWeights()" title="Edit Weights" style="padding: 4px 8px; font-size: 0.75rem;">
                                     ✏️ Edit
                                 </button>
@@ -5406,8 +5406,8 @@
                                     <div style="margin-left: auto; text-align: right;">
                                         <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);" id="dynamoItemCount">--</div>
                                         <div style="font-size: 0.7rem; color: var(--text-muted);">Total Items</div>
-                                    </div>
                                 </div>
+                                    </div>
                                 
                                 <!-- User Data Section -->
                                 <div style="margin-bottom: 12px;">
@@ -5416,11 +5416,11 @@
                                         <div onclick="loadEntityPreview('PROFILE')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--info);" id="dynamoProfileCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Profiles</div>
-                                        </div>
+                                    </div>
                                         <div onclick="loadEntityPreview('MATCH')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--danger);" id="dynamoMatchCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Matches</div>
-                                        </div>
+                                    </div>
                                         <div onclick="loadEntityPreview('CHAT')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--success);" id="dynamoMessageCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Messages</div>
@@ -5428,10 +5428,10 @@
                                         <div onclick="loadEntityPreview('LIKE')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--pink);" id="dynamoLikeCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Likes</div>
-                                        </div>
                                     </div>
                                 </div>
-                                
+                            </div>
+
                                 <!-- Feedback Section -->
                                 <div style="margin-bottom: 12px;">
                                     <div style="font-size: 0.7rem; color: var(--warning); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">📝 Feedback</div>
@@ -5540,10 +5540,10 @@
                                         <span id="previewEntityType" style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">← Click stat box to load</span>
                                         <button class="btn btn-secondary btn-sm" onclick="refreshDataPreview()" id="refreshPreviewBtn" style="padding: 4px 8px; font-size: 0.7rem;" disabled>
                                             🔄 Refresh
-                                        </button>
-                                    </div>
+                                    </button>
                                 </div>
-                                
+                            </div>
+
                                 <!-- Data Table Preview (click stat boxes on left to load data) -->
                                 <div id="dataPreviewContainer" style="height: 480px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border);">
                                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
@@ -6893,7 +6893,7 @@
                         if (subscription.status === 'canceled' || subscription.status === 'cancelled') {
                             canceledCount++;
                         } else if (subscription.type === 'premium' || subscription.plan === 'premium') {
-                            premiumCount++;
+                        premiumCount++;
                         } else {
                             freeCount++;
                         }
@@ -8997,7 +8997,7 @@
         // Track crawler start time
         let crawlerStartTime = Date.now();
         
-        // Save crawler log to DynamoDB
+        // Save crawler log to DynamoDB (App Diagnostics)
         async function saveCrawlerLogToAWS(startTime, duration, options) {
             try {
                 const runId = new Date(startTime).toISOString();
@@ -9006,6 +9006,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         runId: runId,
+                        source: 'app', // App Diagnostics crawler
                         logs: diagnosticsLogEntries,
                         summary: {
                             passed: crawlerResults.passed,
@@ -9284,13 +9285,13 @@
                                 <div style="font-size: 1rem; margin-bottom: 2px;">🌐</div>
                                 <div style="font-weight: 500; font-size: 0.8rem;">API Gateway</div>
                                 <div style="font-size: 0.65rem; color: var(--text-muted);">HTTP Endpoints</div>
-                            </div>
+                        </div>
                             <div style="color: var(--text-muted);">→</div>
                             <div style="padding: 10px 16px; background: var(--bg-secondary); border: 2px solid var(--warning); border-radius: 8px; text-align: center;">
                                 <div style="font-size: 1rem; margin-bottom: 2px;">⚡</div>
                                 <div style="font-weight: 500; font-size: 0.8rem;">Lambda</div>
                                 <div style="font-size: 0.65rem; color: var(--text-muted);">userSync Function</div>
-                            </div>
+                        </div>
                             <div style="color: var(--text-muted);">→</div>
                             <div style="padding: 10px 16px; background: var(--bg-secondary); border: 2px solid var(--success); border-radius: 8px; text-align: center;">
                                 <div style="font-size: 1rem; margin-bottom: 2px;">🗄️</div>
@@ -9364,6 +9365,7 @@
             
             siteAnalysisRunning = true;
             siteAnalysisStopped = false;
+            siteCrawlerStartTime = Date.now(); // Track start time for log
             
             // Update button visibility
             const runBtn = document.getElementById('runSiteAnalysisBtn');
@@ -9471,6 +9473,10 @@
                 // Run extended diagnostics
                 await runExtendedDiagnostics();
 
+                // Save site crawler log to DynamoDB
+                const endTime = Date.now();
+                await saveSiteCrawlerLogToAWS(siteCrawlerStartTime, endTime - siteCrawlerStartTime);
+
             } catch (err) {
                 appendSiteDiagnosticsLog(`🚨 Error: ${err.message}`, 'error');
                 console.error('Site Diagnostics Error:', err);
@@ -9482,6 +9488,52 @@
                 const stopBtn = document.getElementById('stopSiteAnalysisBtn');
                 if (runBtn) runBtn.style.display = '';
                 if (stopBtn) stopBtn.style.display = 'none';
+            }
+        }
+        
+        // Track site crawler start time
+        let siteCrawlerStartTime = Date.now();
+        let siteDiagnosticsLogEntries = [];
+        
+        // Save site crawler log to DynamoDB
+        async function saveSiteCrawlerLogToAWS(startTime, duration) {
+            try {
+                const runId = new Date(startTime).toISOString();
+                
+                // Collect log entries from the log element
+                const logEl = document.getElementById('siteDiagnosticsLog');
+                const logText = logEl?.querySelector('pre')?.textContent || '';
+                const logEntries = logText.split('\n').filter(line => line.trim()).map(line => ({
+                    message: line,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                const response = await fetch(`${AWS_API_URL}/crawler/logs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        runId: runId,
+                        source: 'site', // Site Diagnostics crawler
+                        logs: logEntries,
+                        summary: {
+                            passed: siteDiagnosticsResults.functional.length,
+                            failed: siteDiagnosticsResults.broken.length,
+                            warnings: siteDiagnosticsResults.hardcoded.length,
+                            connections: siteDiagnosticsResults.connections.filter(c => c.status === 'ok').length
+                        },
+                        duration: duration
+                    })
+                });
+                
+                if (response.ok) {
+                    appendSiteDiagnosticsLog('☁️ Site log saved to cloud', 'success');
+                    // Refresh crawler log count in database schema
+                    await syncDynamoDBSchema();
+                } else {
+                    console.log('Could not save site crawler log to AWS');
+                }
+            } catch (error) {
+                console.log('Site crawler log save error:', error.message);
             }
         }
 
@@ -19197,7 +19249,7 @@
                 CHAT: ['pk', 'sk', 'from', 'to', 'text', 'timestamp'],
                 SUBSCRIPTION: ['email', 'plan', 'status', 'startDate', 'endDate'],
                 CONFIG: ['sk', 'type', 'updatedAt', 'updatedBy'],
-                CRAWLER_LOG: ['sk', 'passed', 'failed', 'warnings', 'duration', 'timestamp'],
+                CRAWLER_LOG: ['source', 'passed', 'failed', 'warnings', 'duration', 'timestamp'],
                 EMPLOYEE: ['name', 'title', 'department', 'email', 'status', 'startDate', 'salary'],
                 DEPARTMENT: ['id', 'name', 'color', 'updatedAt'],
                 REPORT: ['id', 'reportedUser', 'reportedBy', 'reason', 'status', 'createdAt'],
@@ -19364,7 +19416,7 @@
                         <div>
                             <div style="font-weight: 600; font-size: 1.1rem;">DynamoDB Single-Table Design</div>
                             <div style="font-size: 0.8rem; color: var(--text-muted);">Table: <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">${dynamoDBSchema.tableName}</code> | Region: ${dynamoDBSchema.region} | Entities: ${dynamoDBSchema.entities.length}</div>
-                        </div>
+                                </div>
                     </div>
                     <div style="display: flex; gap: 16px; flex-wrap: wrap;">
                         <div style="padding: 8px 12px; background: var(--bg-secondary); border-radius: 6px; font-size: 0.8rem;">
@@ -19414,8 +19466,8 @@
                                                         ${attr.primary ? '<span style="color: var(--warning);" title="Key Attribute">🔑</span>' : '<span style="width: 14px;"></span>'}
                                                         <span style="font-family: monospace; color: var(--text-primary);">${attr.name}</span>
                                                         <span style="color: var(--accent); font-size: 0.6rem; margin-left: auto;">${attr.type}</span>
-                                                    </div>
-                                                `).join('')}
+                                        </div>
+                                    `).join('')}
                                             </div>
                                         </details>
                                         
@@ -19426,28 +19478,28 @@
                                                 <div style="font-size: 0.68rem; color: var(--info);">${entity.usedBy.join(', ')}</div>
                                             </div>
                                         ` : ''}
-                                    </div>
                                 </div>
-                            `).join('')}
-                        </div>
+                            </div>
+                        `).join('')}
+                    </div>
                     </div>
                 `).join('')}
-                
-                <!-- Legend -->
+                    
+                    <!-- Legend -->
                 <div style="display: flex; gap: 24px; justify-content: center; padding: 20px; border-top: 1px solid var(--border); margin-top: 20px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
                         <span>🔑</span> Key Attribute
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
                         <div style="width: 12px; height: 12px; background: rgba(245, 158, 11, 0.2); border-radius: 2px;"></div> Key Row
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
                         <span style="color: var(--warning);">pk</span> Partition Key
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
                         <span style="color: var(--info);">sk</span> Sort Key
-                    </div>
-                </div>
+                        </div>
+                        </div>
             `;
         }
         
@@ -19480,7 +19532,7 @@
                             <div style="background: var(--bg-tertiary); border-radius: 12px; overflow: hidden; border: 1px solid ${cfg.color};">
                                 <div style="background: ${cfg.color}; padding: 10px 14px; color: white; font-weight: 600; font-size: 0.85rem;">
                                     ${cfg.name}
-                                </div>
+                    </div>
                                 <div style="padding: 12px; display: flex; flex-direction: column; gap: 8px;">
                                     ${patterns.map((pattern, idx) => `
                                         <div style="display: flex; align-items: flex-start; gap: 10px; padding: 8px; background: var(--bg-secondary); border-radius: 6px;">
