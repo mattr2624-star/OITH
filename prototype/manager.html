@@ -7203,11 +7203,15 @@
             }
         };
         
-        // Fetch users from AWS DynamoDB
+        // Pull users from AWS DynamoDB - OVERWRITES local user database
         async function syncFromAWS() {
             const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
             
-            showToast('☁️ Fetching users from AWS...', 'info');
+            if (!confirm('⚠️ This will OVERWRITE your local user database with data from DynamoDB.\n\nContinue?')) {
+                return;
+            }
+            
+            showToast('☁️ Pulling users from DynamoDB...', 'info');
             
             try {
                 const response = await fetch(`${awsApiUrl}/users`);
@@ -7216,33 +7220,63 @@
                 const awsUsers = await response.json();
                 console.log('☁️ AWS Users:', awsUsers);
                 
-                // Replace local users with AWS users (AWS is source of truth)
-                localStorage.setItem('oith_registered_users', JSON.stringify(awsUsers));
+                // CLEAR existing local user database first
+                const existingUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
+                Object.keys(existingUsers).forEach(email => {
+                    const key = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+                    localStorage.removeItem(key);
+                });
                 
-                // Also store individual user data
+                // Build new registered users from AWS data
+                const newRegisteredUsers = {};
+                
                 Object.entries(awsUsers).forEach(([email, userData]) => {
+                    // Add to registered users
+                    newRegisteredUsers[email] = {
+                        firstName: userData.firstName || userData.name || 'User',
+                        gender: userData.gender || '',
+                        location: userData.location || '',
+                        age: userData.age || null,
+                        registeredAt: userData.registeredAt || new Date().toISOString(),
+                        fromAWS: true
+                    };
+                    
+                    // Store individual user data
                     const key = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
                     localStorage.setItem(key, JSON.stringify({
+                        version: '1.0',
+                        savedAt: new Date().toISOString(),
                         user: {
                             email: email,
-                            firstName: userData.firstName || userData.name,
-                            age: userData.age,
-                            gender: userData.gender,
-                            location: userData.location,
-                            photos: userData.photos || [userData.photo]
-                        }
+                            firstName: userData.firstName || userData.name || '',
+                            age: userData.age || null,
+                            gender: userData.gender || '',
+                            location: userData.location || '',
+                            occupation: userData.occupation || '',
+                            bio: userData.bio || '',
+                            photo: userData.photo || '',
+                            photos: userData.photos || [userData.photo].filter(p => p),
+                            education: userData.education || ''
+                        },
+                        fromAWS: true
                     }));
                 });
                 
+                // OVERWRITE local registered users with AWS data
+                localStorage.setItem('oith_registered_users', JSON.stringify(newRegisteredUsers));
+                
+                // Clear test bots (AWS mode = no test bots)
+                localStorage.setItem('oith_test_bots', JSON.stringify([]));
+                
                 const userCount = Object.keys(awsUsers).length;
-                showToast(`☁️ Loaded ${userCount} users from DynamoDB`, 'success');
+                showToast(`✅ Replaced local database with ${userCount} users from DynamoDB`, 'success');
                 
                 // Reload UI
                 refreshData();
                 
             } catch (error) {
                 console.error('AWS sync error:', error);
-                showToast('❌ Failed to sync from AWS: ' + error.message, 'error');
+                showToast('❌ Failed to pull from AWS: ' + error.message, 'error');
             }
         }
         
