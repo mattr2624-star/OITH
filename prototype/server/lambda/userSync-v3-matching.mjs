@@ -83,15 +83,13 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify(users) };
         }
         
-        // DELETE /users/clear - Clear ALL users from DynamoDB
+        // DELETE /users/clear - Clear ALL items from DynamoDB (users, likes, matches, chats)
         if (method === 'DELETE' && path.includes('/users/clear')) {
-            console.log('🗑️ Clearing all users from DynamoDB...');
+            console.log('🗑️ Clearing ALL items from DynamoDB...');
             
-            // Scan for all PROFILE items
+            // Scan for ALL items (no filter)
             const result = await docClient.send(new ScanCommand({ 
-                TableName: TABLE_NAME,
-                FilterExpression: 'sk = :sk',
-                ExpressionAttributeValues: { ':sk': 'PROFILE' }
+                TableName: TABLE_NAME
             }));
             
             // Delete each one
@@ -104,7 +102,7 @@ export const handler = async (event) => {
                 deleted++;
             }
             
-            console.log(`🗑️ Deleted ${deleted} users`);
+            console.log(`🗑️ Deleted ${deleted} items (users, likes, matches, chats)`);
             return { statusCode: 200, headers, body: JSON.stringify({ success: true, deleted }) };
         }
         
