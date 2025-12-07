@@ -3931,6 +3931,8 @@ function showScreen(screenId) {
             refreshUserDataFromStorage();
             // Initialize edit profile screen with user data
             initEditProfileScreen();
+            // Update profile visibility counter (how many users will see your profile)
+            updateProfileVisibilityCounter();
         }
         
         if (screenId === 'match-preferences') {
@@ -5022,6 +5024,77 @@ function initMatchPreferencesScreen() {
     
     // Update the counter with current preferences
     updateMatchPreferencesCounter();
+}
+
+/**
+ * Update the profile visibility counter on Edit Profile screen
+ * Shows how many users' preferences your profile matches
+ */
+function updateProfileVisibilityCounter() {
+    const countEl = document.getElementById('profileVisibilityCount');
+    const barEl = document.getElementById('profileVisibilityBar');
+    if (!countEl) return;
+    
+    const currentUser = appState.user || {};
+    const currentUserEmail = currentUser.email?.toLowerCase();
+    
+    // Get all available profiles (other users)
+    const allProfiles = getAvailableProfilesFromDatabase(currentUserEmail);
+    
+    // Count how many users' preferences our profile matches
+    let visibleToCount = 0;
+    
+    allProfiles.forEach(otherUser => {
+        // Get the other user's preferences (if stored)
+        const otherPrefs = otherUser.preferences || {};
+        
+        // Check if current user matches other user's preferences
+        const matchesAge = checkAgeMatch(currentUser.age, otherPrefs);
+        const matchesGender = checkGenderMatch(currentUser.gender, otherPrefs);
+        
+        if (matchesAge && matchesGender) {
+            visibleToCount++;
+        }
+    });
+    
+    // Update the counter
+    countEl.textContent = visibleToCount;
+    
+    // Update bar color based on count
+    if (barEl) {
+        if (visibleToCount === 0) {
+            barEl.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        } else if (visibleToCount < 3) {
+            barEl.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        } else {
+            barEl.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)';
+        }
+    }
+    
+    console.log(`👁️ Profile visible to ${visibleToCount} users`);
+}
+
+// Helper: Check if age matches preferences
+function checkAgeMatch(userAge, prefs) {
+    if (!userAge) return true; // If no age, assume match
+    const minAge = prefs.ageMin || 18;
+    const maxAge = prefs.ageMax || 99;
+    return userAge >= minAge && userAge <= maxAge;
+}
+
+// Helper: Check if gender matches preferences
+function checkGenderMatch(userGender, prefs) {
+    const interestedIn = (prefs.interestedIn || 'everyone').toLowerCase();
+    if (interestedIn === 'everyone') return true;
+    
+    const gender = (userGender || '').toLowerCase();
+    const isFemale = ['female', 'woman', 'women', 'f'].includes(gender);
+    const isMale = ['male', 'man', 'men', 'm'].includes(gender);
+    
+    if (interestedIn === 'women' && isFemale) return true;
+    if (interestedIn === 'men' && isMale) return true;
+    
+    return false;
 }
 
 /**
