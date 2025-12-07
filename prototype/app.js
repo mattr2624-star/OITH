@@ -625,6 +625,28 @@ function saveUserData() {
         const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
         syncToServer(email, dataToSave, registeredUsers[email]);
         
+        // Debounced sync of additional data to AWS
+        // This ensures photos, settings, etc. are also updated
+        if (!window._awsSyncTimeout) {
+            window._awsSyncTimeout = setTimeout(async () => {
+                window._awsSyncTimeout = null;
+                try {
+                    // Sync photos if they exist
+                    if (appState.user?.photos?.length > 0) {
+                        await syncPhotosToAWS();
+                    }
+                    // Sync settings if they exist
+                    if (appState.user?.settings) {
+                        await syncSettingsToAWS();
+                    }
+                    // Subscription is synced immediately on payment success
+                    // Emergency contact is synced immediately on save
+                } catch (e) {
+                    console.log('Background AWS sync:', e.message);
+                }
+            }, 2000); // Debounce to 2 seconds after last save
+        }
+        
         return true;
     } catch (error) {
         console.error('Failed to save user data:', error);
@@ -2216,12 +2238,19 @@ async function forceSyncToAWS() {
                     photo: appState.user.photos?.[0] || '', // Only first photo URL
                     height: appState.user.height || '',
                     bodyType: appState.user.bodyType || '',
-                    interests: (appState.user.interests || []).slice(0, 10) // Limit interests
+                    interests: (appState.user.interests || []).slice(0, 10), // Limit interests
+                    // Include preferences for matching
+                    preferences: {
+                        interestedIn: appState.user.preferences?.interestedIn || appState.user.matchPreferences?.interestedIn || 'everyone',
+                        ageMin: appState.user.preferences?.ageMin || appState.user.matchPreferences?.ageMin || 18,
+                        ageMax: appState.user.preferences?.ageMax || appState.user.matchPreferences?.ageMax || 99,
+                        maxDistance: appState.user.preferences?.maxDistance || appState.user.matchPreferences?.maxDistance || 100
+                    }
                 }
             }
         };
         
-        console.log('📤 Sending to AWS (minimal data):', payload.email);
+        console.log('📤 Sending to AWS (with preferences):', payload.email);
         
         const response = await fetch(`${awsUrl}/users`, {
             method: 'POST',
@@ -5038,6 +5067,10 @@ function initManagePhotosScreen() {
 function saveMatchPreferences() {
     savePrefToState();
     autoSave();
+    
+    // Force sync preferences to AWS for matching
+    forceSyncToAWS();
+    
     showToast('Preferences saved!');
     showScreen('my-profile');
 }
