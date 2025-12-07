@@ -5918,6 +5918,23 @@ const PAYMENT_CONFIG = {
     
     plans: {
         monthly: { price: 10.00, interval: 'month', label: '$10.00/month' }
+    },
+    
+    // Test card numbers that bypass payment (for testers)
+    // Share these with test users - they won't be charged!
+    testCards: {
+        // Success cards - payment will be simulated as successful
+        success: [
+            '4242424242424242',  // Standard test card
+            '4111111111111111',  // Visa test
+            '5555555555554444',  // Mastercard test
+            '1234567890123456',  // Easy to remember test
+            '0000000000000000',  // All zeros test
+        ],
+        // Decline cards - payment will be simulated as declined (for testing error handling)
+        decline: [
+            '4000000000000002',  // Generic decline
+        ]
     }
 };
 
@@ -6075,6 +6092,24 @@ async function processPayment(event) {
     if (processingView) processingView.style.display = 'block';
     
     try {
+        // ========================================
+        // CHECK FOR TEST CARDS FIRST (bypass payment)
+        // ========================================
+        if (PAYMENT_CONFIG.testCards.success.includes(cardNumber)) {
+            console.log('🧪 TEST CARD DETECTED - Simulating successful payment (no charge)');
+            showToast('🧪 Test card detected - Free access granted!', 'info');
+            await simulateTestPayment();
+            return;
+        }
+        
+        if (PAYMENT_CONFIG.testCards.decline.includes(cardNumber)) {
+            console.log('🧪 TEST DECLINE CARD - Simulating declined payment');
+            throw new Error('Card declined (test mode)');
+        }
+        
+        // ========================================
+        // REAL PAYMENT FLOW
+        // ========================================
         // Check if Square Checkout is configured
         const isSquareConfigured = PAYMENT_CONFIG.squareCheckoutUrl && 
                                    !PAYMENT_CONFIG.squareCheckoutUrl.includes('YOUR_');
