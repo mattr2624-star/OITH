@@ -1924,6 +1924,35 @@ function parseHeightToInches(heightStr) {
 }
 
 /**
+ * Manual refresh from cloud - callable by users via button
+ */
+async function refreshFromCloud() {
+    showToast('☁️ Syncing from cloud...', 'info');
+    
+    try {
+        await fetchAWSUsersForMatchPool();
+        
+        // Refresh the match pool
+        if (typeof syncMatchPool === 'function') {
+            syncMatchPool();
+        }
+        
+        showToast('✅ Synced latest profiles from cloud!', 'success');
+        
+        // Try to get a new match
+        setTimeout(() => {
+            if (typeof presentMatch === 'function') {
+                presentMatch();
+            }
+        }, 1000);
+        
+    } catch (error) {
+        console.error('Cloud sync failed:', error);
+        showToast('❌ Sync failed. Try again.', 'error');
+    }
+}
+
+/**
  * Fetch users from AWS DynamoDB and merge into local match pool
  * This allows users on AWS to see and match with other AWS users
  */
