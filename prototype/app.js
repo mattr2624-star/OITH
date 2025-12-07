@@ -9580,6 +9580,168 @@ function initDatePlanScreen() {
     
     // Show/hide emergency contact notification option
     updateSafetyNotifyOption();
+    
+    // Clear any previous search
+    clearVenueSearch();
+}
+
+// ==========================================
+// Venue Search Functions
+// ==========================================
+
+let currentVenueFilter = 'all';
+let allVenues = [];
+
+// Sample venue database (in production, this would come from an API like Google Places)
+const venueDatabase = [
+    { name: "The Coffee House", type: "cafe", rating: 4.5, price: "$$", address: "123 Main St", distance: "0.3 mi" },
+    { name: "Bella Italia", type: "restaurant", rating: 4.7, price: "$$$", address: "456 Oak Ave", distance: "0.5 mi" },
+    { name: "The Rooftop Bar", type: "bar", rating: 4.3, price: "$$", address: "789 High St", distance: "0.8 mi" },
+    { name: "Escape Room Adventures", type: "activity", rating: 4.8, price: "$$", address: "321 Fun Blvd", distance: "1.2 mi" },
+    { name: "Sunrise Cafe", type: "cafe", rating: 4.4, price: "$", address: "555 Morning Dr", distance: "0.4 mi" },
+    { name: "Sushi Palace", type: "restaurant", rating: 4.6, price: "$$$", address: "777 Harbor Rd", distance: "0.6 mi" },
+    { name: "The Wine Cellar", type: "bar", rating: 4.5, price: "$$$", address: "999 Vine St", distance: "0.9 mi" },
+    { name: "Mini Golf World", type: "activity", rating: 4.2, price: "$", address: "111 Play Lane", distance: "1.5 mi" },
+    { name: "Taco Town", type: "restaurant", rating: 4.1, price: "$", address: "222 Fiesta Ave", distance: "0.2 mi" },
+    { name: "The Study", type: "cafe", rating: 4.6, price: "$$", address: "333 Book St", distance: "0.7 mi" },
+    { name: "Cocktail Lounge", type: "bar", rating: 4.4, price: "$$", address: "444 Night Blvd", distance: "1.0 mi" },
+    { name: "Bowling Alley", type: "activity", rating: 4.0, price: "$", address: "666 Strike Rd", distance: "1.8 mi" },
+    { name: "Farm to Table", type: "restaurant", rating: 4.9, price: "$$$$", address: "888 Organic Way", distance: "1.1 mi" },
+    { name: "Tea House", type: "cafe", rating: 4.3, price: "$", address: "101 Zen Garden", distance: "0.5 mi" },
+    { name: "Sports Bar", type: "bar", rating: 4.0, price: "$", address: "202 Game Day Dr", distance: "0.8 mi" }
+];
+
+function searchVenues(query) {
+    const searchInput = document.getElementById('venueSearchInput');
+    const clearBtn = document.getElementById('clearVenueSearch');
+    const resultsSection = document.getElementById('venueSearchResults');
+    const suggestedSection = document.getElementById('suggestedVenuesSection');
+    const resultsList = document.getElementById('searchResultsList');
+    const resultsCount = document.getElementById('searchResultsCount');
+    
+    // Show/hide clear button
+    if (clearBtn) {
+        clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
+    }
+    
+    if (!query || query.length < 2) {
+        // Hide search results, show suggested
+        if (resultsSection) resultsSection.style.display = 'none';
+        if (suggestedSection) suggestedSection.style.display = 'block';
+        return;
+    }
+    
+    // Filter venues by query and type
+    const lowerQuery = query.toLowerCase();
+    let results = venueDatabase.filter(venue => {
+        const matchesQuery = venue.name.toLowerCase().includes(lowerQuery) ||
+                            venue.type.toLowerCase().includes(lowerQuery) ||
+                            venue.address.toLowerCase().includes(lowerQuery);
+        const matchesFilter = currentVenueFilter === 'all' || venue.type === currentVenueFilter;
+        return matchesQuery && matchesFilter;
+    });
+    
+    // Show results section, hide suggested
+    if (resultsSection) resultsSection.style.display = 'block';
+    if (suggestedSection) suggestedSection.style.display = 'none';
+    
+    // Update count
+    if (resultsCount) {
+        resultsCount.textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
+    }
+    
+    // Render results
+    if (resultsList) {
+        if (results.length === 0) {
+            resultsList.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+                    <p>No venues found for "${query}"</p>
+                    <p style="font-size: 0.85rem; margin-top: 8px;">Try a different search term</p>
+                </div>
+            `;
+        } else {
+            resultsList.innerHTML = results.map(venue => renderVenueCard(venue)).join('');
+        }
+    }
+}
+
+function filterVenueType(btn, type) {
+    // Update active state
+    document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+    btn.classList.add('active');
+    
+    currentVenueFilter = type;
+    
+    // Re-run search with current query
+    const searchInput = document.getElementById('venueSearchInput');
+    if (searchInput && searchInput.value.length >= 2) {
+        searchVenues(searchInput.value);
+    }
+}
+
+function clearVenueSearch() {
+    const searchInput = document.getElementById('venueSearchInput');
+    const clearBtn = document.getElementById('clearVenueSearch');
+    const resultsSection = document.getElementById('venueSearchResults');
+    const suggestedSection = document.getElementById('suggestedVenuesSection');
+    
+    if (searchInput) searchInput.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    if (resultsSection) resultsSection.style.display = 'none';
+    if (suggestedSection) suggestedSection.style.display = 'block';
+    
+    // Reset filter to 'all'
+    currentVenueFilter = 'all';
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.textContent.includes('All'));
+    });
+}
+
+function renderVenueCard(venue) {
+    const typeEmoji = {
+        'restaurant': '🍽️',
+        'cafe': '☕',
+        'bar': '🍸',
+        'activity': '🎯'
+    };
+    
+    return `
+        <div class="venue-card" onclick="selectVenue('${venue.name}', '${venue.address}')">
+            <div class="venue-info">
+                <div class="venue-type-badge">${typeEmoji[venue.type] || '📍'}</div>
+                <div class="venue-details">
+                    <h5 class="venue-name">${venue.name}</h5>
+                    <p class="venue-meta">
+                        <span class="venue-rating">⭐ ${venue.rating}</span>
+                        <span class="venue-price">${venue.price}</span>
+                        <span class="venue-distance">${venue.distance}</span>
+                    </p>
+                    <p class="venue-address">${venue.address}</p>
+                </div>
+            </div>
+            <div class="venue-select-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </div>
+        </div>
+    `;
+}
+
+function selectVenue(name, address) {
+    // Store selected venue
+    if (!appState.datePlan) appState.datePlan = {};
+    appState.datePlan.venue = { name, address };
+    
+    showToast(`📍 Selected: ${name}`, 'success');
+    
+    // Highlight the selected venue
+    document.querySelectorAll('.venue-card').forEach(card => {
+        card.classList.remove('selected');
+        if (card.querySelector('.venue-name')?.textContent === name) {
+            card.classList.add('selected');
+        }
+    });
 }
 
 /**

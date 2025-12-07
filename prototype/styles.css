@@ -7197,6 +7197,119 @@ body {
 }
 
 /* ==========================================
+   Venue Search (Date Plan Screen)
+   ========================================== */
+.venue-search-container {
+    margin-bottom: 16px;
+}
+
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0 12px;
+    transition: all 0.2s;
+}
+
+.search-input-wrapper:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(196, 88, 74, 0.1);
+}
+
+.search-input-wrapper .search-icon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.search-input-wrapper input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 14px 12px;
+    font-size: 1rem;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.search-input-wrapper input::placeholder {
+    color: var(--text-muted);
+}
+
+.clear-search-btn {
+    background: var(--bg-tertiary);
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clear-search-btn:hover {
+    background: var(--border);
+    color: var(--text-primary);
+}
+
+.search-filters {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.filter-chip {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.filter-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.filter-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+.venue-search-results {
+    margin-bottom: 16px;
+}
+
+.search-results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.search-results-header .btn-text {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+/* ==========================================
    Responsive
    ========================================== */
 @media (max-width: 420px) {

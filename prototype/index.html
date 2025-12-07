@@ -622,7 +622,7 @@
                     
                     <button class="btn btn-primary" onclick="showPaymentForm()" id="subscribeBtn" style="width: 100%; padding: 16px; font-size: 1rem; font-weight: 600;">
                         <span id="subscribeBtnText">Continue to Payment</span>
-                        <span id="subscribeBtnPrice" style="opacity: 0.9;"> - $79.99/year</span>
+                        <span id="subscribeBtnPrice" style="opacity: 0.9;"> - $10.00/month</span>
                     </button>
                     <p class="payment-note" style="text-align: center; margin-top: 12px; font-size: 0.8rem; color: var(--text-muted);">
                         🔒 Secure payment via Stripe • Cancel anytime • 7-day money-back guarantee
@@ -1633,13 +1633,47 @@
                     </div>
                     
                     <div class="date-plan-section">
-                        <h4>Suggested Venues</h4>
-                        <p class="section-subtitle" id="venueSubtitle">Ranked by your conversation topics & shared interests</p>
-                        <p class="user-location" id="userLocationDisplay">📍 Near <span id="userLocationText">your area</span></p>
-                        <div class="venue-list" id="venueList">
-                            <!-- Venues will be populated dynamically based on location -->
-                                    </div>
-                                </div>
+                        <h4>Find a Venue</h4>
+                        
+                        <!-- Location Search -->
+                        <div class="venue-search-container">
+                            <div class="search-input-wrapper">
+                                <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                <input type="text" id="venueSearchInput" placeholder="Search restaurants, bars, cafes..." oninput="searchVenues(this.value)" autocomplete="off">
+                                <button class="clear-search-btn" id="clearVenueSearch" onclick="clearVenueSearch()" style="display: none;">✕</button>
+                            </div>
+                            <div class="search-filters">
+                                <button class="filter-chip active" onclick="filterVenueType(this, 'all')">All</button>
+                                <button class="filter-chip" onclick="filterVenueType(this, 'restaurant')">🍽️ Restaurant</button>
+                                <button class="filter-chip" onclick="filterVenueType(this, 'cafe')">☕ Cafe</button>
+                                <button class="filter-chip" onclick="filterVenueType(this, 'bar')">🍸 Bar</button>
+                                <button class="filter-chip" onclick="filterVenueType(this, 'activity')">🎯 Activity</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Results -->
+                        <div class="venue-search-results" id="venueSearchResults" style="display: none;">
+                            <div class="search-results-header">
+                                <span id="searchResultsCount">0 results</span>
+                                <button class="btn-text" onclick="clearVenueSearch()">Clear</button>
+                            </div>
+                            <div class="venue-list" id="searchResultsList">
+                                <!-- Search results will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Suggested Venues -->
+                        <div id="suggestedVenuesSection">
+                            <p class="section-subtitle" id="venueSubtitle">Ranked by your conversation topics & shared interests</p>
+                            <p class="user-location" id="userLocationDisplay">📍 Near <span id="userLocationText">your area</span></p>
+                            <div class="venue-list" id="venueList">
+                                <!-- Venues will be populated dynamically based on location -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="date-plan-footer">
                     <!-- Safety notification option (only shown if emergency contact exists) -->
