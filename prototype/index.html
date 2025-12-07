@@ -2018,15 +2018,15 @@
                     <form class="payment-form" onsubmit="savePaymentMethod(event)">
                         <div class="form-group">
                             <label>Cardholder Name</label>
-                            <input type="text" id="cardholderName" placeholder="Name on card" required>
+                            <input type="text" id="settingsCardholderName" placeholder="Name on card" required>
                         </div>
                         
                         <div class="form-group">
                             <label>Card Number</label>
                             <div class="card-input-wrapper">
-                                <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" 
+                                <input type="text" id="settingsCardNumber" placeholder="1234 5678 9012 3456" 
                                     maxlength="19" oninput="formatCardNumber(this)" required>
-                                <div class="card-brand" id="cardBrand">
+                                <div class="card-brand" id="settingsCardBrand">
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                         <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                                         <line x1="1" y1="10" x2="23" y2="10"/>
@@ -2038,13 +2038,13 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label>Expiry Date</label>
-                                <input type="text" id="cardExpiry" placeholder="MM/YY" 
+                                <input type="text" id="settingsCardExpiry" placeholder="MM/YY" 
                                     maxlength="5" oninput="formatExpiry(this)" required>
                             </div>
                             <div class="form-group">
                                 <label>CVV</label>
                                 <div class="cvv-input-wrapper">
-                                    <input type="text" id="cardCvv" placeholder="123" 
+                                    <input type="text" id="settingsCardCvv" placeholder="123" 
                                         maxlength="4" oninput="this.value = this.value.replace(/\D/g, '')" required>
                                     <button type="button" class="cvv-help" onclick="showCvvHelp()">?</button>
                                 </div>
