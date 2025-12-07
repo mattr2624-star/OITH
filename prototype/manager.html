@@ -7927,6 +7927,11 @@
             document.getElementById('stopCrawlerBtn').style.display = 'none';
             setDiagnosticsStatus('Stopped', 'warning');
             appendDiagnosticsLog('🛑 Crawler stopped by user.', 'warn');
+            
+            // Clean up test fixtures
+            cleanupTestFixtures();
+            const cleanupChannel = new BroadcastChannel('oith_sync');
+            cleanupChannel.postMessage({ type: 'crawler_logout', source: 'admin' });
         }
 
         // Create test user fixtures for comprehensive testing
@@ -8074,26 +8079,8 @@
                 }]
             };
             
-            localStorage.setItem(`oith_user_${testEmail}`, JSON.stringify(userData));
-            
-            // Add to registered users
-            const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
-            registeredUsers[testEmail] = {
-                email: testEmail,
-                password: 'testpass123',
-                registeredAt: new Date().toISOString()
-            };
-            registeredUsers[testMatchEmail] = {
-                email: testMatchEmail,
-                password: 'testpass123',
-                registeredAt: new Date().toISOString()
-            };
-            localStorage.setItem('oith_registered_users', JSON.stringify(registeredUsers));
-            
-            // Store match user data
-            localStorage.setItem(`oith_user_${testMatchEmail}`, JSON.stringify({
-                user: testMatch
-            }));
+            // NOTE: We do NOT save to localStorage anymore to avoid polluting user data
+            // The crawler only sends data to the app via BroadcastChannel (in-memory only)
             
             // Send login command to app via BroadcastChannel
             const channel = new BroadcastChannel('oith_sync');
@@ -8976,6 +8963,14 @@
                 crawlerRunning = false;
                 document.getElementById('runCrawlerBtn').style.display = 'flex';
                 document.getElementById('stopCrawlerBtn').style.display = 'none';
+                
+                // Clean up test fixtures - send logout to app
+                if (options.simulateLogin) {
+                    cleanupTestFixtures();
+                    const cleanupChannel = new BroadcastChannel('oith_sync');
+                    cleanupChannel.postMessage({ type: 'crawler_logout', source: 'admin' });
+                    appendDiagnosticsLog('🧹 Cleaned up test fixtures');
+                }
                 
                 // Save crawler log to DynamoDB
                 const endTime = Date.now();
