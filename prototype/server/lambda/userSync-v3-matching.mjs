@@ -732,6 +732,52 @@ export const handler = async (event) => {
             };
         }
         
+        // ============ ML SETTINGS ============
+        
+        // POST /ml-settings - Save ML model settings
+        if (method === 'POST' && path.includes('/ml-settings')) {
+            const body = JSON.parse(event.body || '{}');
+            const { type, settings } = body;
+            
+            if (!type || !settings) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Type and settings required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'CONFIG',
+                    sk: `ML#${type}`,
+                    type: type,
+                    settings: settings,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: body.updatedBy || 'admin'
+                }
+            }));
+            
+            console.log(`⚙️ ML settings saved: ${type}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, type }) };
+        }
+        
+        // GET /ml-settings/{type} - Get ML model settings
+        if (method === 'GET' && path.includes('/ml-settings/')) {
+            const type = path.split('/ml-settings/')[1];
+            if (!type) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Type required' }) };
+            }
+            
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'CONFIG', sk: `ML#${type}` }
+            }));
+            
+            if (result.Item) {
+                return { statusCode: 200, headers, body: JSON.stringify({ settings: result.Item.settings, updatedAt: result.Item.updatedAt }) };
+            }
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ settings: null }) };
+        }
+        
         // Health check
         return { statusCode: 200, headers, body: JSON.stringify({ status: 'ok' }) };
         

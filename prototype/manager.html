@@ -2611,37 +2611,90 @@
                     </div>
                 </div>
 
-                <!-- Algorithm Details Cards -->
+                <!-- Editable Algorithm Details Cards -->
                 <div class="cards-grid" style="margin-bottom: 20px;">
-                    <div class="card">
-                        <div class="card-header">
+                    <div class="card" id="compatibilityAlgorithmCard">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <h3 class="card-title">💕 Compatibility Algorithm</h3>
-                            <span class="status-badge active">v1.0</span>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <span class="status-badge active">v1.0</span>
+                                <button class="btn btn-sm" onclick="editCompatibilityWeights()" title="Edit Weights" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    ✏️ Edit
+                                </button>
+                            </div>
                         </div>
                         <div class="card-body">
                             <p style="color: var(--text-muted); margin-bottom: 12px; font-size: 0.85rem;">
                                 Weighted scoring algorithm that calculates overall match compatibility.
                             </p>
-                            <div style="display: flex; flex-direction: column; gap: 8px;">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                            <div id="compatibilityWeightsDisplay" style="display: flex; flex-direction: column; gap: 8px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
                                     <span>Relationship Goals</span>
-                                    <span style="color: var(--accent);">25% weight</span>
+                                    <span class="weight-value" data-key="goals" style="color: var(--accent); font-weight: 600;">25%</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
                                     <span>Shared Interests</span>
-                                    <span style="color: var(--accent);">25% weight</span>
+                                    <span class="weight-value" data-key="interests" style="color: var(--accent); font-weight: 600;">25%</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
                                     <span>Location Proximity</span>
-                                    <span style="color: var(--accent);">20% weight</span>
+                                    <span class="weight-value" data-key="location" style="color: var(--accent); font-weight: 600;">20%</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
                                     <span>Age Compatibility</span>
-                                    <span style="color: var(--accent);">15% weight</span>
+                                    <span class="weight-value" data-key="age" style="color: var(--accent); font-weight: 600;">15%</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">
                                     <span>Communication Style</span>
-                                    <span style="color: var(--accent);">15% weight</span>
+                                    <span class="weight-value" data-key="communication" style="color: var(--accent); font-weight: 600;">15%</span>
+                                </div>
+                            </div>
+                            <!-- Edit Form (hidden by default) -->
+                            <div id="compatibilityWeightsEdit" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label style="font-size: 0.8rem;">Relationship Goals</label>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="range" id="weightGoals" min="0" max="50" value="25" style="width: 100px;" oninput="updateWeightPreview('goals', this.value)">
+                                            <span id="weightGoalsValue" style="min-width: 35px; font-size: 0.8rem;">25%</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label style="font-size: 0.8rem;">Shared Interests</label>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="range" id="weightInterests" min="0" max="50" value="25" style="width: 100px;" oninput="updateWeightPreview('interests', this.value)">
+                                            <span id="weightInterestsValue" style="min-width: 35px; font-size: 0.8rem;">25%</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label style="font-size: 0.8rem;">Location Proximity</label>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="range" id="weightLocation" min="0" max="50" value="20" style="width: 100px;" oninput="updateWeightPreview('location', this.value)">
+                                            <span id="weightLocationValue" style="min-width: 35px; font-size: 0.8rem;">20%</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label style="font-size: 0.8rem;">Age Compatibility</label>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="range" id="weightAge" min="0" max="50" value="15" style="width: 100px;" oninput="updateWeightPreview('age', this.value)">
+                                            <span id="weightAgeValue" style="min-width: 35px; font-size: 0.8rem;">15%</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <label style="font-size: 0.8rem;">Communication Style</label>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="range" id="weightCommunication" min="0" max="50" value="15" style="width: 100px;" oninput="updateWeightPreview('communication', this.value)">
+                                            <span id="weightCommunicationValue" style="min-width: 35px; font-size: 0.8rem;">15%</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--bg-tertiary); border-radius: 6px; margin-top: 8px;">
+                                        <span style="font-size: 0.8rem; font-weight: 600;">Total:</span>
+                                        <span id="weightTotal" style="font-size: 0.9rem; font-weight: 600; color: var(--success);">100%</span>
+                                    </div>
+                                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                        <button class="btn btn-primary" onclick="saveCompatibilityWeights()" style="flex: 1; font-size: 0.8rem;">💾 Save & Apply</button>
+                                        <button class="btn btn-secondary" onclick="cancelEditWeights()" style="font-size: 0.8rem;">Cancel</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -11782,6 +11835,198 @@
                 return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             }
         }
+        
+        // ==========================================
+        // ML MODEL WEIGHT EDITING
+        // ==========================================
+        
+        // Default compatibility weights
+        const defaultCompatibilityWeights = {
+            goals: 25,
+            interests: 25,
+            location: 20,
+            age: 15,
+            communication: 15
+        };
+        
+        // Current weights (loaded from localStorage/DynamoDB)
+        let compatibilityWeights = { ...defaultCompatibilityWeights };
+        
+        // Load ML model settings on page load
+        function loadMLModelSettings() {
+            try {
+                const saved = localStorage.getItem('oith_ml_compatibility_weights');
+                if (saved) {
+                    compatibilityWeights = JSON.parse(saved);
+                    updateWeightsDisplay();
+                }
+                
+                // Also try to load from AWS
+                loadMLSettingsFromAWS();
+            } catch (e) {
+                console.log('Using default ML weights');
+            }
+        }
+        
+        // Update the display values
+        function updateWeightsDisplay() {
+            document.querySelectorAll('.weight-value').forEach(el => {
+                const key = el.dataset.key;
+                if (key && compatibilityWeights[key] !== undefined) {
+                    el.textContent = compatibilityWeights[key] + '%';
+                }
+            });
+        }
+        
+        // Show edit form
+        function editCompatibilityWeights() {
+            document.getElementById('compatibilityWeightsDisplay').style.display = 'none';
+            document.getElementById('compatibilityWeightsEdit').style.display = 'block';
+            
+            // Set slider values
+            document.getElementById('weightGoals').value = compatibilityWeights.goals;
+            document.getElementById('weightInterests').value = compatibilityWeights.interests;
+            document.getElementById('weightLocation').value = compatibilityWeights.location;
+            document.getElementById('weightAge').value = compatibilityWeights.age;
+            document.getElementById('weightCommunication').value = compatibilityWeights.communication;
+            
+            // Update previews
+            ['goals', 'interests', 'location', 'age', 'communication'].forEach(key => {
+                updateWeightPreview(key, compatibilityWeights[key]);
+            });
+            
+            updateWeightTotal();
+        }
+        
+        // Cancel editing
+        function cancelEditWeights() {
+            document.getElementById('compatibilityWeightsDisplay').style.display = 'flex';
+            document.getElementById('compatibilityWeightsEdit').style.display = 'none';
+        }
+        
+        // Update preview while sliding
+        function updateWeightPreview(key, value) {
+            const capitalized = key.charAt(0).toUpperCase() + key.slice(1);
+            const valueEl = document.getElementById('weight' + capitalized + 'Value');
+            if (valueEl) {
+                valueEl.textContent = value + '%';
+            }
+            updateWeightTotal();
+        }
+        
+        // Update total percentage
+        function updateWeightTotal() {
+            const total = 
+                parseInt(document.getElementById('weightGoals').value || 0) +
+                parseInt(document.getElementById('weightInterests').value || 0) +
+                parseInt(document.getElementById('weightLocation').value || 0) +
+                parseInt(document.getElementById('weightAge').value || 0) +
+                parseInt(document.getElementById('weightCommunication').value || 0);
+            
+            const totalEl = document.getElementById('weightTotal');
+            if (totalEl) {
+                totalEl.textContent = total + '%';
+                totalEl.style.color = total === 100 ? 'var(--success)' : 'var(--danger)';
+            }
+        }
+        
+        // Save weights
+        async function saveCompatibilityWeights() {
+            const newWeights = {
+                goals: parseInt(document.getElementById('weightGoals').value),
+                interests: parseInt(document.getElementById('weightInterests').value),
+                location: parseInt(document.getElementById('weightLocation').value),
+                age: parseInt(document.getElementById('weightAge').value),
+                communication: parseInt(document.getElementById('weightCommunication').value)
+            };
+            
+            const total = Object.values(newWeights).reduce((a, b) => a + b, 0);
+            
+            if (total !== 100) {
+                showToast('⚠️ Weights must add up to 100%', 'warning');
+                return;
+            }
+            
+            compatibilityWeights = newWeights;
+            
+            // Save to localStorage
+            localStorage.setItem('oith_ml_compatibility_weights', JSON.stringify(compatibilityWeights));
+            
+            // Save to AWS DynamoDB
+            await saveMLSettingsToAWS();
+            
+            // Update display
+            updateWeightsDisplay();
+            cancelEditWeights();
+            
+            // Broadcast to app to update in real-time
+            broadcastMLWeightsUpdate();
+            
+            showToast('✅ Compatibility weights saved and applied!', 'success');
+        }
+        
+        // Save ML settings to AWS
+        async function saveMLSettingsToAWS() {
+            try {
+                const response = await fetch(`${AWS_API_URL}/ml-settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'compatibility_weights',
+                        settings: compatibilityWeights,
+                        updatedAt: new Date().toISOString(),
+                        updatedBy: 'admin'
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('☁️ ML settings saved to AWS');
+                }
+            } catch (error) {
+                console.log('⚠️ Could not save ML settings to AWS:', error.message);
+            }
+        }
+        
+        // Load ML settings from AWS
+        async function loadMLSettingsFromAWS() {
+            try {
+                const response = await fetch(`${AWS_API_URL}/ml-settings/compatibility_weights`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.settings) {
+                        compatibilityWeights = data.settings;
+                        localStorage.setItem('oith_ml_compatibility_weights', JSON.stringify(compatibilityWeights));
+                        updateWeightsDisplay();
+                        console.log('☁️ ML settings loaded from AWS');
+                    }
+                }
+            } catch (error) {
+                console.log('Using local ML settings');
+            }
+        }
+        
+        // Broadcast ML weights update to app
+        function broadcastMLWeightsUpdate() {
+            if (window.adminSyncChannel) {
+                window.adminSyncChannel.postMessage({
+                    source: 'admin',
+                    type: 'ml_weights_updated',
+                    weights: compatibilityWeights,
+                    timestamp: Date.now()
+                });
+                console.log('📡 ML weights broadcasted to app');
+            }
+        }
+        
+        // Load settings on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(loadMLModelSettings, 500);
+        });
+        
+        // ==========================================
+        // END ML MODEL WEIGHT EDITING
+        // ==========================================
         
         function runAllModelTests() {
             loadMLModelsData();

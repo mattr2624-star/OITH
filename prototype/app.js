@@ -9528,12 +9528,76 @@ function showCompatibilityBreakdown() {
     }, 100);
 }
 
+// ==========================================
+// ML COMPATIBILITY WEIGHTS (Editable from Admin)
+// ==========================================
+let mlCompatibilityWeights = {
+    goals: 25,
+    interests: 25,
+    location: 20,
+    age: 15,
+    communication: 15
+};
+
+// Load ML weights from localStorage/AWS
+async function loadMLWeights() {
+    try {
+        // Try localStorage first
+        const saved = localStorage.getItem('oith_ml_compatibility_weights');
+        if (saved) {
+            mlCompatibilityWeights = JSON.parse(saved);
+            console.log('📊 ML weights loaded from localStorage:', mlCompatibilityWeights);
+        }
+        
+        // Try AWS for latest
+        const response = await fetch(`${AWS_API_URL}/ml-settings/compatibility_weights`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.settings) {
+                mlCompatibilityWeights = data.settings;
+                localStorage.setItem('oith_ml_compatibility_weights', JSON.stringify(mlCompatibilityWeights));
+                console.log('📊 ML weights loaded from AWS:', mlCompatibilityWeights);
+            }
+        }
+    } catch (e) {
+        console.log('Using default ML weights');
+    }
+}
+
+// Listen for ML weights updates from admin
+oithSyncChannel.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'ml_weights_updated' && event.data.source === 'admin') {
+        console.log('📊 ML weights updated from admin:', event.data.weights);
+        mlCompatibilityWeights = event.data.weights;
+        localStorage.setItem('oith_ml_compatibility_weights', JSON.stringify(mlCompatibilityWeights));
+        
+        // Recalculate current match compatibility if applicable
+        if (appState.oneMatch?.current) {
+            const factors = calculateCompatibilityFactors(appState.oneMatch.current);
+            const newScore = calculateWeightedCompatibility(factors);
+            appState.oneMatch.current.compatibility = newScore;
+            syncCompatibilityDisplays(newScore);
+        }
+    }
+});
+
+// Calculate weighted compatibility score using admin-defined weights
+function calculateWeightedCompatibility(factors) {
+    const weighted = 
+        (factors.goals.score * mlCompatibilityWeights.goals / 100) +
+        (factors.interests.score * mlCompatibilityWeights.interests / 100) +
+        (factors.location.score * mlCompatibilityWeights.location / 100) +
+        (factors.age.score * mlCompatibilityWeights.age / 100) +
+        (factors.communication.score * mlCompatibilityWeights.communication / 100);
+    
+    return Math.round(weighted);
+}
+
 /**
  * Calculate compatibility factors for a match
  */
 function calculateCompatibilityFactors(match) {
-    // Simulated compatibility calculation
-    // In production, this would come from the backend
+    // Compatibility calculation using ML weights from admin
     const user = appState.user;
     
     // Relationship goals match
@@ -9561,13 +9625,22 @@ function calculateCompatibilityFactors(match) {
     // Communication style (simulated)
     const communicationScore = 85 + Math.floor(Math.random() * 10);
     
-    return {
+    const factors = {
         goals: { score: goalsMatch, label: goalsMatch === 100 ? 'Perfect Match' : goalsMatch >= 70 ? 'Compatible' : 'Different' },
         interests: { score: Math.round(interestsScore), count: sharedInterests.length, total: matchInterests.length, shared: sharedInterests },
         location: { score: locationScore, distance: match.distance || '3 miles' },
         age: { score: ageScore, label: ageScore >= 85 ? 'Ideal Range' : 'Compatible' },
         communication: { score: communicationScore, label: 'Similar Style' }
     };
+    
+    // Also calculate and attach the weighted score
+    factors.weightedScore = calculateWeightedCompatibility(factors);
+    
+    // Log weights being used
+    console.log('📊 Compatibility calculated with weights:', mlCompatibilityWeights);
+    console.log('   Final weighted score:', factors.weightedScore);
+    
+    return factors;
 }
 
 /**
@@ -13191,6 +13264,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Fetch AWS users for match pool (so users can match with other AWS users)
     await fetchAWSUsersForMatchPool();
+    
+    // Load ML model weights from admin settings
+    await loadMLWeights();
     
     // Seed demo accounts for cross-device access
     const demoEmails = seedDemoAccounts();
