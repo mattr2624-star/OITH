@@ -17748,9 +17748,10 @@
                     <td style="padding: 12px; text-align: center;">
                         <button onclick="editEmployee(${emp.id})" title="Edit" style="padding: 6px 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.8rem; margin-right: 4px;">✏️ Edit</button>
                         ${isInactive ? `
-                            <button onclick="reactivateEmployee(${emp.id})" title="Reactivate" style="padding: 6px 10px; background: var(--success)20; border: 1px solid var(--success); color: var(--success); border-radius: 6px; cursor: pointer; font-size: 0.8rem;">↩️ Reactivate</button>
+                            <button onclick="reactivateEmployee(${emp.id})" title="Reactivate" style="padding: 6px 10px; background: var(--success)20; border: 1px solid var(--success); color: var(--success); border-radius: 6px; cursor: pointer; font-size: 0.8rem; margin-right: 4px;">↩️ Reactivate</button>
+                            <button onclick="deleteEmployee(${emp.id})" title="Permanently Delete" style="padding: 6px 10px; background: var(--danger); border: 1px solid var(--danger); color: white; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">🗑️ Delete</button>
                         ` : `
-                            <button onclick="removeEmployee(${emp.id})" title="Deactivate" style="padding: 6px 10px; background: var(--danger)20; border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; cursor: pointer; font-size: 0.8rem;">🗑️</button>
+                            <button onclick="removeEmployee(${emp.id})" title="Deactivate" style="padding: 6px 10px; background: var(--danger)20; border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; cursor: pointer; font-size: 0.8rem;">🗑️ Deactivate</button>
                         `}
                     </td>
                 </tr>
