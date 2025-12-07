@@ -1924,6 +1924,77 @@ function parseHeightToInches(heightStr) {
 }
 
 /**
+ * Force sync current user to AWS - ensures profile is saved to cloud
+ */
+async function forceSyncToAWS() {
+    const email = appState.user?.email;
+    if (!email) {
+        console.log('⚠️ Cannot sync - no user logged in');
+        return false;
+    }
+    
+    const awsUrl = AWS_API_URL;
+    if (!awsUrl) {
+        console.log('⚠️ Cannot sync - no AWS URL configured');
+        return false;
+    }
+    
+    console.log('☁️ Force syncing to AWS:', email);
+    
+    try {
+        const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
+        const regUser = registeredUsers[email] || {};
+        
+        const payload = {
+            email: email,
+            name: appState.user.firstName || regUser.firstName || '',
+            password: regUser.password || '',
+            userData: {
+                user: {
+                    email: email,
+                    firstName: appState.user.firstName || '',
+                    age: appState.user.age || null,
+                    birthday: appState.user.birthday || '',
+                    gender: appState.user.gender || '',
+                    location: appState.user.location || '',
+                    occupation: appState.user.occupation || '',
+                    education: appState.user.education || '',
+                    bio: appState.user.bio || '',
+                    photos: appState.user.photos || [],
+                    height: appState.user.height || '',
+                    bodyType: appState.user.bodyType || ''
+                }
+            }
+        };
+        
+        console.log('📤 Sending to AWS:', payload);
+        
+        const response = await fetch(`${awsUrl}/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        const result = await response.json();
+        console.log('📥 AWS Response:', result);
+        
+        if (response.ok && result.success) {
+            console.log('✅ Successfully synced to AWS!');
+            showToast('☁️ Profile synced to cloud!', 'success');
+            return true;
+        } else {
+            console.error('❌ AWS sync failed:', result);
+            showToast('⚠️ Cloud sync failed', 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ AWS sync error:', error);
+        showToast('⚠️ Cloud sync error', 'error');
+        return false;
+    }
+}
+
+/**
  * Reset all profiles - clears passed matches so user can see everyone again
  */
 function resetAllProfiles() {
@@ -5815,6 +5886,9 @@ function completeSignup() {
     // Save complete profile
     saveUserData();
     
+    // EXPLICITLY sync to AWS for cross-device access
+    forceSyncToAWS();
+    
     // Broadcast to admin dashboard
     broadcastSync('user_updated', { email: appState.user.email });
     
@@ -7064,8 +7138,11 @@ function saveProfileAndGoBack() {
     // Save to localStorage AND broadcast to admin dashboard immediately
     saveUserData();
     
+    // Force sync to AWS for cross-device access
+    forceSyncToAWS();
+    
     // Show feedback and go back
-    showToast('Profile saved!');
+    showToast('Profile saved & synced to cloud! ☁️');
     showScreen('my-profile');
 }
 
