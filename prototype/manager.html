@@ -5413,19 +5413,19 @@
                                 <div style="margin-bottom: 12px;">
                                     <div style="font-size: 0.7rem; color: var(--info); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">👤 User Data</div>
                                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 0.75rem;">
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('PROFILE')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--info);" id="dynamoProfileCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Profiles</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('MATCH')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--danger);" id="dynamoMatchCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Matches</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('CHAT')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--success);" id="dynamoMessageCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Messages</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('LIKE')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--pink);" id="dynamoLikeCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Likes</div>
                                         </div>
@@ -5436,15 +5436,15 @@
                                 <div style="margin-bottom: 12px;">
                                     <div style="font-size: 0.7rem; color: var(--warning); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">📝 Feedback</div>
                                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 0.75rem;">
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('FEEDBACK')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--warning);" id="dynamoFeedbackCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Feedback</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('RATING')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: #FBBF24;" id="dynamoRatingCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Ratings</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('REPORT')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--danger);" id="dynamoReportCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Reports</div>
                                         </div>
@@ -5455,15 +5455,15 @@
                                 <div style="margin-bottom: 12px;">
                                     <div style="font-size: 0.7rem; color: var(--success); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">📊 Activity</div>
                                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; font-size: 0.75rem;">
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('ACTIVITY')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--success);" id="dynamoActivityCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Events</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('SESSION')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: #06B6D4;" id="dynamoSessionCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Sessions</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('METRICS')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--purple);" id="dynamoMetricsCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Daily Metrics</div>
                                         </div>
@@ -5474,19 +5474,19 @@
                                 <div style="margin-bottom: 12px;">
                                     <div style="font-size: 0.7rem; color: var(--purple); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">🏢 Company</div>
                                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 0.75rem;">
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('EMPLOYEE')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--info);" id="dynamoEmployeeCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Employees</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('DEPARTMENT')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--purple);" id="dynamoDeptCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Depts</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('COMPANY_METRICS')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--success);" id="dynamoCompanyMetricsCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Metrics</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('INVESTOR')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--pink);" id="dynamoInvestorCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Investors</div>
                                         </div>
@@ -5497,11 +5497,11 @@
                                 <div>
                                     <div style="font-size: 0.7rem; color: #0EA5E9; font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">📄 Documents</div>
                                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 0.75rem;">
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('PATENT_DOC')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: #0EA5E9;" id="dynamoPatentDocsCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Patent Docs</div>
                                         </div>
-                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                        <div onclick="loadEntityPreview('COMPLIANCE_DOC')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
                                             <div style="font-weight: 600; color: var(--success);" id="dynamoComplianceDocsCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Compliance Docs</div>
                                         </div>
@@ -19061,7 +19061,16 @@
                     EMPLOYEE: '👥 Employees',
                     DEPARTMENT: '🏢 Departments',
                     REPORT: '🚨 Reports',
-                    SUPPORT: '💬 Support'
+                    SUPPORT: '💬 Support',
+                    FEEDBACK: '📝 Feedback',
+                    RATING: '⭐ Ratings',
+                    ACTIVITY: '📊 Activity Events',
+                    SESSION: '🔗 Sessions',
+                    METRICS: '📈 Daily Metrics',
+                    COMPANY_METRICS: '📊 Company Metrics',
+                    INVESTOR: '💰 Investors',
+                    PATENT_DOC: '📜 Patent Docs',
+                    COMPLIANCE_DOC: '📋 Compliance Docs'
                 };
                 
                 entityLabel.textContent = entityNames[entityType] || entityType;
@@ -19116,7 +19125,16 @@
                 EMPLOYEE: ['name', 'title', 'department', 'email', 'status', 'startDate', 'salary'],
                 DEPARTMENT: ['id', 'name', 'color', 'updatedAt'],
                 REPORT: ['id', 'reportedUser', 'reportedBy', 'reason', 'status', 'createdAt'],
-                SUPPORT: ['id', 'userEmail', 'subject', 'status', 'priority', 'createdAt']
+                SUPPORT: ['id', 'userEmail', 'subject', 'status', 'priority', 'createdAt'],
+                FEEDBACK: ['pk', 'type', 'message', 'rating', 'createdAt'],
+                RATING: ['pk', 'ratedUser', 'ratedBy', 'rating', 'createdAt'],
+                ACTIVITY: ['pk', 'event', 'user', 'details', 'timestamp'],
+                SESSION: ['pk', 'user', 'device', 'startTime', 'endTime'],
+                METRICS: ['pk', 'date', 'activeUsers', 'newUsers', 'matches'],
+                COMPANY_METRICS: ['sk', 'metric', 'value', 'period', 'updatedAt'],
+                INVESTOR: ['sk', 'name', 'type', 'amount', 'date'],
+                PATENT_DOC: ['sk', 'name', 'type', 'status', 'filedDate'],
+                COMPLIANCE_DOC: ['sk', 'name', 'type', 'status', 'expiryDate']
             };
             
             // Get columns - use config or infer from first item

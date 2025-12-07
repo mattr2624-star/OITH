@@ -1182,6 +1182,155 @@ export const handler = async (event) => {
                         break;
                     }
                     
+                    case 'FEEDBACK': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'begins_with(pk, :pk)',
+                            ExpressionAttributeValues: { ':pk': 'FEEDBACK#' },
+                            Limit: 50
+                        }));
+                        items = result.Items?.map(item => ({
+                            pk: item.pk,
+                            type: item.type,
+                            message: item.message?.substring(0, 50) + (item.message?.length > 50 ? '...' : ''),
+                            rating: item.rating,
+                            createdAt: item.createdAt
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'RATING': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'begins_with(pk, :pk)',
+                            ExpressionAttributeValues: { ':pk': 'RATING#' },
+                            Limit: 50
+                        }));
+                        items = result.Items?.map(item => ({
+                            pk: item.pk,
+                            ratedUser: item.ratedUser,
+                            ratedBy: item.ratedBy,
+                            rating: item.rating,
+                            createdAt: item.createdAt
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'ACTIVITY': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'begins_with(pk, :pk)',
+                            ExpressionAttributeValues: { ':pk': 'ACTIVITY#' },
+                            Limit: 50
+                        }));
+                        items = result.Items?.map(item => ({
+                            pk: item.pk,
+                            event: item.event,
+                            user: item.user,
+                            details: item.details,
+                            timestamp: item.timestamp
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'SESSION': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'begins_with(pk, :pk)',
+                            ExpressionAttributeValues: { ':pk': 'SESSION#' },
+                            Limit: 50
+                        }));
+                        items = result.Items?.map(item => ({
+                            pk: item.pk,
+                            user: item.user,
+                            device: item.device,
+                            startTime: item.startTime,
+                            endTime: item.endTime
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'METRICS': {
+                        const result = await docClient.send(new ScanCommand({
+                            TableName: TABLE_NAME,
+                            FilterExpression: 'begins_with(pk, :pk)',
+                            ExpressionAttributeValues: { ':pk': 'METRICS#' },
+                            Limit: 50
+                        }));
+                        items = result.Items?.map(item => ({
+                            pk: item.pk,
+                            date: item.date,
+                            activeUsers: item.activeUsers,
+                            newUsers: item.newUsers,
+                            matches: item.matches
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'COMPANY_METRICS': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'ORG#metrics' }
+                        }));
+                        items = result.Items?.map(item => ({
+                            sk: item.sk,
+                            metric: item.metric,
+                            value: item.value,
+                            period: item.period,
+                            updatedAt: item.updatedAt
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'INVESTOR': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'ORG#investor' }
+                        }));
+                        items = result.Items?.map(item => ({
+                            sk: item.sk,
+                            name: item.name,
+                            type: item.type,
+                            amount: item.amount,
+                            date: item.date
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'PATENT_DOC': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'DOC#patent' }
+                        }));
+                        items = result.Items?.map(item => ({
+                            sk: item.sk,
+                            name: item.name,
+                            type: item.type,
+                            status: item.status,
+                            filedDate: item.filedDate
+                        })) || [];
+                        break;
+                    }
+                    
+                    case 'COMPLIANCE_DOC': {
+                        const result = await docClient.send(new QueryCommand({
+                            TableName: TABLE_NAME,
+                            KeyConditionExpression: 'pk = :pk',
+                            ExpressionAttributeValues: { ':pk': 'DOC#compliance' }
+                        }));
+                        items = result.Items?.map(item => ({
+                            sk: item.sk,
+                            name: item.name,
+                            type: item.type,
+                            status: item.status,
+                            expiryDate: item.expiryDate
+                        })) || [];
+                        break;
+                    }
+                    
                     default:
                         return { statusCode: 400, headers, body: JSON.stringify({ error: `Unknown entity type: ${entityType}` }) };
                 }
