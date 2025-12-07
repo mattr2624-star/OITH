@@ -966,9 +966,13 @@ export const handler = async (event) => {
                     else if (item.pk === 'ORG#department') stats.departments++;
                     else if (item.pk === 'ORG#metrics') stats.companyMetrics++;
                     else if (item.pk === 'ORG#investor') stats.investors++;
-                    // Document entities
-                    else if (item.pk === 'DOC#patent') stats.patentDocs++;
-                    else if (item.pk === 'DOC#compliance') stats.complianceDocs++;
+                    // Document entities - skip container items (we'll count their contents separately)
+                    else if (item.pk === 'DOC#patent' && item.sk === 'ALL') {
+                        // Will count contents below
+                    }
+                    else if (item.pk === 'DOC#compliance' && item.sk === 'ALL') {
+                        // Will count contents below
+                    }
                     // System entities
                     else if (item.pk === 'CRAWLER#logs') stats.crawlerLogs++;
                     else if (item.pk === 'SUPPORT#all') stats.supportMessages++;
@@ -976,6 +980,23 @@ export const handler = async (event) => {
                 
                 lastEvaluatedKey = scanResult.LastEvaluatedKey;
             } while (lastEvaluatedKey);
+            
+            // Count actual documents inside container items
+            try {
+                const patentResult = await docClient.send(new GetCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: 'DOC#patent', sk: 'ALL' }
+                }));
+                stats.patentDocs = Object.keys(patentResult.Item?.documents || {}).length;
+                
+                const complianceResult = await docClient.send(new GetCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: 'DOC#compliance', sk: 'ALL' }
+                }));
+                stats.complianceDocs = Object.keys(complianceResult.Item?.documents || {}).length;
+            } catch (e) {
+                console.log('Could not count document contents:', e.message);
+            }
             
             console.log('📊 Schema stats:', stats);
             return { statusCode: 200, headers, body: JSON.stringify(stats) };
@@ -1302,34 +1323,40 @@ export const handler = async (event) => {
                     }
                     
                     case 'PATENT_DOC': {
-                        const result = await docClient.send(new QueryCommand({
+                        // Get the container item that holds documents
+                        const result = await docClient.send(new GetCommand({
                             TableName: TABLE_NAME,
-                            KeyConditionExpression: 'pk = :pk',
-                            ExpressionAttributeValues: { ':pk': 'DOC#patent' }
+                            Key: { pk: 'DOC#patent', sk: 'ALL' }
                         }));
-                        items = result.Items?.map(item => ({
-                            sk: item.sk,
-                            name: item.name,
-                            type: item.type,
-                            status: item.status,
-                            filedDate: item.filedDate
-                        })) || [];
+                        
+                        // Extract actual documents from the container
+                        const docs = result.Item?.documents || {};
+                        items = Object.entries(docs).map(([id, doc]) => ({
+                            id: id,
+                            name: doc.name || 'Unnamed',
+                            type: doc.type || '--',
+                            status: doc.status || '--',
+                            uploadedAt: doc.uploadedAt || '--'
+                        }));
                         break;
                     }
                     
                     case 'COMPLIANCE_DOC': {
-                        const result = await docClient.send(new QueryCommand({
+                        // Get the container item that holds documents
+                        const result = await docClient.send(new GetCommand({
                             TableName: TABLE_NAME,
-                            KeyConditionExpression: 'pk = :pk',
-                            ExpressionAttributeValues: { ':pk': 'DOC#compliance' }
+                            Key: { pk: 'DOC#compliance', sk: 'ALL' }
                         }));
-                        items = result.Items?.map(item => ({
-                            sk: item.sk,
-                            name: item.name,
-                            type: item.type,
-                            status: item.status,
-                            expiryDate: item.expiryDate
-                        })) || [];
+                        
+                        // Extract actual documents from the container
+                        const docs = result.Item?.documents || {};
+                        items = Object.entries(docs).map(([id, doc]) => ({
+                            id: id,
+                            name: doc.name || 'Unnamed',
+                            type: doc.type || '--',
+                            status: doc.status || '--',
+                            uploadedAt: doc.uploadedAt || '--'
+                        }));
                         break;
                     }
                     

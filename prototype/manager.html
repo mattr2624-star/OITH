@@ -19239,13 +19239,24 @@
             content.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <h3 style="margin: 0;">📄 Item Detail</h3>
-                    <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">×</button>
+                    <button onclick="closeItemDetailModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted); padding: 4px 8px;">×</button>
                 </div>
                 <pre style="background: var(--bg-primary); padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.75rem; white-space: pre-wrap; word-break: break-all;">${JSON.stringify(item, null, 2)}</pre>
             `;
             
+            modal.id = 'itemDetailModal';
             modal.appendChild(content);
             document.body.appendChild(modal);
+            
+            // Close on backdrop click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeItemDetailModal();
+            });
+        }
+        
+        function closeItemDetailModal() {
+            const modal = document.getElementById('itemDetailModal');
+            if (modal) modal.remove();
         }
         
         function exportPreviewData() {
