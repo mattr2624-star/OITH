@@ -1867,7 +1867,7 @@
                     </div>
 
                     <!-- User App Flow Diagram -->
-                    <div class="tree-diagram">
+                    <div class="tree-diagram" id="userAppFlowDiagram">
                         <div class="tree-diagram-title">
                             <span>📱</span>
                             <h4>User App Flow (index.html)</h4>
@@ -14904,10 +14904,17 @@
         let currentPreviewScreen = '';
         let flowNodesInitialized = false;
         
-        // Initialize click handlers for flow nodes
+        // Initialize click handlers for flow nodes - ONLY in User App Flow section
         function initFlowNodeClicks() {
-            const nodes = document.querySelectorAll('.flow-node[data-component], .tree-node[data-component]');
-            console.log(`🔗 Initializing ${nodes.length} clickable flow nodes`);
+            // Only target nodes within the User App Flow diagram, not Admin dashboard nav
+            const userAppFlow = document.getElementById('userAppFlowDiagram');
+            if (!userAppFlow) {
+                console.warn('⚠️ User App Flow diagram not found');
+                return;
+            }
+            
+            const nodes = userAppFlow.querySelectorAll('.flow-node[data-component], .tree-node[data-component]');
+            console.log(`🔗 Initializing ${nodes.length} clickable flow nodes (User App Flow only)`);
             
             nodes.forEach(node => {
                 const component = node.getAttribute('data-component');
@@ -14915,6 +14922,8 @@
                     node.setAttribute('data-click-init', 'true');
                     node.style.cursor = 'pointer';
                     node.title = 'Click to preview this screen';
+                    // Remove any existing onclick (like showSection) and replace with preview
+                    node.removeAttribute('onclick');
                     node.onclick = (e) => {
                         e.preventDefault();
                         e.stopPropagation();
