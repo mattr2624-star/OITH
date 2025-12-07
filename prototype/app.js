@@ -2005,6 +2005,104 @@ async function forceSyncToAWS() {
     }
 }
 
+// ============ REAL USER MATCHING (AWS) ============
+
+/**
+ * Like a real user - sends to AWS and checks for mutual match
+ */
+async function likeRealUser(toEmail) {
+    const fromEmail = appState.user?.email;
+    if (!fromEmail || !toEmail) {
+        console.log('⚠️ Cannot like - missing email');
+        return { success: false };
+    }
+    
+    try {
+        console.log(`💕 Liking user: ${toEmail}`);
+        
+        const response = await fetch(`${AWS_API_URL}/like`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fromEmail, toEmail })
+        });
+        
+        const result = await response.json();
+        console.log('💕 Like result:', result);
+        
+        if (result.isMatch) {
+            console.log('🎉 IT\'S A MATCH!');
+            showToast('🎉 It\'s a Match! You can now chat!', 'success');
+            
+            // Store the match locally
+            if (!appState.realMatches) appState.realMatches = [];
+            appState.realMatches.push({
+                email: toEmail,
+                matchedAt: new Date().toISOString()
+            });
+            saveUserData();
+        }
+        
+        return result;
+    } catch (error) {
+        console.error('Like error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Get all matches for current user from AWS
+ */
+async function getMyMatches() {
+    const email = appState.user?.email;
+    if (!email) return [];
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/matches/${encodeURIComponent(email)}`);
+        const result = await response.json();
+        console.log('💕 My matches:', result.matches);
+        return result.matches || [];
+    } catch (error) {
+        console.error('Get matches error:', error);
+        return [];
+    }
+}
+
+/**
+ * Send a chat message to a match
+ */
+async function sendChatMessage(matchId, message) {
+    const fromEmail = appState.user?.email;
+    if (!fromEmail || !matchId || !message) return { success: false };
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ matchId, fromEmail, message })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error('Send message error:', error);
+        return { success: false };
+    }
+}
+
+/**
+ * Get chat messages for a match
+ */
+async function getChatMessages(matchId) {
+    if (!matchId) return [];
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/chat/${encodeURIComponent(matchId)}`);
+        const result = await response.json();
+        return result.messages || [];
+    } catch (error) {
+        console.error('Get messages error:', error);
+        return [];
+    }
+}
+
 /**
  * Reset all profiles - clears passed matches so user can see everyone again
  */
@@ -2575,7 +2673,7 @@ function syncCompatibilityDisplays(compatibility) {
 /**
  * Accept the automatically found match
  */
-function acceptMatch() {
+async function acceptMatch() {
     if (appState.oneMatch.decisionMade) return;
     
     const match = appState.oneMatch.current;
@@ -2592,19 +2690,69 @@ function acceptMatch() {
     // Show waiting for mutual match view
     showWaitingForMatchView(match);
     
-    // Simulate match's decision (3-8 seconds delay for realism)
-    const responseDelay = 3000 + Math.random() * 5000;
-    
-    setTimeout(() => {
-        // 90% chance they accept (for demo purposes)
-        const matchAccepts = Math.random() < 0.9;
+    // Check if this is a REAL user (has email) vs test bot
+    if (match.email && !match.isTestBot) {
+        console.log('💕 Liking REAL user:', match.email);
         
-        if (matchAccepts) {
+        // Send like to AWS and check for mutual match
+        const result = await likeRealUser(match.email);
+        
+        if (result.isMatch) {
+            // MUTUAL MATCH! They already liked us
+            console.log('🎉 MUTUAL MATCH with real user!');
             handleMutualMatch(match);
         } else {
-            handleMatchDeclined(match);
+            // They haven't liked us yet - show waiting
+            console.log('⏳ Waiting for them to like back...');
+            showToast('💕 You liked them! Waiting for them to see you...', 'info');
+            
+            // Poll for match every 10 seconds
+            startMatchPolling(match.email);
         }
-    }, responseDelay);
+    } else {
+        // Test bot - simulate response (legacy behavior)
+        const responseDelay = 3000 + Math.random() * 5000;
+        
+        setTimeout(() => {
+            const matchAccepts = Math.random() < 0.9;
+            
+            if (matchAccepts) {
+                handleMutualMatch(match);
+            } else {
+                handleMatchDeclined(match);
+            }
+        }, responseDelay);
+    }
+}
+
+/**
+ * Poll AWS to check if we got a match
+ */
+let matchPollingInterval = null;
+function startMatchPolling(matchEmail) {
+    if (matchPollingInterval) clearInterval(matchPollingInterval);
+    
+    matchPollingInterval = setInterval(async () => {
+        const matches = await getMyMatches();
+        const found = matches.find(m => m.matchedWith === matchEmail);
+        
+        if (found) {
+            console.log('🎉 Match confirmed!');
+            clearInterval(matchPollingInterval);
+            matchPollingInterval = null;
+            
+            // They matched with us!
+            handleMutualMatch(appState.oneMatch.current);
+        }
+    }, 10000); // Check every 10 seconds
+    
+    // Stop polling after 5 minutes
+    setTimeout(() => {
+        if (matchPollingInterval) {
+            clearInterval(matchPollingInterval);
+            matchPollingInterval = null;
+        }
+    }, 300000);
 }
 
 /**
