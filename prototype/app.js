@@ -12390,6 +12390,24 @@ function updateUIForLoggedInUser() {
 const oithSyncChannel = new BroadcastChannel('oith_sync');
 
 // ==========================================
+// EARLY PING HANDLER - Must respond to admin/crawler immediately
+// ==========================================
+oithSyncChannel.addEventListener('message', (event) => {
+    // Respond to ping requests immediately (before any other processing)
+    if (event.data && event.data.type === 'ping' && event.data.source === 'admin') {
+        console.log('📡 [EARLY] Ping received from admin, sending pong...');
+        oithSyncChannel.postMessage({
+            source: 'app',
+            type: 'pong',
+            timestamp: Date.now(),
+            appReady: true,
+            currentScreen: document.querySelector('.screen.active')?.id || 'unknown'
+        });
+    }
+});
+console.log('📡 BroadcastChannel listener ready for admin ping');
+
+// ==========================================
 // User Behavior Tracking
 // ==========================================
 const userBehavior = {
