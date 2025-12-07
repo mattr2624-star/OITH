@@ -4730,6 +4730,24 @@
                         </div>
                     </div>
 
+                    <!-- Crawler Log History Panel -->
+                    <div class="card" style="margin-top: 20px; border: 1px solid var(--info);">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.02)); cursor: pointer;" onclick="toggleCrawlerHistory()">
+                            <h3 class="card-title">📚 Crawler Log History</h3>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="status-badge" style="background: var(--info);" id="crawlerHistoryCount">-- logs</span>
+                                <svg id="crawlerHistoryToggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s;">
+                                    <polyline points="6 9 12 15 18 9"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="card-body" id="crawlerHistoryBody" style="display: none; max-height: 400px; overflow-y: auto;">
+                            <div id="crawlerLogHistory">
+                                <div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading log history...</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Issues Found Panel -->
                     <div class="card" id="issuesFoundPanel" style="margin-top: 20px; border: 2px solid var(--danger); display: none;">
                         <div class="card-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));">
@@ -8133,6 +8151,20 @@
                 };
             }
             appendDiagnosticsLog('// Diagnostics view opened');
+            
+            // Load crawler log history from DynamoDB
+            loadCrawlerLogHistory();
+        }
+        
+        // Toggle crawler history panel
+        function toggleCrawlerHistory() {
+            const body = document.getElementById('crawlerHistoryBody');
+            const toggle = document.getElementById('crawlerHistoryToggle');
+            if (body) {
+                const isHidden = body.style.display === 'none';
+                body.style.display = isHidden ? 'block' : 'none';
+                if (toggle) toggle.style.transform = isHidden ? 'rotate(180deg)' : '';
+            }
         }
 
         function pingIndexApp() {
@@ -8499,6 +8531,8 @@
                 transitions: [],
                 logicFlows: []
             };
+            crawlerStartTime = Date.now(); // Track start time for log saving
+            diagnosticsLogEntries = []; // Clear previous log entries
             updateCrawlerStats(0, 0, 0, 0);
             
             // Update UI
@@ -8931,6 +8965,186 @@
                 crawlerRunning = false;
                 document.getElementById('runCrawlerBtn').style.display = 'flex';
                 document.getElementById('stopCrawlerBtn').style.display = 'none';
+                
+                // Save crawler log to DynamoDB
+                const endTime = Date.now();
+                await saveCrawlerLogToAWS(crawlerStartTime, endTime - crawlerStartTime, options);
+            }
+        }
+        
+        // Track crawler start time
+        let crawlerStartTime = Date.now();
+        
+        // Save crawler log to DynamoDB
+        async function saveCrawlerLogToAWS(startTime, duration, options) {
+            try {
+                const runId = new Date(startTime).toISOString();
+                const response = await fetch(`${AWS_API_URL}/crawler/logs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        runId: runId,
+                        logs: diagnosticsLogEntries,
+                        summary: {
+                            passed: crawlerResults.passed,
+                            failed: crawlerResults.failed,
+                            warnings: crawlerResults.warnings,
+                            issueCount: crawlerResults.issues.length
+                        },
+                        options: options,
+                        duration: duration
+                    })
+                });
+                
+                if (response.ok) {
+                    appendDiagnosticsLog('☁️ Log saved to cloud', 'success');
+                    loadCrawlerLogHistory(); // Refresh the history
+                } else {
+                    console.log('Could not save crawler log to AWS');
+                }
+            } catch (error) {
+                console.log('Crawler log save error:', error.message);
+            }
+        }
+        
+        // Load crawler log history from DynamoDB
+        async function loadCrawlerLogHistory() {
+            try {
+                const response = await fetch(`${AWS_API_URL}/crawler/logs`);
+                if (response.ok) {
+                    const data = await response.json();
+                    renderCrawlerLogHistory(data.logs || []);
+                }
+            } catch (error) {
+                console.log('Could not load crawler history');
+            }
+        }
+        
+        // Render the crawler log history UI
+        function renderCrawlerLogHistory(logs) {
+            const container = document.getElementById('crawlerLogHistory');
+            if (!container) return;
+            
+            if (logs.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">No crawler logs saved yet. Run the crawler to create your first log.</div>';
+                return;
+            }
+            
+            container.innerHTML = logs.map(log => {
+                const date = new Date(log.createdAt);
+                const statusIcon = log.summary?.failed > 0 ? '❌' : log.summary?.warnings > 0 ? '⚠️' : '✅';
+                const statusColor = log.summary?.failed > 0 ? 'var(--danger)' : log.summary?.warnings > 0 ? 'var(--warning)' : 'var(--success)';
+                
+                return `
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 8px;">
+                        <div style="font-size: 1.5rem;">${statusIcon}</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500;">${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                <span style="color: var(--success);">✅ ${log.summary?.passed || 0}</span> · 
+                                <span style="color: var(--danger);">❌ ${log.summary?.failed || 0}</span> · 
+                                <span style="color: var(--warning);">⚠️ ${log.summary?.warnings || 0}</span> · 
+                                ${log.logCount || 0} log entries · ${Math.round((log.duration || 0) / 1000)}s
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="viewCrawlerLog('${log.runId}')" style="padding: 6px 12px; background: var(--info); color: white; border: none; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                                👁️ View
+                            </button>
+                            <button onclick="downloadCrawlerLog('${log.runId}')" style="padding: 6px 12px; background: var(--accent); color: white; border: none; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                                📥 Download
+                            </button>
+                            <button onclick="deleteCrawlerLog('${log.runId}')" style="padding: 6px 12px; background: transparent; color: var(--danger); border: 1px solid var(--danger); border-radius: 6px; font-size: 0.75rem; cursor: pointer;">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // View a specific crawler log
+        async function viewCrawlerLog(runId) {
+            try {
+                const response = await fetch(`${AWS_API_URL}/crawler/logs/${encodeURIComponent(runId)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Display in the main log viewer
+                    const logEl = document.getElementById('diagnosticsLog');
+                    if (logEl) {
+                        const text = data.logs.map(e => `${e.timestamp} ${e.prefix} ${e.message}`).join('\n');
+                        logEl.innerHTML = `<pre>${text}</pre>`;
+                        logEl.scrollTop = 0;
+                    }
+                    
+                    // Update stats display
+                    if (data.summary) {
+                        updateCrawlerStats(data.summary.passed, data.summary.failed, data.summary.warnings, 100);
+                    }
+                    
+                    showToast(`📋 Viewing log from ${new Date(runId).toLocaleString()}`, 'info');
+                }
+            } catch (error) {
+                showToast('❌ Could not load log', 'error');
+            }
+        }
+        
+        // Download a crawler log as text file
+        async function downloadCrawlerLog(runId) {
+            try {
+                const response = await fetch(`${AWS_API_URL}/crawler/logs/${encodeURIComponent(runId)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    let text = `OITH Crawler Log\n`;
+                    text += `================\n`;
+                    text += `Run: ${runId}\n`;
+                    text += `Date: ${new Date(data.createdAt).toLocaleString()}\n`;
+                    text += `Duration: ${Math.round((data.duration || 0) / 1000)} seconds\n\n`;
+                    text += `SUMMARY\n`;
+                    text += `-------\n`;
+                    text += `Passed: ${data.summary?.passed || 0}\n`;
+                    text += `Failed: ${data.summary?.failed || 0}\n`;
+                    text += `Warnings: ${data.summary?.warnings || 0}\n`;
+                    text += `Issues: ${data.summary?.issueCount || 0}\n\n`;
+                    text += `OPTIONS\n`;
+                    text += `-------\n`;
+                    text += JSON.stringify(data.options || {}, null, 2) + '\n\n';
+                    text += `LOG OUTPUT\n`;
+                    text += `----------\n`;
+                    text += data.logs.map(e => `${e.timestamp} ${e.prefix} ${e.message}`).join('\n');
+                    
+                    const blob = new Blob([text], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `oith-crawler-log-${new Date(runId).toISOString().split('T')[0]}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    showToast('📥 Log downloaded', 'success');
+                }
+            } catch (error) {
+                showToast('❌ Could not download log', 'error');
+            }
+        }
+        
+        // Delete a crawler log
+        async function deleteCrawlerLog(runId) {
+            if (!confirm('Delete this crawler log?')) return;
+            
+            try {
+                const response = await fetch(`${AWS_API_URL}/crawler/logs/${encodeURIComponent(runId)}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showToast('🗑️ Log deleted', 'info');
+                    loadCrawlerLogHistory();
+                }
+            } catch (error) {
+                showToast('❌ Could not delete log', 'error');
             }
         }
 
@@ -18496,6 +18710,27 @@
                         { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
                     ]
                 },
+                // ========== CRAWLER LOG ENTITY ==========
+                {
+                    name: 'CRAWLER_LOG',
+                    color: '#F59E0B',
+                    icon: '🕷️',
+                    pkPattern: 'CRAWLER#logs',
+                    skPattern: 'RUN#{runId}',
+                    description: 'Crawler diagnostic run logs',
+                    usedBy: ['manager.html: Diagnostics crawler'],
+                    category: 'activity',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'CRAWLER#logs', primary: true },
+                        { name: 'sk', type: 'String', example: 'RUN#2024-12-07T19:24:14', primary: true },
+                        { name: 'runId', type: 'String', description: 'Unique run ID (timestamp)' },
+                        { name: 'logs', type: 'List', description: 'Array of log entries' },
+                        { name: 'summary', type: 'Map', description: 'OK/Warning/Error counts' },
+                        { name: 'options', type: 'Map', description: 'Crawler options used' },
+                        { name: 'duration', type: 'Number', description: 'Duration in ms' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
                 // ========== DOCUMENT ENTITIES ==========
                 {
                     name: 'PATENT_DOCUMENT',
@@ -18568,7 +18803,10 @@
                 // Document Patterns
                 { name: 'Get patent documents', query: 'pk = DOC#patent, sk begins_with PATENT#{patentId}', category: 'documents' },
                 { name: 'Get compliance documents', query: 'pk = DOC#compliance, sk begins_with ITEM#{itemId}', category: 'documents' },
-                { name: 'Get all documents by type', query: 'pk = DOC#{type}', category: 'documents' }
+                { name: 'Get all documents by type', query: 'pk = DOC#{type}', category: 'documents' },
+                // Crawler Log Patterns
+                { name: 'Get all crawler logs', query: 'pk = CRAWLER#logs', category: 'activity' },
+                { name: 'Get specific crawler log', query: 'pk = CRAWLER#logs, sk = RUN#{runId}', category: 'activity' }
             ]
         };
         

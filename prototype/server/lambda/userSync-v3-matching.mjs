@@ -732,6 +732,90 @@ export const handler = async (event) => {
             };
         }
         
+        // ============ CRAWLER LOGS ============
+        
+        // POST /crawler/logs - Save crawler run log
+        if (method === 'POST' && path.includes('/crawler/logs')) {
+            const body = JSON.parse(event.body || '{}');
+            const { runId, logs, summary, options, duration } = body;
+            
+            if (!runId || !logs) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'runId and logs required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'CRAWLER#logs',
+                    sk: `RUN#${runId}`,
+                    runId: runId,
+                    logs: logs, // Array of log entries
+                    summary: summary || {},
+                    options: options || {},
+                    duration: duration || 0,
+                    createdAt: new Date().toISOString()
+                }
+            }));
+            
+            console.log(`📋 Crawler log saved: ${runId}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, runId }) };
+        }
+        
+        // GET /crawler/logs - Get all crawler logs (list)
+        if (method === 'GET' && path === '/crawler/logs') {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'CRAWLER#logs' },
+                ScanIndexForward: false, // newest first
+                Limit: 50
+            }));
+            
+            const logs = result.Items?.map(item => ({
+                runId: item.runId,
+                summary: item.summary,
+                duration: item.duration,
+                createdAt: item.createdAt,
+                logCount: item.logs?.length || 0
+            })) || [];
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ logs }) };
+        }
+        
+        // GET /crawler/logs/{runId} - Get specific crawler log
+        if (method === 'GET' && path.includes('/crawler/logs/')) {
+            const runId = path.split('/crawler/logs/')[1];
+            if (!runId) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'runId required' }) };
+            }
+            
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'CRAWLER#logs', sk: `RUN#${runId}` }
+            }));
+            
+            if (!result.Item) {
+                return { statusCode: 404, headers, body: JSON.stringify({ error: 'Log not found' }) };
+            }
+            
+            return { statusCode: 200, headers, body: JSON.stringify(result.Item) };
+        }
+        
+        // DELETE /crawler/logs/{runId} - Delete a crawler log
+        if (method === 'DELETE' && path.includes('/crawler/logs/')) {
+            const runId = path.split('/crawler/logs/')[1];
+            if (!runId) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'runId required' }) };
+            }
+            
+            await docClient.send(new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'CRAWLER#logs', sk: `RUN#${runId}` }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
         // ============ DOCUMENTS (Patents & Compliance) ============
         
         // POST /documents/patent - Save patent documents
@@ -844,7 +928,9 @@ export const handler = async (event) => {
                 investors: 0,
                 // Document entities
                 patentDocs: 0,
-                complianceDocs: 0
+                complianceDocs: 0,
+                // Crawler logs
+                crawlerLogs: 0
             };
             
             do {
@@ -882,6 +968,8 @@ export const handler = async (event) => {
                     // Document entities
                     else if (item.pk === 'DOC#patent') stats.patentDocs++;
                     else if (item.pk === 'DOC#compliance') stats.complianceDocs++;
+                    // Crawler logs
+                    else if (item.pk === 'CRAWLER#logs') stats.crawlerLogs++;
                 });
                 
                 lastEvaluatedKey = scanResult.LastEvaluatedKey;
