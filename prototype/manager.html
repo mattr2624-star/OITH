@@ -9230,76 +9230,88 @@
             if (!container) return;
 
             const html = `
-                <div style="display: flex; flex-direction: column; gap: 24px;">
-                    <!-- Top Level: Admin Dashboard -->
-                    <div style="display: flex; justify-content: center;">
-                        <div style="padding: 16px 24px; background: linear-gradient(135deg, var(--accent), var(--accent-light)); border-radius: 12px; color: white; font-weight: 600; text-align: center;">
-                            🏢 Admin Dashboard (manager.html)
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <!-- AWS Amplify Hosting Layer -->
+                    <div style="padding: 12px; background: linear-gradient(135deg, rgba(255, 153, 0, 0.15), rgba(255, 153, 0, 0.05)); border: 1px solid #FF9900; border-radius: 12px;">
+                        <div style="font-size: 0.7rem; color: #FF9900; font-weight: 600; margin-bottom: 12px; text-align: center;">☁️ AWS AMPLIFY HOSTING</div>
+                        <div style="display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;">
+                            <div style="padding: 14px 20px; background: linear-gradient(135deg, var(--accent), var(--accent-light)); border-radius: 10px; color: white; font-weight: 600; text-align: center; min-width: 180px;">
+                                🏢 Admin Dashboard<br><span style="font-size: 0.75rem; opacity: 0.9;">manager.html</span>
+                            </div>
+                            <div style="padding: 14px 20px; background: linear-gradient(135deg, var(--success), #34d399); border-radius: 10px; color: white; font-weight: 600; text-align: center; min-width: 180px;">
+                                📱 User App<br><span style="font-size: 0.75rem; opacity: 0.9;">index.html</span>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Connection Lines -->
-                    <div style="display: flex; justify-content: center; gap: 60px;">
+                    <!-- Connection Lines to API -->
+                    <div style="display: flex; justify-content: center; gap: 100px;">
                         <div style="text-align: center;">
-                            <div style="width: 2px; height: 30px; background: var(--border); margin: 0 auto;"></div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">manages</div>
+                            <div style="width: 3px; height: 25px; background: linear-gradient(var(--info), var(--purple)); margin: 0 auto;"></div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted);">REST API</div>
                         </div>
                         <div style="text-align: center;">
-                            <div style="width: 2px; height: 30px; background: var(--border); margin: 0 auto;"></div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">reads/writes</div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="width: 2px; height: 30px; background: var(--border); margin: 0 auto;"></div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">syncs to</div>
+                            <div style="width: 3px; height: 25px; background: linear-gradient(var(--info), var(--purple)); margin: 0 auto;"></div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted);">REST API</div>
                         </div>
                     </div>
                     
-                    <!-- Middle Layer -->
-                    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
-                        <div style="padding: 12px 20px; background: var(--bg-secondary); border: 2px solid var(--purple); border-radius: 10px; text-align: center; min-width: 150px;">
-                            <div style="font-size: 1.2rem; margin-bottom: 4px;">👥</div>
-                            <div style="font-weight: 500; font-size: 0.9rem;">User Data</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">Profiles, Matches</div>
-                        </div>
-                        <div style="padding: 12px 20px; background: var(--bg-secondary); border: 2px solid var(--info); border-radius: 10px; text-align: center; min-width: 150px;">
-                            <div style="font-size: 1.2rem; margin-bottom: 4px;">💾</div>
-                            <div style="font-weight: 500; font-size: 0.9rem;">localStorage</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">Browser Storage</div>
-                        </div>
-                        <div style="padding: 12px 20px; background: var(--bg-secondary); border: 2px solid var(--success); border-radius: 10px; text-align: center; min-width: 150px;">
-                            <div style="font-size: 1.2rem; margin-bottom: 4px;">📱</div>
-                            <div style="font-weight: 500; font-size: 0.9rem;">Index App</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">index.html</div>
+                    <!-- AWS Backend Layer -->
+                    <div style="padding: 12px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.02)); border: 1px solid var(--purple); border-radius: 12px;">
+                        <div style="font-size: 0.7rem; color: var(--purple); font-weight: 600; margin-bottom: 12px; text-align: center;">⚡ AWS BACKEND</div>
+                        <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; align-items: center;">
+                            <div style="padding: 10px 16px; background: var(--bg-secondary); border: 2px solid var(--info); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1rem; margin-bottom: 2px;">🌐</div>
+                                <div style="font-weight: 500; font-size: 0.8rem;">API Gateway</div>
+                                <div style="font-size: 0.65rem; color: var(--text-muted);">HTTP Endpoints</div>
+                            </div>
+                            <div style="color: var(--text-muted);">→</div>
+                            <div style="padding: 10px 16px; background: var(--bg-secondary); border: 2px solid var(--warning); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1rem; margin-bottom: 2px;">⚡</div>
+                                <div style="font-weight: 500; font-size: 0.8rem;">Lambda</div>
+                                <div style="font-size: 0.65rem; color: var(--text-muted);">userSync Function</div>
+                            </div>
+                            <div style="color: var(--text-muted);">→</div>
+                            <div style="padding: 10px 16px; background: var(--bg-secondary); border: 2px solid var(--success); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1rem; margin-bottom: 2px;">🗄️</div>
+                                <div style="font-weight: 500; font-size: 0.8rem;">DynamoDB</div>
+                                <div style="font-size: 0.65rem; color: var(--text-muted);">oith-users table</div>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Connection Lines -->
+                    <!-- Data Types Stored -->
+                    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;">
+                        <span style="padding: 4px 10px; background: var(--bg-secondary); border-radius: 20px; font-size: 0.7rem; border: 1px solid var(--border);">👤 Profiles</span>
+                        <span style="padding: 4px 10px; background: var(--bg-secondary); border-radius: 20px; font-size: 0.7rem; border: 1px solid var(--border);">💕 Matches</span>
+                        <span style="padding: 4px 10px; background: var(--bg-secondary); border-radius: 20px; font-size: 0.7rem; border: 1px solid var(--border);">💬 Messages</span>
+                        <span style="padding: 4px 10px; background: var(--bg-secondary); border-radius: 20px; font-size: 0.7rem; border: 1px solid var(--border);">👥 Employees</span>
+                        <span style="padding: 4px 10px; background: var(--bg-secondary); border-radius: 20px; font-size: 0.7rem; border: 1px solid var(--border);">📄 Documents</span>
+                        <span style="padding: 4px 10px; background: var(--bg-secondary); border-radius: 20px; font-size: 0.7rem; border: 1px solid var(--border);">⚙️ Config</span>
+                    </div>
+                    
+                    <!-- Real-time Communication -->
                     <div style="display: flex; justify-content: center;">
-                        <div style="width: 2px; height: 30px; background: var(--border);"></div>
-                    </div>
-                    
-                    <!-- Bottom Layer: Communication -->
-                    <div style="display: flex; justify-content: center;">
-                        <div style="padding: 12px 20px; background: var(--bg-secondary); border: 2px dashed var(--warning); border-radius: 10px; text-align: center;">
-                            <div style="font-size: 1rem; margin-bottom: 4px;">📡</div>
-                            <div style="font-weight: 500; font-size: 0.85rem;">BroadcastChannel</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">'oith_sync' - Real-time communication</div>
+                        <div style="padding: 10px 20px; background: var(--bg-secondary); border: 2px dashed var(--warning); border-radius: 10px; text-align: center;">
+                            <div style="font-size: 0.9rem; margin-bottom: 2px;">📡</div>
+                            <div style="font-weight: 500; font-size: 0.8rem;">BroadcastChannel</div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted);">'oith_sync' - Admin ↔ App real-time sync</div>
                         </div>
                     </div>
                     
                     <!-- Data Flow Legend -->
-                    <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; padding-top: 16px; border-top: 1px solid var(--border);">
-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem;">
-                            <div style="width: 30px; height: 3px; background: var(--success);"></div>
-                            <span>Data Read</span>
+                    <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.7rem;">
+                            <div style="width: 20px; height: 3px; background: linear-gradient(90deg, var(--info), var(--purple));"></div>
+                            <span>API Call</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem;">
-                            <div style="width: 30px; height: 3px; background: var(--info);"></div>
-                            <span>Data Write</span>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.7rem;">
+                            <div style="width: 20px; height: 3px; background: var(--success);"></div>
+                            <span>Data Flow</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem;">
-                            <div style="width: 30px; height: 3px; background: var(--warning); border-style: dashed;"></div>
-                            <span>Real-time Sync</span>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.7rem;">
+                            <div style="width: 20px; height: 3px; border-top: 2px dashed var(--warning);"></div>
+                            <span>Real-time</span>
                         </div>
                     </div>
                 </div>
