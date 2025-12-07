@@ -7214,7 +7214,14 @@
                 const awsUsers = await response.json();
                 console.log(`☁️ Fetched ${Object.keys(awsUsers).length} users from DynamoDB`);
                 
-                // Build new registered users from AWS data
+                // CLEAR existing local users first
+                const existingUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
+                Object.keys(existingUsers).forEach(email => {
+                    const key = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+                    localStorage.removeItem(key);
+                });
+                
+                // Build new registered users from AWS data ONLY
                 const newRegisteredUsers = {};
                 
                 Object.entries(awsUsers).forEach(([email, userData]) => {
@@ -7248,8 +7255,11 @@
                     }));
                 });
                 
-                // Update localStorage with AWS data
+                // REPLACE localStorage with AWS data only
                 localStorage.setItem('oith_registered_users', JSON.stringify(newRegisteredUsers));
+                
+                // Clear test bots (AWS mode = no bots)
+                localStorage.setItem('oith_test_bots', JSON.stringify([]));
                 
             } catch (error) {
                 console.log('⚠️ AWS fetch failed (offline?):', error.message);
@@ -14419,13 +14429,13 @@
         };
 
         function loadTestBots() {
-            // Load from localStorage or use defaults
+            // Load from localStorage - DO NOT recreate defaults
             const saved = localStorage.getItem('oith_test_bots');
             if (saved) {
                 testBots = JSON.parse(saved);
             } else {
-                testBots = [...defaultTestProfiles];
-                saveTestBots();
+                // Empty array - don't recreate default bots
+                testBots = [];
             }
             
             // Load settings
