@@ -7203,7 +7203,60 @@
             }
         };
         
-        // Pull users from AWS DynamoDB - OVERWRITES local user database
+        // Silently fetch from AWS (used by auto-refresh, no confirmation)
+        async function fetchFromAWSSilent() {
+            const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+            
+            try {
+                const response = await fetch(`${awsApiUrl}/users`);
+                if (!response.ok) return;
+                
+                const awsUsers = await response.json();
+                console.log(`☁️ Fetched ${Object.keys(awsUsers).length} users from DynamoDB`);
+                
+                // Build new registered users from AWS data
+                const newRegisteredUsers = {};
+                
+                Object.entries(awsUsers).forEach(([email, userData]) => {
+                    newRegisteredUsers[email] = {
+                        firstName: userData.firstName || userData.name || 'User',
+                        gender: userData.gender || '',
+                        location: userData.location || '',
+                        age: userData.age || null,
+                        registeredAt: userData.registeredAt || new Date().toISOString(),
+                        fromAWS: true
+                    };
+                    
+                    // Store individual user data
+                    const key = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+                    localStorage.setItem(key, JSON.stringify({
+                        version: '1.0',
+                        savedAt: new Date().toISOString(),
+                        user: {
+                            email: email,
+                            firstName: userData.firstName || userData.name || '',
+                            age: userData.age || null,
+                            gender: userData.gender || '',
+                            location: userData.location || '',
+                            occupation: userData.occupation || '',
+                            bio: userData.bio || '',
+                            photo: userData.photo || '',
+                            photos: userData.photos || [userData.photo].filter(p => p),
+                            education: userData.education || ''
+                        },
+                        fromAWS: true
+                    }));
+                });
+                
+                // Update localStorage with AWS data
+                localStorage.setItem('oith_registered_users', JSON.stringify(newRegisteredUsers));
+                
+            } catch (error) {
+                console.log('⚠️ AWS fetch failed (offline?):', error.message);
+            }
+        }
+        
+        // Pull users from AWS DynamoDB - OVERWRITES local user database (with confirmation)
         async function syncFromAWS() {
             const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
             
@@ -7394,8 +7447,8 @@
             }
         }
         
-        function refreshData() {
-            console.log('🔄 Refreshing all data...');
+        async function refreshData() {
+            console.log('🔄 Refreshing all data from DynamoDB...');
             
             // Clear existing data first
             allUserData = {};
@@ -7406,7 +7459,10 @@
             allUsersData = [];
             filteredUsers = [];
             
-            // Reload all data from localStorage
+            // Fetch latest from DynamoDB first (silent - no confirmation)
+            await fetchFromAWSSilent();
+            
+            // Reload all data from localStorage (now updated from AWS)
             loadAllData();
             
             // Recalculate platform stats
