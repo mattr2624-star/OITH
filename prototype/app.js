@@ -267,37 +267,47 @@ async function syncToServer(email, userData, registeredUserData) {
             return false;
         }
         
-        // Determine the endpoint
-        const endpoint = apiUrl.includes('execute-api') 
-            ? `${apiUrl}/users`  // AWS API Gateway
-            : `${apiUrl}/users`; // Local server
+        const endpoint = `${apiUrl}/users`;
         
-        console.log('☁️ Syncing to:', endpoint);
+        // Only send essential profile data to avoid DynamoDB 400KB limit
+        const user = userData?.user || {};
+        const minimalPayload = {
+            email: email,
+            name: user.firstName || registeredUserData?.firstName || '',
+            password: registeredUserData?.password || '',
+            userData: {
+                user: {
+                    email: email,
+                    firstName: user.firstName || '',
+                    age: user.age || null,
+                    birthday: user.birthday || '',
+                    gender: user.gender || '',
+                    location: user.location || '',
+                    occupation: user.occupation || '',
+                    education: user.education || '',
+                    bio: (user.bio || '').substring(0, 500),
+                    photo: user.photos?.[0] || '',
+                    height: user.height || '',
+                    bodyType: user.bodyType || ''
+                }
+            }
+        };
         
         const response = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email: email,
-                name: userData.user?.firstName || registeredUserData?.firstName,
-                password: registeredUserData?.password,
-                userData: userData
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(minimalPayload)
         });
         
         if (response.ok) {
-            const result = await response.json();
-            console.log('☁️ User data synced to AWS:', email, result);
+            console.log('☁️ User synced to AWS:', email);
             return true;
         } else {
             console.log('⚠️ AWS sync failed:', response.status);
             return false;
         }
     } catch (error) {
-        // Server sync is optional - don't fail if server is unavailable
-        console.log('⚠️ Cloud sync unavailable (offline mode):', error.message);
+        console.log('⚠️ Cloud sync unavailable:', error.message);
         return false;
     }
 }
@@ -1925,6 +1935,7 @@ function parseHeightToInches(heightStr) {
 
 /**
  * Force sync current user to AWS - ensures profile is saved to cloud
+ * Only sends ESSENTIAL profile data (not match history, conversations, etc.)
  */
 async function forceSyncToAWS() {
     const email = appState.user?.email;
@@ -1945,6 +1956,8 @@ async function forceSyncToAWS() {
         const registeredUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
         const regUser = registeredUsers[email] || {};
         
+        // Only send essential profile data (keep under 400KB limit)
+        // DO NOT send: match history, conversations, connections, etc.
         const payload = {
             email: email,
             name: appState.user.firstName || regUser.firstName || '',
@@ -1959,15 +1972,16 @@ async function forceSyncToAWS() {
                     location: appState.user.location || '',
                     occupation: appState.user.occupation || '',
                     education: appState.user.education || '',
-                    bio: appState.user.bio || '',
-                    photos: appState.user.photos || [],
+                    bio: (appState.user.bio || '').substring(0, 500), // Limit bio length
+                    photo: appState.user.photos?.[0] || '', // Only first photo URL
                     height: appState.user.height || '',
-                    bodyType: appState.user.bodyType || ''
+                    bodyType: appState.user.bodyType || '',
+                    interests: (appState.user.interests || []).slice(0, 10) // Limit interests
                 }
             }
         };
         
-        console.log('📤 Sending to AWS:', payload);
+        console.log('📤 Sending to AWS (minimal data):', payload.email);
         
         const response = await fetch(`${awsUrl}/users`, {
             method: 'POST',
@@ -1980,16 +1994,13 @@ async function forceSyncToAWS() {
         
         if (response.ok && result.success) {
             console.log('✅ Successfully synced to AWS!');
-            showToast('☁️ Profile synced to cloud!', 'success');
             return true;
         } else {
             console.error('❌ AWS sync failed:', result);
-            showToast('⚠️ Cloud sync failed', 'error');
             return false;
         }
     } catch (error) {
         console.error('❌ AWS sync error:', error);
-        showToast('⚠️ Cloud sync error', 'error');
         return false;
     }
 }
