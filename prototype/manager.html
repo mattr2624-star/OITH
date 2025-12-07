@@ -5545,7 +5545,7 @@
                                 </div>
                                 
                                 <!-- Data Table Preview (click stat boxes on left to load data) -->
-                                <div id="dataPreviewContainer" style="height: 280px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border);">
+                                <div id="dataPreviewContainer" style="height: 480px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border);">
                                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
                                         <div style="font-size: 2rem; margin-bottom: 8px;">📊</div>
                                         <div style="font-size: 0.85rem;">Click a stat box on the left to preview data</div>
@@ -5553,14 +5553,12 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Row Count & Actions -->
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
+                                <!-- Row Count & Export -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
                                     <span id="previewRowCount" style="font-size: 0.7rem; color: var(--text-muted);">0 rows</span>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button class="btn btn-secondary btn-sm" onclick="exportPreviewData()" id="exportPreviewBtn" style="padding: 4px 8px; font-size: 0.65rem;" disabled>
-                                            📥 Export CSV
-                                        </button>
-                                    </div>
+                                    <button class="btn btn-secondary btn-sm" onclick="exportPreviewData()" id="exportPreviewBtn" style="padding: 4px 10px; font-size: 0.7rem;" disabled>
+                                        📥 Export CSV
+                                    </button>
                                 </div>
                             </div>
                         </div>
