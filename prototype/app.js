@@ -248,15 +248,10 @@ function getUserStorageKey(email) {
  * Data is stored per-user based on their email
  */
 // API Server URL for syncing (adjust based on deployment)
-// AWS API Gateway URL - Set this after deploying the Lambda function
-// Format: https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod
-const AWS_API_URL = localStorage.getItem('oith_aws_api_url') || '';
+// AWS API Gateway URL - Hardcoded for automatic cloud sync
+const AWS_API_URL = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
 
-const API_BASE_URL = AWS_API_URL || (
-    window.location.hostname.includes('amplifyapp.com') 
-        ? ''  // Will use AWS API if configured
-        : 'http://localhost:3001/api'
-);
+const API_BASE_URL = AWS_API_URL || 'http://localhost:3001/api';
 
 /**
  * Sync user data to the backend server
