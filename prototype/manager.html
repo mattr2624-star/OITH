@@ -7246,7 +7246,7 @@
             }
         }
         
-        // Push ALL local users to AWS DynamoDB
+        // Push ALL local users to AWS DynamoDB (OVERWRITES existing data)
         async function pushAllToAWS() {
             const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
             
@@ -7258,11 +7258,11 @@
                 return;
             }
             
-            if (!confirm(`Push ${userEmails.length} users to AWS DynamoDB?`)) {
+            if (!confirm(`⚠️ This will OVERWRITE DynamoDB with ${userEmails.length} users from your local database.\n\nContinue?`)) {
                 return;
             }
             
-            showToast(`☁️ Pushing ${userEmails.length} users to AWS...`, 'info');
+            showToast(`☁️ Pushing ${userEmails.length} users to AWS (overwriting)...`, 'info');
             
             let successCount = 0;
             let errorCount = 0;
@@ -7274,6 +7274,7 @@
                     const userData = JSON.parse(localStorage.getItem(storageKey) || '{}');
                     const user = userData.user || {};
                     
+                    // Only send essential fields to avoid 400KB limit
                     const payload = {
                         email: email,
                         name: user.firstName || regUser.firstName || 'User',
@@ -7282,12 +7283,11 @@
                             user: {
                                 email: email,
                                 firstName: user.firstName || regUser.firstName || '',
-                                age: user.age || regUser.age,
+                                age: user.age || regUser.age || null,
                                 gender: user.gender || regUser.gender || '',
                                 location: user.location || regUser.location || '',
                                 occupation: user.occupation || '',
-                                bio: user.bio || '',
-                                photos: user.photos || [],
+                                photo: (user.photos && user.photos[0]) || '',
                                 education: user.education || ''
                             }
                         }
@@ -7303,8 +7303,9 @@
                         successCount++;
                         console.log(`✅ Pushed: ${email}`);
                     } else {
+                        const errText = await response.text();
                         errorCount++;
-                        console.error(`❌ Failed: ${email}`);
+                        console.error(`❌ Failed: ${email}`, errText);
                     }
                 } catch (error) {
                     errorCount++;
@@ -7312,7 +7313,11 @@
                 }
             }
             
-            showToast(`☁️ Pushed ${successCount} users to AWS (${errorCount} errors)`, successCount > 0 ? 'success' : 'error');
+            if (successCount > 0) {
+                showToast(`✅ Pushed ${successCount} users to AWS DynamoDB!`, 'success');
+            } else {
+                showToast(`❌ Failed to push users (${errorCount} errors)`, 'error');
+            }
         }
         
         function refreshData() {
