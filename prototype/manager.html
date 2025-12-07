@@ -5718,6 +5718,11 @@
 
     <script>
         // ==========================================
+        // GLOBAL CONSTANTS
+        // ==========================================
+        const AWS_API_URL = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+        
+        // ==========================================
         // SYSTEM HIERARCHY FUNCTIONS
         // ==========================================
         
@@ -18743,14 +18748,19 @@
         
         function renderTableDefinitions() {
             const container = document.getElementById('tableDefinitions');
+            if (!container) return;
             
-            container.innerHTML = databaseSchema.tables.map(table => `
+            // Use dynamoDBSchema.entities instead of the old databaseSchema.tables
+            container.innerHTML = dynamoDBSchema.entities.map(entity => `
                 <div style="border-bottom: 1px solid var(--border);">
                     <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px; background: var(--bg-tertiary); cursor: pointer;" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-                        <span style="font-size: 1.2rem;">${table.icon}</span>
+                        <span style="font-size: 1.2rem;">${entity.icon}</span>
                         <div style="flex: 1;">
-                            <div style="font-weight: 600; color: ${table.color};">${table.name}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">${table.description} · ${table.fields.length} fields</div>
+                            <div style="font-weight: 600; color: ${entity.color};">${entity.name}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${entity.description} · ${entity.attributes.length} attributes</div>
+                        </div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted); font-family: monospace; margin-right: 12px;">
+                            pk: ${entity.pkPattern}
                         </div>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--text-muted);">
                             <polyline points="6 9 12 15 18 9"/>
@@ -18760,25 +18770,23 @@
                         <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                             <thead>
                                 <tr style="background: var(--bg-primary);">
-                                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted); font-weight: 500;">Field</th>
+                                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted); font-weight: 500;">Attribute</th>
                                     <th style="padding: 10px 16px; text-align: left; color: var(--text-muted); font-weight: 500;">Type</th>
-                                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted); font-weight: 500;">Constraints</th>
+                                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted); font-weight: 500;">Key</th>
                                     <th style="padding: 10px 16px; text-align: left; color: var(--text-muted); font-weight: 500;">Description</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${table.fields.map(f => `
+                                ${entity.attributes.map(attr => `
                                     <tr style="border-bottom: 1px solid var(--border);">
                                         <td style="padding: 10px 16px; font-family: monospace; color: var(--text-primary);">
-                                            ${f.primary ? '🔑 ' : ''}${f.foreign ? '🔗 ' : ''}${f.name}
+                                            ${attr.primary ? '🔑 ' : ''}${attr.name}
                                         </td>
-                                        <td style="padding: 10px 16px; color: var(--info); font-family: monospace; font-size: 0.8rem;">${f.type}</td>
+                                        <td style="padding: 10px 16px; color: var(--info); font-family: monospace; font-size: 0.8rem;">${attr.type}</td>
                                         <td style="padding: 10px 16px;">
-                                            ${f.primary ? '<span style="background: rgba(245, 158, 11, 0.2); color: var(--warning); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">PRIMARY KEY</span>' : ''}
-                                            ${f.unique ? '<span style="background: rgba(59, 130, 246, 0.2); color: var(--info); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 4px;">UNIQUE</span>' : ''}
-                                            ${f.foreign ? '<span style="background: rgba(168, 85, 247, 0.2); color: var(--purple); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">FK → ' + f.foreign + '</span>' : ''}
+                                            ${attr.primary ? '<span style="background: rgba(245, 158, 11, 0.2); color: var(--warning); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">KEY</span>' : ''}
                                         </td>
-                                        <td style="padding: 10px 16px; color: var(--text-muted);">${f.description}</td>
+                                        <td style="padding: 10px 16px; color: var(--text-muted);">${attr.description || attr.example || ''}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -18790,17 +18798,32 @@
         
         function renderRelationships() {
             const container = document.getElementById('relationshipsDetail');
+            if (!container) return;
+            
+            // DynamoDB single-table design relationships
+            const relationships = [
+                { from: 'USER_PROFILE', to: 'SUBSCRIPTION', type: 'has one', link: 'pk = USER#{email}' },
+                { from: 'USER_PROFILE', to: 'EMERGENCY_CONTACT', type: 'has one', link: 'pk = USER#{email}' },
+                { from: 'USER_PROFILE', to: 'USER_SETTINGS', type: 'has one', link: 'pk = USER#{email}' },
+                { from: 'USER_PROFILE', to: 'LIKE', type: 'creates many', link: 'LIKE#{email} → TO#{other}' },
+                { from: 'LIKE', to: 'MATCH', type: 'mutual creates', link: 'if A→B and B→A' },
+                { from: 'MATCH', to: 'CHAT_MESSAGE', type: 'has many', link: 'CHAT#{matchId}' },
+                { from: 'USER_PROFILE', to: 'FEEDBACK', type: 'submits', link: 'userEmail field' },
+                { from: 'USER_PROFILE', to: 'USER_RATING', type: 'receives', link: 'RATING#{email}' },
+                { from: 'EMPLOYEE', to: 'DEPARTMENT', type: 'belongs to', link: 'departmentId field' },
+                { from: 'ACTIVITY_EVENT', to: 'SESSION', type: 'grouped by', link: 'sessionId field' }
+            ];
             
             container.innerHTML = `
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 16px;">
-                    ${databaseSchema.relationships.map(rel => {
-                        const fromTable = databaseSchema.tables.find(t => t.name === rel.from);
-                        const toTable = databaseSchema.tables.find(t => t.name === rel.to);
+                    ${relationships.map(rel => {
+                        const fromEntity = dynamoDBSchema.entities.find(e => e.name === rel.from);
+                        const toEntity = dynamoDBSchema.entities.find(e => e.name === rel.to);
                         return `
                             <div style="display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-tertiary); border-radius: 8px;">
                                 <div style="text-align: center; min-width: 80px;">
-                                    <div style="font-size: 1.5rem;">${fromTable?.icon || '📋'}</div>
-                                    <div style="font-size: 0.8rem; font-weight: 500; color: ${fromTable?.color || 'var(--text-primary)'}">${rel.from}</div>
+                                    <div style="font-size: 1.5rem;">${fromEntity?.icon || '📋'}</div>
+                                    <div style="font-size: 0.75rem; font-weight: 500; color: ${fromEntity?.color || 'var(--text-primary)'}">${rel.from}</div>
                                 </div>
                                 <div style="flex: 1; text-align: center;">
                                     <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">${rel.type}</div>
@@ -18809,11 +18832,11 @@
                                         <span style="font-size: 1rem;">→</span>
                                         <div style="height: 2px; width: 30px; background: var(--border);"></div>
                                     </div>
-                                    <div style="font-size: 0.7rem; color: var(--purple); font-family: monospace; margin-top: 4px;">${rel.field}</div>
+                                    <div style="font-size: 0.65rem; color: var(--purple); font-family: monospace; margin-top: 4px;">${rel.link}</div>
                                 </div>
                                 <div style="text-align: center; min-width: 80px;">
-                                    <div style="font-size: 1.5rem;">${toTable?.icon || '📋'}</div>
-                                    <div style="font-size: 0.8rem; font-weight: 500; color: ${toTable?.color || 'var(--text-primary)'}">${rel.to}</div>
+                                    <div style="font-size: 1.5rem;">${toEntity?.icon || '📋'}</div>
+                                    <div style="font-size: 0.75rem; font-weight: 500; color: ${toEntity?.color || 'var(--text-primary)'}">${rel.to}</div>
                                 </div>
                             </div>
                         `;
@@ -18930,31 +18953,56 @@
         }
         
         function exportDatabaseSchema() {
-            // Generate SQL create statements
-            let sql = '-- OITH Database Schema\n';
-            sql += '-- Generated: ' + new Date().toISOString() + '\n\n';
+            // Generate DynamoDB schema documentation
+            let doc = '# OITH DynamoDB Schema\n';
+            doc += '# Generated: ' + new Date().toISOString() + '\n';
+            doc += '# Table: ' + dynamoDBSchema.tableName + '\n';
+            doc += '# Region: ' + dynamoDBSchema.region + '\n\n';
+            doc += '## Single-Table Design\n';
+            doc += 'Primary Key: pk (String) + sk (String)\n\n';
             
-            databaseSchema.tables.forEach(table => {
-                sql += `-- ${table.description}\n`;
-                sql += `CREATE TABLE ${table.name} (\n`;
-                sql += table.fields.map(f => {
-                    let line = `    ${f.name} ${f.type}`;
-                    if (f.primary) line += ' PRIMARY KEY';
-                    if (f.unique) line += ' UNIQUE';
-                    if (f.foreign) line += ` REFERENCES ${f.foreign.split('.')[0]}(${f.foreign.split('.')[1]})`;
-                    return line;
-                }).join(',\n');
-                sql += '\n);\n\n';
+            // Group entities by category
+            const categories = {};
+            dynamoDBSchema.entities.forEach(entity => {
+                const cat = entity.category || 'user';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(entity);
             });
             
-            const blob = new Blob([sql], { type: 'text/plain' });
+            Object.entries(categories).forEach(([cat, entities]) => {
+                doc += `\n## ${cat.toUpperCase()} ENTITIES\n`;
+                doc += '=' .repeat(50) + '\n\n';
+                
+                entities.forEach(entity => {
+                    doc += `### ${entity.icon} ${entity.name}\n`;
+                    doc += `${entity.description}\n\n`;
+                    doc += `pk pattern: ${entity.pkPattern}\n`;
+                    doc += `sk pattern: ${entity.skPattern}\n\n`;
+                    doc += 'Attributes:\n';
+                    entity.attributes.forEach(attr => {
+                        doc += `  - ${attr.name} (${attr.type})${attr.primary ? ' [KEY]' : ''}: ${attr.description || ''}\n`;
+                    });
+                    doc += '\n';
+                });
+            });
+            
+            // Add access patterns
+            doc += '\n## ACCESS PATTERNS\n';
+            doc += '=' .repeat(50) + '\n\n';
+            dynamoDBSchema.accessPatterns.forEach((pattern, i) => {
+                doc += `${i + 1}. ${pattern.name}\n`;
+                doc += `   Query: ${pattern.query}\n`;
+                doc += `   Category: ${pattern.category || 'user'}\n\n`;
+            });
+            
+            const blob = new Blob([doc], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'oith_database_schema.sql';
+            a.download = 'oith_dynamodb_schema.md';
             a.click();
             URL.revokeObjectURL(url);
-            showToast('📥 Database schema exported!');
+            showToast('📥 DynamoDB schema exported!');
         }
 
         // ==========================================
