@@ -9562,22 +9562,7 @@ async function loadMLWeights() {
     }
 }
 
-// Listen for ML weights updates from admin
-oithSyncChannel.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'ml_weights_updated' && event.data.source === 'admin') {
-        console.log('📊 ML weights updated from admin:', event.data.weights);
-        mlCompatibilityWeights = event.data.weights;
-        localStorage.setItem('oith_ml_compatibility_weights', JSON.stringify(mlCompatibilityWeights));
-        
-        // Recalculate current match compatibility if applicable
-        if (appState.oneMatch?.current) {
-            const factors = calculateCompatibilityFactors(appState.oneMatch.current);
-            const newScore = calculateWeightedCompatibility(factors);
-            appState.oneMatch.current.compatibility = newScore;
-            syncCompatibilityDisplays(newScore);
-        }
-    }
-});
+// ML weights listener is set up after oithSyncChannel is created (see below)
 
 // Calculate weighted compatibility score using admin-defined weights
 function calculateWeightedCompatibility(factors) {
@@ -12497,6 +12482,23 @@ oithSyncChannel.addEventListener('message', (event) => {
 });
 console.log('📡 BroadcastChannel listener ready for admin ping');
 console.log('📡 Debug: Check window.oithBroadcastReady, window.oithPingCount, window.oithPongCount in console');
+
+// Listen for ML weights updates from admin
+oithSyncChannel.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'ml_weights_updated' && event.data.source === 'admin') {
+        console.log('📊 ML weights updated from admin:', event.data.weights);
+        mlCompatibilityWeights = event.data.weights;
+        localStorage.setItem('oith_ml_compatibility_weights', JSON.stringify(mlCompatibilityWeights));
+        
+        // Recalculate current match compatibility if applicable
+        if (appState.oneMatch?.current) {
+            const factors = calculateCompatibilityFactors(appState.oneMatch.current);
+            const newScore = calculateWeightedCompatibility(factors);
+            appState.oneMatch.current.compatibility = newScore;
+            syncCompatibilityDisplays(newScore);
+        }
+    }
+});
 
 // ==========================================
 // User Behavior Tracking
