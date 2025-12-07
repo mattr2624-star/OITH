@@ -5494,7 +5494,7 @@
                                 </div>
                                 
                                 <!-- Documents Section -->
-                                <div>
+                                <div style="margin-bottom: 12px;">
                                     <div style="font-size: 0.7rem; color: #0EA5E9; font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">📄 Documents</div>
                                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 0.75rem;">
                                         <div onclick="loadEntityPreview('PATENT_DOC')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
@@ -5507,6 +5507,29 @@
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <!-- System Section -->
+                                <div>
+                                    <div style="font-size: 0.7rem; color: #94A3B8; font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">⚙️ System</div>
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 0.75rem;">
+                                        <div onclick="loadEntityPreview('SUBSCRIPTION')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
+                                            <div style="font-weight: 600; color: var(--success);" id="dynamoSubscriptionCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Subs</div>
+                                        </div>
+                                        <div onclick="loadEntityPreview('CONFIG')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
+                                            <div style="font-weight: 600; color: #94A3B8;" id="dynamoConfigCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Config</div>
+                                        </div>
+                                        <div onclick="loadEntityPreview('CRAWLER_LOG')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
+                                            <div style="font-weight: 600; color: var(--warning);" id="dynamoCrawlerCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Crawler</div>
+                                        </div>
+                                        <div onclick="loadEntityPreview('SUPPORT')" style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='var(--accent)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='var(--bg-secondary)'; this.style.transform='scale(1)'">
+                                            <div style="font-weight: 600; color: var(--info);" id="dynamoSupportCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Support</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Data Preview Panel -->
@@ -5514,52 +5537,18 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                     <div style="font-size: 0.8rem; color: var(--text-muted);">DATA PREVIEW</div>
                                     <div style="display: flex; gap: 8px; align-items: center;">
-                                        <span id="previewEntityType" style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">Select an entity type →</span>
+                                        <span id="previewEntityType" style="font-size: 0.75rem; color: var(--accent); font-weight: 600;">← Click stat box to load</span>
                                         <button class="btn btn-secondary btn-sm" onclick="refreshDataPreview()" id="refreshPreviewBtn" style="padding: 4px 8px; font-size: 0.7rem;" disabled>
                                             🔄 Refresh
                                         </button>
                                     </div>
                                 </div>
                                 
-                                <!-- Entity Type Selector -->
-                                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-                                    <button class="entity-preview-btn" data-entity="PROFILE" onclick="loadEntityPreview('PROFILE')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        👤 Profiles
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="MATCH" onclick="loadEntityPreview('MATCH')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        💕 Matches
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="LIKE" onclick="loadEntityPreview('LIKE')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        💗 Likes
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="CHAT" onclick="loadEntityPreview('CHAT')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        💬 Messages
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="SUBSCRIPTION" onclick="loadEntityPreview('SUBSCRIPTION')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        💳 Subscriptions
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="CONFIG" onclick="loadEntityPreview('CONFIG')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        ⚙️ Config
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="CRAWLER_LOG" onclick="loadEntityPreview('CRAWLER_LOG')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        🕷️ Crawler Logs
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="EMPLOYEE" onclick="loadEntityPreview('EMPLOYEE')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        👥 Employees
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="REPORT" onclick="loadEntityPreview('REPORT')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        🚨 Reports
-                                    </button>
-                                    <button class="entity-preview-btn" data-entity="SUPPORT" onclick="loadEntityPreview('SUPPORT')" style="padding: 4px 10px; font-size: 0.7rem; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; transition: all 0.2s;">
-                                        💬 Support
-                                    </button>
-                                </div>
-                                
-                                <!-- Data Table Preview -->
+                                <!-- Data Table Preview (click stat boxes on left to load data) -->
                                 <div id="dataPreviewContainer" style="height: 280px; overflow-y: auto; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border);">
                                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
                                         <div style="font-size: 2rem; margin-bottom: 8px;">📊</div>
-                                        <div style="font-size: 0.85rem;">Click an entity type above to preview data</div>
+                                        <div style="font-size: 0.85rem;">Click a stat box on the left to preview data</div>
                                         <div style="font-size: 0.7rem; margin-top: 4px; opacity: 0.7;">Data is loaded directly from AWS DynamoDB</div>
                                     </div>
                                 </div>
@@ -19021,6 +19010,12 @@
             // Document counts
             updateEl('dynamoPatentDocsCount', dynamoDBStats.patentDocs || '--');
             updateEl('dynamoComplianceDocsCount', dynamoDBStats.complianceDocs || '--');
+            
+            // System counts
+            updateEl('dynamoSubscriptionCount', dynamoDBStats.subscriptions || '--');
+            updateEl('dynamoConfigCount', dynamoDBStats.configs || '--');
+            updateEl('dynamoCrawlerCount', dynamoDBStats.crawlerLogs || '--');
+            updateEl('dynamoSupportCount', dynamoDBStats.supportMessages || '--');
         }
         
         // ==========================================
