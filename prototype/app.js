@@ -327,6 +327,238 @@ async function syncToServer(email, userData, registeredUserData) {
 function setAWSApiUrl(url) {
     if (url) {
         localStorage.setItem('oith_aws_api_url', url);
+    }
+}
+
+// ==========================================
+// ADDITIONAL DATA SYNC FUNCTIONS
+// ==========================================
+
+/**
+ * Sync subscription data to AWS
+ */
+async function syncSubscriptionToAWS() {
+    const email = appState.user?.email;
+    if (!email || !appState.user?.subscription) return false;
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/subscription`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                subscription: appState.user.subscription
+            })
+        });
+        
+        if (response.ok) {
+            console.log('☁️ Subscription synced to AWS');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.warn('⚠️ Failed to sync subscription:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Sync emergency contact to AWS
+ */
+async function syncEmergencyContactToAWS() {
+    const email = appState.user?.email;
+    if (!email || !appState.user?.emergencyContact) return false;
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/emergency-contact`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                contact: appState.user.emergencyContact
+            })
+        });
+        
+        if (response.ok) {
+            console.log('☁️ Emergency contact synced to AWS');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.warn('⚠️ Failed to sync emergency contact:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Sync user settings to AWS
+ */
+async function syncSettingsToAWS() {
+    const email = appState.user?.email;
+    if (!email) return false;
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                settings: appState.user.settings || {}
+            })
+        });
+        
+        if (response.ok) {
+            console.log('☁️ Settings synced to AWS');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.warn('⚠️ Failed to sync settings:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Sync photos to AWS
+ */
+async function syncPhotosToAWS() {
+    const email = appState.user?.email;
+    if (!email || !appState.user?.photos) return false;
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/photos`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                photos: appState.user.photos
+            })
+        });
+        
+        if (response.ok) {
+            console.log('☁️ Photos synced to AWS');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.warn('⚠️ Failed to sync photos:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Load FULL user data from AWS on login
+ * This restores all user data including subscription, settings, etc.
+ */
+async function loadFullUserDataFromAWS(email) {
+    if (!email) return null;
+    
+    try {
+        console.log(`📥 Loading full user data from AWS for ${email}...`);
+        
+        const response = await fetch(`${AWS_API_URL}/user/${encodeURIComponent(email)}/full`);
+        
+        if (!response.ok) {
+            console.warn('⚠️ Failed to load user data from AWS:', response.status);
+            return null;
+        }
+        
+        const userData = await response.json();
+        
+        if (userData && userData.profile) {
+            console.log('✅ Loaded full user data from AWS:', {
+                hasProfile: !!userData.profile,
+                hasSubscription: !!userData.subscription,
+                hasEmergencyContact: !!userData.emergencyContact,
+                hasSettings: !!userData.settings,
+                matchCount: userData.matches?.length || 0
+            });
+            
+            // Merge AWS data into appState
+            if (userData.profile) {
+                Object.assign(appState.user, {
+                    firstName: userData.profile.firstName,
+                    age: userData.profile.age,
+                    gender: userData.profile.gender,
+                    location: userData.profile.location,
+                    occupation: userData.profile.occupation,
+                    bio: userData.profile.bio,
+                    photo: userData.profile.photo,
+                    education: userData.profile.education
+                });
+                
+                if (userData.profile.preferences) {
+                    appState.user.preferences = userData.profile.preferences;
+                    appState.user.matchPreferences = userData.profile.preferences;
+                }
+            }
+            
+            if (userData.subscription) {
+                appState.user.subscription = userData.subscription;
+            }
+            
+            if (userData.emergencyContact) {
+                appState.user.emergencyContact = userData.emergencyContact;
+            }
+            
+            if (userData.settings) {
+                appState.user.settings = userData.settings;
+            }
+            
+            if (userData.photos && userData.photos.length > 0) {
+                appState.user.photos = userData.photos;
+            }
+            
+            if (userData.matches && userData.matches.length > 0) {
+                appState.user.awsMatches = userData.matches;
+                // If user has a match, set up the active connection
+                const latestMatch = userData.matches[0];
+                if (latestMatch && !appState.activeConnection) {
+                    appState.activeConnection = {
+                        matchId: latestMatch.matchId,
+                        email: latestMatch.matchedWith,
+                        matchedAt: latestMatch.matchedAt
+                    };
+                }
+            }
+            
+            // Save to localStorage
+            saveUserData();
+            
+            return userData;
+        }
+        
+        return null;
+    } catch (error) {
+        console.warn('⚠️ Error loading user data from AWS:', error.message);
+        return null;
+    }
+}
+
+/**
+ * Sync ALL user data to AWS (call after important changes)
+ */
+async function syncAllUserDataToAWS() {
+    const email = appState.user?.email;
+    if (!email) return;
+    
+    console.log('☁️ Syncing all user data to AWS...');
+    
+    // Sync profile (existing function)
+    await syncToServer(email, { user: appState.user }, { firstName: appState.user.firstName });
+    
+    // Sync additional data
+    await syncSubscriptionToAWS();
+    await syncEmergencyContactToAWS();
+    await syncSettingsToAWS();
+    await syncPhotosToAWS();
+    
+    console.log('✅ All user data synced to AWS');
+}
+
+// ==========================================
+// END ADDITIONAL DATA SYNC
+// ==========================================
         console.log('✅ AWS API URL configured:', url);
         showToast('AWS API configured!', 'success');
     } else {
@@ -5540,6 +5772,18 @@ function handleLogin(event) {
     // Save login state
     saveUserData();
     
+    // Load full user data from AWS (subscription, settings, emergency contact, etc.)
+    // This runs in background and merges AWS data with local data
+    loadFullUserDataFromAWS(userEmail).then(awsData => {
+        if (awsData) {
+            console.log('✅ User data loaded from AWS');
+            // Update UI if subscription was loaded
+            if (awsData.subscription?.status === 'active') {
+                console.log('👑 Premium subscription restored from AWS');
+            }
+        }
+    }).catch(err => console.log('AWS data load:', err.message));
+    
     // Check for and apply any active experiment treatments
     checkAndApplyExperiments();
     
@@ -6194,8 +6438,11 @@ function handlePaymentSuccess() {
     // Clear pending payment
     delete appState.user.pendingPayment;
     
-    // Save user data
+    // Save user data locally
     saveUserData();
+    
+    // Sync subscription to AWS for cross-device persistence
+    syncSubscriptionToAWS();
     
     // Show success screen
     showScreen('payment');
@@ -7724,6 +7971,9 @@ function saveEmergencyContact() {
     
     closeModal();
     showToast('Emergency contact saved! 🛡️ They will be notified when you go on dates.', 'success');
+    
+    // Sync to AWS for cross-device persistence
+    syncEmergencyContactToAWS();
     
     console.log('🛡️ Emergency contact saved:', appState.user.emergencyContact);
 }

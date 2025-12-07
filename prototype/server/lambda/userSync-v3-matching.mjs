@@ -250,6 +250,295 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ matches }) };
         }
         
+        // ============ SUBSCRIPTION ============
+        
+        // POST /subscription - Save subscription status
+        if (method === 'POST' && path.includes('/subscription')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email, subscription } = body;
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: `USER#${email.toLowerCase()}`,
+                    sk: 'SUBSCRIPTION',
+                    email: email.toLowerCase(),
+                    type: subscription?.type || 'free',
+                    plan: subscription?.plan || null,
+                    status: subscription?.status || 'inactive',
+                    startDate: subscription?.startDate || null,
+                    nextBillingDate: subscription?.nextBillingDate || null,
+                    amount: subscription?.amount || 0,
+                    provider: subscription?.provider || null,
+                    paymentId: subscription?.paymentId || null,
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // GET /subscription/{email} - Get subscription status
+        if (method === 'GET' && path.includes('/subscription/')) {
+            const email = path.split('/subscription/')[1]?.toLowerCase();
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: `USER#${email}`, sk: 'SUBSCRIPTION' }
+            }));
+            
+            return { 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ subscription: result.Item || { type: 'free', status: 'inactive' } }) 
+            };
+        }
+        
+        // ============ EMERGENCY CONTACT ============
+        
+        // POST /emergency-contact - Save emergency contact
+        if (method === 'POST' && path.includes('/emergency-contact')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email, contact } = body;
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: `USER#${email.toLowerCase()}`,
+                    sk: 'EMERGENCY_CONTACT',
+                    email: email.toLowerCase(),
+                    contactName: contact?.name || '',
+                    contactPhone: contact?.phone || '',
+                    contactRelationship: contact?.relationship || '',
+                    notifyOnDate: contact?.notifyOnDate !== false,
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // GET /emergency-contact/{email} - Get emergency contact
+        if (method === 'GET' && path.includes('/emergency-contact/')) {
+            const email = path.split('/emergency-contact/')[1]?.toLowerCase();
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: `USER#${email}`, sk: 'EMERGENCY_CONTACT' }
+            }));
+            
+            return { 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ contact: result.Item || null }) 
+            };
+        }
+        
+        // ============ USER SETTINGS ============
+        
+        // POST /settings - Save user settings
+        if (method === 'POST' && path.includes('/settings')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email, settings } = body;
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: `USER#${email.toLowerCase()}`,
+                    sk: 'SETTINGS',
+                    email: email.toLowerCase(),
+                    notifications: settings?.notifications ?? true,
+                    emailNotifications: settings?.emailNotifications ?? true,
+                    pushNotifications: settings?.pushNotifications ?? true,
+                    showOnlineStatus: settings?.showOnlineStatus ?? true,
+                    showLastSeen: settings?.showLastSeen ?? true,
+                    darkMode: settings?.darkMode ?? false,
+                    language: settings?.language || 'en',
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // GET /settings/{email} - Get user settings
+        if (method === 'GET' && path.includes('/settings/')) {
+            const email = path.split('/settings/')[1]?.toLowerCase();
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: `USER#${email}`, sk: 'SETTINGS' }
+            }));
+            
+            return { 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ settings: result.Item || {} }) 
+            };
+        }
+        
+        // ============ USER PHOTOS ============
+        
+        // POST /photos - Save user photos
+        if (method === 'POST' && path.includes('/photos')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email, photos } = body;
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: `USER#${email.toLowerCase()}`,
+                    sk: 'PHOTOS',
+                    email: email.toLowerCase(),
+                    photos: photos || [],
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // GET /photos/{email} - Get user photos
+        if (method === 'GET' && path.includes('/photos/')) {
+            const email = path.split('/photos/')[1]?.toLowerCase();
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: `USER#${email}`, sk: 'PHOTOS' }
+            }));
+            
+            return { 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ photos: result.Item?.photos || [] }) 
+            };
+        }
+        
+        // ============ FULL USER DATA (for login) ============
+        
+        // GET /user/{email}/full - Get ALL user data for login restoration
+        if (method === 'GET' && path.includes('/user/') && path.includes('/full')) {
+            const pathParts = path.split('/');
+            const emailIndex = pathParts.indexOf('user') + 1;
+            const email = pathParts[emailIndex]?.toLowerCase();
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            // Get all items for this user
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': `USER#${email}` }
+            }));
+            
+            // Organize data by type
+            const userData = {
+                email: email,
+                profile: null,
+                subscription: null,
+                emergencyContact: null,
+                settings: null,
+                photos: []
+            };
+            
+            for (const item of (result.Items || [])) {
+                if (item.sk === 'PROFILE') {
+                    userData.profile = {
+                        firstName: item.firstName,
+                        age: item.age,
+                        gender: item.gender,
+                        location: item.location,
+                        occupation: item.occupation,
+                        bio: item.bio,
+                        photo: item.photo,
+                        education: item.education,
+                        preferences: item.preferences,
+                        isHidden: item.isHidden,
+                        lastSeen: item.lastSeen
+                    };
+                } else if (item.sk === 'SUBSCRIPTION') {
+                    userData.subscription = {
+                        type: item.type,
+                        plan: item.plan,
+                        status: item.status,
+                        startDate: item.startDate,
+                        nextBillingDate: item.nextBillingDate,
+                        amount: item.amount,
+                        provider: item.provider
+                    };
+                } else if (item.sk === 'EMERGENCY_CONTACT') {
+                    userData.emergencyContact = {
+                        name: item.contactName,
+                        phone: item.contactPhone,
+                        relationship: item.contactRelationship,
+                        notifyOnDate: item.notifyOnDate
+                    };
+                } else if (item.sk === 'SETTINGS') {
+                    userData.settings = {
+                        notifications: item.notifications,
+                        emailNotifications: item.emailNotifications,
+                        pushNotifications: item.pushNotifications,
+                        showOnlineStatus: item.showOnlineStatus,
+                        showLastSeen: item.showLastSeen,
+                        darkMode: item.darkMode,
+                        language: item.language
+                    };
+                } else if (item.sk === 'PHOTOS') {
+                    userData.photos = item.photos || [];
+                }
+            }
+            
+            // Also get matches
+            const matchesResult = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk AND begins_with(sk, :sk)',
+                ExpressionAttributeValues: {
+                    ':pk': `MATCH#${email}`,
+                    ':sk': 'WITH#'
+                }
+            }));
+            
+            userData.matches = matchesResult.Items?.map(item => ({
+                matchId: item.matchId,
+                matchedWith: item.sk.replace('WITH#', ''),
+                matchedAt: item.matchedAt
+            })) || [];
+            
+            console.log(`📦 Loaded full user data for ${email}: profile=${!!userData.profile}, subscription=${!!userData.subscription}, matches=${userData.matches.length}`);
+            
+            return { statusCode: 200, headers, body: JSON.stringify(userData) };
+        }
+        
         // ============ CHAT MESSAGES ============
         
         // POST /chat - Send a message
