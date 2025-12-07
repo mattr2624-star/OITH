@@ -7280,7 +7280,7 @@
             }
         }
         
-        // Push ALL local users to AWS DynamoDB (OVERWRITES existing data)
+        // Push ALL local users to AWS DynamoDB - COMPLETE OVERWRITE
         async function pushAllToAWS() {
             const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
             
@@ -7292,65 +7292,99 @@
                 return;
             }
             
-            if (!confirm(`⚠️ This will OVERWRITE DynamoDB with ${userEmails.length} users from your local database.\n\nContinue?`)) {
+            if (!confirm(`⚠️ This will COMPLETELY REPLACE DynamoDB with ${userEmails.length} users from your local database.\n\nAll existing DynamoDB data will be deleted first.\n\nContinue?`)) {
                 return;
             }
             
-            showToast(`☁️ Pushing ${userEmails.length} users to AWS (overwriting)...`, 'info');
+            showToast(`☁️ Replacing DynamoDB with ${userEmails.length} local users...`, 'info');
             
-            let successCount = 0;
-            let errorCount = 0;
-            
-            for (const email of userEmails) {
-                try {
+            try {
+                // Step 1: Clear all existing users in DynamoDB
+                console.log('🗑️ Clearing DynamoDB...');
+                await fetch(`${awsApiUrl}/users/clear`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                // Step 2: Build users array for bulk upload
+                const usersToUpload = [];
+                
+                for (const email of userEmails) {
                     const regUser = registeredUsers[email];
                     const storageKey = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
                     const userData = JSON.parse(localStorage.getItem(storageKey) || '{}');
                     const user = userData.user || {};
                     
-                    // Only send essential fields to avoid 400KB limit
-                    const payload = {
+                    usersToUpload.push({
                         email: email,
-                        name: user.firstName || regUser.firstName || 'User',
-                        password: regUser.password || '',
-                        userData: {
-                            user: {
-                                email: email,
-                                firstName: user.firstName || regUser.firstName || '',
-                                age: user.age || regUser.age || null,
-                                gender: user.gender || regUser.gender || '',
-                                location: user.location || regUser.location || '',
-                                occupation: user.occupation || '',
-                                photo: (user.photos && user.photos[0]) || '',
-                                education: user.education || ''
-                            }
-                        }
-                    };
-                    
-                    const response = await fetch(`${awsApiUrl}/users`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        firstName: user.firstName || regUser.firstName || 'User',
+                        age: user.age || regUser.age || null,
+                        gender: user.gender || regUser.gender || '',
+                        location: user.location || regUser.location || '',
+                        occupation: user.occupation || '',
+                        photo: (user.photos && user.photos[0]) || user.photo || '',
+                        education: user.education || ''
                     });
-                    
-                    if (response.ok) {
-                        successCount++;
-                        console.log(`✅ Pushed: ${email}`);
-                    } else {
-                        const errText = await response.text();
-                        errorCount++;
-                        console.error(`❌ Failed: ${email}`, errText);
-                    }
-                } catch (error) {
-                    errorCount++;
-                    console.error(`❌ Error pushing ${email}:`, error);
                 }
-            }
-            
-            if (successCount > 0) {
-                showToast(`✅ Pushed ${successCount} users to AWS DynamoDB!`, 'success');
-            } else {
-                showToast(`❌ Failed to push users (${errorCount} errors)`, 'error');
+                
+                // Step 3: Bulk upload all users
+                console.log(`📤 Uploading ${usersToUpload.length} users...`);
+                const response = await fetch(`${awsApiUrl}/users/bulk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ users: usersToUpload })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Bulk upload failed');
+                }
+                
+                const result = await response.json();
+                showToast(`✅ Replaced DynamoDB with ${result.count || usersToUpload.length} users!`, 'success');
+                
+            } catch (error) {
+                console.error('Push error:', error);
+                
+                // Fallback: push one by one if bulk fails
+                showToast('⚠️ Bulk upload failed, trying one by one...', 'warning');
+                
+                let successCount = 0;
+                for (const email of userEmails) {
+                    try {
+                        const regUser = registeredUsers[email];
+                        const storageKey = 'oith_user_' + email.replace(/[^a-zA-Z0-9]/g, '_');
+                        const userData = JSON.parse(localStorage.getItem(storageKey) || '{}');
+                        const user = userData.user || {};
+                        
+                        const payload = {
+                            email: email,
+                            name: user.firstName || regUser.firstName || 'User',
+                            userData: {
+                                user: {
+                                    firstName: user.firstName || regUser.firstName || '',
+                                    age: user.age || regUser.age || null,
+                                    gender: user.gender || regUser.gender || '',
+                                    location: user.location || regUser.location || '',
+                                    occupation: user.occupation || '',
+                                    photo: (user.photos && user.photos[0]) || '',
+                                    education: user.education || ''
+                                }
+                            }
+                        };
+                        
+                        const resp = await fetch(`${awsApiUrl}/users`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        
+                        if (resp.ok) successCount++;
+                    } catch (e) {
+                        console.error(`Failed: ${email}`, e);
+                    }
+                }
+                
+                showToast(`✅ Pushed ${successCount}/${userEmails.length} users to DynamoDB`, 'success');
             }
         }
         

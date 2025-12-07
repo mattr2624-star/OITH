@@ -4,7 +4,7 @@
  */
 
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, QueryCommand, DeleteCommand, BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -81,6 +81,65 @@ export const handler = async (event) => {
                 }
             });
             return { statusCode: 200, headers, body: JSON.stringify(users) };
+        }
+        
+        // DELETE /users/clear - Clear ALL users from DynamoDB
+        if (method === 'DELETE' && path.includes('/users/clear')) {
+            console.log('🗑️ Clearing all users from DynamoDB...');
+            
+            // Scan for all PROFILE items
+            const result = await docClient.send(new ScanCommand({ 
+                TableName: TABLE_NAME,
+                FilterExpression: 'sk = :sk',
+                ExpressionAttributeValues: { ':sk': 'PROFILE' }
+            }));
+            
+            // Delete each one
+            let deleted = 0;
+            for (const item of (result.Items || [])) {
+                await docClient.send(new DeleteCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: item.pk, sk: item.sk }
+                }));
+                deleted++;
+            }
+            
+            console.log(`🗑️ Deleted ${deleted} users`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, deleted }) };
+        }
+        
+        // POST /users/bulk - Bulk upload users (replaces all)
+        if (method === 'POST' && path.includes('/users/bulk')) {
+            const body = JSON.parse(event.body || '{}');
+            const users = body.users || [];
+            
+            console.log(`📤 Bulk uploading ${users.length} users...`);
+            
+            let count = 0;
+            for (const user of users) {
+                if (!user.email) continue;
+                
+                await docClient.send(new PutCommand({
+                    TableName: TABLE_NAME,
+                    Item: {
+                        pk: `USER#${user.email.toLowerCase()}`,
+                        sk: 'PROFILE',
+                        email: user.email.toLowerCase(),
+                        firstName: user.firstName || user.name || '',
+                        age: user.age || null,
+                        gender: user.gender || '',
+                        location: user.location || '',
+                        occupation: user.occupation || '',
+                        photo: user.photo || '',
+                        education: user.education || '',
+                        updatedAt: new Date().toISOString()
+                    }
+                }));
+                count++;
+            }
+            
+            console.log(`✅ Uploaded ${count} users`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, count }) };
         }
         
         // ============ LIKES & MATCHING ============
