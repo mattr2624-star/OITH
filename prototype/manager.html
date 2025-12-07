@@ -8624,11 +8624,14 @@
                 
                 // First verify app is connected before running diagnostics
                 appendDiagnosticsLog('📡 Checking app connection...');
+                console.log('🔍 [CRAWLER] Starting connection check...');
                 
                 let appConnected = false;
                 const connectionCheck = new Promise((resolve) => {
                     const checkHandler = (event) => {
+                        console.log('🔍 [CRAWLER] Received message during connection check:', event.data);
                         if (event.data && event.data.type === 'pong') {
+                            console.log('🔍 [CRAWLER] ✅ PONG received!', event.data);
                             appConnected = true;
                             channel.removeEventListener('message', checkHandler);
                             resolve(true);
@@ -8636,11 +8639,19 @@
                     };
                     channel.addEventListener('message', checkHandler);
                     
+                    // Also log ALL messages on this channel for debugging
+                    channel.onmessage = (event) => {
+                        console.log('🔍 [CRAWLER] onmessage received:', event.data);
+                    };
+                    
                     // Send ping
-                    channel.postMessage({ type: 'ping', source: 'admin', timestamp: Date.now() });
+                    const pingMessage = { type: 'ping', source: 'admin', timestamp: Date.now(), crawlerPing: true };
+                    console.log('🔍 [CRAWLER] Sending ping:', pingMessage);
+                    channel.postMessage(pingMessage);
                     
                     // Timeout after 3 seconds
                     setTimeout(() => {
+                        console.log('🔍 [CRAWLER] Timeout reached, appConnected =', appConnected);
                         channel.removeEventListener('message', checkHandler);
                         resolve(false);
                     }, 3000);

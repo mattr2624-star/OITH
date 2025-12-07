@@ -12462,10 +12462,18 @@ function updateUIForLoggedInUser() {
 
 const oithSyncChannel = new BroadcastChannel('oith_sync');
 
+// Global flag for debugging - check window.oithBroadcastReady in console
+window.oithBroadcastReady = true;
+window.oithPingCount = 0;
+window.oithPongCount = 0;
+
 // ==========================================
 // EARLY PING HANDLER - Must respond to admin/crawler immediately
 // ==========================================
 oithSyncChannel.addEventListener('message', (event) => {
+    // Log ALL incoming messages for debugging
+    console.log('📡 [BC] Received message:', event.data?.type, event.data);
+    
     // Respond to ping requests immediately (before any other processing)
     // Check for both 'source' and 'from' since different parts of admin use different property names
     const isAdminPing = event.data && 
@@ -12473,18 +12481,24 @@ oithSyncChannel.addEventListener('message', (event) => {
                         (event.data.source === 'admin' || event.data.from === 'admin');
     
     if (isAdminPing) {
-        console.log('📡 [EARLY] Ping received from admin, sending pong...', event.data);
-        oithSyncChannel.postMessage({
+        window.oithPingCount++;
+        console.log('📡 [EARLY] Ping #' + window.oithPingCount + ' received from admin, sending pong...', event.data);
+        const pongMessage = {
             source: 'app',
             type: 'pong',
             timestamp: Date.now(),
             originalTimestamp: event.data.timestamp, // Echo back for latency calculation
             appReady: true,
-            currentScreen: document.querySelector('.screen.active')?.id || 'unknown'
-        });
+            currentScreen: document.querySelector('.screen.active')?.id || 'unknown',
+            pingCount: window.oithPingCount
+        };
+        oithSyncChannel.postMessage(pongMessage);
+        window.oithPongCount++;
+        console.log('📡 [EARLY] Pong #' + window.oithPongCount + ' sent:', pongMessage);
     }
 });
 console.log('📡 BroadcastChannel listener ready for admin ping');
+console.log('📡 Debug: Check window.oithBroadcastReady, window.oithPingCount, window.oithPongCount in console');
 
 // ==========================================
 // User Behavior Tracking
