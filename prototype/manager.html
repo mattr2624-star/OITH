@@ -5488,7 +5488,7 @@
                                 </div>
                                 
                                 <!-- Company Section -->
-                                <div>
+                                <div style="margin-bottom: 12px;">
                                     <div style="font-size: 0.7rem; color: var(--purple); font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">🏢 Company</div>
                                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; font-size: 0.75rem;">
                                         <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
@@ -5506,6 +5506,21 @@
                                         <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
                                             <div style="font-weight: 600; color: var(--pink);" id="dynamoInvestorCount">--</div>
                                             <div style="color: var(--text-muted); font-size: 0.65rem;">Investors</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Documents Section -->
+                                <div>
+                                    <div style="font-size: 0.7rem; color: #0EA5E9; font-weight: 600; margin-bottom: 6px; text-transform: uppercase;">📄 Documents</div>
+                                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 0.75rem;">
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: #0EA5E9;" id="dynamoPatentDocsCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Patent Docs</div>
+                                        </div>
+                                        <div style="padding: 6px; background: var(--bg-secondary); border-radius: 4px; text-align: center;">
+                                            <div style="font-weight: 600; color: var(--success);" id="dynamoComplianceDocsCount">--</div>
+                                            <div style="color: var(--text-muted); font-size: 0.65rem;">Compliance Docs</div>
                                         </div>
                                     </div>
                                 </div>
@@ -15328,18 +15343,57 @@
         // LEGAL / PATENTS & IP
         // ==========================================
         
-        // Load patent documents from localStorage
+        // Load patent documents from localStorage (and sync from DynamoDB on first load)
+        let patentDocsLoaded = false;
         function getPatentDocuments() {
             try {
+                // Load from DynamoDB on first access
+                if (!patentDocsLoaded) {
+                    loadPatentDocumentsFromAWS();
+                    patentDocsLoaded = true;
+                }
                 return JSON.parse(localStorage.getItem('oith_patent_documents') || '{}');
             } catch (e) {
                 return {};
             }
         }
         
-        // Save patent documents to localStorage
-        function savePatentDocuments(docs) {
+        // Save patent documents to localStorage AND DynamoDB
+        async function savePatentDocuments(docs) {
             localStorage.setItem('oith_patent_documents', JSON.stringify(docs));
+            await savePatentDocumentsToAWS(docs);
+        }
+        
+        // Save patent documents to DynamoDB
+        async function savePatentDocumentsToAWS(docs) {
+            try {
+                const response = await fetch(`${AWS_API_URL}/documents/patent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ documents: docs })
+                });
+                if (response.ok) {
+                    console.log('☁️ Patent documents synced to AWS');
+                }
+            } catch (error) {
+                console.log('⚠️ Could not sync patent docs to AWS:', error.message);
+            }
+        }
+        
+        // Load patent documents from DynamoDB
+        async function loadPatentDocumentsFromAWS() {
+            try {
+                const response = await fetch(`${AWS_API_URL}/documents/patent`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.documents && Object.keys(data.documents).length > 0) {
+                        localStorage.setItem('oith_patent_documents', JSON.stringify(data.documents));
+                        console.log('☁️ Patent documents loaded from AWS');
+                    }
+                }
+            } catch (error) {
+                console.log('Using local patent documents');
+            }
         }
         
         // Upload patent document
@@ -15759,18 +15813,57 @@
             `;
         }
 
-        // Load compliance documents from localStorage
+        // Load compliance documents from localStorage (and sync from DynamoDB on first load)
+        let complianceDocsLoaded = false;
         function getComplianceDocuments() {
             try {
+                // Load from DynamoDB on first access
+                if (!complianceDocsLoaded) {
+                    loadComplianceDocumentsFromAWS();
+                    complianceDocsLoaded = true;
+                }
                 return JSON.parse(localStorage.getItem('oith_compliance_documents') || '{}');
             } catch (e) {
                 return {};
             }
         }
         
-        // Save compliance documents to localStorage
-        function saveComplianceDocuments(docs) {
+        // Save compliance documents to localStorage AND DynamoDB
+        async function saveComplianceDocuments(docs) {
             localStorage.setItem('oith_compliance_documents', JSON.stringify(docs));
+            await saveComplianceDocumentsToAWS(docs);
+        }
+        
+        // Save compliance documents to DynamoDB
+        async function saveComplianceDocumentsToAWS(docs) {
+            try {
+                const response = await fetch(`${AWS_API_URL}/documents/compliance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ documents: docs })
+                });
+                if (response.ok) {
+                    console.log('☁️ Compliance documents synced to AWS');
+                }
+            } catch (error) {
+                console.log('⚠️ Could not sync compliance docs to AWS:', error.message);
+            }
+        }
+        
+        // Load compliance documents from DynamoDB
+        async function loadComplianceDocumentsFromAWS() {
+            try {
+                const response = await fetch(`${AWS_API_URL}/documents/compliance`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.documents && Object.keys(data.documents).length > 0) {
+                        localStorage.setItem('oith_compliance_documents', JSON.stringify(data.documents));
+                        console.log('☁️ Compliance documents loaded from AWS');
+                    }
+                }
+            } catch (error) {
+                console.log('Using local compliance documents');
+            }
         }
         
         // Upload compliance document
@@ -17972,6 +18065,9 @@
             departments: 0,
             companyMetrics: 0,
             investors: 0,
+            // Document entities
+            patentDocs: 0,
+            complianceDocs: 0,
             lastSync: null
         };
         
@@ -18399,6 +18495,53 @@
                         { name: 'notes', type: 'String', description: 'Additional notes' },
                         { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
                     ]
+                },
+                // ========== DOCUMENT ENTITIES ==========
+                {
+                    name: 'PATENT_DOCUMENT',
+                    color: '#0EA5E9',
+                    icon: '📜',
+                    pkPattern: 'DOC#patent',
+                    skPattern: 'PATENT#{patentId}#FILE#{fileId}',
+                    description: 'Patent & IP document uploads',
+                    usedBy: ['manager.html: Patents & IP section'],
+                    category: 'documents',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'DOC#patent', primary: true },
+                        { name: 'sk', type: 'String', example: 'PATENT#PA-2024-001#FILE#123', primary: true },
+                        { name: 'patentId', type: 'String', description: 'Patent application ID' },
+                        { name: 'fileId', type: 'String', description: 'Unique file ID' },
+                        { name: 'fileName', type: 'String', description: 'Original file name' },
+                        { name: 'fileType', type: 'String', description: 'MIME type' },
+                        { name: 'fileSize', type: 'Number', description: 'File size in bytes' },
+                        { name: 'fileData', type: 'String', description: 'Base64 encoded file (up to 400KB)' },
+                        { name: 's3Key', type: 'String', description: 'S3 key for large files' },
+                        { name: 'uploadedBy', type: 'String', description: 'Admin email' },
+                        { name: 'uploadedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'COMPLIANCE_DOCUMENT',
+                    color: '#10B981',
+                    icon: '✅',
+                    pkPattern: 'DOC#compliance',
+                    skPattern: 'ITEM#{itemId}#FILE#{fileId}',
+                    description: 'Legal compliance document uploads',
+                    usedBy: ['manager.html: Compliance section'],
+                    category: 'documents',
+                    attributes: [
+                        { name: 'pk', type: 'String', example: 'DOC#compliance', primary: true },
+                        { name: 'sk', type: 'String', example: 'ITEM#gdpr#FILE#456', primary: true },
+                        { name: 'itemId', type: 'String', description: 'Compliance item ID' },
+                        { name: 'fileId', type: 'String', description: 'Unique file ID' },
+                        { name: 'fileName', type: 'String', description: 'Original file name' },
+                        { name: 'fileType', type: 'String', description: 'MIME type' },
+                        { name: 'fileSize', type: 'Number', description: 'File size in bytes' },
+                        { name: 'fileData', type: 'String', description: 'Base64 encoded file (up to 400KB)' },
+                        { name: 's3Key', type: 'String', description: 'S3 key for large files' },
+                        { name: 'uploadedBy', type: 'String', description: 'Admin email' },
+                        { name: 'uploadedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
                 }
             ],
             accessPatterns: [
@@ -18421,7 +18564,11 @@
                 { name: 'Get all employees', query: 'pk = ORG#employee', category: 'company' },
                 { name: 'Get all departments', query: 'pk = ORG#department', category: 'company' },
                 { name: 'Get company metrics', query: 'pk = ORG#metrics, sk begins_with PERIOD#', category: 'company' },
-                { name: 'Get ML config', query: 'pk = CONFIG, sk = ML#{type}', category: 'config' }
+                { name: 'Get ML config', query: 'pk = CONFIG, sk = ML#{type}', category: 'config' },
+                // Document Patterns
+                { name: 'Get patent documents', query: 'pk = DOC#patent, sk begins_with PATENT#{patentId}', category: 'documents' },
+                { name: 'Get compliance documents', query: 'pk = DOC#compliance, sk begins_with ITEM#{itemId}', category: 'documents' },
+                { name: 'Get all documents by type', query: 'pk = DOC#{type}', category: 'documents' }
             ]
         };
         
@@ -18576,6 +18723,10 @@
             updateEl('dynamoDeptCount', dynamoDBStats.departments || '--');
             updateEl('dynamoCompanyMetricsCount', dynamoDBStats.companyMetrics || '--');
             updateEl('dynamoInvestorCount', dynamoDBStats.investors || '--');
+            
+            // Document counts
+            updateEl('dynamoPatentDocsCount', dynamoDBStats.patentDocs || '--');
+            updateEl('dynamoComplianceDocsCount', dynamoDBStats.complianceDocs || '--');
         }
         
         function renderDynamoDBEntities() {

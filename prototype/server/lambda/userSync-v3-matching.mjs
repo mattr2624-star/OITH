@@ -732,6 +732,84 @@ export const handler = async (event) => {
             };
         }
         
+        // ============ DOCUMENTS (Patents & Compliance) ============
+        
+        // POST /documents/patent - Save patent documents
+        if (method === 'POST' && path.includes('/documents/patent')) {
+            const body = JSON.parse(event.body || '{}');
+            const { documents } = body;
+            
+            if (!documents) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Documents required' }) };
+            }
+            
+            // Store the entire documents object as a single item (for simplicity)
+            // Note: For large files, consider using S3 instead
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'DOC#patent',
+                    sk: 'ALL',
+                    documents: documents,
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            console.log('📜 Patent documents saved to DynamoDB');
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // GET /documents/patent - Get patent documents
+        if (method === 'GET' && path.includes('/documents/patent')) {
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'DOC#patent', sk: 'ALL' }
+            }));
+            
+            return { 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ documents: result.Item?.documents || {} }) 
+            };
+        }
+        
+        // POST /documents/compliance - Save compliance documents
+        if (method === 'POST' && path.includes('/documents/compliance')) {
+            const body = JSON.parse(event.body || '{}');
+            const { documents } = body;
+            
+            if (!documents) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Documents required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'DOC#compliance',
+                    sk: 'ALL',
+                    documents: documents,
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            console.log('✅ Compliance documents saved to DynamoDB');
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // GET /documents/compliance - Get compliance documents
+        if (method === 'GET' && path.includes('/documents/compliance')) {
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'DOC#compliance', sk: 'ALL' }
+            }));
+            
+            return { 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ documents: result.Item?.documents || {} }) 
+            };
+        }
+        
         // ============ SCHEMA STATS ============
         
         // GET /schema/stats - Get DynamoDB table statistics
@@ -763,7 +841,10 @@ export const handler = async (event) => {
                 employees: 0,
                 departments: 0,
                 companyMetrics: 0,
-                investors: 0
+                investors: 0,
+                // Document entities
+                patentDocs: 0,
+                complianceDocs: 0
             };
             
             do {
@@ -798,6 +879,9 @@ export const handler = async (event) => {
                     else if (item.pk === 'ORG#department') stats.departments++;
                     else if (item.pk === 'ORG#metrics') stats.companyMetrics++;
                     else if (item.pk === 'ORG#investor') stats.investors++;
+                    // Document entities
+                    else if (item.pk === 'DOC#patent') stats.patentDocs++;
+                    else if (item.pk === 'DOC#compliance') stats.complianceDocs++;
                 });
                 
                 lastEvaluatedKey = scanResult.LastEvaluatedKey;
