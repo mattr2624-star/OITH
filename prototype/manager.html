@@ -2022,12 +2022,12 @@
                 </div>
                 
                 <!-- Screen Preview Modal -->
-                <div id="screenPreviewModal" class="modal" style="display: none;">
-                    <div class="modal-backdrop" onclick="closeScreenPreview()"></div>
-                    <div class="modal-content" style="width: 420px; max-width: 95vw; height: 85vh; padding: 0; overflow: hidden;">
+                <div id="screenPreviewModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; align-items: center; justify-content: center;">
+                    <div onclick="closeScreenPreview()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7);"></div>
+                    <div style="position: relative; width: 420px; max-width: 95vw; height: 85vh; background: var(--bg-secondary); border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border);">
                             <div>
-                                <h3 id="previewScreenTitle" style="margin: 0; font-size: 1rem;">Screen Preview</h3>
+                                <h3 id="previewScreenTitle" style="margin: 0; font-size: 1rem; color: var(--text-primary);">Screen Preview</h3>
                                 <span id="previewScreenId" style="font-size: 0.75rem; color: var(--text-muted);"></span>
                             </div>
                             <div style="display: flex; gap: 8px;">
@@ -2036,10 +2036,10 @@
                                         <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
                                     </svg>
                                 </button>
-                                <button class="btn btn-secondary btn-sm" onclick="closeScreenPreview()">✕</button>
+                                <button class="btn btn-secondary btn-sm" onclick="closeScreenPreview()" style="font-size: 1.2rem; padding: 4px 10px;">✕</button>
                             </div>
                         </div>
-                        <iframe id="screenPreviewFrame" style="width: 100%; height: calc(100% - 50px); border: none; background: #000;"></iframe>
+                        <iframe id="screenPreviewFrame" style="width: 100%; height: calc(100% - 50px); border: none; background: #1a1a2e;"></iframe>
                     </div>
                 </div>
             </div>
@@ -14902,51 +14902,79 @@
         };
         
         let currentPreviewScreen = '';
+        let flowNodesInitialized = false;
         
         // Initialize click handlers for flow nodes
         function initFlowNodeClicks() {
-            document.querySelectorAll('.flow-node, .tree-node').forEach(node => {
+            const nodes = document.querySelectorAll('.flow-node[data-component], .tree-node[data-component]');
+            console.log(`🔗 Initializing ${nodes.length} clickable flow nodes`);
+            
+            nodes.forEach(node => {
                 const component = node.getAttribute('data-component');
-                if (component) {
+                if (component && !node.hasAttribute('data-click-init')) {
+                    node.setAttribute('data-click-init', 'true');
                     node.style.cursor = 'pointer';
                     node.title = 'Click to preview this screen';
-                    node.addEventListener('click', () => openScreenPreview(component, node));
+                    node.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openScreenPreview(component, node);
+                    };
                 }
             });
+            flowNodesInitialized = true;
         }
         
         function openScreenPreview(component, nodeEl) {
+            console.log('📱 Opening preview for:', component);
             const screenId = screenIdMap[component] || component;
             currentPreviewScreen = screenId;
             
             const pageId = nodeEl?.getAttribute('data-page-id') || '';
             const screenName = nodeEl?.textContent?.trim() || component;
             
-            document.getElementById('previewScreenTitle').textContent = screenName;
-            document.getElementById('previewScreenId').textContent = `Screen ID: ${screenId} | Page: ${pageId}`;
+            const titleEl = document.getElementById('previewScreenTitle');
+            const idEl = document.getElementById('previewScreenId');
+            const frameEl = document.getElementById('screenPreviewFrame');
+            const modalEl = document.getElementById('screenPreviewModal');
             
-            // Load the screen in iframe with query param
-            const previewUrl = `index.html?screen=${screenId}`;
-            document.getElementById('screenPreviewFrame').src = previewUrl;
+            if (titleEl) titleEl.textContent = screenName;
+            if (idEl) idEl.textContent = `Screen ID: ${screenId} | Page: ${pageId}`;
+            
+            // Load the screen in iframe with query param and cache buster
+            const previewUrl = `index.html?screen=${screenId}&t=${Date.now()}`;
+            console.log('📱 Loading URL:', previewUrl);
+            if (frameEl) frameEl.src = previewUrl;
             
             // Show modal
-            document.getElementById('screenPreviewModal').style.display = 'flex';
+            if (modalEl) {
+                modalEl.style.display = 'flex';
+                modalEl.style.opacity = '1';
+                modalEl.style.visibility = 'visible';
+            }
         }
         
         function closeScreenPreview() {
-            document.getElementById('screenPreviewModal').style.display = 'none';
-            document.getElementById('screenPreviewFrame').src = '';
+            const modalEl = document.getElementById('screenPreviewModal');
+            const frameEl = document.getElementById('screenPreviewFrame');
+            if (modalEl) modalEl.style.display = 'none';
+            if (frameEl) frameEl.src = '';
         }
         
         function openPreviewInNewTab() {
             if (currentPreviewScreen) {
-                window.open(`index.html?screen=${currentPreviewScreen}`, '_blank');
+                window.open(`index.html?screen=${currentPreviewScreen}&t=${Date.now()}`, '_blank');
             }
         }
         
-        // Initialize flow node clicks after DOM loads
+        // Initialize flow node clicks after DOM loads and when sections change
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(initFlowNodeClicks, 100);
+            // Initial setup
+            setTimeout(initFlowNodeClicks, 500);
+            
+            // Re-init when overview section is shown
+            setTimeout(initFlowNodeClicks, 1000);
+            setTimeout(initFlowNodeClicks, 2000);
         });
 
         // ==========================================
