@@ -14950,8 +14950,9 @@
             if (titleEl) titleEl.textContent = screenName;
             if (idEl) idEl.textContent = `Screen ID: ${screenId} | Page: ${pageId}`;
             
-            // Load the screen in iframe with query param and cache buster
-            const previewUrl = `index.html?screen=${screenId}&t=${Date.now()}`;
+            // Load the screen in iframe with query param, preview mode flag, and cache buster
+            // preview=true tells index.html to skip all data operations
+            const previewUrl = `index.html?screen=${screenId}&preview=true&t=${Date.now()}`;
             console.log('📱 Loading URL:', previewUrl);
             if (frameEl) frameEl.src = previewUrl;
             
@@ -14972,7 +14973,7 @@
         
         function openPreviewInNewTab() {
             if (currentPreviewScreen) {
-                window.open(`index.html?screen=${currentPreviewScreen}&t=${Date.now()}`, '_blank');
+                window.open(`index.html?screen=${currentPreviewScreen}&preview=true&t=${Date.now()}`, '_blank');
             }
         }
         

@@ -12543,24 +12543,20 @@ async function autoLoadSyncData() {
 // Initialize App
 // ==========================================
 document.addEventListener('DOMContentLoaded', async () => {
-    // Auto-load sync data (test bots & users) if localStorage is empty
-    await autoLoadSyncData();
-    
-    // Fetch AWS users for match pool (so users can match with other AWS users)
-    await fetchAWSUsersForMatchPool();
-    
-    // Seed demo accounts for cross-device access
-    const demoEmails = seedDemoAccounts();
-    // Check if URL has a query parameter for direct screen navigation (used by overview page)
+    // Check if URL has a query parameter for direct screen navigation (used by admin preview)
     const urlParams = new URLSearchParams(window.location.search);
     const screenParam = urlParams.get('screen');
+    const isPreviewMode = urlParams.get('preview') === 'true';
     
     // Also check hash for backwards compatibility
     const urlHash = window.location.hash.substring(1);
     const targetScreen = screenParam || urlHash;
     
-    if (targetScreen && document.getElementById(targetScreen)) {
-        // Direct screen preview mode - just show the screen without loading user data
+    // PREVIEW MODE: Skip ALL data operations when previewing from admin
+    if (isPreviewMode || (targetScreen && document.getElementById(targetScreen))) {
+        console.log('📱 Preview mode - skipping all data operations');
+        
+        // Direct screen preview mode - just show the screen without ANY data operations
         // Hide ALL screens first with inline styles to ensure they're hidden
         document.querySelectorAll('.screen').forEach(s => {
             s.classList.remove('active');
@@ -12571,14 +12567,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Show only the target screen
         const target = document.getElementById(targetScreen);
-        target.classList.add('active');
-        target.style.opacity = '1';
-        target.style.visibility = 'visible';
-        target.style.display = 'flex';
-        target.style.transform = 'translateX(0)';
+        if (target) {
+            target.classList.add('active');
+            target.style.opacity = '1';
+            target.style.visibility = 'visible';
+            target.style.display = 'flex';
+            target.style.transform = 'translateX(0)';
+        }
         
         // For modals, also show them
-        if (targetScreen.includes('modal')) {
+        if (targetScreen && targetScreen.includes('modal')) {
             const modal = document.getElementById(targetScreen);
             if (modal) {
                 modal.classList.add('active');
@@ -12588,11 +12586,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
         
-        // Populate screens with demo data for preview
+        // Populate screens with demo data for preview (but don't save anything)
         populatePreviewData(targetScreen);
         
-        return; // Skip normal initialization
+        return; // Skip normal initialization - NO data sync, NO localStorage changes
     }
+    
+    // NORMAL MODE: Only run data operations when NOT in preview mode
+    // Auto-load sync data (test bots & users) if localStorage is empty
+    await autoLoadSyncData();
+    
+    // Fetch AWS users for match pool (so users can match with other AWS users)
+    await fetchAWSUsersForMatchPool();
+    
+    // Seed demo accounts for cross-device access
+    const demoEmails = seedDemoAccounts();
     
     console.log('═══════════════════════════════════════════');
     console.log('  OITH - One In The Hand');
