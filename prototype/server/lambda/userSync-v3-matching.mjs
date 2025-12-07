@@ -67,12 +67,12 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ success: true, email }) };
         }
         
-        // GET /users - Get all users
+        // GET /users - Get all VISIBLE users (not hidden/matched)
         if (method === 'GET' && path.endsWith('/users')) {
             const result = await docClient.send(new ScanCommand({ 
                 TableName: TABLE_NAME,
-                FilterExpression: 'sk = :sk',
-                ExpressionAttributeValues: { ':sk': 'PROFILE' }
+                FilterExpression: 'sk = :sk AND (attribute_not_exists(isHidden) OR isHidden = :false)',
+                ExpressionAttributeValues: { ':sk': 'PROFILE', ':false': false }
             }));
             
             const users = {};
@@ -86,10 +86,12 @@ export const handler = async (event) => {
                         occupation: item.occupation,
                         photo: item.photo,
                         online: item.online,
+                        isHidden: item.isHidden || false,
                         lastSeen: item.lastSeen
                     };
                 }
             });
+            console.log(`📊 Returning ${Object.keys(users).length} visible users`);
             return { statusCode: 200, headers, body: JSON.stringify(users) };
         }
         
@@ -329,7 +331,23 @@ export const handler = async (event) => {
             const currentUser = userResult.Item;
             const userPrefs = currentUser.preferences || {};
             
-            // Get all other users
+            // Check if current user is hidden (already matched)
+            if (currentUser.isHidden === true) {
+                console.log(`⚠️ User ${userEmail} is already hidden (matched) - skipping auto-match`);
+                return { 
+                    statusCode: 200, 
+                    headers, 
+                    body: JSON.stringify({ 
+                        success: true, 
+                        email: userEmail,
+                        message: 'User already matched - profile hidden',
+                        newMatches: [],
+                        matchCount: 0
+                    }) 
+                };
+            }
+            
+            // Get all other VISIBLE users only (not hidden)
             const allUsersResult = await docClient.send(new ScanCommand({
                 TableName: TABLE_NAME,
                 FilterExpression: 'sk = :sk AND email <> :email AND (attribute_not_exists(isHidden) OR isHidden = :false)',
@@ -339,6 +357,8 @@ export const handler = async (event) => {
                     ':false': false
                 }
             }));
+            
+            console.log(`🔍 Found ${allUsersResult.Items?.length || 0} visible profiles to check`);
             
             const matches = [];
             
