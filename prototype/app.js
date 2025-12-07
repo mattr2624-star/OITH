@@ -7077,6 +7077,7 @@ function continueFromProfileDetails() {
     const exercise = document.getElementById('setupExercise')?.value || '';
     const children = document.getElementById('setupChildren')?.value || '';
     const religion = document.getElementById('setupReligion')?.value || '';
+    const politics = document.getElementById('setupPolitics')?.value || '';
     const bio = document.getElementById('setupBio')?.value || '';
     
     // Validate required fields
@@ -7097,6 +7098,7 @@ function continueFromProfileDetails() {
     appState.user.exercise = exercise;
     appState.user.children = children;
     appState.user.religion = religion;
+    appState.user.politics = politics;
     appState.user.bio = bio;
     
     // Save progress
