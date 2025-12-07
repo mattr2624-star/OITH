@@ -12467,12 +12467,18 @@ const oithSyncChannel = new BroadcastChannel('oith_sync');
 // ==========================================
 oithSyncChannel.addEventListener('message', (event) => {
     // Respond to ping requests immediately (before any other processing)
-    if (event.data && event.data.type === 'ping' && event.data.source === 'admin') {
-        console.log('📡 [EARLY] Ping received from admin, sending pong...');
+    // Check for both 'source' and 'from' since different parts of admin use different property names
+    const isAdminPing = event.data && 
+                        event.data.type === 'ping' && 
+                        (event.data.source === 'admin' || event.data.from === 'admin');
+    
+    if (isAdminPing) {
+        console.log('📡 [EARLY] Ping received from admin, sending pong...', event.data);
         oithSyncChannel.postMessage({
             source: 'app',
             type: 'pong',
             timestamp: Date.now(),
+            originalTimestamp: event.data.timestamp, // Echo back for latency calculation
             appReady: true,
             currentScreen: document.querySelector('.screen.active')?.id || 'unknown'
         });
@@ -12631,13 +12637,14 @@ oithSyncChannel.onmessage = (event) => {
     // Skip messages from self
     if (event.data.source === 'app') return;
     
-    // Respond to ping requests from admin
+    // Respond to ping requests from admin (backup handler - early handler should catch most)
     if (event.data.type === 'ping') {
-        console.log('📡 Ping received from admin, sending pong...');
+        console.log('📡 Ping received from admin (backup handler), sending pong...');
         oithSyncChannel.postMessage({
             source: 'app',
             type: 'pong',
             timestamp: Date.now(),
+            originalTimestamp: event.data.timestamp,
             appReady: true,
             currentScreen: document.querySelector('.screen.active')?.id || 'unknown'
         });
