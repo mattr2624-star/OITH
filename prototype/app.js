@@ -5901,30 +5901,25 @@ function formatExpiry(input) {
  * Process payment and show success screen
  */
 // ==========================================
-// PAYMENT CONFIGURATION - SQUARE
+// PAYMENT CONFIGURATION - SQUARE CHECKOUT
 // ==========================================
 const PAYMENT_CONFIG = {
-    // Square Configuration - Get these from https://developer.squareup.com/apps
-    squareApplicationId: 'sandbox-sq0idb-2-fPVsJ-fUH7bXTHPAc6gw', // Your Square App ID
-    squareLocationId: 'LQG727ZKHH6V7',                 // Your Square Location ID
+    // Square Checkout Link - Create this in your Square Dashboard
+    // Go to: Square Dashboard → Online → Checkout Links → Create Link
+    // Set price to $10.00, name it "OITH Premium Monthly"
+    // After creating, paste the link URL here:
+    squareCheckoutUrl: 'YOUR_SQUARE_CHECKOUT_LINK', // e.g., 'https://square.link/u/XXXXXXXX'
     
-    // Environment: 'sandbox' for testing, 'production' for live payments
-    squareEnvironment: 'sandbox', // Change to 'production' when ready
+    // Redirect URL after successful payment (your app URL + success screen)
+    successRedirectUrl: 'https://main.d3cpep2ztx08x2.amplifyapp.com/prototype/index.html#payment-success',
     
-    // Backend API URL for processing payments (you'll need a server for this)
-    apiUrl: 'https://your-api-endpoint.com/api',
-    
-    // Test mode - set to false when Square is fully configured
+    // Test mode - set to false when checkout link is configured
     testMode: true,
     
     plans: {
         monthly: { price: 10.00, interval: 'month', label: '$10.00/month' }
     }
 };
-
-// Square Web Payments SDK instance
-let squarePayments = null;
-let squareCard = null;
 
 // Selected plan (default to yearly for best value)
 let selectedPlan = 'monthly'; // Default to monthly (only option now)
@@ -6007,11 +6002,11 @@ function selectPlan(planId) {
     console.log(`📋 Selected plan: ${planId}`);
 }
 
-// Initialize payment screen with Square
+// Initialize payment screen with Square Checkout
 async function initPaymentScreen() {
-    // Check if Square is configured
-    const isSquareConfigured = PAYMENT_CONFIG.squareApplicationId && 
-                               !PAYMENT_CONFIG.squareApplicationId.includes('YOUR_');
+    // Check if Square Checkout is configured
+    const isSquareConfigured = PAYMENT_CONFIG.squareCheckoutUrl && 
+                               !PAYMENT_CONFIG.squareCheckoutUrl.includes('YOUR_');
     
     // Show/hide test mode banner
     const testBanner = document.getElementById('testModeBanner');
@@ -6019,55 +6014,37 @@ async function initPaymentScreen() {
         testBanner.style.display = isSquareConfigured ? 'none' : 'block';
     }
     
-    // Show Square container or manual form based on configuration
+    // Hide Square SDK container (not needed for Checkout Links)
     const squareContainer = document.getElementById('square-payment-container');
-    const manualForm = document.getElementById('paymentCardForm');
-    
-    if (isSquareConfigured && typeof Square !== 'undefined') {
-        // Show Square payment, hide manual form
-        if (squareContainer) squareContainer.style.display = 'block';
-        if (manualForm) manualForm.style.display = 'none';
-        
-        // Initialize Square SDK
-        await initializeSquarePayments();
-    } else {
-        // Show manual form, hide Square container
-        if (squareContainer) squareContainer.style.display = 'none';
-        if (manualForm) manualForm.style.display = 'block';
-    }
+    if (squareContainer) squareContainer.style.display = 'none';
     
     // Select default plan
     selectPlan('monthly');
     
-    console.log(`💳 Payment initialized - Mode: ${isSquareConfigured ? 'SQUARE' : 'TEST'}`);
+    console.log(`💳 Payment initialized - Mode: ${isSquareConfigured ? 'SQUARE CHECKOUT' : 'TEST'}`);
 }
 
-// Initialize Square Web Payments SDK
-async function initializeSquarePayments() {
-    try {
-        if (!window.Square) {
-            console.warn('⚠️ Square SDK not loaded');
-            return;
-        }
-        
-        squarePayments = window.Square.payments(
-            PAYMENT_CONFIG.squareApplicationId,
-            PAYMENT_CONFIG.squareLocationId
-        );
-        
-        // Create card payment method
-        squareCard = await squarePayments.card();
-        
-        // Attach to the container (we'll show this when needed)
-        const container = document.getElementById('square-card-container');
-        if (container) {
-            await squareCard.attach('#square-card-container');
-        }
-        
-        console.log('✅ Square Payments initialized');
-    } catch (error) {
-        console.error('❌ Square initialization error:', error);
+// Redirect to Square Checkout
+function redirectToSquareCheckout() {
+    const checkoutUrl = PAYMENT_CONFIG.squareCheckoutUrl;
+    
+    if (!checkoutUrl || checkoutUrl.includes('YOUR_')) {
+        showToast('Payment not configured yet', 'error');
+        return;
     }
+    
+    // Save pending payment state
+    appState.user.pendingPayment = {
+        startedAt: new Date().toISOString(),
+        plan: selectedPlan,
+        amount: PAYMENT_CONFIG.plans[selectedPlan].price
+    };
+    saveUserData();
+    
+    console.log('💳 Redirecting to Square Checkout...');
+    
+    // Redirect to Square hosted checkout
+    window.location.href = checkoutUrl;
 }
 
 // Process payment from the payment details form
@@ -6098,13 +6075,14 @@ async function processPayment(event) {
     if (processingView) processingView.style.display = 'block';
     
     try {
-        // Check if Square is configured
-        const isSquareConfigured = PAYMENT_CONFIG.squareApplicationId && 
-                                   !PAYMENT_CONFIG.squareApplicationId.includes('YOUR_');
+        // Check if Square Checkout is configured
+        const isSquareConfigured = PAYMENT_CONFIG.squareCheckoutUrl && 
+                                   !PAYMENT_CONFIG.squareCheckoutUrl.includes('YOUR_');
         
-        if (isSquareConfigured && squareCard) {
-            // Use Square Payment
-            await processSquarePayment();
+        if (isSquareConfigured) {
+            // Redirect to Square Checkout
+            redirectToSquareCheckout();
+            return; // Don't continue - we're redirecting
         } else {
             // Use test mode - simulate payment
             await simulateTestPayment();
@@ -6128,66 +6106,75 @@ async function processPayment(event) {
     }
 }
 
-// Process payment with Square
-async function processSquarePayment() {
-    try {
-        console.log('💳 Processing Square payment...');
-        
-        // Tokenize the card
-        const tokenResult = await squareCard.tokenize();
-        
-        if (tokenResult.status === 'OK') {
-            const token = tokenResult.token;
-            console.log('✅ Card tokenized:', token.substring(0, 20) + '...');
-            
-            // Send token to your backend to create the payment
-            const response = await fetch(`${PAYMENT_CONFIG.apiUrl}/square/create-payment`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sourceId: token,
-                    amount: PAYMENT_CONFIG.plans[selectedPlan].price * 100, // Amount in cents
-                    currency: 'USD',
-                    email: appState.user?.email || '',
-                    userId: appState.user?.id || 'unknown',
-                    plan: selectedPlan
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            
-            // Payment successful
-            await handlePaymentSuccess(data);
-            
-        } else {
-            // Tokenization failed
-            let errorMessage = 'Card validation failed';
-            if (tokenResult.errors) {
-                errorMessage = tokenResult.errors.map(e => e.message).join(', ');
-            }
-            throw new Error(errorMessage);
-        }
-    } catch (error) {
-        throw error;
+// Check if user is returning from Square Checkout
+function checkSquarePaymentReturn() {
+    const urlHash = window.location.hash;
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Check for payment success indicators
+    // Square may add query params or you can use a specific hash
+    if (urlHash === '#payment-success' || urlParams.get('payment') === 'success') {
+        console.log('✅ User returned from Square Checkout - Payment successful!');
+        handlePaymentSuccess();
+        return true;
     }
+    
+    // Check if user has a pending payment that was completed
+    if (appState.user?.pendingPayment) {
+        const pendingTime = new Date(appState.user.pendingPayment.startedAt);
+        const now = new Date();
+        const minutesSincePending = (now - pendingTime) / (1000 * 60);
+        
+        // If they started payment less than 30 mins ago and are back, assume success
+        // In production, you'd verify this with Square API via webhook
+        if (minutesSincePending < 30 && urlHash === '#payment-success') {
+            handlePaymentSuccess();
+            return true;
+        }
+    }
+    
+    return false;
 }
 
-// Handle successful payment
-async function handlePaymentSuccess(paymentData) {
-    console.log('✅ Payment successful:', paymentData);
+// Handle successful payment (from Square Checkout return)
+function handlePaymentSuccess() {
+    console.log('✅ Processing successful payment...');
     
     // Calculate billing dates
-    const plan = PAYMENT_CONFIG.plans[selectedPlan];
+    const plan = PAYMENT_CONFIG.plans['monthly'];
     const nextBilling = new Date();
     nextBilling.setMonth(nextBilling.getMonth() + 1);
     
-    // Show success view
-    document.getElementById('paymentProcessingView').style.display = 'none';
-    document.getElementById('paymentSuccessView').style.display = 'block';
+    // Update subscription status
+    appState.user.subscription = {
+        type: 'premium',
+        plan: 'monthly',
+        status: 'active',
+        startDate: new Date().toISOString(),
+        nextBillingDate: nextBilling.toISOString(),
+        amount: plan.price,
+        provider: 'square'
+    };
+    
+    // Clear pending payment
+    delete appState.user.pendingPayment;
+    
+    // Save user data
+    saveUserData();
+    
+    // Show success screen
+    showScreen('payment');
+    
+    // Hide other views, show success
+    const formView = document.getElementById('paymentFormView');
+    const detailsView = document.getElementById('paymentDetailsView');
+    const processingView = document.getElementById('paymentProcessingView');
+    const successView = document.getElementById('paymentSuccessView');
+    
+    if (formView) formView.style.display = 'none';
+    if (detailsView) detailsView.style.display = 'none';
+    if (processingView) processingView.style.display = 'none';
+    if (successView) successView.style.display = 'block';
     
     // Update next billing date display
     const nextBillingEl = document.getElementById('nextBillingDate');
@@ -6199,22 +6186,10 @@ async function handlePaymentSuccess(paymentData) {
         });
     }
     
-    // Update subscription status
-    appState.user.subscription = {
-        type: 'premium',
-        plan: selectedPlan,
-        status: 'active',
-        startDate: new Date().toISOString(),
-        nextBillingDate: nextBilling.toISOString(),
-        amount: plan.price,
-        paymentId: paymentData.paymentId || null,
-        provider: 'square'
-    };
-    
-    // Save user data
-    saveUserData();
-    
     showToast('🎉 Welcome to OITH Premium!', 'success');
+    
+    // Clean up URL
+    history.replaceState(null, '', window.location.pathname);
 }
 
 // Simulate test payment (development mode)
@@ -12733,6 +12708,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Try to load saved user data
     const hasData = loadUserData();
+    
+    // Check if returning from Square Checkout payment
+    if (checkSquarePaymentReturn()) {
+        return; // Payment success screen will be shown
+    }
     
     // Add smooth scroll behavior
     document.querySelectorAll('.screen').forEach(screen => {

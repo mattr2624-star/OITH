@@ -35,9 +35,6 @@
             }
         })();
     </script>
-    <!-- Square Web Payments SDK -->
-    <script src="https://sandbox.web.squarecdn.com/v1/square.js"></script>
-    <!-- For production, change to: https://web.squarecdn.com/v1/square.js -->
 </head>
 <body>
     <div class="phone-frame">
@@ -679,18 +676,7 @@
                         </div>
                     </div>
                     
-                    <!-- Square Card Container (for live payments) -->
-                    <div id="square-payment-container" style="display: none;">
-                        <div class="form-group" style="margin-bottom: 16px;">
-                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Card Details</label>
-                            <div id="square-card-container" style="min-height: 90px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 12px;"></div>
-                        </div>
-                        <button type="button" class="btn btn-primary" onclick="processSquarePayment()" style="width: 100%; padding: 16px; font-size: 1rem; font-weight: 600;">
-                            Pay $10.00 & Subscribe
-                        </button>
-                    </div>
-                    
-                    <!-- Manual Card Form (for test mode) -->
+                    <!-- Card Details Form (test mode) or redirects to Square Checkout (live) -->
                     <form id="paymentCardForm" onsubmit="processPayment(event)">
                         <div class="form-group" style="margin-bottom: 16px;">
                             <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Cardholder Name</label>
