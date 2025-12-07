@@ -1585,6 +1585,16 @@
                     Payroll
                     <span class="nav-badge" style="background: var(--success)">NEW</span>
                 </div>
+                <div class="nav-item" onclick="showSection('tax')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="12" y1="18" x2="12" y2="12"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
+                    Tax
+                    <span class="nav-badge" style="background: var(--warning)">NEW</span>
+                </div>
             </div>
 
             <!-- USER APP / INDEX SECTION -->
@@ -4457,6 +4467,114 @@
                         <h3 class="card-title">👥 Employee Compensation</h3>
                     </div>
                     <div class="card-body" id="employeeCompensation">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tax Section -->
+            <div id="tax-section" style="display: none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">📋 Tax Requirements & Compliance</h2>
+                        <p class="page-subtitle">Federal, state, and local tax obligations for OITH</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="exportTaxChecklist()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            Export Checklist
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Current Status Banner -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--warning); background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.02));">
+                    <div class="card-body" style="display: flex; align-items: center; gap: 16px;">
+                        <div style="font-size: 2.5rem;">⏳</div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem; color: var(--warning);">Current Status: Pre-LLC Formation</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px;">
+                                2 employees • LLC application pending • No revenue yet
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tax Summary Stats -->
+                <div class="stats-grid" style="margin-bottom: 20px;">
+                    <div class="stat-card" style="border-color: var(--warning);">
+                        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--warning);">📅</div>
+                        <div class="stat-value" style="color: var(--warning);" id="nextTaxDeadline">Q4 Est.</div>
+                        <div class="stat-label">Next Tax Deadline</div>
+                    </div>
+                    <div class="stat-card" style="border-color: var(--info);">
+                        <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: var(--info);">📋</div>
+                        <div class="stat-value" id="taxFormsRequired">4</div>
+                        <div class="stat-label">Forms Required</div>
+                    </div>
+                    <div class="stat-card" style="border-color: var(--success);">
+                        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">✅</div>
+                        <div class="stat-value" id="taxTasksCompleted">0/12</div>
+                        <div class="stat-label">Tasks Completed</div>
+                    </div>
+                    <div class="stat-card" style="border-color: var(--danger);">
+                        <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2); color: var(--danger);">⚠️</div>
+                        <div class="stat-value" id="taxUrgentItems">3</div>
+                        <div class="stat-label">Urgent Items</div>
+                    </div>
+                </div>
+
+                <!-- Phase 1: Pre-LLC (Current Stage) -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--warning);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));">
+                        <h3 class="card-title">📍 PHASE 1: Pre-LLC Formation (Current Stage)</h3>
+                        <span class="status-badge" style="background: var(--warning);">IN PROGRESS</span>
+                    </div>
+                    <div class="card-body" id="taxPhase1Content">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Phase 2: Post-LLC Formation -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--info);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));">
+                        <h3 class="card-title">📋 PHASE 2: Post-LLC Formation</h3>
+                        <span class="status-badge" style="background: var(--info);">UPCOMING</span>
+                    </div>
+                    <div class="card-body" id="taxPhase2Content">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Phase 3: Revenue Generation -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--success);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));">
+                        <h3 class="card-title">💰 PHASE 3: Revenue & Operations</h3>
+                        <span class="status-badge" style="background: var(--success);">FUTURE</span>
+                    </div>
+                    <div class="card-body" id="taxPhase3Content">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Key Tax Deadlines -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">📅 Key Tax Deadlines</h3>
+                    </div>
+                    <div class="card-body" id="taxDeadlinesContent">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Recommended Tax Professionals -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">👤 Recommended Actions</h3>
+                    </div>
+                    <div class="card-body" id="taxRecommendationsContent">
                         <!-- Populated by JS -->
                     </div>
                 </div>
@@ -7720,6 +7838,7 @@
                 case 'experiments': renderExperiments(); break;
                 case 'org-hierarchy': renderOrgHierarchy(); break;
                 case 'payroll': renderPayroll(); break;
+                case 'tax': renderTax(); break;
                 default: renderDashboard();
             }
             
@@ -7803,6 +7922,7 @@
                 case 'experiments': renderExperiments(); break;
                 case 'org-hierarchy': renderOrgHierarchy(); break;
                 case 'payroll': renderPayroll(); break;
+                case 'tax': renderTax(); break;
                 case 'diagnostics': renderDiagnostics(); break;
                 case 'site-diagnostics': renderSiteDiagnostics(); break;
             }
@@ -18383,6 +18503,561 @@
             URL.revokeObjectURL(url);
             
             showToast('📥 Payroll report exported', 'success');
+        }
+
+        // ==========================================
+        // TAX REQUIREMENTS & COMPLIANCE
+        // ==========================================
+        
+        // Tax data storage
+        let taxData = {
+            currentPhase: 1,
+            tasksCompleted: [],
+            lastUpdated: null
+        };
+        
+        function loadTaxData() {
+            const saved = localStorage.getItem('oith_tax_data');
+            if (saved) {
+                taxData = JSON.parse(saved);
+            }
+        }
+        
+        function saveTaxData() {
+            taxData.lastUpdated = new Date().toISOString();
+            localStorage.setItem('oith_tax_data', JSON.stringify(taxData));
+        }
+        
+        function toggleTaxTask(taskId) {
+            loadTaxData();
+            if (taxData.tasksCompleted.includes(taskId)) {
+                taxData.tasksCompleted = taxData.tasksCompleted.filter(t => t !== taskId);
+            } else {
+                taxData.tasksCompleted.push(taskId);
+            }
+            saveTaxData();
+            renderTax();
+        }
+        
+        function renderTax() {
+            loadTaxData();
+            
+            // Phase 1: Pre-LLC Formation Requirements
+            const phase1Requirements = [
+                {
+                    id: 'p1_1',
+                    title: 'Personal Tax Implications for Founders',
+                    description: 'Until LLC is formed, any business income/expenses flow through personal tax returns',
+                    urgency: 'info',
+                    icon: '👤',
+                    details: [
+                        'Track all business expenses with receipts (deductible on Schedule C)',
+                        'Document any personal funds invested as "owner contributions"',
+                        'Keep separate records even without separate bank account yet'
+                    ]
+                },
+                {
+                    id: 'p1_2',
+                    title: 'Prepare for EIN Application',
+                    description: 'Required immediately after LLC approval - cannot hire or open business bank account without it',
+                    urgency: 'warning',
+                    icon: '🔑',
+                    details: [
+                        'IRS Form SS-4 (free, online at IRS.gov)',
+                        'Need: LLC name, address, responsible party SSN',
+                        'Apply online for instant EIN or fax/mail (4-6 weeks)',
+                        'OITH will need this before issuing any W-2s or 1099s'
+                    ]
+                },
+                {
+                    id: 'p1_3',
+                    title: 'Document Pre-Formation Expenses',
+                    description: 'Startup costs incurred before LLC formation can be deducted',
+                    urgency: 'success',
+                    icon: '📝',
+                    details: [
+                        'Legal fees (LLC filing, operating agreement)',
+                        'Software subscriptions (development tools, AWS)',
+                        'Market research and business planning',
+                        'Up to $5,000 deductible in first year, remainder amortized over 180 months'
+                    ]
+                },
+                {
+                    id: 'p1_4',
+                    title: 'Classify Worker Relationships',
+                    description: '2 current team members - establish proper classification NOW',
+                    urgency: 'danger',
+                    icon: '⚠️',
+                    details: [
+                        'IRS has strict rules on Employee vs. Contractor',
+                        'Founders working full-time = likely employees (once LLC formed)',
+                        'Misclassification penalties: back taxes + 100% of unpaid employment taxes',
+                        'Document roles, hours, and control factors'
+                    ]
+                },
+                {
+                    id: 'p1_5',
+                    title: 'Choose Tax Classification for LLC',
+                    description: 'Multi-member LLC defaults to partnership taxation - consider alternatives',
+                    urgency: 'info',
+                    icon: '📋',
+                    details: [
+                        '<strong>Default (Partnership):</strong> Income passes through to members proportionally',
+                        '<strong>S-Corp Election (Form 2553):</strong> Potential self-employment tax savings',
+                        '<strong>C-Corp Election:</strong> Only if planning significant VC funding',
+                        'Consult CPA before making election - difficult to change later'
+                    ]
+                }
+            ];
+            
+            // Phase 2: Post-LLC Formation Requirements
+            const phase2Requirements = [
+                {
+                    id: 'p2_1',
+                    title: 'Obtain EIN (Employer Identification Number)',
+                    description: 'Apply immediately after LLC is approved',
+                    urgency: 'danger',
+                    icon: '🏛️',
+                    details: [
+                        'Required for: opening business bank account, hiring, filing taxes',
+                        'Free to obtain at irs.gov/ein',
+                        'Takes minutes online, instant issuance',
+                        'Keep EIN letter in permanent records'
+                    ],
+                    deadline: 'Within 1 week of LLC approval'
+                },
+                {
+                    id: 'p2_2',
+                    title: 'Register with Ohio Department of Taxation',
+                    description: 'State employer registration required if paying wages',
+                    urgency: 'warning',
+                    icon: '🗂️',
+                    details: [
+                        'Ohio IT 1 (Employer\'s Withholding Registration)',
+                        'Ohio Commercial Activity Tax (CAT) - if gross receipts > $150,000',
+                        'Sales Tax Registration - if selling taxable goods/services',
+                        'Register at tax.ohio.gov'
+                    ],
+                    deadline: 'Before first payroll'
+                },
+                {
+                    id: 'p2_3',
+                    title: 'Ohio Unemployment Tax (SUTA)',
+                    description: 'Required for all Ohio employers',
+                    urgency: 'warning',
+                    icon: '📊',
+                    details: [
+                        'Register with Ohio Department of Job & Family Services',
+                        'New employer rate: 2.7% on first $9,000 of each employee\'s wages',
+                        'File Form JFS-20125 quarterly',
+                        'Due dates: 4/30, 7/31, 10/31, 1/31'
+                    ],
+                    deadline: 'Before first payroll'
+                },
+                {
+                    id: 'p2_4',
+                    title: 'Federal Unemployment Tax (FUTA)',
+                    description: 'IRS Form 940 - Annual federal unemployment tax',
+                    urgency: 'info',
+                    icon: '📑',
+                    details: [
+                        '6.0% on first $7,000 of each employee\'s wages',
+                        'Credit up to 5.4% for paying state unemployment tax',
+                        'Net rate typically 0.6% ($42/employee/year)',
+                        'File Form 940 annually by January 31'
+                    ],
+                    deadline: 'Annual - January 31'
+                },
+                {
+                    id: 'p2_5',
+                    title: 'Set Up Payroll Tax Withholding',
+                    description: 'Must withhold and deposit employee taxes',
+                    urgency: 'danger',
+                    icon: '💰',
+                    details: [
+                        '<strong>Federal:</strong> Income tax, Social Security (6.2%), Medicare (1.45%)',
+                        '<strong>Ohio:</strong> State income tax withholding',
+                        '<strong>Local:</strong> Many Ohio cities have income tax (verify for your location)',
+                        'Deposits: Semi-weekly or monthly depending on liability amount',
+                        'Form 941 filed quarterly to IRS'
+                    ],
+                    deadline: 'Before first payroll'
+                },
+                {
+                    id: 'p2_6',
+                    title: 'Workers\' Compensation Insurance',
+                    description: 'Ohio BWC - Required for all Ohio employers',
+                    urgency: 'warning',
+                    icon: '🛡️',
+                    details: [
+                        'Register with Ohio Bureau of Workers\' Compensation',
+                        'Rates vary by classification (software/office work = low risk)',
+                        'Premium based on payroll amount',
+                        'Can elect to be a self-insuring employer (advanced)'
+                    ],
+                    deadline: 'Before first payroll'
+                },
+                {
+                    id: 'p2_7',
+                    title: 'Open Business Bank Account',
+                    description: 'Separate business finances from personal',
+                    urgency: 'success',
+                    icon: '🏦',
+                    details: [
+                        'Requires: EIN, LLC formation documents, Operating Agreement',
+                        'Maintains "corporate veil" protection',
+                        'Makes accounting and tax prep much easier',
+                        'Consider: checking, savings, and business credit card'
+                    ],
+                    deadline: 'Week 1 after EIN received'
+                }
+            ];
+            
+            // Phase 3: Revenue & Operations Requirements
+            const phase3Requirements = [
+                {
+                    id: 'p3_1',
+                    title: 'Quarterly Estimated Tax Payments',
+                    description: 'Once profitable, must pay taxes quarterly to avoid penalties',
+                    urgency: 'warning',
+                    icon: '📅',
+                    details: [
+                        'IRS Form 1040-ES (individual) or entity-level payments',
+                        'Due: April 15, June 15, September 15, January 15',
+                        'Pay 100% of prior year tax OR 90% of current year to avoid penalty',
+                        'Ohio estimated payments also required'
+                    ]
+                },
+                {
+                    id: 'p3_2',
+                    title: 'Ohio Commercial Activity Tax (CAT)',
+                    description: 'Applies to businesses with Ohio gross receipts',
+                    urgency: 'info',
+                    icon: '🏢',
+                    details: [
+                        '<strong>Under $150,000:</strong> No CAT due, but must still register if required',
+                        '<strong>$150,000 - $1M:</strong> Minimum tax of $150/year',
+                        '<strong>Over $1M:</strong> 0.26% on gross receipts over $1M',
+                        'Filed quarterly (calendar year filers)'
+                    ]
+                },
+                {
+                    id: 'p3_3',
+                    title: 'Sales Tax Collection (If Applicable)',
+                    description: 'Ohio sales tax on tangible goods and some services',
+                    urgency: 'info',
+                    icon: '🧾',
+                    details: [
+                        'SaaS subscriptions generally NOT taxable in Ohio (as of 2024)',
+                        'Physical goods, certain digital products ARE taxable',
+                        'If taxable: Register, collect 5.75% state + local rates',
+                        'File monthly, quarterly, or semi-annually based on liability'
+                    ]
+                },
+                {
+                    id: 'p3_4',
+                    title: 'Annual LLC Return / K-1s',
+                    description: 'Partnership/LLC tax reporting requirements',
+                    urgency: 'warning',
+                    icon: '📊',
+                    details: [
+                        '<strong>Form 1065:</strong> Partnership Return (due March 15)',
+                        '<strong>Schedule K-1:</strong> Issued to each member showing their share',
+                        'Members report K-1 income on personal returns',
+                        'Late filing penalty: $220/month per partner'
+                    ]
+                },
+                {
+                    id: 'p3_5',
+                    title: 'Payroll Tax Compliance (Ongoing)',
+                    description: 'Recurring payroll tax obligations',
+                    urgency: 'danger',
+                    icon: '📋',
+                    details: [
+                        '<strong>Form 941:</strong> Quarterly federal payroll tax return',
+                        '<strong>W-2s:</strong> Issued to employees by January 31',
+                        '<strong>W-3:</strong> Summary filed with SSA by January 31',
+                        '<strong>1099-NEC:</strong> For contractors paid $600+ (due January 31)'
+                    ]
+                },
+                {
+                    id: 'p3_6',
+                    title: 'R&D Tax Credit',
+                    description: 'Federal credit for qualified research expenses',
+                    urgency: 'success',
+                    icon: '💡',
+                    details: [
+                        'Software development often qualifies!',
+                        'Credit up to 20% of qualified research expenses',
+                        'Startups can offset payroll taxes (up to $250K/year for 5 years)',
+                        'Document: developer time, experimentation, technical uncertainty'
+                    ]
+                },
+                {
+                    id: 'p3_7',
+                    title: 'Section 1202 QSBS Exclusion',
+                    description: 'Potential tax-free gains on stock sale',
+                    urgency: 'success',
+                    icon: '🎯',
+                    details: [
+                        'Exclude up to 100% of capital gains on qualifying small business stock',
+                        'Requirements: C-Corp, held 5+ years, active business, under $50M assets',
+                        'Relevant if planning to convert to C-Corp for VC funding',
+                        'Worth discussing with CPA if planning equity fundraising'
+                    ]
+                }
+            ];
+            
+            // Key Tax Deadlines
+            const taxDeadlines = [
+                { date: 'Upon LLC Approval', task: 'Apply for EIN', status: 'pending', phase: 2 },
+                { date: 'Before 1st Payroll', task: 'Register with Ohio Dept of Taxation & BWC', status: 'pending', phase: 2 },
+                { date: 'January 31', task: 'W-2s to employees, 1099s to contractors', status: 'annual', phase: 3 },
+                { date: 'January 31', task: 'Form 940 (FUTA) annual filing', status: 'annual', phase: 3 },
+                { date: 'March 15', task: 'Form 1065 Partnership Return (or extension)', status: 'annual', phase: 3 },
+                { date: 'April 15', task: 'Q1 estimated taxes (federal & state)', status: 'quarterly', phase: 3 },
+                { date: 'April 30', task: 'Q1 Form 941 & Ohio unemployment', status: 'quarterly', phase: 3 },
+                { date: 'June 15', task: 'Q2 estimated taxes', status: 'quarterly', phase: 3 },
+                { date: 'July 31', task: 'Q2 Form 941 & Ohio unemployment', status: 'quarterly', phase: 3 },
+                { date: 'September 15', task: 'Q3 estimated taxes', status: 'quarterly', phase: 3 },
+                { date: 'October 31', task: 'Q3 Form 941 & Ohio unemployment', status: 'quarterly', phase: 3 },
+                { date: 'January 15', task: 'Q4 estimated taxes', status: 'quarterly', phase: 3 },
+                { date: 'January 31', task: 'Q4 Form 941 & Ohio unemployment', status: 'quarterly', phase: 3 }
+            ];
+            
+            // Update summary stats
+            const totalTasks = phase1Requirements.length + phase2Requirements.length + phase3Requirements.length;
+            const completedCount = taxData.tasksCompleted.length;
+            document.getElementById('taxTasksCompleted').textContent = `${completedCount}/${totalTasks}`;
+            
+            // Count urgent items (danger level not completed)
+            const urgentItems = [...phase1Requirements, ...phase2Requirements].filter(r => r.urgency === 'danger' && !taxData.tasksCompleted.includes(r.id)).length;
+            document.getElementById('taxUrgentItems').textContent = urgentItems;
+            
+            // Render Phase 1
+            document.getElementById('taxPhase1Content').innerHTML = renderTaxRequirementsList(phase1Requirements);
+            
+            // Render Phase 2
+            document.getElementById('taxPhase2Content').innerHTML = renderTaxRequirementsList(phase2Requirements);
+            
+            // Render Phase 3
+            document.getElementById('taxPhase3Content').innerHTML = renderTaxRequirementsList(phase3Requirements);
+            
+            // Render Deadlines
+            document.getElementById('taxDeadlinesContent').innerHTML = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border);">
+                                <th style="padding: 12px; text-align: left; font-size: 0.8rem; color: var(--text-muted);">Deadline</th>
+                                <th style="padding: 12px; text-align: left; font-size: 0.8rem; color: var(--text-muted);">Task</th>
+                                <th style="padding: 12px; text-align: center; font-size: 0.8rem; color: var(--text-muted);">Frequency</th>
+                                <th style="padding: 12px; text-align: center; font-size: 0.8rem; color: var(--text-muted);">Phase</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${taxDeadlines.map(d => `
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 12px; font-weight: 600;">${d.date}</td>
+                                    <td style="padding: 12px;">${d.task}</td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        <span style="padding: 4px 10px; background: ${d.status === 'pending' ? 'var(--warning)' : d.status === 'annual' ? 'var(--info)' : 'var(--purple)'}20; color: ${d.status === 'pending' ? 'var(--warning)' : d.status === 'annual' ? 'var(--info)' : 'var(--purple)'}; border-radius: 12px; font-size: 0.75rem; text-transform: capitalize;">
+                                            ${d.status}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        <span style="padding: 4px 10px; background: var(--bg-secondary); border-radius: 12px; font-size: 0.75rem;">
+                                            Phase ${d.phase}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            // Render Recommendations
+            document.getElementById('taxRecommendationsContent').innerHTML = `
+                <div style="display: grid; gap: 16px;">
+                    <div style="padding: 20px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.02)); border-radius: 12px; border-left: 4px solid var(--danger);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <span style="font-size: 1.5rem;">🚨</span>
+                            <div>
+                                <h4 style="margin: 0 0 8px; color: var(--danger);">IMMEDIATE: Hire a CPA</h4>
+                                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                                    Before LLC formation completes, consult with a CPA experienced with startups. They can advise on:
+                                    tax entity election (LLC vs S-Corp vs C-Corp), Ohio-specific requirements, and help set up proper
+                                    accounting systems from day one. Cost: $200-500 for initial consultation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 20px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.02)); border-radius: 12px; border-left: 4px solid var(--warning);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <span style="font-size: 1.5rem;">📊</span>
+                            <div>
+                                <h4 style="margin: 0 0 8px; color: var(--warning);">Set Up Accounting Software</h4>
+                                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                                    Use QuickBooks Online, Xero, or Wave (free) to track all income and expenses from day one.
+                                    Categories needed: Software/SaaS, Legal, Professional Services, Marketing, Payroll.
+                                    Connect to business bank account for automatic transaction import.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 20px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.02)); border-radius: 12px; border-left: 4px solid var(--info);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <span style="font-size: 1.5rem;">📁</span>
+                            <div>
+                                <h4 style="margin: 0 0 8px; color: var(--info);">Document Everything NOW</h4>
+                                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                                    Even before LLC is formed, keep records of: hours worked by founders, money invested, 
+                                    expenses paid (save all receipts), decisions made about equity splits.
+                                    This protects you legally and maximizes deductions.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="padding: 20px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.02)); border-radius: 12px; border-left: 4px solid var(--success);">
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <span style="font-size: 1.5rem;">💡</span>
+                            <div>
+                                <h4 style="margin: 0 0 8px; color: var(--success);">Consider Payroll Service</h4>
+                                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                                    For 2 employees, a payroll service like Gusto ($40/mo + $6/employee) handles all withholding,
+                                    deposits, and filings automatically. Worth it to avoid penalties from missed deadlines.
+                                    Many also offer HR features, benefits administration, and contractor payments.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 24px; padding: 20px; background: var(--bg-tertiary); border-radius: 12px;">
+                    <h4 style="margin: 0 0 12px;">📚 Helpful Resources</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        <a href="https://www.irs.gov/businesses/small-businesses-self-employed/apply-for-an-employer-identification-number-ein-online" target="_blank" style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-decoration: none; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                            <span>🏛️</span> IRS EIN Application
+                        </a>
+                        <a href="https://tax.ohio.gov/business" target="_blank" style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-decoration: none; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                            <span>📋</span> Ohio Business Taxes
+                        </a>
+                        <a href="https://jfs.ohio.gov/unemployment" target="_blank" style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-decoration: none; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                            <span>📊</span> Ohio Unemployment (SUTA)
+                        </a>
+                        <a href="https://www.bwc.ohio.gov/" target="_blank" style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-decoration: none; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+                            <span>🛡️</span> Ohio Workers' Comp
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderTaxRequirementsList(requirements) {
+            return `
+                <div style="display: grid; gap: 16px;">
+                    ${requirements.map(req => {
+                        const isCompleted = taxData.tasksCompleted.includes(req.id);
+                        const urgencyColors = {
+                            danger: 'var(--danger)',
+                            warning: 'var(--warning)',
+                            info: 'var(--info)',
+                            success: 'var(--success)'
+                        };
+                        const color = urgencyColors[req.urgency] || 'var(--accent)';
+                        
+                        return `
+                            <div style="padding: 20px; background: ${isCompleted ? 'var(--bg-tertiary)' : `linear-gradient(135deg, ${color}10, ${color}02)`}; border-radius: 12px; border-left: 4px solid ${isCompleted ? 'var(--success)' : color}; opacity: ${isCompleted ? '0.7' : '1'};">
+                                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                    <label style="cursor: pointer; display: flex; align-items: center;">
+                                        <input type="checkbox" ${isCompleted ? 'checked' : ''} onchange="toggleTaxTask('${req.id}')" 
+                                               style="width: 20px; height: 20px; accent-color: var(--success); cursor: pointer;">
+                                    </label>
+                                    <span style="font-size: 1.5rem;">${req.icon}</span>
+                                    <div style="flex: 1;">
+                                        <h4 style="margin: 0 0 4px; ${isCompleted ? 'text-decoration: line-through;' : ''}">${req.title}</h4>
+                                        <p style="margin: 0 0 12px; font-size: 0.9rem; color: var(--text-secondary);">${req.description}</p>
+                                        ${req.deadline ? `<div style="font-size: 0.8rem; color: ${color}; font-weight: 600; margin-bottom: 8px;">📅 ${req.deadline}</div>` : ''}
+                                        <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--text-muted);">
+                                            ${req.details.map(d => `<li style="margin-bottom: 4px;">${d}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                    ${!isCompleted ? `
+                                        <span style="padding: 4px 10px; background: ${color}20; color: ${color}; border-radius: 12px; font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">
+                                            ${req.urgency === 'danger' ? 'Critical' : req.urgency === 'warning' ? 'Important' : req.urgency === 'success' ? 'Beneficial' : 'Info'}
+                                        </span>
+                                    ` : `
+                                        <span style="padding: 4px 10px; background: var(--success)20; color: var(--success); border-radius: 12px; font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">
+                                            ✓ Done
+                                        </span>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+        
+        function exportTaxChecklist() {
+            loadTaxData();
+            
+            const checklist = {
+                exportDate: new Date().toISOString(),
+                company: 'OITH (On In The Hills, LLC)',
+                currentPhase: 'Pre-LLC Formation',
+                status: {
+                    employees: 2,
+                    llcStatus: 'Application Pending',
+                    einStatus: 'Not Yet Applied'
+                },
+                phase1_preLLC: [
+                    { task: 'Track personal tax implications', completed: taxData.tasksCompleted.includes('p1_1') },
+                    { task: 'Prepare for EIN application', completed: taxData.tasksCompleted.includes('p1_2') },
+                    { task: 'Document pre-formation expenses', completed: taxData.tasksCompleted.includes('p1_3') },
+                    { task: 'Classify worker relationships', completed: taxData.tasksCompleted.includes('p1_4') },
+                    { task: 'Choose tax classification for LLC', completed: taxData.tasksCompleted.includes('p1_5') }
+                ],
+                phase2_postLLC: [
+                    { task: 'Obtain EIN', completed: taxData.tasksCompleted.includes('p2_1') },
+                    { task: 'Register with Ohio Department of Taxation', completed: taxData.tasksCompleted.includes('p2_2') },
+                    { task: 'Ohio Unemployment Tax (SUTA)', completed: taxData.tasksCompleted.includes('p2_3') },
+                    { task: 'Federal Unemployment Tax (FUTA)', completed: taxData.tasksCompleted.includes('p2_4') },
+                    { task: 'Set up payroll tax withholding', completed: taxData.tasksCompleted.includes('p2_5') },
+                    { task: 'Workers\' Compensation Insurance', completed: taxData.tasksCompleted.includes('p2_6') },
+                    { task: 'Open business bank account', completed: taxData.tasksCompleted.includes('p2_7') }
+                ],
+                phase3_revenue: [
+                    { task: 'Quarterly estimated tax payments', completed: taxData.tasksCompleted.includes('p3_1') },
+                    { task: 'Ohio Commercial Activity Tax (CAT)', completed: taxData.tasksCompleted.includes('p3_2') },
+                    { task: 'Sales tax collection (if applicable)', completed: taxData.tasksCompleted.includes('p3_3') },
+                    { task: 'Annual LLC Return / K-1s', completed: taxData.tasksCompleted.includes('p3_4') },
+                    { task: 'Payroll tax compliance (ongoing)', completed: taxData.tasksCompleted.includes('p3_5') },
+                    { task: 'R&D Tax Credit', completed: taxData.tasksCompleted.includes('p3_6') },
+                    { task: 'Section 1202 QSBS Exclusion', completed: taxData.tasksCompleted.includes('p3_7') }
+                ],
+                keyDeadlines: [
+                    'Upon LLC Approval: Apply for EIN',
+                    'Before 1st Payroll: Register with Ohio & BWC',
+                    'January 31: W-2s, 1099s, Form 940',
+                    'March 15: Form 1065 Partnership Return',
+                    'Quarterly: Form 941, Ohio unemployment, estimated taxes'
+                ]
+            };
+            
+            const blob = new Blob([JSON.stringify(checklist, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `oith_tax_checklist_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('📥 Tax checklist exported!', 'success');
         }
 
         // ==========================================
