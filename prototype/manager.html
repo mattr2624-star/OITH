@@ -6757,6 +6757,10 @@
             platformData = calculatePlatformStats();
             updateBadgeCounts();
             
+            // Fetch DynamoDB schema stats for stat boxes
+            console.log('📊 Fetching DynamoDB schema stats...');
+            await syncDynamoDBSchema();
+            
             // Show overview section by default
             showSection('overview');
             
@@ -7682,6 +7686,9 @@
             
             // Update the badge counts
             updateBadgeCounts();
+            
+            // Refresh DynamoDB schema stats
+            await syncDynamoDBSchema();
             
             console.log('📊 Refreshing section:', currentSection);
             console.log('📊 Platform data:', platformData);
