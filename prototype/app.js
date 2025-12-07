@@ -4937,14 +4937,24 @@ function updatePrefAgeRange() {
 function updatePrefDistance() {
     const slider = document.getElementById('prefDistanceSlider');
     const display = document.getElementById('prefDistance');
+    const unitDisplay = document.getElementById('prefDistanceUnit');
     
     if (slider && display) {
-        display.textContent = slider.value;
+        const distance = parseInt(slider.value);
+        
+        // Show "Nationwide" when slider is at max (101)
+        if (distance >= 101) {
+            display.textContent = 'Nationwide';
+            if (unitDisplay) unitDisplay.textContent = '';
+        } else {
+            display.textContent = distance;
+            if (unitDisplay) unitDisplay.textContent = 'miles';
+        }
         
         // Update slider background to show filled portion
         const min = slider.min || 1;
-        const max = slider.max || 100;
-        const percent = ((slider.value - min) / (max - min)) * 100;
+        const max = slider.max || 101;
+        const percent = ((distance - min) / (max - min)) * 100;
         slider.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${percent}%, var(--border) ${percent}%, var(--border) 100%)`;
     }
     
@@ -8624,13 +8634,24 @@ function updateRangeTrack(minId, maxId, trackId) {
 
 function updateDistance() {
     const slider = document.getElementById('distance');
-    const distance = slider.value;
-    document.getElementById('distanceValue').textContent = distance;
-    appState.user.preferences.distance = parseInt(distance);
+    const distance = parseInt(slider.value);
+    const distanceDisplay = document.getElementById('distanceValue');
+    const distanceUnit = document.getElementById('distanceUnit');
+    
+    // Show "Nationwide" when slider is at max (101)
+    if (distance >= 101) {
+        distanceDisplay.textContent = 'Nationwide';
+        if (distanceUnit) distanceUnit.textContent = '';
+        appState.user.preferences.distance = 'nationwide';
+    } else {
+        distanceDisplay.textContent = distance;
+        if (distanceUnit) distanceUnit.textContent = 'miles';
+        appState.user.preferences.distance = distance;
+    }
     
     // Update slider background to show filled portion
     const min = slider.min || 5;
-    const max = slider.max || 100;
+    const max = slider.max || 101;
     const percent = ((distance - min) / (max - min)) * 100;
     slider.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${percent}%, var(--border) ${percent}%, var(--border) 100%)`;
     
@@ -8675,13 +8696,24 @@ function updateAdjustAgeRange() {
  */
 function updateAdjustDistance() {
     const slider = document.getElementById('adjustDistance');
-    const distance = slider.value;
-    document.getElementById('adjustDistanceValue').textContent = distance;
-    appState.user.preferences.distance = parseInt(distance);
+    const distance = parseInt(slider.value);
+    const distanceDisplay = document.getElementById('adjustDistanceValue');
+    const distanceUnit = document.getElementById('adjustDistanceUnit');
+    
+    // Show "Nationwide" when slider is at max (101)
+    if (distance >= 101) {
+        distanceDisplay.textContent = 'Nationwide';
+        if (distanceUnit) distanceUnit.textContent = '';
+        appState.user.preferences.distance = 'nationwide';
+    } else {
+        distanceDisplay.textContent = distance;
+        if (distanceUnit) distanceUnit.textContent = 'miles';
+        appState.user.preferences.distance = distance;
+    }
     
     // Update slider background to show filled portion
     const min = slider.min || 5;
-    const max = slider.max || 100;
+    const max = slider.max || 101;
     const percent = ((distance - min) / (max - min)) * 100;
     slider.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${percent}%, var(--border) ${percent}%, var(--border) 100%)`;
     

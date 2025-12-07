@@ -540,9 +540,9 @@
                     <div class="preference-section">
                         <label class="preference-label">Maximum distance</label>
                         <div class="range-display">
-                            <span id="distanceValue">25</span> miles
+                            <span id="distanceValue">25</span> <span id="distanceUnit">miles</span>
                         </div>
-                        <input type="range" id="distance" min="5" max="100" value="25" class="single-range" oninput="updateDistance()">
+                        <input type="range" id="distance" min="5" max="101" value="25" class="single-range" oninput="updateDistance()">
                     </div>
                     <button class="btn btn-primary" onclick="showScreen('profile-details')">Continue</button>
                 </div>
@@ -3786,8 +3786,8 @@
                         
                         <div class="pref-item">
                             <label>Maximum Distance</label>
-                            <div class="range-display"><span id="prefDistance">100</span> miles</div>
-                            <input type="range" id="prefDistanceSlider" min="1" max="100" value="100" class="pref-slider" oninput="updatePrefDistance()">
+                            <div class="range-display"><span id="prefDistance">100</span> <span id="prefDistanceUnit">miles</span></div>
+                            <input type="range" id="prefDistanceSlider" min="1" max="101" value="100" class="pref-slider" oninput="updatePrefDistance()">
                         </div>
                     </div>
                     
@@ -4003,9 +4003,9 @@
                     <div class="preference-section">
                         <label class="preference-label">Maximum distance</label>
                         <div class="range-display">
-                            <span id="adjustDistanceValue">25</span> miles
+                            <span id="adjustDistanceValue">25</span> <span id="adjustDistanceUnit">miles</span>
                         </div>
-                        <input type="range" id="adjustDistance" min="5" max="100" value="25" class="single-range" oninput="updateAdjustDistance()">
+                        <input type="range" id="adjustDistance" min="5" max="101" value="25" class="single-range" oninput="updateAdjustDistance()">
                     </div>
                     
                     <!-- Matching Stats -->
