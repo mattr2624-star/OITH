@@ -1633,6 +1633,14 @@
                     Safety & Reports
                     <span class="nav-badge" id="reportsBadge">3</span>
                 </div>
+                <div class="nav-item" onclick="showSection('compliance')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
+                        <rect x="9" y="3" width="6" height="4" rx="1"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                    Compliance
+                </div>
                 <div class="nav-item" onclick="showSection('feedback')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
@@ -3578,6 +3586,22 @@
                         <h2 class="page-title">Safety & Reports</h2>
                         <p class="page-subtitle">User reports, safety alerts, and moderation</p>
                     </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="exportReports()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            Export Reports
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Safety Tabs -->
+                <div class="tabs" style="margin-bottom: 20px;">
+                    <div class="tab active" onclick="switchSafetyTab('reports')">Pending Reports</div>
+                    <div class="tab" onclick="switchSafetyTab('suspended')">Suspended Users</div>
+                    <div class="tab" onclick="switchSafetyTab('moderation')">Content Queue</div>
+                    <div class="tab" onclick="switchSafetyTab('history')">Action History</div>
                 </div>
 
                 <div class="stats-grid">
@@ -3587,9 +3611,9 @@
                         <div class="stat-label">Open Reports</div>
                     </div>
                     <div class="stat-card users">
-                        <div class="stat-icon users">🛡️</div>
-                        <div class="stat-value" id="safetyAlerts">2</div>
-                        <div class="stat-label">Safety Alerts Sent</div>
+                        <div class="stat-icon users">🚫</div>
+                        <div class="stat-value" id="suspendedCount">2</div>
+                        <div class="stat-label">Suspended Users</div>
                     </div>
                     <div class="stat-card warning">
                         <div class="stat-icon revenue">⚠️</div>
@@ -3603,21 +3627,323 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">🚨 Pending Reports</h3>
+                <!-- Reports Tab Content -->
+                <div id="safety-reports-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🚨 Pending Reports</h3>
+                            <div class="card-actions">
+                                <select id="reportFilterType" onchange="filterReports()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); font-size: 0.85rem;">
+                                    <option value="all">All Types</option>
+                                    <option value="underage">⚠️ Underage</option>
+                                    <option value="threatening">⚠️ Threatening</option>
+                                    <option value="hate-speech">🚫 Hate Speech</option>
+                                    <option value="harassment">Harassment</option>
+                                    <option value="fake-profile">Fake Profile</option>
+                                    <option value="spam">Spam</option>
+                                    <option value="explicit-content">Explicit Content</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body" id="pendingReports">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
-                    <div class="card-body" id="pendingReports">
-                        <!-- Populated by JS -->
+
+                    <div class="card" style="margin-top: 20px;">
+                        <div class="card-header">
+                            <h3 class="card-title">📱 Emergency Contact Alerts</h3>
+                        </div>
+                        <div class="card-body" id="safetyAlertsList">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">📱 Emergency Contact Alerts</h3>
+                <!-- Suspended Users Tab Content -->
+                <div id="safety-suspended-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🚫 Suspended Users</h3>
+                        </div>
+                        <div class="card-body" id="suspendedUsersList">
+                            <!-- Populated by JS -->
+                            <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <div style="font-size: 3rem; margin-bottom: 12px;">✅</div>
+                                <p>No suspended users</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body" id="safetyAlertsList">
-                        <!-- Populated by JS -->
+                </div>
+
+                <!-- Content Moderation Queue Tab Content -->
+                <div id="safety-moderation-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📷 Content Moderation Queue</h3>
+                            <span class="status-badge warning">Coming Soon</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <div style="font-size: 3rem; margin-bottom: 12px;">📷</div>
+                                <p>AI-powered content moderation will automatically flag photos for review</p>
+                                <p style="font-size: 0.85rem; margin-top: 8px;">Integration with Hive/AWS Rekognition coming soon</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action History Tab Content -->
+                <div id="safety-history-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📋 Moderation Action History</h3>
+                            <div class="card-actions">
+                                <select id="actionHistoryFilter" onchange="filterActionHistory()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); font-size: 0.85rem;">
+                                    <option value="all">All Actions</option>
+                                    <option value="warning">Warnings</option>
+                                    <option value="suspend">Suspensions</option>
+                                    <option value="ban">Bans</option>
+                                    <option value="unsuspend">Unsuspensions</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body" id="actionHistoryList">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Review Modal -->
+            <div id="reportReviewModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 24px; width: 90%; max-width: 600px; max-height: 85vh; overflow-y: auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">📋 Review Report</h3>
+                        <button onclick="closeReportReviewModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+                    </div>
+                    
+                    <!-- Report Details -->
+                    <div style="background: var(--bg-tertiary); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span id="reportReviewType" class="status-badge warning">Loading...</span>
+                            <span id="reportReviewDate" style="font-size: 0.85rem; color: var(--text-muted);">--</span>
+                        </div>
+                        <p id="reportReviewDescription" style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">Loading description...</p>
+                    </div>
+
+                    <!-- Reported User Info -->
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="font-size: 0.9rem; color: var(--accent); margin-bottom: 12px;">Reported User</h4>
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                            <div id="reportedUserAvatar" style="width: 50px; height: 50px; border-radius: 50%; background: var(--accent-light);"></div>
+                            <div>
+                                <div id="reportedUserName" style="font-weight: 600;">--</div>
+                                <div id="reportedUserEmail" style="font-size: 0.85rem; color: var(--text-muted);">--</div>
+                            </div>
+                            <button onclick="viewReportedUserProfile()" class="btn btn-secondary" style="margin-left: auto; padding: 6px 12px; font-size: 0.8rem;">View Profile</button>
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.85rem; color: var(--text-muted);">
+                            <span>Previous reports against this user: <strong id="reportedUserPreviousReports">0</strong></span>
+                            <span style="margin-left: 16px;">Account status: <span id="reportedUserStatus" class="status-badge active">Active</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Reporter Info -->
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="font-size: 0.9rem; color: var(--accent); margin-bottom: 12px;">Reported By</h4>
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                            <div id="reporterAvatar" style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-light);"></div>
+                            <div>
+                                <div id="reporterName" style="font-weight: 500; font-size: 0.9rem;">--</div>
+                                <div id="reporterEmail" style="font-size: 0.8rem; color: var(--text-muted);">--</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resolution Notes -->
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="font-size: 0.9rem; color: var(--accent); margin-bottom: 12px;">Resolution Notes</h4>
+                        <textarea id="reportResolutionNotes" rows="3" placeholder="Add notes about this report resolution..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); resize: vertical; font-size: 0.9rem;"></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="border-top: 1px solid var(--border); padding-top: 20px;">
+                        <h4 style="font-size: 0.9rem; color: var(--accent); margin-bottom: 12px;">Take Action</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <button onclick="resolveReportWithAction('dismiss')" class="btn btn-secondary" style="padding: 12px;">
+                                ✓ Dismiss Report
+                            </button>
+                            <button onclick="resolveReportWithAction('warning')" class="btn" style="padding: 12px; background: var(--warning); color: white;">
+                                ⚠️ Send Warning
+                            </button>
+                            <button onclick="resolveReportWithAction('suspend-7')" class="btn" style="padding: 12px; background: #f97316; color: white;">
+                                🔒 Suspend 7 Days
+                            </button>
+                            <button onclick="resolveReportWithAction('suspend-30')" class="btn" style="padding: 12px; background: #ea580c; color: white;">
+                                🔒 Suspend 30 Days
+                            </button>
+                            <button onclick="resolveReportWithAction('ban')" class="btn" style="padding: 12px; background: var(--danger); color: white; grid-column: span 2;">
+                                🚫 Permanent Ban
+                            </button>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="reviewingReportId">
+                    <input type="hidden" id="reportedUserEmailHidden">
+                </div>
+            </div>
+
+            <!-- Moderation Action Modal (Quick Actions) -->
+            <div id="moderationActionModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 24px; width: 90%; max-width: 450px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">⚡ Quick Moderation</h3>
+                        <button onclick="closeModerationModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+                    </div>
+                    
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div id="modUserAvatar" style="width: 60px; height: 60px; border-radius: 50%; background: var(--accent-light); margin: 0 auto 12px;"></div>
+                        <div id="modUserName" style="font-weight: 600; font-size: 1.1rem;">--</div>
+                        <div id="modUserEmail" style="font-size: 0.85rem; color: var(--text-muted);">--</div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Reason (optional)</label>
+                        <textarea id="modActionReason" rows="2" placeholder="Reason for action..." style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); resize: none; font-size: 0.9rem;"></textarea>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button onclick="executeModAction('warning')" class="btn" style="padding: 12px; background: var(--warning); color: white; justify-content: center;">
+                            ⚠️ Send Warning
+                        </button>
+                        <button onclick="executeModAction('suspend-7')" class="btn" style="padding: 12px; background: #f97316; color: white; justify-content: center;">
+                            🔒 Suspend 7 Days
+                        </button>
+                        <button onclick="executeModAction('suspend-30')" class="btn" style="padding: 12px; background: #ea580c; color: white; justify-content: center;">
+                            🔒 Suspend 30 Days
+                        </button>
+                        <button onclick="executeModAction('ban')" class="btn" style="padding: 12px; background: var(--danger); color: white; justify-content: center;">
+                            🚫 Permanent Ban
+                        </button>
+                        <button onclick="executeModAction('unsuspend')" id="modUnsuspendBtn" class="btn btn-secondary" style="padding: 12px; justify-content: center; display: none;">
+                            ✅ Unsuspend User
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="modTargetUserEmail">
+                </div>
+            </div>
+
+            <!-- Compliance Section -->
+            <div id="compliance-section" style="display: none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">Compliance & Audit</h2>
+                        <p class="page-subtitle">Data requests, audit logs, and compliance tracking</p>
+                    </div>
+                </div>
+
+                <!-- Compliance Tabs -->
+                <div class="tabs" style="margin-bottom: 20px;">
+                    <div class="tab active" onclick="switchComplianceTab('deletion')">Data Deletion Requests</div>
+                    <div class="tab" onclick="switchComplianceTab('audit')">Audit Log</div>
+                    <div class="tab" onclick="switchComplianceTab('exports')">Data Exports</div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card safety">
+                        <div class="stat-icon safety">🗑️</div>
+                        <div class="stat-value" id="pendingDeletions">0</div>
+                        <div class="stat-label">Pending Deletions</div>
+                    </div>
+                    <div class="stat-card users">
+                        <div class="stat-icon users">✅</div>
+                        <div class="stat-value" id="completedDeletions">5</div>
+                        <div class="stat-label">Completed (30 days)</div>
+                    </div>
+                    <div class="stat-card messages">
+                        <div class="stat-icon messages">📥</div>
+                        <div class="stat-value" id="dataExports">3</div>
+                        <div class="stat-label">Data Exports (30 days)</div>
+                    </div>
+                    <div class="stat-card revenue">
+                        <div class="stat-icon revenue">📋</div>
+                        <div class="stat-value" id="auditEvents">127</div>
+                        <div class="stat-label">Audit Events (30 days)</div>
+                    </div>
+                </div>
+
+                <!-- Data Deletion Tab -->
+                <div id="compliance-deletion-tab">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🗑️ Data Deletion Request Queue</h3>
+                        </div>
+                        <div class="card-body" id="deletionRequestsList">
+                            <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <div style="font-size: 3rem; margin-bottom: 12px;">✅</div>
+                                <p>No pending deletion requests</p>
+                                <p style="font-size: 0.85rem; margin-top: 8px;">User deletion requests will appear here for processing</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Log Tab -->
+                <div id="compliance-audit-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📋 Audit Log</h3>
+                            <div class="card-actions">
+                                <select id="auditLogFilter" onchange="filterAuditLog()" style="padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-tertiary); color: var(--text-primary); font-size: 0.85rem;">
+                                    <option value="all">All Events</option>
+                                    <option value="admin_login">Admin Logins</option>
+                                    <option value="user_action">User Actions</option>
+                                    <option value="moderation">Moderation</option>
+                                    <option value="data_access">Data Access</option>
+                                    <option value="config_change">Config Changes</option>
+                                </select>
+                                <button class="btn btn-secondary" onclick="exportAuditLog()" style="margin-left: 10px; padding: 6px 12px; font-size: 0.85rem;">
+                                    Export Log
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body" id="auditLogList">
+                            <!-- Audit log entries -->
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid var(--border);">
+                                            <th style="padding: 12px 8px; text-align: left; color: var(--text-muted);">Timestamp</th>
+                                            <th style="padding: 12px 8px; text-align: left; color: var(--text-muted);">Admin</th>
+                                            <th style="padding: 12px 8px; text-align: left; color: var(--text-muted);">Action</th>
+                                            <th style="padding: 12px 8px; text-align: left; color: var(--text-muted);">Target</th>
+                                            <th style="padding: 12px 8px; text-align: left; color: var(--text-muted);">Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditLogTableBody">
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Exports Tab -->
+                <div id="compliance-exports-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📥 Data Export History</h3>
+                        </div>
+                        <div class="card-body" id="dataExportsList">
+                            <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <div style="font-size: 3rem; margin-bottom: 12px;">📥</div>
+                                <p>No data exports in the last 30 days</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -14852,24 +15178,33 @@
                 document.getElementById('pendingReports').innerHTML = pendingReports.map(r => {
                     // Determine severity based on report type
                     let severity = 'warning';
-                    if (r.type === 'Harassment' || r.type === 'Threatening behavior') {
+                    let priorityLabel = 'Medium';
+                    const criticalTypes = ['underage', 'threatening', 'hate-speech', 'Harassment', 'Threatening behavior'];
+                    if (criticalTypes.includes(r.type) || criticalTypes.includes(r.reportType)) {
                         severity = 'danger';
+                        priorityLabel = '⚠️ High Priority';
                     }
                     
+                    const reportId = r.id || r.timestamp;
+                    const reportedUser = r.reportedUser || r.aboutUser || 'Unknown';
+                    
                     return `
-                        <div class="report-card">
+                        <div class="report-card" style="${severity === 'danger' ? 'border-left: 3px solid var(--danger);' : ''}">
                             <div class="report-header">
-                                <span class="report-type">${r.type || 'Report'}</span>
-                                <span class="status-badge ${severity}">${severity === 'danger' ? 'High Priority' : 'Medium'}</span>
+                                <span class="report-type">${r.type || r.reportType || 'Report'}</span>
+                                <span class="status-badge ${severity}">${priorityLabel}</span>
                             </div>
-                            <div class="report-reason">${r.description || 'No description provided'}</div>
+                            <div class="report-reason">${r.description || r.message || 'No description provided'}</div>
                             <div class="report-meta">
-                                <span>Match ID: ${r.matchId || 'Unknown'}</span>
+                                <span>Reported: ${reportedUser}</span>
                                 <span>${r.timestamp ? formatTimeAgo(r.timestamp) : 'Recently'}</span>
                             </div>
-                            <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" style="font-size: 0.8rem; padding: 6px 16px;" onclick="openReportReview('${reportId}')">
+                                    📋 Review & Action
+                                </button>
                                 <button class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 12px;" onclick="resolveReport('${r.timestamp}')">
-                                    Mark Resolved
+                                    ✓ Quick Dismiss
                                 </button>
                                 ${r.blockUser ? '<span class="status-badge danger" style="font-size: 0.65rem;">User Blocked</span>' : ''}
                             </div>
@@ -14960,6 +15295,511 @@
                 renderSafety();
                 showToast('Report marked as resolved');
             }
+        }
+        
+        // ==========================================
+        // MODERATION & COMPLIANCE FUNCTIONS
+        // ==========================================
+        
+        // Audit log storage
+        let auditLog = JSON.parse(localStorage.getItem('oith_audit_log') || '[]');
+        
+        // Suspended users storage
+        let suspendedUsers = JSON.parse(localStorage.getItem('oith_suspended_users') || '[]');
+        
+        // Moderation action history
+        let moderationHistory = JSON.parse(localStorage.getItem('oith_moderation_history') || '[]');
+        
+        // Log an audit event
+        function logAuditEvent(action, targetType, targetId, details = {}) {
+            const event = {
+                id: 'audit_' + Date.now(),
+                timestamp: new Date().toISOString(),
+                admin: 'Admin User', // In production, get from auth
+                action: action,
+                targetType: targetType,
+                targetId: targetId,
+                details: details,
+                ipAddress: '127.0.0.1' // In production, get from request
+            };
+            auditLog.unshift(event);
+            // Keep only last 1000 events
+            if (auditLog.length > 1000) auditLog = auditLog.slice(0, 1000);
+            localStorage.setItem('oith_audit_log', JSON.stringify(auditLog));
+            updateComplianceStats();
+        }
+        
+        // Switch safety tabs
+        function switchSafetyTab(tab) {
+            // Update tab UI
+            document.querySelectorAll('#safety-section .tabs .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Hide all tab content
+            document.getElementById('safety-reports-tab').style.display = 'none';
+            document.getElementById('safety-suspended-tab').style.display = 'none';
+            document.getElementById('safety-moderation-tab').style.display = 'none';
+            document.getElementById('safety-history-tab').style.display = 'none';
+            
+            // Show selected tab
+            document.getElementById('safety-' + tab + '-tab').style.display = 'block';
+            
+            // Render content
+            if (tab === 'suspended') renderSuspendedUsers();
+            if (tab === 'history') renderModerationHistory();
+        }
+        
+        // Switch compliance tabs
+        function switchComplianceTab(tab) {
+            // Update tab UI
+            document.querySelectorAll('#compliance-section .tabs .tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Hide all tab content
+            document.getElementById('compliance-deletion-tab').style.display = 'none';
+            document.getElementById('compliance-audit-tab').style.display = 'none';
+            document.getElementById('compliance-exports-tab').style.display = 'none';
+            
+            // Show selected tab
+            document.getElementById('compliance-' + tab + '-tab').style.display = 'block';
+            
+            // Render content
+            if (tab === 'audit') renderAuditLog();
+        }
+        
+        // Render suspended users list
+        function renderSuspendedUsers() {
+            const container = document.getElementById('suspendedUsersList');
+            if (!container) return;
+            
+            // Get suspended users from user data
+            const suspended = [];
+            Object.keys(allUserData).forEach(email => {
+                const user = allUserData[email];
+                if (user.suspended || user.banned) {
+                    suspended.push({
+                        email: email,
+                        name: user.firstName || 'Unknown',
+                        status: user.banned ? 'Banned' : 'Suspended',
+                        reason: user.suspensionReason || 'Policy violation',
+                        date: user.suspendedAt || new Date().toISOString(),
+                        expiresAt: user.suspensionExpires || null
+                    });
+                }
+            });
+            
+            // Also check local suspended users list
+            suspendedUsers.forEach(su => {
+                if (!suspended.find(s => s.email === su.email)) {
+                    suspended.push(su);
+                }
+            });
+            
+            if (suspended.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="font-size: 3rem; margin-bottom: 12px;">✅</div>
+                        <p>No suspended users</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = suspended.map(user => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: ${user.status === 'Banned' ? 'var(--danger)' : 'var(--warning)'}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                            ${user.status === 'Banned' ? '🚫' : '🔒'}
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">${user.name}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">${user.email}</div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="status-badge ${user.status === 'Banned' ? 'danger' : 'warning'}">${user.status}</span>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                            ${user.expiresAt ? 'Expires: ' + new Date(user.expiresAt).toLocaleDateString() : 'Permanent'}
+                        </div>
+                    </div>
+                    <button onclick="openModerationModal('${user.email}')" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; margin-left: 12px;">
+                        Manage
+                    </button>
+                </div>
+            `).join('');
+            
+            // Update stat
+            document.getElementById('suspendedCount').textContent = suspended.length;
+        }
+        
+        // Render moderation action history
+        function renderModerationHistory() {
+            const container = document.getElementById('actionHistoryList');
+            if (!container) return;
+            
+            if (moderationHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="font-size: 3rem; margin-bottom: 12px;">📋</div>
+                        <p>No moderation actions yet</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const actionIcons = {
+                'warning': '⚠️',
+                'suspend-7': '🔒',
+                'suspend-30': '🔒',
+                'ban': '🚫',
+                'unsuspend': '✅',
+                'dismiss': '✓'
+            };
+            
+            const actionColors = {
+                'warning': 'var(--warning)',
+                'suspend-7': '#f97316',
+                'suspend-30': '#ea580c',
+                'ban': 'var(--danger)',
+                'unsuspend': 'var(--success)',
+                'dismiss': 'var(--text-muted)'
+            };
+            
+            container.innerHTML = moderationHistory.slice(0, 50).map(action => `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: ${actionColors[action.action]}; display: flex; align-items: center; justify-content: center; color: white;">
+                            ${actionIcons[action.action] || '📋'}
+                        </div>
+                        <div>
+                            <div style="font-weight: 500;">${action.actionLabel || action.action}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Target: ${action.targetEmail || 'Unknown'}</div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">${new Date(action.timestamp).toLocaleDateString()}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(action.timestamp).toLocaleTimeString()}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Render audit log
+        function renderAuditLog() {
+            const tbody = document.getElementById('auditLogTableBody');
+            if (!tbody) return;
+            
+            if (auditLog.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            No audit events recorded
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = auditLog.slice(0, 100).map(event => `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 10px 8px; color: var(--text-muted);">${new Date(event.timestamp).toLocaleString()}</td>
+                    <td style="padding: 10px 8px;">${event.admin}</td>
+                    <td style="padding: 10px 8px;">
+                        <span class="status-badge ${event.action.includes('ban') || event.action.includes('delete') ? 'danger' : event.action.includes('suspend') ? 'warning' : 'active'}">
+                            ${event.action}
+                        </span>
+                    </td>
+                    <td style="padding: 10px 8px;">${event.targetId || '-'}</td>
+                    <td style="padding: 10px 8px; font-size: 0.8rem; color: var(--text-muted);">${JSON.stringify(event.details).substring(0, 50)}...</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Update compliance stats
+        function updateComplianceStats() {
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            
+            const recentAudit = auditLog.filter(e => new Date(e.timestamp).getTime() > thirtyDaysAgo);
+            document.getElementById('auditEvents').textContent = recentAudit.length;
+        }
+        
+        // Open report review modal
+        function openReportReview(reportId) {
+            const report = reports.find(r => r.id === reportId || r.timestamp === reportId);
+            if (!report) {
+                showToast('Report not found', 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('reportReviewModal');
+            modal.style.display = 'flex';
+            
+            // Populate report details
+            document.getElementById('reportReviewType').textContent = report.type || report.reportType || 'Unknown';
+            document.getElementById('reportReviewType').className = 'status-badge ' + (report.type === 'underage' || report.type === 'threatening' ? 'danger' : 'warning');
+            document.getElementById('reportReviewDate').textContent = new Date(report.timestamp).toLocaleString();
+            document.getElementById('reportReviewDescription').textContent = report.description || report.message || 'No description provided';
+            
+            // Populate reported user
+            const reportedEmail = report.reportedUser || report.aboutUser;
+            const reportedUser = allUserData[reportedEmail] || {};
+            document.getElementById('reportedUserName').textContent = reportedUser.firstName || 'Unknown User';
+            document.getElementById('reportedUserEmail').textContent = reportedEmail || 'Unknown';
+            document.getElementById('reportedUserEmailHidden').value = reportedEmail;
+            document.getElementById('reviewingReportId').value = reportId;
+            
+            // Count previous reports
+            const previousReports = reports.filter(r => (r.reportedUser === reportedEmail || r.aboutUser === reportedEmail) && r.resolved).length;
+            document.getElementById('reportedUserPreviousReports').textContent = previousReports;
+            
+            // Set status
+            const statusBadge = document.getElementById('reportedUserStatus');
+            if (reportedUser.banned) {
+                statusBadge.textContent = 'Banned';
+                statusBadge.className = 'status-badge danger';
+            } else if (reportedUser.suspended) {
+                statusBadge.textContent = 'Suspended';
+                statusBadge.className = 'status-badge warning';
+            } else {
+                statusBadge.textContent = 'Active';
+                statusBadge.className = 'status-badge active';
+            }
+            
+            // Populate reporter
+            const reporterEmail = report.reportedBy || report.fromUser;
+            const reporter = allUserData[reporterEmail] || {};
+            document.getElementById('reporterName').textContent = reporter.firstName || 'Anonymous';
+            document.getElementById('reporterEmail').textContent = reporterEmail || 'Unknown';
+            
+            logAuditEvent('view_report', 'report', reportId, { reportedUser: reportedEmail });
+        }
+        
+        function closeReportReviewModal() {
+            document.getElementById('reportReviewModal').style.display = 'none';
+        }
+        
+        function viewReportedUserProfile() {
+            const email = document.getElementById('reportedUserEmailHidden').value;
+            if (email && allUserData[email]) {
+                closeReportReviewModal();
+                openEditUserModal(email);
+            }
+        }
+        
+        // Resolve report with action
+        function resolveReportWithAction(action) {
+            const reportId = document.getElementById('reviewingReportId').value;
+            const targetEmail = document.getElementById('reportedUserEmailHidden').value;
+            const notes = document.getElementById('reportResolutionNotes').value;
+            
+            // Execute moderation action
+            if (action !== 'dismiss') {
+                executeModActionOnUser(targetEmail, action, notes);
+            }
+            
+            // Mark report as resolved
+            const reportIndex = reports.findIndex(r => r.id === reportId || r.timestamp === reportId);
+            if (reportIndex !== -1) {
+                reports[reportIndex].resolved = true;
+                reports[reportIndex].resolvedAt = new Date().toISOString();
+                reports[reportIndex].resolution = action;
+                reports[reportIndex].resolutionNotes = notes;
+                localStorage.setItem('oith_reports', JSON.stringify(reports));
+            }
+            
+            // Log audit event
+            logAuditEvent('resolve_report', 'report', reportId, { action, targetEmail, notes });
+            
+            // Record in moderation history
+            moderationHistory.unshift({
+                id: 'mod_' + Date.now(),
+                timestamp: new Date().toISOString(),
+                action: action,
+                actionLabel: getActionLabel(action),
+                targetEmail: targetEmail,
+                reportId: reportId,
+                notes: notes
+            });
+            localStorage.setItem('oith_moderation_history', JSON.stringify(moderationHistory));
+            
+            closeReportReviewModal();
+            renderSafety();
+            showToast('Report resolved: ' + getActionLabel(action), 'success');
+        }
+        
+        function getActionLabel(action) {
+            const labels = {
+                'dismiss': 'Dismissed',
+                'warning': 'Warning Sent',
+                'suspend-7': 'Suspended 7 Days',
+                'suspend-30': 'Suspended 30 Days',
+                'ban': 'Permanently Banned',
+                'unsuspend': 'Unsuspended'
+            };
+            return labels[action] || action;
+        }
+        
+        // Open quick moderation modal
+        function openModerationModal(email) {
+            const user = allUserData[email] || {};
+            const modal = document.getElementById('moderationActionModal');
+            modal.style.display = 'flex';
+            
+            document.getElementById('modUserName').textContent = user.firstName || 'Unknown User';
+            document.getElementById('modUserEmail').textContent = email;
+            document.getElementById('modTargetUserEmail').value = email;
+            document.getElementById('modActionReason').value = '';
+            
+            // Show unsuspend button if user is suspended
+            const unsuspendBtn = document.getElementById('modUnsuspendBtn');
+            if (user.suspended || user.banned) {
+                unsuspendBtn.style.display = 'block';
+            } else {
+                unsuspendBtn.style.display = 'none';
+            }
+        }
+        
+        function closeModerationModal() {
+            document.getElementById('moderationActionModal').style.display = 'none';
+        }
+        
+        // Execute moderation action
+        function executeModAction(action) {
+            const email = document.getElementById('modTargetUserEmail').value;
+            const reason = document.getElementById('modActionReason').value;
+            
+            executeModActionOnUser(email, action, reason);
+            closeModerationModal();
+        }
+        
+        function executeModActionOnUser(email, action, reason) {
+            if (!email || !allUserData[email]) {
+                showToast('User not found', 'error');
+                return;
+            }
+            
+            const user = allUserData[email];
+            const now = new Date();
+            
+            switch(action) {
+                case 'warning':
+                    user.warnings = (user.warnings || 0) + 1;
+                    user.lastWarning = now.toISOString();
+                    user.lastWarningReason = reason;
+                    showToast('Warning sent to ' + (user.firstName || email), 'success');
+                    break;
+                    
+                case 'suspend-7':
+                    user.suspended = true;
+                    user.suspendedAt = now.toISOString();
+                    user.suspensionExpires = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+                    user.suspensionReason = reason;
+                    user.banned = false;
+                    showToast((user.firstName || email) + ' suspended for 7 days', 'success');
+                    break;
+                    
+                case 'suspend-30':
+                    user.suspended = true;
+                    user.suspendedAt = now.toISOString();
+                    user.suspensionExpires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+                    user.suspensionReason = reason;
+                    user.banned = false;
+                    showToast((user.firstName || email) + ' suspended for 30 days', 'success');
+                    break;
+                    
+                case 'ban':
+                    user.banned = true;
+                    user.bannedAt = now.toISOString();
+                    user.banReason = reason;
+                    user.suspended = false;
+                    showToast((user.firstName || email) + ' permanently banned', 'success');
+                    break;
+                    
+                case 'unsuspend':
+                    user.suspended = false;
+                    user.banned = false;
+                    user.unsuspendedAt = now.toISOString();
+                    showToast((user.firstName || email) + ' unsuspended', 'success');
+                    break;
+            }
+            
+            // Save changes
+            localStorage.setItem('oith_sync_data', JSON.stringify({ users: allUserData, lastSync: Date.now() }));
+            
+            // Log audit event
+            logAuditEvent('moderation_action', 'user', email, { action, reason });
+            
+            // Record in moderation history
+            moderationHistory.unshift({
+                id: 'mod_' + Date.now(),
+                timestamp: now.toISOString(),
+                action: action,
+                actionLabel: getActionLabel(action),
+                targetEmail: email,
+                reason: reason
+            });
+            localStorage.setItem('oith_moderation_history', JSON.stringify(moderationHistory));
+            
+            // Refresh displays
+            renderUsers();
+            renderSuspendedUsers();
+        }
+        
+        // Export reports
+        function exportReports() {
+            const data = {
+                exportedAt: new Date().toISOString(),
+                totalReports: reports.length,
+                pending: reports.filter(r => !r.resolved).length,
+                resolved: reports.filter(r => r.resolved).length,
+                reports: reports
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'oith_reports_' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            logAuditEvent('export_reports', 'reports', null, { count: reports.length });
+            showToast('Reports exported', 'success');
+        }
+        
+        // Export audit log
+        function exportAuditLog() {
+            const data = {
+                exportedAt: new Date().toISOString(),
+                totalEvents: auditLog.length,
+                events: auditLog
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'oith_audit_log_' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Audit log exported', 'success');
+        }
+        
+        // Filter reports by type
+        function filterReports() {
+            const filterType = document.getElementById('reportFilterType').value;
+            renderSafety(); // Re-render with filter
+        }
+        
+        // Filter action history
+        function filterActionHistory() {
+            renderModerationHistory(); // Re-render with filter
+        }
+        
+        // Filter audit log
+        function filterAuditLog() {
+            renderAuditLog(); // Re-render with filter
         }
         
         function formatDateTimeShort(dateString) {

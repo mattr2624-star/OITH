@@ -7414,6 +7414,681 @@ body {
 }
 
 /* ==========================================
+   Age Gate Screen (Compliance)
+   ========================================== */
+.age-gate-screen {
+    background: var(--bg-primary);
+}
+
+.age-gate-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+}
+
+.age-gate-icon {
+    margin-bottom: 24px;
+}
+
+.age-gate-content h2 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.age-gate-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 32px;
+    max-width: 300px;
+}
+
+.age-gate-options {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.age-option {
+    cursor: pointer;
+}
+
+.age-option input {
+    display: none;
+}
+
+.age-option-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    transition: all 0.2s;
+}
+
+.age-option input:checked + .age-option-box {
+    border-color: var(--accent);
+    background: var(--accent-light);
+}
+
+.age-option input:checked + .age-option-box.minor {
+    border-color: var(--danger);
+    background: rgba(229, 57, 53, 0.1);
+}
+
+.age-option-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.age-option input:checked + .age-option-box .age-option-check {
+    background: var(--accent);
+    color: white;
+}
+
+.age-option input:checked + .age-option-box.minor .age-option-check {
+    background: var(--danger);
+    color: white;
+}
+
+.age-option-text {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.age-gate-error {
+    background: rgba(229, 57, 53, 0.1);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    max-width: 320px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.age-gate-content .btn {
+    width: 100%;
+    max-width: 320px;
+    margin-bottom: 20px;
+}
+
+.age-gate-legal {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    max-width: 280px;
+    line-height: 1.5;
+}
+
+.age-gate-legal a {
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* ==========================================
+   Legal Screens (Terms, Privacy, Guidelines)
+   ========================================== */
+.legal-screen {
+    background: var(--bg-primary);
+}
+
+.legal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 40px;
+}
+
+.legal-updated {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.legal-section {
+    margin-bottom: 24px;
+}
+
+.legal-section h3 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.legal-section p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.legal-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.legal-section li {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    padding: 6px 0 6px 20px;
+    position: relative;
+}
+
+.legal-section li::before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+}
+
+/* Community Guidelines Styles */
+.guidelines-intro {
+    background: var(--accent-light);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.guidelines-intro p {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.guideline-card {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.guideline-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.guideline-content h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-family: var(--font-body);
+}
+
+.guideline-content p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.guidelines-consequences {
+    background: rgba(229, 57, 53, 0.05);
+    border: 1px solid rgba(229, 57, 53, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 24px 0;
+}
+
+.guidelines-consequences h3 {
+    color: var(--danger);
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.guidelines-consequences p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.guidelines-consequences ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.guidelines-consequences li {
+    font-size: 0.85rem;
+    padding: 4px 0 4px 20px;
+}
+
+.guidelines-report {
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+.guidelines-report h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+}
+
+.guidelines-report p {
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+}
+
+/* Safety Guidelines Page Styles */
+.safety-guidelines-content {
+    padding-bottom: 100px;
+}
+
+.safety-hero {
+    text-align: center;
+    padding: 24px 16px;
+    background: linear-gradient(135deg, var(--accent-light) 0%, rgba(196, 88, 74, 0.1) 100%);
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.safety-hero-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+}
+
+.safety-hero h2 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.safety-hero p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+.safety-section {
+    margin-bottom: 28px;
+}
+
+.safety-section h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text-primary);
+}
+
+.safety-intro {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+
+.safety-tip-card {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.tip-num {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.safety-tip-card strong {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.safety-tip-card p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.red-flags-list {
+    list-style: none;
+    padding: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+}
+
+.red-flags-list li {
+    padding: 8px 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.red-flags-list li:last-child {
+    border-bottom: none;
+}
+
+.safety-emergency {
+    background: rgba(229, 57, 53, 0.05);
+    border: 1px solid rgba(229, 57, 53, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.safety-emergency h3 {
+    color: var(--danger);
+    margin-bottom: 8px;
+}
+
+.safety-emergency > p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.emergency-contacts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.emergency-contact {
+    background: var(--bg-secondary);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.emergency-contact strong {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+}
+
+.emergency-contact a, .emergency-contact span {
+    color: var(--accent);
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.safety-actions {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 24px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    max-width: 390px;
+    margin: 0 auto;
+}
+
+.safety-actions .btn {
+    flex: 1;
+}
+
+/* ==========================================
+   Consent Checkboxes (Signup)
+   ========================================== */
+.consent-group {
+    margin: 16px 0 24px;
+}
+
+.consent-checkbox {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    margin-bottom: 12px;
+}
+
+.consent-checkbox input {
+    display: none;
+}
+
+.checkbox-mark {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    margin-top: 2px;
+}
+
+.consent-checkbox input:checked + .checkbox-mark {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.consent-checkbox input:checked + .checkbox-mark::after {
+    content: '✓';
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.consent-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.consent-text a {
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/* ==========================================
+   Delete Account Modal
+   ========================================== */
+.delete-account-modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.delete-account-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.delete-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+}
+
+.delete-account-header h2 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--danger);
+}
+
+.delete-warning {
+    background: rgba(229, 57, 53, 0.1);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.delete-warning p {
+    color: var(--danger);
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: center;
+}
+
+.delete-info {
+    margin-bottom: 16px;
+}
+
+.delete-info h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.delete-info ul {
+    list-style: none;
+    padding: 0;
+}
+
+.delete-info li {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 4px 0;
+}
+
+.delete-timeline {
+    background: var(--bg-tertiary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.delete-timeline p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+.delete-confirmation {
+    margin-bottom: 20px;
+}
+
+.delete-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.delete-actions .btn {
+    flex: 1;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background: #c62828;
+}
+
+.btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ==========================================
+   Cancel Subscription Modal
+   ========================================== */
+.cancel-sub-content {
+    text-align: left;
+}
+
+.cancel-sub-content h2 {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.cancel-sub-intro {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.cancel-instructions {
+    margin-bottom: 20px;
+}
+
+.cancel-platform {
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.cancel-platform h4 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.cancel-platform ol {
+    padding-left: 20px;
+    margin: 0;
+}
+
+.cancel-platform li {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 4px 0;
+    line-height: 1.5;
+}
+
+.cancel-note {
+    background: rgba(255, 152, 0, 0.1);
+    border: 1px solid var(--warning);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+}
+
+.cancel-note p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ==========================================
    Responsive
    ========================================== */
 @media (max-width: 420px) {
@@ -7430,6 +8105,10 @@ body {
     
     .phone-frame::before {
         display: none;
+    }
+    
+    .safety-actions {
+        max-width: 100%;
     }
 }
 

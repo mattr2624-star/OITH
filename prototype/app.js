@@ -6299,11 +6299,27 @@ function handleSignupStep1(event) {
         return;
     }
     
+    // Validate consent checkboxes (Compliance requirement)
+    const agreeTerms = document.getElementById('agreeTerms');
+    const agreeCommunity = document.getElementById('agreeCommunity');
+    
+    if (agreeTerms && !agreeTerms.checked) {
+        showToast('Please agree to the Terms of Service and Privacy Policy', 'error');
+        return;
+    }
+    
+    if (agreeCommunity && !agreeCommunity.checked) {
+        showToast('Please agree to follow the Community Guidelines', 'error');
+        return;
+    }
+    
     // Collect user data
     appState.user.firstName = document.getElementById('firstName').value;
     appState.user.email = email;
     appState.user.birthday = document.getElementById('birthday').value;
     appState.user.age = age; // Store the calculated age
+    appState.user.agreedToTerms = true; // Record consent
+    appState.user.agreedToTermsDate = new Date().toISOString();
     
     // Store password temporarily for registration completion
     appState._tempPassword = password;
@@ -7108,7 +7124,104 @@ function downloadMyData() {
 }
 
 function showPrivacyPolicy() {
-    showToast('Privacy Policy page coming soon!', 'info');
+    showScreen('privacy-policy-page');
+}
+
+// ==========================================
+// Age Gate Functions (Compliance)
+// ==========================================
+
+function selectAgeOption(option) {
+    const continueBtn = document.getElementById('ageGateContinue');
+    const errorDiv = document.getElementById('ageGateError');
+    
+    if (option === 'adult') {
+        continueBtn.disabled = false;
+        errorDiv.style.display = 'none';
+    } else if (option === 'minor') {
+        continueBtn.disabled = true;
+        errorDiv.style.display = 'flex';
+    }
+}
+
+function confirmAgeGate() {
+    const adultOption = document.getElementById('ageAdult');
+    if (adultOption && adultOption.checked) {
+        // Store age verification in session
+        sessionStorage.setItem('oith_age_verified', 'true');
+        showScreen('signup');
+    }
+}
+
+// ==========================================
+// Delete Account Functions (Compliance)
+// ==========================================
+
+function showDeleteAccountModal() {
+    const modal = document.getElementById('delete-account-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+        
+        // Reset checkbox
+        const checkbox = document.getElementById('confirmDeleteCheck');
+        const deleteBtn = document.getElementById('confirmDeleteBtn');
+        if (checkbox) checkbox.checked = false;
+        if (deleteBtn) deleteBtn.disabled = true;
+        
+        // Add checkbox listener
+        if (checkbox) {
+            checkbox.onchange = function() {
+                if (deleteBtn) {
+                    deleteBtn.disabled = !this.checked;
+                }
+            };
+        }
+    }
+}
+
+function confirmDeleteAccount() {
+    const checkbox = document.getElementById('confirmDeleteCheck');
+    if (!checkbox || !checkbox.checked) {
+        showToast('Please confirm you want to delete your account', 'error');
+        return;
+    }
+    
+    // Show processing state
+    showToast('Processing your deletion request...', 'info');
+    
+    // Simulate deletion process
+    setTimeout(() => {
+        // Clear all user data
+        localStorage.removeItem('oith_current_user');
+        localStorage.removeItem('oith_sync_data');
+        localStorage.removeItem('oith_registered_users');
+        localStorage.removeItem('oith_user_photos');
+        sessionStorage.clear();
+        
+        // Close modal
+        closeModal();
+        
+        // Show confirmation
+        showToast('Your account has been scheduled for deletion. You will receive a confirmation email.', 'success');
+        
+        // Redirect to splash after short delay
+        setTimeout(() => {
+            showScreen('splash');
+        }, 2000);
+    }, 1500);
+}
+
+// ==========================================
+// Subscription Cancellation (Compliance)
+// ==========================================
+
+function showCancelSubscription() {
+    const modal = document.getElementById('cancel-subscription-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+    }
 }
 
 function resetAllData() {

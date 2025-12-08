@@ -213,14 +213,505 @@
                     <p>Our built-in date planner helps you pick venues and times. We're designed to get you off the app and into real life.</p>
                 </div>
                 <div class="onboarding-footer">
-                    <button class="btn btn-primary" onclick="showScreen('signup')">Create Account</button>
+                    <button class="btn btn-primary" onclick="showScreen('age-gate')">Create Account</button>
+                </div>
+            </div>
+
+            <!-- Age Gate Screen (18+ Verification) -->
+            <div class="screen age-gate-screen" id="age-gate">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="showScreen('onboarding-3')">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="age-gate-content">
+                    <div class="age-gate-icon">
+                        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="80" height="80">
+                            <circle cx="40" cy="40" r="38" stroke="var(--accent)" stroke-width="2" fill="var(--accent-light)"/>
+                            <text x="40" y="48" text-anchor="middle" font-size="24" font-weight="700" fill="var(--accent)">18+</text>
+                        </svg>
+                    </div>
+                    <h2>Age Verification Required</h2>
+                    <p class="age-gate-subtitle">OITH is a dating app for adults only. You must be 18 years or older to create an account and use this service.</p>
+                    
+                    <div class="age-gate-options">
+                        <label class="age-option" onclick="selectAgeOption('adult')">
+                            <input type="radio" name="ageVerify" value="adult" id="ageAdult">
+                            <span class="age-option-box">
+                                <span class="age-option-check">✓</span>
+                                <span class="age-option-text">I am 18 years or older</span>
+                            </span>
+                        </label>
+                        <label class="age-option" onclick="selectAgeOption('minor')">
+                            <input type="radio" name="ageVerify" value="minor" id="ageMinor">
+                            <span class="age-option-box minor">
+                                <span class="age-option-check">✗</span>
+                                <span class="age-option-text">I am under 18 years old</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div id="ageGateError" class="age-gate-error" style="display: none;">
+                        <span>⚠️</span> Sorry, you must be 18 or older to use OITH. Please come back when you're of age.
+                    </div>
+
+                    <button class="btn btn-primary" id="ageGateContinue" onclick="confirmAgeGate()" disabled>Continue</button>
+                    
+                    <p class="age-gate-legal">
+                        By continuing, you agree to our <a onclick="showScreen('terms-of-service')">Terms of Service</a> 
+                        and <a onclick="showScreen('privacy-policy-page')">Privacy Policy</a>, and confirm you are at least 18 years old.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Terms of Service Screen -->
+            <div class="screen legal-screen" id="terms-of-service">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h2 class="header-title">Terms of Service</h2>
+                </div>
+                <div class="legal-content">
+                    <p class="legal-updated">Last Updated: December 2024</p>
+                    
+                    <div class="legal-section">
+                        <h3>1. Acceptance of Terms</h3>
+                        <p>By accessing or using OITH ("the App"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the App.</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>2. Eligibility</h3>
+                        <p>You must be at least 18 years old to use OITH. By creating an account, you represent and warrant that:</p>
+                        <ul>
+                            <li>You are at least 18 years of age</li>
+                            <li>You have the legal capacity to enter into this agreement</li>
+                            <li>You are not prohibited from using the App under applicable laws</li>
+                            <li>You will provide accurate, current, and complete information</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>3. Your Account</h3>
+                        <p>You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You agree to:</p>
+                        <ul>
+                            <li>Provide accurate and truthful profile information</li>
+                            <li>Use only your own photos</li>
+                            <li>Keep your password secure</li>
+                            <li>Notify us immediately of any unauthorized use</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>4. User Conduct</h3>
+                        <p>You agree NOT to:</p>
+                        <ul>
+                            <li>Harass, abuse, or harm other users</li>
+                            <li>Post false, misleading, or fraudulent content</li>
+                            <li>Upload explicit, violent, or illegal content</li>
+                            <li>Use the App for commercial solicitation</li>
+                            <li>Create fake or multiple accounts</li>
+                            <li>Violate any applicable laws or regulations</li>
+                            <li>Attempt to circumvent security measures</li>
+                            <li>Collect or harvest user data</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>5. Content Ownership</h3>
+                        <p>You retain ownership of content you post. By posting content, you grant OITH a non-exclusive, royalty-free license to use, display, and distribute your content in connection with the App.</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>6. Subscriptions & Payments</h3>
+                        <p>Premium features require a paid subscription. By subscribing:</p>
+                        <ul>
+                            <li>Payment is processed through Apple App Store or Google Play</li>
+                            <li>Subscriptions auto-renew unless cancelled 24 hours before period end</li>
+                            <li>Refunds are handled by the respective app store</li>
+                            <li>Prices may change with notice</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>7. Safety Disclaimer</h3>
+                        <p>OITH does not conduct background checks on users. You are solely responsible for your safety when interacting with other users. We encourage you to review our Safety Guidelines.</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>8. Termination</h3>
+                        <p>We may suspend or terminate your account at any time for violations of these terms. You may delete your account at any time through Settings.</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>9. Limitation of Liability</h3>
+                        <p>OITH is provided "as is" without warranties. We are not liable for any damages arising from your use of the App, interactions with other users, or reliance on any content.</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>10. Changes to Terms</h3>
+                        <p>We may update these terms at any time. Continued use after changes constitutes acceptance. Material changes will be notified via email or in-app notice.</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>11. Contact Us</h3>
+                        <p>For questions about these Terms, contact us at:<br>
+                        <strong>legal@oith.app</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Privacy Policy Screen -->
+            <div class="screen legal-screen" id="privacy-policy-page">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h2 class="header-title">Privacy Policy</h2>
+                </div>
+                <div class="legal-content">
+                    <p class="legal-updated">Last Updated: December 2024</p>
+                    
+                    <div class="legal-section">
+                        <h3>1. Information We Collect</h3>
+                        <p><strong>Information you provide:</strong></p>
+                        <ul>
+                            <li>Account information (name, email, phone, date of birth)</li>
+                            <li>Profile information (photos, bio, preferences)</li>
+                            <li>Messages with other users</li>
+                            <li>Payment information (processed by app stores)</li>
+                        </ul>
+                        <p><strong>Information collected automatically:</strong></p>
+                        <ul>
+                            <li>Device information (device ID, OS version)</li>
+                            <li>Location data (with your permission)</li>
+                            <li>Usage data (features used, time spent)</li>
+                            <li>Log data (IP address, access times)</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>2. How We Use Your Information</h3>
+                        <ul>
+                            <li>Provide and improve our matching services</li>
+                            <li>Personalize your experience</li>
+                            <li>Process transactions</li>
+                            <li>Send notifications about matches and messages</li>
+                            <li>Ensure safety and prevent fraud</li>
+                            <li>Comply with legal obligations</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>3. Information Sharing</h3>
+                        <p>We do not sell your personal information. We may share data with:</p>
+                        <ul>
+                            <li>Other users (profile information you choose to share)</li>
+                            <li>Service providers (hosting, analytics, moderation)</li>
+                            <li>Legal authorities (when required by law)</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>4. Data Retention</h3>
+                        <p>We retain your data while your account is active. After deletion:</p>
+                        <ul>
+                            <li>Profile data: Deleted within 30 days</li>
+                            <li>Messages: Deleted within 30 days</li>
+                            <li>Backups: Purged within 90 days</li>
+                            <li>Legal records: Retained as required by law</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>5. Your Rights</h3>
+                        <p>You have the right to:</p>
+                        <ul>
+                            <li><strong>Access:</strong> Request a copy of your data</li>
+                            <li><strong>Correct:</strong> Update inaccurate information</li>
+                            <li><strong>Delete:</strong> Request account and data deletion</li>
+                            <li><strong>Export:</strong> Download your data in portable format</li>
+                            <li><strong>Opt-out:</strong> Unsubscribe from marketing emails</li>
+                        </ul>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>6. Security</h3>
+                        <p>We implement industry-standard security measures including encryption, secure servers, and access controls to protect your data.</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>7. California Residents (CCPA)</h3>
+                        <p>California residents have additional rights under CCPA including the right to know what data is collected, request deletion, and opt-out of data sales (we do not sell data).</p>
+                    </div>
+
+                    <div class="legal-section">
+                        <h3>8. Contact Us</h3>
+                        <p>For privacy inquiries:<br>
+                        <strong>privacy@oith.app</strong></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Guidelines Screen -->
+            <div class="screen legal-screen" id="community-guidelines">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h2 class="header-title">Community Guidelines</h2>
+                </div>
+                <div class="legal-content">
+                    <div class="guidelines-intro">
+                        <p>OITH is built on respect, authenticity, and meaningful connections. These guidelines help create a safe space for everyone.</p>
+                    </div>
+
+                    <div class="guideline-card">
+                        <div class="guideline-icon">✓</div>
+                        <div class="guideline-content">
+                            <h3>Be Authentic</h3>
+                            <p>Use your real name and recent photos. Represent yourself honestly in your bio and conversations. Fake profiles will be removed.</p>
+                        </div>
+                    </div>
+
+                    <div class="guideline-card">
+                        <div class="guideline-icon">💬</div>
+                        <div class="guideline-content">
+                            <h3>Be Respectful</h3>
+                            <p>Treat others the way you want to be treated. No harassment, bullying, intimidation, or unwanted sexual advances. Accept "no" gracefully.</p>
+                        </div>
+                    </div>
+
+                    <div class="guideline-card">
+                        <div class="guideline-icon">🚫</div>
+                        <div class="guideline-content">
+                            <h3>No Hate Speech</h3>
+                            <p>We do not tolerate discrimination based on race, ethnicity, religion, gender, sexual orientation, disability, or any other characteristic.</p>
+                        </div>
+                    </div>
+
+                    <div class="guideline-card">
+                        <div class="guideline-icon">📸</div>
+                        <div class="guideline-content">
+                            <h3>Appropriate Content Only</h3>
+                            <p>No nudity, sexually explicit content, violence, or graphic imagery in public profile areas. Keep conversations appropriate.</p>
+                        </div>
+                    </div>
+
+                    <div class="guideline-card">
+                        <div class="guideline-icon">🔒</div>
+                        <div class="guideline-content">
+                            <h3>Protect Privacy</h3>
+                            <p>Don't share others' personal information without consent. Don't screenshot and share private conversations publicly.</p>
+                        </div>
+                    </div>
+
+                    <div class="guideline-card">
+                        <div class="guideline-icon">💰</div>
+                        <div class="guideline-content">
+                            <h3>No Spam or Solicitation</h3>
+                            <p>OITH is for dating, not business. No advertising, promotions, spam, or requests for money.</p>
+                        </div>
+                    </div>
+
+                    <div class="guideline-card">
+                        <div class="guideline-icon">⚖️</div>
+                        <div class="guideline-content">
+                            <h3>No Illegal Activity</h3>
+                            <p>Don't use OITH for anything illegal including scams, fraud, trafficking, or promoting illegal substances.</p>
+                        </div>
+                    </div>
+
+                    <div class="guideline-card">
+                        <div class="guideline-icon">👶</div>
+                        <div class="guideline-content">
+                            <h3>Adults Only (18+)</h3>
+                            <p>OITH is strictly for users 18 and older. If we discover you are underage, your account will be immediately terminated.</p>
+                        </div>
+                    </div>
+
+                    <div class="guidelines-consequences">
+                        <h3>⚠️ Consequences of Violations</h3>
+                        <p>Violating these guidelines may result in:</p>
+                        <ul>
+                            <li>Warning notification</li>
+                            <li>Temporary account suspension</li>
+                            <li>Permanent account ban</li>
+                            <li>Reporting to law enforcement (for illegal activity)</li>
+                        </ul>
+                    </div>
+
+                    <div class="guidelines-report">
+                        <h3>🚨 See Something? Report It</h3>
+                        <p>If you encounter a user violating these guidelines, please report them. You can report from their profile or from a chat conversation. All reports are reviewed by our team.</p>
+                        <button class="btn btn-secondary" onclick="showReportProblem()">Report a Problem</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety Guidelines Screen (Full Page) -->
+            <div class="screen legal-screen" id="safety-guidelines">
+                <div class="screen-header">
+                    <button class="back-btn" onclick="goBack()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <h2 class="header-title">Safety Guidelines</h2>
+                </div>
+                <div class="legal-content safety-guidelines-content">
+                    <div class="safety-hero">
+                        <div class="safety-hero-icon">🛡️</div>
+                        <h2>Your Safety Matters</h2>
+                        <p>Dating should be exciting, not scary. Follow these guidelines to stay safe while meeting new people.</p>
+                    </div>
+
+                    <div class="safety-section">
+                        <h3>🤝 Meeting Safely</h3>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">1</span>
+                            <div>
+                                <strong>Meet in Public</strong>
+                                <p>Always meet in a public place for your first few dates. Coffee shops, restaurants, and parks are great choices.</p>
+                            </div>
+                        </div>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">2</span>
+                            <div>
+                                <strong>Tell Someone</strong>
+                                <p>Let a friend or family member know where you're going, who you're meeting, and when to expect you back.</p>
+                            </div>
+                        </div>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">3</span>
+                            <div>
+                                <strong>Arrange Your Own Transportation</strong>
+                                <p>Don't rely on your date for a ride. Have your own way to get there and get home.</p>
+                            </div>
+                        </div>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">4</span>
+                            <div>
+                                <strong>Stay Sober</strong>
+                                <p>Keep your wits about you, especially on first dates. Watch your drink being made and keep it in sight.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="safety-section">
+                        <h3>🔐 Protecting Your Information</h3>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">1</span>
+                            <div>
+                                <strong>Don't Share Financial Info</strong>
+                                <p>Never share bank details, credit card numbers, or send money to someone you haven't met.</p>
+                            </div>
+                        </div>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">2</span>
+                            <div>
+                                <strong>Protect Your Personal Details</strong>
+                                <p>Be cautious about sharing your home address, workplace, or daily routine until you know someone well.</p>
+                            </div>
+                        </div>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">3</span>
+                            <div>
+                                <strong>Keep Conversations In-App</strong>
+                                <p>Use OITH messaging until you're comfortable. Moving to personal phone/email removes our safety features.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="safety-section">
+                        <h3>🚩 Recognizing Red Flags</h3>
+                        <p class="safety-intro">Watch out for these warning signs:</p>
+                        <ul class="red-flags-list">
+                            <li>❌ Refuses to video chat or meet in person</li>
+                            <li>❌ Asks for money or financial help</li>
+                            <li>❌ Stories don't add up or change frequently</li>
+                            <li>❌ Pressures you to move fast or share explicit content</li>
+                            <li>❌ Gets angry when you set boundaries</li>
+                            <li>❌ Profile seems too good to be true</li>
+                            <li>❌ Wants to immediately move off the app</li>
+                            <li>❌ Claims to be overseas or constantly traveling</li>
+                        </ul>
+                    </div>
+
+                    <div class="safety-section">
+                        <h3>💡 Online Safety Tips</h3>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">1</span>
+                            <div>
+                                <strong>Report Suspicious Behavior</strong>
+                                <p>If something feels off, report it. Our team reviews all reports and takes action.</p>
+                            </div>
+                        </div>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">2</span>
+                            <div>
+                                <strong>Block Users Freely</strong>
+                                <p>You can block anyone at any time. Trust your instincts.</p>
+                            </div>
+                        </div>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">3</span>
+                            <div>
+                                <strong>Don't Click Suspicious Links</strong>
+                                <p>Be wary of links sent by people you don't know well.</p>
+                            </div>
+                        </div>
+                        <div class="safety-tip-card">
+                            <span class="tip-num">4</span>
+                            <div>
+                                <strong>Verify Before Meeting</strong>
+                                <p>Consider a video chat before meeting in person to confirm they are who they say they are.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="safety-emergency">
+                        <h3>🆘 Emergency Resources</h3>
+                        <p>If you're in immediate danger, call 911.</p>
+                        <div class="emergency-contacts">
+                            <div class="emergency-contact">
+                                <strong>National Domestic Violence Hotline</strong>
+                                <a href="tel:1-800-799-7233">1-800-799-7233</a>
+                            </div>
+                            <div class="emergency-contact">
+                                <strong>RAINN Sexual Assault Hotline</strong>
+                                <a href="tel:1-800-656-4673">1-800-656-4673</a>
+                            </div>
+                            <div class="emergency-contact">
+                                <strong>Crisis Text Line</strong>
+                                <span>Text HOME to 741741</span>
+                            </div>
+                            <div class="emergency-contact">
+                                <strong>FBI Internet Crime Complaint</strong>
+                                <a href="https://ic3.gov" target="_blank">ic3.gov</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="safety-actions">
+                        <button class="btn btn-primary" onclick="showReportProblem()">Report a Problem</button>
+                        <button class="btn btn-secondary" onclick="showContactSupport()">Contact Support</button>
+                    </div>
                 </div>
             </div>
 
             <!-- Signup Screen -->
             <div class="screen signup-screen" id="signup">
                 <div class="screen-header">
-                    <button class="back-btn" onclick="showScreen('onboarding-3')">
+                    <button class="back-btn" onclick="showScreen('age-gate')">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                         </svg>
@@ -246,6 +737,23 @@
                             <label>Birthday</label>
                             <input type="date" id="birthday" required onchange="calculateAndDisplayAge('birthday', 'signupAgeDisplay')">
                             <div id="signupAgeDisplay" style="margin-top: 6px; font-size: 0.85rem; color: var(--accent); font-weight: 500;"></div>
+                        </div>
+                        <div class="consent-group">
+                            <label class="consent-checkbox">
+                                <input type="checkbox" id="agreeTerms" required>
+                                <span class="checkbox-mark"></span>
+                                <span class="consent-text">
+                                    I agree to the <a onclick="showScreen('terms-of-service'); event.stopPropagation();">Terms of Service</a> and 
+                                    <a onclick="showScreen('privacy-policy-page'); event.stopPropagation();">Privacy Policy</a>
+                                </span>
+                            </label>
+                            <label class="consent-checkbox">
+                                <input type="checkbox" id="agreeCommunity" required>
+                                <span class="checkbox-mark"></span>
+                                <span class="consent-text">
+                                    I agree to follow the <a onclick="showScreen('community-guidelines'); event.stopPropagation();">Community Guidelines</a>
+                                </span>
+                            </label>
                         </div>
                         <button type="submit" class="btn btn-primary">Continue</button>
                     </form>
@@ -3246,9 +3754,14 @@
                             <label>What would you like to report?</label>
                             <select id="reportType" required>
                                 <option value="">Select a category</option>
+                                <option value="underage">⚠️ User appears underage</option>
+                                <option value="threatening">⚠️ Threatening behavior</option>
+                                <option value="hate-speech">🚫 Hate speech or discrimination</option>
+                                <option value="harassment">Harassment or bullying</option>
                                 <option value="inappropriate">Inappropriate behavior</option>
                                 <option value="fake-profile">Fake or scam profile</option>
-                                <option value="harassment">Harassment</option>
+                                <option value="spam">Spam or solicitation</option>
+                                <option value="explicit-content">Explicit or sexual content</option>
                                 <option value="offensive-content">Offensive content</option>
                                 <option value="bug">App bug or issue</option>
                                 <option value="other">Other</option>
@@ -3477,8 +3990,34 @@
                                     <path d="M9 18l6-6-6-6"/>
                                 </svg>
                             </div>
-                            <div class="settings-item clickable" onclick="showPrivacyPolicy()">
-                                <div class="settings-item-icon">📄</div>
+                            <div class="settings-item clickable" onclick="showDeleteAccountModal()">
+                                <div class="settings-item-icon">🗑️</div>
+                                <div class="settings-item-content">
+                                    <span>Delete My Account</span>
+                                    <span class="settings-item-desc">Permanently delete your account and data</span>
+                                </div>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h4>Legal & Policies</h4>
+                        <div class="settings-list">
+                            <div class="settings-item clickable" onclick="showScreen('terms-of-service')">
+                                <div class="settings-item-icon">📜</div>
+                                <div class="settings-item-content">
+                                    <span>Terms of Service</span>
+                                    <span class="settings-item-desc">User agreement</span>
+                                </div>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </div>
+                            <div class="settings-item clickable" onclick="showScreen('privacy-policy-page')">
+                                <div class="settings-item-icon">🔒</div>
                                 <div class="settings-item-content">
                                     <span>Privacy Policy</span>
                                     <span class="settings-item-desc">How we handle your data</span>
@@ -3487,7 +4026,129 @@
                                     <path d="M9 18l6-6-6-6"/>
                                 </svg>
                             </div>
+                            <div class="settings-item clickable" onclick="showScreen('community-guidelines')">
+                                <div class="settings-item-icon">📋</div>
+                                <div class="settings-item-content">
+                                    <span>Community Guidelines</span>
+                                    <span class="settings-item-desc">Rules for using OITH</span>
                         </div>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                    </div>
+                            <div class="settings-item clickable" onclick="showScreen('safety-guidelines')">
+                                <div class="settings-item-icon">🛡️</div>
+                                <div class="settings-item-content">
+                                    <span>Safety Guidelines</span>
+                                    <span class="settings-item-desc">Stay safe while dating</span>
+                                </div>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Account Confirmation Modal -->
+            <div class="modal" id="delete-account-modal">
+                <div class="modal-content delete-account-modal-content">
+                    <button class="modal-close" onclick="closeModal()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                    <div class="delete-account-header">
+                        <div class="delete-icon">🗑️</div>
+                        <h2>Delete Your Account?</h2>
+                    </div>
+                    
+                    <div class="delete-warning">
+                        <p><strong>This action is permanent and cannot be undone.</strong></p>
+                    </div>
+                    
+                    <div class="delete-info">
+                        <h4>What will be deleted:</h4>
+                        <ul>
+                            <li>✓ Your profile and photos</li>
+                            <li>✓ All your matches and conversations</li>
+                            <li>✓ Your preferences and settings</li>
+                            <li>✓ Your subscription (no refunds for unused time)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="delete-info">
+                        <h4>What we retain (as required by law):</h4>
+                        <ul>
+                            <li>• Transaction records for 7 years</li>
+                            <li>• Safety reports involving your account</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="delete-timeline">
+                        <p>📅 <strong>Timeline:</strong> After confirmation, your account will be deactivated immediately. All data will be permanently deleted within 30 days. Backups are purged within 90 days.</p>
+                    </div>
+                    
+                    <div class="delete-confirmation">
+                        <label class="consent-checkbox">
+                            <input type="checkbox" id="confirmDeleteCheck">
+                            <span class="checkbox-mark"></span>
+                            <span>I understand this is permanent and want to delete my account</span>
+                        </label>
+                    </div>
+                    
+                    <div class="delete-actions">
+                        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDeleteAccount()" disabled>Delete My Account</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Cancellation Modal -->
+            <div class="modal" id="cancel-subscription-modal">
+                <div class="modal-content">
+                    <button class="modal-close" onclick="closeModal()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                    <div class="cancel-sub-content">
+                        <h2>How to Cancel Your Subscription</h2>
+                        <p class="cancel-sub-intro">Subscriptions are managed through your device's app store, not within OITH.</p>
+                        
+                        <div class="cancel-instructions">
+                            <div class="cancel-platform">
+                                <h4>🍎 iPhone / iPad (iOS)</h4>
+                                <ol>
+                                    <li>Open the <strong>Settings</strong> app on your device</li>
+                                    <li>Tap your name at the top</li>
+                                    <li>Tap <strong>Subscriptions</strong></li>
+                                    <li>Find and tap <strong>OITH</strong></li>
+                                    <li>Tap <strong>Cancel Subscription</strong></li>
+                                </ol>
+                            </div>
+                            
+                            <div class="cancel-platform">
+                                <h4>🤖 Android</h4>
+                                <ol>
+                                    <li>Open the <strong>Google Play Store</strong> app</li>
+                                    <li>Tap your profile icon (top right)</li>
+                                    <li>Tap <strong>Payments & subscriptions</strong></li>
+                                    <li>Tap <strong>Subscriptions</strong></li>
+                                    <li>Find and tap <strong>OITH</strong></li>
+                                    <li>Tap <strong>Cancel subscription</strong></li>
+                                </ol>
+                            </div>
+                        </div>
+                        
+                        <div class="cancel-note">
+                            <p>📝 <strong>Note:</strong> Cancelling stops future charges. You'll keep Premium access until your current billing period ends. No refunds are provided for partial periods.</p>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="closeModal()">Got It</button>
                     </div>
                 </div>
             </div>
