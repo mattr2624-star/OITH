@@ -21,7 +21,8 @@ import {
     PutCommand, 
     QueryCommand,
     UpdateCommand,
-    ScanCommand
+    ScanCommand,
+    DeleteCommand
 } from '@aws-sdk/lib-dynamodb';
 
 const client = new DynamoDBClient({ region: 'us-east-1' });
@@ -34,6 +35,8 @@ const TABLES = {
     MATCH_HISTORY: 'oith-match-history', // Pass/accept history
     CONVERSATIONS: 'oith-conversations', // Chat messages
     NOTIFICATIONS: 'oith-notifications', // Push/in-app notifications
+    REPORTS: 'oith-reports',             // User reports (harassment, fake, etc.)
+    BLOCKS: 'oith-blocks',               // Blocked users
     COMPANY: 'oith-users'                // Company/admin data (legacy name)
 };
 
@@ -500,6 +503,42 @@ export const handler = async (event) => {
             return await registerPushToken(event);
         }
         
+        // ============ SAFETY & MODERATION ============
+        
+        // POST /api/report - Report a user
+        if (path.includes('/report') && method === 'POST') {
+            return await reportUser(event);
+        }
+        
+        // POST /api/block - Block a user
+        if (path.includes('/block') && method === 'POST') {
+            return await blockUser(event);
+        }
+        
+        // DELETE /api/block - Unblock a user
+        if (path.includes('/block') && method === 'DELETE') {
+            return await unblockUser(event);
+        }
+        
+        // GET /api/blocks - Get blocked users list
+        if (path.includes('/blocks') && method === 'GET') {
+            return await getBlockedUsers(event);
+        }
+        
+        // ============ ACCOUNT MANAGEMENT ============
+        
+        // DELETE /api/account - Delete account (GDPR)
+        if (path.includes('/account') && method === 'DELETE') {
+            return await deleteAccount(event);
+        }
+        
+        // ============ STRIPE WEBHOOKS ============
+        
+        // POST /api/stripe/webhook - Handle Stripe events
+        if (path.includes('/stripe/webhook') && method === 'POST') {
+            return await handleStripeWebhook(event);
+        }
+        
         return {
             statusCode: 404,
             headers,
@@ -597,7 +636,33 @@ async function getNextMatch(event) {
     
     const passedIds = matchHistory.filter(h => h.action === 'pass').map(h => h.matchEmail);
     const connectedIds = matchHistory.filter(h => h.action === 'accept').map(h => h.matchEmail);
-    const excludeEmails = [...passedIds, ...connectedIds, userEmail.toLowerCase()];
+    
+    // 2c. Get blocked users (both directions - users I blocked AND users who blocked me)
+    let blockedEmails = [];
+    try {
+        const [myBlocks, blockedByOthers] = await Promise.all([
+            // Users I blocked
+            docClient.send(new QueryCommand({
+                TableName: TABLES.BLOCKS,
+                KeyConditionExpression: 'blockerEmail = :email',
+                ExpressionAttributeValues: { ':email': userEmail.toLowerCase() }
+            })),
+            // Users who blocked me
+            docClient.send(new ScanCommand({
+                TableName: TABLES.BLOCKS,
+                FilterExpression: 'blockedEmail = :email',
+                ExpressionAttributeValues: { ':email': userEmail.toLowerCase() }
+            }))
+        ]);
+        
+        const myBlockedList = (myBlocks.Items || []).map(b => b.blockedEmail);
+        const blockedMeList = (blockedByOthers.Items || []).map(b => b.blockerEmail);
+        blockedEmails = [...myBlockedList, ...blockedMeList];
+    } catch (e) {
+        console.log('No blocks table or empty:', e.message);
+    }
+    
+    const excludeEmails = [...passedIds, ...connectedIds, ...blockedEmails, userEmail.toLowerCase()];
     
     // 2b. Check for expired presented matches and auto-pass them
     await autoPassExpiredMatches(userEmail.toLowerCase());
@@ -1344,5 +1409,553 @@ async function registerPushToken(event) {
             body: JSON.stringify({ error: error.message })
         };
     }
+}
+
+// ==========================================
+// REPORT USER
+// ==========================================
+
+async function reportUser(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { reporterEmail, reportedEmail, reason, details } = body;
+    
+    if (!reporterEmail || !reportedEmail || !reason) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'reporterEmail, reportedEmail, and reason are required' })
+        };
+    }
+    
+    const validReasons = ['harassment', 'fake_profile', 'inappropriate_content', 'scam', 'underage', 'other'];
+    if (!validReasons.includes(reason)) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: `Invalid reason. Must be one of: ${validReasons.join(', ')}` })
+        };
+    }
+    
+    console.log(`🚨 Report: ${reporterEmail} reporting ${reportedEmail} for ${reason}`);
+    
+    const reportId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+        await docClient.send(new PutCommand({
+            TableName: TABLES.REPORTS,
+            Item: {
+                reportId,
+                reporterEmail: reporterEmail.toLowerCase(),
+                reportedEmail: reportedEmail.toLowerCase(),
+                reason,
+                details: details || '',
+                status: 'pending', // pending, reviewed, actioned, dismissed
+                createdAt: new Date().toISOString()
+            }
+        }));
+        
+        // Also auto-block the reported user for the reporter
+        await docClient.send(new PutCommand({
+            TableName: TABLES.BLOCKS,
+            Item: {
+                blockerEmail: reporterEmail.toLowerCase(),
+                blockedEmail: reportedEmail.toLowerCase(),
+                reason: `Reported for ${reason}`,
+                createdAt: new Date().toISOString()
+            }
+        }));
+        
+        // If currently matched, unmatch them
+        const reporterProfile = await docClient.send(new GetCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email: reporterEmail.toLowerCase() }
+        }));
+        
+        if (reporterProfile.Item?.activeMatchEmail === reportedEmail.toLowerCase()) {
+            // Restore reporter's visibility, hide reported user's visibility
+            await docClient.send(new UpdateCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: reporterEmail.toLowerCase() },
+                UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt',
+                ExpressionAttributeValues: { ':true': true }
+            }));
+        }
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                success: true,
+                reportId,
+                message: 'Report submitted. This user has been blocked and removed from your matches.'
+            })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+}
+
+// ==========================================
+// BLOCK USER
+// ==========================================
+
+async function blockUser(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { blockerEmail, blockedEmail, reason } = body;
+    
+    if (!blockerEmail || !blockedEmail) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'blockerEmail and blockedEmail are required' })
+        };
+    }
+    
+    console.log(`🚫 Block: ${blockerEmail} blocking ${blockedEmail}`);
+    
+    try {
+        await docClient.send(new PutCommand({
+            TableName: TABLES.BLOCKS,
+            Item: {
+                blockerEmail: blockerEmail.toLowerCase(),
+                blockedEmail: blockedEmail.toLowerCase(),
+                reason: reason || 'User blocked',
+                createdAt: new Date().toISOString()
+            }
+        }));
+        
+        // If currently matched, unmatch them
+        const blockerProfile = await docClient.send(new GetCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email: blockerEmail.toLowerCase() }
+        }));
+        
+        if (blockerProfile.Item?.activeMatchEmail === blockedEmail.toLowerCase()) {
+            await docClient.send(new UpdateCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: blockerEmail.toLowerCase() },
+                UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt',
+                ExpressionAttributeValues: { ':true': true }
+            }));
+        }
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                success: true,
+                message: 'User blocked successfully'
+            })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+}
+
+// ==========================================
+// UNBLOCK USER
+// ==========================================
+
+async function unblockUser(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { blockerEmail, blockedEmail } = body;
+    
+    if (!blockerEmail || !blockedEmail) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'blockerEmail and blockedEmail are required' })
+        };
+    }
+    
+    console.log(`✅ Unblock: ${blockerEmail} unblocking ${blockedEmail}`);
+    
+    try {
+        await docClient.send(new DeleteCommand({
+            TableName: TABLES.BLOCKS,
+            Key: {
+                blockerEmail: blockerEmail.toLowerCase(),
+                blockedEmail: blockedEmail.toLowerCase()
+            }
+        }));
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                success: true,
+                message: 'User unblocked successfully'
+            })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+}
+
+// ==========================================
+// GET BLOCKED USERS
+// ==========================================
+
+async function getBlockedUsers(event) {
+    const userEmail = event.queryStringParameters?.userEmail;
+    
+    if (!userEmail) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'userEmail is required' })
+        };
+    }
+    
+    try {
+        const result = await docClient.send(new QueryCommand({
+            TableName: TABLES.BLOCKS,
+            KeyConditionExpression: 'blockerEmail = :email',
+            ExpressionAttributeValues: { ':email': userEmail.toLowerCase() }
+        }));
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                blockedUsers: (result.Items || []).map(b => ({
+                    email: b.blockedEmail,
+                    blockedAt: b.createdAt,
+                    reason: b.reason
+                }))
+            })
+        };
+    } catch (error) {
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ blockedUsers: [] })
+        };
+    }
+}
+
+// ==========================================
+// DELETE ACCOUNT (GDPR Compliance)
+// ==========================================
+
+async function deleteAccount(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { userEmail, confirmEmail } = body;
+    
+    if (!userEmail || !confirmEmail) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'userEmail and confirmEmail are required' })
+        };
+    }
+    
+    if (userEmail.toLowerCase() !== confirmEmail.toLowerCase()) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Email confirmation does not match' })
+        };
+    }
+    
+    console.log(`🗑️ Account deletion requested for: ${userEmail}`);
+    
+    const email = userEmail.toLowerCase();
+    
+    try {
+        // 1. Get current profile to check for active match
+        const profile = await docClient.send(new GetCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email }
+        }));
+        
+        // 2. If matched, restore other user's visibility
+        if (profile.Item?.activeMatchEmail) {
+            await docClient.send(new UpdateCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: profile.Item.activeMatchEmail },
+                UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt',
+                ExpressionAttributeValues: { ':true': true }
+            }));
+            
+            // Notify them
+            await createNotification(profile.Item.activeMatchEmail, 'match_ended', {
+                message: 'Your match has left OITH. You\'re back in the matching pool!'
+            });
+        }
+        
+        // 3. Delete from all tables
+        const deletions = [
+            // Delete profile
+            docClient.send(new DeleteCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email }
+            })),
+            
+            // Delete from company table (subscription, settings, etc.)
+            docClient.send(new DeleteCommand({
+                TableName: TABLES.COMPANY,
+                Key: { pk: `USER#${email}`, sk: 'PROFILE' }
+            })).catch(() => {}),
+            docClient.send(new DeleteCommand({
+                TableName: TABLES.COMPANY,
+                Key: { pk: `USER#${email}`, sk: 'SUBSCRIPTION' }
+            })).catch(() => {}),
+            docClient.send(new DeleteCommand({
+                TableName: TABLES.COMPANY,
+                Key: { pk: `USER#${email}`, sk: 'SETTINGS' }
+            })).catch(() => {}),
+            docClient.send(new DeleteCommand({
+                TableName: TABLES.COMPANY,
+                Key: { pk: `USER#${email}`, sk: 'EMERGENCY_CONTACT' }
+            })).catch(() => {}),
+            docClient.send(new DeleteCommand({
+                TableName: TABLES.COMPANY,
+                Key: { pk: `USER#${email}`, sk: 'ACTIVITY' }
+            })).catch(() => {})
+        ];
+        
+        await Promise.all(deletions);
+        
+        // 4. Delete match history (scan and delete)
+        try {
+            const matchHistory = await docClient.send(new QueryCommand({
+                TableName: TABLES.MATCH_HISTORY,
+                KeyConditionExpression: 'userEmail = :email',
+                ExpressionAttributeValues: { ':email': email }
+            }));
+            
+            for (const item of (matchHistory.Items || [])) {
+                await docClient.send(new DeleteCommand({
+                    TableName: TABLES.MATCH_HISTORY,
+                    Key: { userEmail: item.userEmail, matchEmail: item.matchEmail }
+                }));
+            }
+        } catch (e) {
+            console.log('Could not delete match history:', e.message);
+        }
+        
+        // 5. Delete notifications
+        try {
+            const notifications = await docClient.send(new QueryCommand({
+                TableName: TABLES.NOTIFICATIONS,
+                KeyConditionExpression: 'userEmail = :email',
+                ExpressionAttributeValues: { ':email': email }
+            }));
+            
+            for (const item of (notifications.Items || [])) {
+                await docClient.send(new DeleteCommand({
+                    TableName: TABLES.NOTIFICATIONS,
+                    Key: { userEmail: item.userEmail, notificationId: item.notificationId }
+                }));
+            }
+        } catch (e) {
+            console.log('Could not delete notifications:', e.message);
+        }
+        
+        // 6. Delete blocks (both directions)
+        try {
+            const myBlocks = await docClient.send(new QueryCommand({
+                TableName: TABLES.BLOCKS,
+                KeyConditionExpression: 'blockerEmail = :email',
+                ExpressionAttributeValues: { ':email': email }
+            }));
+            
+            for (const item of (myBlocks.Items || [])) {
+                await docClient.send(new DeleteCommand({
+                    TableName: TABLES.BLOCKS,
+                    Key: { blockerEmail: item.blockerEmail, blockedEmail: item.blockedEmail }
+                }));
+            }
+        } catch (e) {
+            console.log('Could not delete blocks:', e.message);
+        }
+        
+        console.log(`✅ Account ${email} fully deleted`);
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                success: true,
+                message: 'Your account and all associated data have been permanently deleted.',
+                deletedAt: new Date().toISOString()
+            })
+        };
+        
+    } catch (error) {
+        console.error('Account deletion error:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: 'Failed to delete account. Please contact support.' })
+        };
+    }
+}
+
+// ==========================================
+// STRIPE WEBHOOK HANDLER
+// ==========================================
+
+async function handleStripeWebhook(event) {
+    console.log('💳 Stripe webhook received');
+    
+    // In production, verify webhook signature using Stripe secret
+    // const sig = event.headers['stripe-signature'];
+    // const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    
+    let stripeEvent;
+    try {
+        stripeEvent = JSON.parse(event.body || '{}');
+    } catch (err) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Invalid JSON' })
+        };
+    }
+    
+    const eventType = stripeEvent.type;
+    const data = stripeEvent.data?.object;
+    
+    console.log(`💳 Stripe event: ${eventType}`);
+    
+    try {
+        switch (eventType) {
+            case 'customer.subscription.created':
+            case 'customer.subscription.updated':
+                await handleSubscriptionUpdate(data);
+                break;
+                
+            case 'customer.subscription.deleted':
+                await handleSubscriptionCanceled(data);
+                break;
+                
+            case 'invoice.payment_failed':
+                await handlePaymentFailed(data);
+                break;
+                
+            case 'invoice.payment_succeeded':
+                await handlePaymentSucceeded(data);
+                break;
+                
+            default:
+                console.log(`Unhandled Stripe event: ${eventType}`);
+        }
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ received: true })
+        };
+        
+    } catch (error) {
+        console.error('Webhook handler error:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+}
+
+async function handleSubscriptionUpdate(subscription) {
+    const customerEmail = subscription.customer_email || subscription.metadata?.email;
+    if (!customerEmail) {
+        console.log('No email in subscription, skipping');
+        return;
+    }
+    
+    console.log(`📧 Updating subscription for ${customerEmail}: ${subscription.status}`);
+    
+    await docClient.send(new UpdateCommand({
+        TableName: TABLES.COMPANY,
+        Key: { pk: `USER#${customerEmail.toLowerCase()}`, sk: 'SUBSCRIPTION' },
+        UpdateExpression: 'SET #status = :status, stripeSubscriptionId = :subId, stripePlan = :plan, currentPeriodEnd = :periodEnd, updatedAt = :time',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: {
+            ':status': subscription.status, // active, past_due, canceled, etc.
+            ':subId': subscription.id,
+            ':plan': subscription.items?.data?.[0]?.price?.id || 'unknown',
+            ':periodEnd': new Date(subscription.current_period_end * 1000).toISOString(),
+            ':time': new Date().toISOString()
+        }
+    }));
+}
+
+async function handleSubscriptionCanceled(subscription) {
+    const customerEmail = subscription.customer_email || subscription.metadata?.email;
+    if (!customerEmail) return;
+    
+    console.log(`❌ Subscription canceled for ${customerEmail}`);
+    
+    await docClient.send(new UpdateCommand({
+        TableName: TABLES.COMPANY,
+        Key: { pk: `USER#${customerEmail.toLowerCase()}`, sk: 'SUBSCRIPTION' },
+        UpdateExpression: 'SET #status = :status, canceledAt = :time, updatedAt = :time',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: {
+            ':status': 'canceled',
+            ':time': new Date().toISOString()
+        }
+    }));
+    
+    // Notify user
+    await createNotification(customerEmail, 'subscription_canceled', {
+        message: 'Your OITH subscription has been canceled.'
+    });
+}
+
+async function handlePaymentFailed(invoice) {
+    const customerEmail = invoice.customer_email;
+    if (!customerEmail) return;
+    
+    console.log(`💳 Payment failed for ${customerEmail}`);
+    
+    await docClient.send(new UpdateCommand({
+        TableName: TABLES.COMPANY,
+        Key: { pk: `USER#${customerEmail.toLowerCase()}`, sk: 'SUBSCRIPTION' },
+        UpdateExpression: 'SET #status = :status, lastPaymentFailed = :time, updatedAt = :time',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: {
+            ':status': 'past_due',
+            ':time': new Date().toISOString()
+        }
+    }));
+    
+    // Notify user to update payment method
+    await createNotification(customerEmail, 'payment_failed', {
+        message: 'Your payment failed. Please update your payment method to continue using OITH.'
+    });
+}
+
+async function handlePaymentSucceeded(invoice) {
+    const customerEmail = invoice.customer_email;
+    if (!customerEmail) return;
+    
+    console.log(`✅ Payment succeeded for ${customerEmail}`);
+    
+    await docClient.send(new UpdateCommand({
+        TableName: TABLES.COMPANY,
+        Key: { pk: `USER#${customerEmail.toLowerCase()}`, sk: 'SUBSCRIPTION' },
+        UpdateExpression: 'SET #status = :status, lastPaymentAt = :time, updatedAt = :time',
+        ExpressionAttributeNames: { '#status': 'status' },
+        ExpressionAttributeValues: {
+            ':status': 'active',
+            ':time': new Date().toISOString()
+        }
+    }));
 }
 
