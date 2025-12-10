@@ -21,6 +21,58 @@ const TABLES = {
 // Legacy table name for backward compatibility
 const TABLE_NAME = process.env.DYNAMODB_TABLE || 'oith-users';
 
+// ==========================================
+// GEOHASH ENCODING (for GSI location queries)
+// ==========================================
+const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+
+/**
+ * Encode lat/lng to geohash prefix for GSI indexing
+ * Precision 4 = ~40km radius (good for initial filtering)
+ */
+function encodeGeohash(lat, lng, precision = 4) {
+    if (!lat || !lng) return null;
+    
+    let idx = 0;
+    let bit = 0;
+    let evenBit = true;
+    let geohash = '';
+    
+    let latMin = -90, latMax = 90;
+    let lngMin = -180, lngMax = 180;
+    
+    while (geohash.length < precision) {
+        if (evenBit) {
+            const lngMid = (lngMin + lngMax) / 2;
+            if (lng >= lngMid) {
+                idx = idx * 2 + 1;
+                lngMin = lngMid;
+            } else {
+                idx = idx * 2;
+                lngMax = lngMid;
+            }
+        } else {
+            const latMid = (latMin + latMax) / 2;
+            if (lat >= latMid) {
+                idx = idx * 2 + 1;
+                latMin = latMid;
+            } else {
+                idx = idx * 2;
+                latMax = latMid;
+            }
+        }
+        evenBit = !evenBit;
+        
+        if (++bit === 5) {
+            geohash += BASE32[idx];
+            bit = 0;
+            idx = 0;
+        }
+    }
+    
+    return geohash;
+}
+
 export const handler = async (event) => {
     const headers = {
         'Content-Type': 'application/json',
@@ -48,6 +100,12 @@ export const handler = async (event) => {
             const user = userData?.user || {};
             const prefs = user.preferences || user.matchPreferences || {};
             
+            // Calculate geohash for GSI indexing (enables efficient location queries)
+            const coords = user.coordinates || null;
+            const geohash_prefix = coords?.lat && coords?.lng 
+                ? encodeGeohash(coords.lat, coords.lng, 4) 
+                : null;
+            
             // Write to NEW oith-profiles table (simple email key)
             await docClient.send(new PutCommand({
                 TableName: TABLES.PROFILES,
@@ -57,7 +115,8 @@ export const handler = async (event) => {
                     age: user.age || null,
                     gender: user.gender || '',
                     location: user.location || '',
-                    coordinates: user.coordinates || null,
+                    coordinates: coords,
+                    geohash_prefix: geohash_prefix, // For GSI location queries
                     occupation: user.occupation || '',
                     bio: (user.bio || '').substring(0, 300),
                     photo: user.photo || '',
@@ -93,7 +152,7 @@ export const handler = async (event) => {
                     updatedAt: new Date().toISOString()
                 }
             }));
-            return { statusCode: 200, headers, body: JSON.stringify({ success: true, email, table: 'oith-profiles' }) };
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, email, table: 'oith-profiles', geohash: geohash_prefix }) };
         }
         
         // GET /users - Get all VISIBLE users with FULL data from oith-profiles

@@ -48,8 +48,21 @@ const CONFIG = {
     ACTIVE_USER_DAYS: 14,
     
     // Maximum profiles to scan per request (pagination for scale)
-    MAX_SCAN_LIMIT: 500
+    MAX_SCAN_LIMIT: 500,
+    
+    // Geohash precision for location queries (4 = ~40km, 5 = ~5km)
+    GEOHASH_PRECISION: 4,
+    
+    // Rate limiting: max requests per minute per user
+    RATE_LIMIT_REQUESTS: 20,
+    RATE_LIMIT_WINDOW_SECONDS: 60
 };
+
+// GSI name for geohash-based queries (create this GSI on oith-profiles)
+const GEOHASH_GSI_NAME = 'geohash-lastSeen-index';
+
+// In-memory rate limit cache (resets on Lambda cold start, but still helps)
+const rateLimitCache = new Map();
 
 // CORS headers
 const headers = {
@@ -115,6 +128,59 @@ async function getUnreadNotifications(userEmail) {
 
 // ==========================================
 // MATCH EXPIRATION UTILITIES
+// ==========================================
+
+// ==========================================
+// RATE LIMITING
+// ==========================================
+
+/**
+ * Check if user is rate limited
+ * Returns { limited: boolean, remaining: number, resetIn: number }
+ */
+function checkRateLimit(userEmail) {
+    const now = Date.now();
+    const key = userEmail.toLowerCase();
+    const windowMs = CONFIG.RATE_LIMIT_WINDOW_SECONDS * 1000;
+    
+    // Get or create rate limit entry
+    let entry = rateLimitCache.get(key);
+    
+    if (!entry || (now - entry.windowStart) > windowMs) {
+        // New window
+        entry = { windowStart: now, count: 0 };
+    }
+    
+    entry.count++;
+    rateLimitCache.set(key, entry);
+    
+    const remaining = Math.max(0, CONFIG.RATE_LIMIT_REQUESTS - entry.count);
+    const resetIn = Math.ceil((entry.windowStart + windowMs - now) / 1000);
+    
+    if (entry.count > CONFIG.RATE_LIMIT_REQUESTS) {
+        console.log(`🚫 Rate limited: ${userEmail} (${entry.count} requests in window)`);
+        return { limited: true, remaining: 0, resetIn };
+    }
+    
+    return { limited: false, remaining, resetIn };
+}
+
+/**
+ * Clean up old rate limit entries (call periodically)
+ */
+function cleanupRateLimitCache() {
+    const now = Date.now();
+    const windowMs = CONFIG.RATE_LIMIT_WINDOW_SECONDS * 1000;
+    
+    for (const [key, entry] of rateLimitCache.entries()) {
+        if ((now - entry.windowStart) > windowMs * 2) {
+            rateLimitCache.delete(key);
+        }
+    }
+}
+
+// ==========================================
+// MATCH EXPIRATION
 // ==========================================
 
 /**
@@ -466,6 +532,24 @@ async function getNextMatch(event) {
         };
     }
     
+    // Check rate limit
+    const rateLimit = checkRateLimit(userEmail);
+    if (rateLimit.limited) {
+        return {
+            statusCode: 429,
+            headers: {
+                ...headers,
+                'X-RateLimit-Remaining': '0',
+                'X-RateLimit-Reset': rateLimit.resetIn.toString(),
+                'Retry-After': rateLimit.resetIn.toString()
+            },
+            body: JSON.stringify({ 
+                error: 'Too many requests. Please slow down.',
+                retryAfter: rateLimit.resetIn
+            })
+        };
+    }
+    
     console.log(`🔍 Finding next match for: ${userEmail}`);
     
     // 1. Get current user's profile and preferences from oith-profiles
@@ -518,42 +602,105 @@ async function getNextMatch(event) {
     // 2b. Check for expired presented matches and auto-pass them
     await autoPassExpiredMatches(userEmail.toLowerCase());
     
-    // 3. Get potential matches from oith-profiles table with PAGINATION
-    // Filter: visible, active within 14 days, has first name (complete profile)
+    // Periodic cleanup of rate limit cache
+    if (Math.random() < 0.1) cleanupRateLimitCache();
+    
+    // 3. Get potential matches - use GSI if user has coordinates, otherwise scan
     const activeThreshold = new Date(Date.now() - CONFIG.ACTIVE_USER_DAYS * 24 * 60 * 60 * 1000).toISOString();
     
     let allProfiles = [];
-    let lastEvaluatedKey = null;
-    let scanCount = 0;
-    const maxScans = 10; // Safety limit to prevent infinite loops
+    let queryMethod = 'scan';
     
-    do {
-        const scanParams = {
-            TableName: TABLES.PROFILES,
-            FilterExpression: 'attribute_exists(firstName) AND (attribute_not_exists(isVisible) OR isVisible <> :false) AND (attribute_not_exists(lastSeen) OR lastSeen > :activeThreshold)',
-            ExpressionAttributeValues: { 
-                ':false': false,
-                ':activeThreshold': activeThreshold
-            },
-            Limit: CONFIG.MAX_SCAN_LIMIT
-        };
+    // Try to use GSI for efficient geohash-based query
+    if (currentUser.coordinates?.lat && currentUser.coordinates?.lng) {
+        const userGeohash = encodeGeohash(
+            currentUser.coordinates.lat, 
+            currentUser.coordinates.lng, 
+            CONFIG.GEOHASH_PRECISION
+        );
+        const neighboringHashes = getNeighboringGeohashes(userGeohash);
+        const searchHashes = [userGeohash, ...neighboringHashes];
         
-        if (lastEvaluatedKey) {
-            scanParams.ExclusiveStartKey = lastEvaluatedKey;
+        console.log(`📍 Using GSI query with geohashes: ${searchHashes.join(', ')}`);
+        
+        try {
+            // Query each geohash prefix (user's location + 8 neighbors = ~9 queries)
+            const gsiQueries = searchHashes.map(hash => 
+                docClient.send(new QueryCommand({
+                    TableName: TABLES.PROFILES,
+                    IndexName: GEOHASH_GSI_NAME,
+                    KeyConditionExpression: 'geohash_prefix = :hash AND lastSeen > :active',
+                    FilterExpression: 'attribute_exists(firstName) AND (attribute_not_exists(isVisible) OR isVisible <> :false)',
+                    ExpressionAttributeValues: {
+                        ':hash': hash,
+                        ':active': activeThreshold,
+                        ':false': false
+                    },
+                    Limit: 100
+                })).catch(err => {
+                    // GSI might not exist yet - will fallback to scan
+                    console.log(`GSI query failed for ${hash}: ${err.message}`);
+                    return { Items: [] };
+                })
+            );
+            
+            const results = await Promise.all(gsiQueries);
+            allProfiles = results.flatMap(r => r.Items || []);
+            
+            // Deduplicate (same profile might appear in multiple geohash areas)
+            const seen = new Set();
+            allProfiles = allProfiles.filter(p => {
+                if (seen.has(p.email)) return false;
+                seen.add(p.email);
+                return true;
+            });
+            
+            if (allProfiles.length > 0) {
+                queryMethod = 'gsi';
+                console.log(`📊 GSI returned ${allProfiles.length} nearby profiles`);
+            }
+        } catch (gsiError) {
+            console.log(`GSI not available, falling back to scan: ${gsiError.message}`);
         }
-        
-        const scanResult = await docClient.send(new ScanCommand(scanParams));
-        allProfiles = allProfiles.concat(scanResult.Items || []);
-        lastEvaluatedKey = scanResult.LastEvaluatedKey;
-        scanCount++;
-        
-        // Stop if we have enough profiles or hit safety limit
-        if (allProfiles.length >= 1000 || scanCount >= maxScans) {
-            break;
-        }
-    } while (lastEvaluatedKey);
+    }
     
-    console.log(`📊 Scanned ${allProfiles.length} profiles in ${scanCount} scan(s)`);
+    // Fallback to table scan if GSI didn't return results or user has no coordinates
+    if (allProfiles.length === 0) {
+        console.log('📊 Using table scan (no coordinates or GSI unavailable)');
+        
+        let lastEvaluatedKey = null;
+        let scanCount = 0;
+        const maxScans = 10;
+        
+        do {
+            const scanParams = {
+                TableName: TABLES.PROFILES,
+                FilterExpression: 'attribute_exists(firstName) AND (attribute_not_exists(isVisible) OR isVisible <> :false) AND (attribute_not_exists(lastSeen) OR lastSeen > :activeThreshold)',
+                ExpressionAttributeValues: { 
+                    ':false': false,
+                    ':activeThreshold': activeThreshold
+                },
+                Limit: CONFIG.MAX_SCAN_LIMIT
+            };
+            
+            if (lastEvaluatedKey) {
+                scanParams.ExclusiveStartKey = lastEvaluatedKey;
+            }
+            
+            const scanResult = await docClient.send(new ScanCommand(scanParams));
+            allProfiles = allProfiles.concat(scanResult.Items || []);
+            lastEvaluatedKey = scanResult.LastEvaluatedKey;
+            scanCount++;
+            
+            if (allProfiles.length >= 1000 || scanCount >= maxScans) {
+                break;
+            }
+        } while (lastEvaluatedKey);
+        
+        console.log(`📊 Scanned ${allProfiles.length} profiles in ${scanCount} scan(s)`);
+    }
+    
+    console.log(`📊 Query method: ${queryMethod}, Total profiles: ${allProfiles.length}`);
     
     const potentialMatches = allProfiles.filter(user => 
         !excludeEmails.includes(user.email?.toLowerCase())
