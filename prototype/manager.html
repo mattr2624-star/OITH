@@ -5866,11 +5866,11 @@
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                             <!-- DynamoDB Connection Info -->
                             <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
-                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">DYNAMODB TABLE</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">DYNAMODB TABLES (Multi-Table Design)</div>
                                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                                     <div id="dynamoConnectionDot" style="width: 12px; height: 12px; background: var(--text-muted); border-radius: 50%;"></div>
                                     <div>
-                                        <div style="font-weight: 600;" id="dynamoTableName">oith-users</div>
+                                        <div style="font-weight: 600;" id="dynamoTableName">oith-profiles • oith-matches • oith-users</div>
                                         <div style="font-size: 0.75rem; color: var(--text-muted);" id="dynamoRegion">us-east-1</div>
                                     </div>
                                     <div style="margin-left: auto; text-align: right;">
@@ -6144,7 +6144,7 @@
                 <!-- DynamoDB Entity Diagram -->
                 <div class="card" style="margin-top: 20px;">
                     <div class="card-header">
-                        <h3 class="card-title">📐 DynamoDB Entities (Single-Table Design)</h3>
+                        <h3 class="card-title">📐 DynamoDB Entities (Multi-Table Design)</h3>
                         <span class="status-badge active" style="font-size: 0.7rem;">LIVE</span>
                     </div>
                     <div class="card-body" style="overflow-x: auto; padding: 24px;">
@@ -20244,7 +20244,7 @@
         }
 
         // ==========================================
-        // DATABASE SCHEMA - DynamoDB Single-Table Design
+        // DATABASE SCHEMA - DynamoDB Multi-Table Design
         // ==========================================
         
         // Live DynamoDB stats (updated from AWS)
@@ -20254,6 +20254,7 @@
             // User entities
             profiles: 0,
             matches: 0,
+            matchHistory: 0,
             likes: 0,
             messages: 0,
             configs: 0,
@@ -20276,6 +20277,14 @@
             // Document entities
             patentDocs: 0,
             complianceDocs: 0,
+            // Table breakdown (multi-table design)
+            tables: {
+                'oith-profiles': 0,
+                'oith-matches': 0,
+                'oith-match-history': 0,
+                'oith-conversations': 0,
+                'oith-users': 0
+            },
             lastSync: null
         };
         
@@ -20920,6 +20929,7 @@
                         // User entities
                         profiles: data.profiles || 0,
                         matches: data.matches || 0,
+                        matchHistory: data.matchHistory || 0,
                         likes: data.likes || 0,
                         messages: data.messages || 0,
                         configs: data.configs || 0,
@@ -20945,6 +20955,14 @@
                         // System entities
                         crawlerLogs: data.crawlerLogs || 0,
                         supportMessages: data.supportMessages || 0,
+                        // Table breakdown (multi-table design)
+                        tables: data.tables || {
+                            'oith-profiles': data.profiles || 0,
+                            'oith-matches': data.matches || 0,
+                            'oith-match-history': data.matchHistory || 0,
+                            'oith-conversations': data.messages || 0,
+                            'oith-users': 0
+                        },
                         lastSync: new Date().toISOString()
                     };
                     
@@ -21334,7 +21352,7 @@
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                         <span style="font-size: 1.5rem;">☁️</span>
                         <div>
-                            <div style="font-weight: 600; font-size: 1.1rem;">DynamoDB Single-Table Design</div>
+                            <div style="font-weight: 600; font-size: 1.1rem;">DynamoDB Multi-Table Design</div>
                             <div style="font-size: 0.8rem; color: var(--text-muted);">Table: <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">${dynamoDBSchema.tableName}</code> | Region: ${dynamoDBSchema.region} | Entities: ${dynamoDBSchema.entities.length}</div>
                                 </div>
                     </div>
@@ -21683,7 +21701,7 @@
             doc += '# Generated: ' + new Date().toISOString() + '\n';
             doc += '# Table: ' + dynamoDBSchema.tableName + '\n';
             doc += '# Region: ' + dynamoDBSchema.region + '\n\n';
-            doc += '## Single-Table Design\n';
+            doc += '## Multi-Table Design\n';
             doc += 'Primary Key: pk (String) + sk (String)\n\n';
             
             // Group entities by category

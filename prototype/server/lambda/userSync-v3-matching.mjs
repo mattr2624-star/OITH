@@ -1198,18 +1198,17 @@ export const handler = async (event) => {
         
         // ============ SCHEMA STATS ============
         
-        // GET /schema/stats - Get DynamoDB table statistics
+        // GET /schema/stats - Get DynamoDB table statistics (multi-table)
         if (method === 'GET' && path.includes('/schema/stats')) {
-            console.log('📊 Fetching schema statistics...');
+            console.log('📊 Fetching schema statistics from all tables...');
             
-            // Scan for all items and count by type
-            let lastEvaluatedKey;
             let stats = {
                 totalItems: 0,
-                // User entities
+                // User entities (from oith-profiles)
                 profiles: 0,
                 likes: 0,
                 matches: 0,
+                matchHistory: 0,
                 messages: 0,
                 subscriptions: 0,
                 emergencyContacts: 0,
@@ -1233,9 +1232,71 @@ export const handler = async (event) => {
                 complianceDocs: 0,
                 // System entities
                 crawlerLogs: 0,
-                supportMessages: 0
+                supportMessages: 0,
+                // Table breakdown
+                tables: {
+                    'oith-profiles': 0,
+                    'oith-matches': 0,
+                    'oith-match-history': 0,
+                    'oith-conversations': 0,
+                    'oith-users': 0
+                }
             };
             
+            // 1. Count profiles from oith-profiles table
+            try {
+                const profileScan = await docClient.send(new ScanCommand({
+                    TableName: TABLES.PROFILES,
+                    Select: 'COUNT'
+                }));
+                stats.profiles = profileScan.Count || 0;
+                stats.tables['oith-profiles'] = profileScan.Count || 0;
+                stats.totalItems += profileScan.Count || 0;
+            } catch (e) {
+                console.log('Could not scan oith-profiles:', e.message);
+            }
+            
+            // 2. Count matches from oith-matches table
+            try {
+                const matchScan = await docClient.send(new ScanCommand({
+                    TableName: TABLES.MATCHES,
+                    Select: 'COUNT'
+                }));
+                stats.matches = matchScan.Count || 0;
+                stats.tables['oith-matches'] = matchScan.Count || 0;
+                stats.totalItems += matchScan.Count || 0;
+            } catch (e) {
+                console.log('Could not scan oith-matches:', e.message);
+            }
+            
+            // 3. Count match history from oith-match-history table
+            try {
+                const historyScan = await docClient.send(new ScanCommand({
+                    TableName: TABLES.MATCH_HISTORY,
+                    Select: 'COUNT'
+                }));
+                stats.matchHistory = historyScan.Count || 0;
+                stats.tables['oith-match-history'] = historyScan.Count || 0;
+                stats.totalItems += historyScan.Count || 0;
+            } catch (e) {
+                console.log('Could not scan oith-match-history:', e.message);
+            }
+            
+            // 4. Count conversations from oith-conversations table
+            try {
+                const convScan = await docClient.send(new ScanCommand({
+                    TableName: TABLES.CONVERSATIONS,
+                    Select: 'COUNT'
+                }));
+                stats.messages = convScan.Count || 0;
+                stats.tables['oith-conversations'] = convScan.Count || 0;
+                stats.totalItems += convScan.Count || 0;
+            } catch (e) {
+                console.log('Could not scan oith-conversations:', e.message);
+            }
+            
+            // 5. Scan oith-users (company data) for remaining entities
+            let lastEvaluatedKey;
             do {
                 const scanResult = await docClient.send(new ScanCommand({
                     TableName: TABLE_NAME,
@@ -1245,36 +1306,24 @@ export const handler = async (event) => {
                 
                 scanResult.Items?.forEach(item => {
                     stats.totalItems++;
+                    stats.tables['oith-users']++;
                     
-                    // User entities
-                    if (item.pk.startsWith('USER#') && item.sk === 'PROFILE') stats.profiles++;
-                    else if (item.pk.startsWith('LIKE#')) stats.likes++;
-                    else if (item.pk.startsWith('MATCH#')) stats.matches++;
-                    else if (item.pk.startsWith('CHAT#')) stats.messages++;
-                    else if (item.pk.startsWith('USER#') && item.sk === 'SUBSCRIPTION') stats.subscriptions++;
-                    else if (item.pk.startsWith('USER#') && item.sk === 'EMERGENCY_CONTACT') stats.emergencyContacts++;
-                    else if (item.pk.startsWith('USER#') && item.sk === 'SETTINGS') stats.settings++;
+                    // Legacy user entities (still in oith-users for now)
+                    if (item.pk?.startsWith('LIKE#')) stats.likes++;
+                    else if (item.pk?.startsWith('USER#') && item.sk === 'SUBSCRIPTION') stats.subscriptions++;
+                    else if (item.pk?.startsWith('USER#') && item.sk === 'EMERGENCY_CONTACT') stats.emergencyContacts++;
+                    else if (item.pk?.startsWith('USER#') && item.sk === 'SETTINGS') stats.settings++;
+                    else if (item.pk?.startsWith('USER#') && item.sk === 'ACTIVITY') stats.activityEvents++;
                     else if (item.pk === 'CONFIG') stats.configs++;
                     // Feedback entities
-                    else if (item.pk.startsWith('FEEDBACK#')) stats.feedback++;
-                    else if (item.pk.startsWith('RATING#')) stats.ratings++;
-                    else if (item.pk.startsWith('REPORT#')) stats.reports++;
-                    // Activity entities
-                    else if (item.pk.startsWith('ACTIVITY#')) stats.activityEvents++;
-                    else if (item.pk.startsWith('SESSION#')) stats.sessions++;
-                    else if (item.pk.startsWith('METRICS#')) stats.dailyMetrics++;
+                    else if (item.pk?.startsWith('FEEDBACK#')) stats.feedback++;
+                    else if (item.pk?.startsWith('RATING#')) stats.ratings++;
+                    else if (item.pk?.startsWith('REPORT#')) stats.reports++;
                     // Company entities
                     else if (item.pk === 'ORG#employee') stats.employees++;
                     else if (item.pk === 'ORG#department') stats.departments++;
                     else if (item.pk === 'ORG#metrics') stats.companyMetrics++;
                     else if (item.pk === 'ORG#investor') stats.investors++;
-                    // Document entities - skip container items (we'll count their contents separately)
-                    else if (item.pk === 'DOC#patent' && item.sk === 'ALL') {
-                        // Will count contents below
-                    }
-                    else if (item.pk === 'DOC#compliance' && item.sk === 'ALL') {
-                        // Will count contents below
-                    }
                     // System entities
                     else if (item.pk === 'CRAWLER#logs') stats.crawlerLogs++;
                     else if (item.pk === 'SUPPORT#all') stats.supportMessages++;
