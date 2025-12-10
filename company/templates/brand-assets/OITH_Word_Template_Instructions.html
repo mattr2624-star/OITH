@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OITH Word Template Reference</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'DM Sans', Arial, sans-serif;
+            background: #FDF9F7;
+            color: #2D2926;
+            line-height: 1.6;
+            padding: 40px;
+        }
+        
+        .page {
+            max-width: 8.5in;
+            margin: 0 auto 40px;
+            background: white;
+            padding: 1in;
+            box-shadow: 0 4px 20px rgba(45, 41, 38, 0.1);
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #C4584A;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: #C4584A;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+            font-size: 24px;
+            margin-right: 20px;
+        }
+        
+        .header-text h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: #2D2926;
+        }
+        
+        .header-text p {
+            font-size: 14px;
+            color: #5A524E;
+        }
+        
+        h1.title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 700;
+            color: #2D2926;
+            margin-bottom: 8px;
+        }
+        
+        h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: #2D2926;
+            margin: 30px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #F5E6E3;
+        }
+        
+        h3 {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #2D2926;
+            margin: 20px 0 10px;
+        }
+        
+        p {
+            margin-bottom: 15px;
+            font-size: 11pt;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #5A524E;
+            margin-bottom: 30px;
+        }
+        
+        .accent-box {
+            background: #F5E6E3;
+            border-left: 4px solid #C4584A;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+        
+        .accent-box p {
+            margin: 0;
+            color: #2D2926;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th {
+            background: #C4584A;
+            color: white;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #E8E2DE;
+        }
+        
+        tr:nth-child(even) {
+            background: #F8F4F2;
+        }
+        
+        .button {
+            display: inline-block;
+            background: #C4584A;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+        
+        .button:hover {
+            background: #A84639;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #E8E2DE;
+            text-align: center;
+            color: #9A918C;
+            font-size: 12px;
+        }
+        
+        ul, ol {
+            margin: 15px 0 15px 25px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .color-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        
+        @media print {
+            body { padding: 0; background: white; }
+            .page { box-shadow: none; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <div class="logo">O</div>
+            <div class="header-text">
+                <h1>OITH</h1>
+                <p>One In The Hand</p>
+            </div>
+        </div>
+        
+        <h1 class="title">Document Title Goes Here</h1>
+        <p class="subtitle">Subtitle or brief description of the document</p>
+        
+        <h2>Section Heading</h2>
+        <p>This is standard body text using DM Sans font at 11pt. The text color is #2D2926 (Charcoal) for optimal readability on the warm white background. Line spacing should be set to 1.5 for comfortable reading.</p>
+        
+        <div class="accent-box">
+            <p><strong>Important Note:</strong> This accent box uses the light terracotta background (#F5E6E3) with a dark terracotta left border (#C4584A) to highlight important information.</p>
+        </div>
+        
+        <h3>Subsection Heading</h3>
+        <p>Use this style for third-level headings. The font is DM Sans at 18px bold.</p>
+        
+        <h2>Brand Colors Reference</h2>
+        <table>
+            <tr>
+                <th>Color</th>
+                <th>Hex Code</th>
+                <th>Usage</th>
+            </tr>
+            <tr>
+                <td><span class="color-swatch" style="background: #C4584A;"></span>OITH Terracotta</td>
+                <td>#C4584A</td>
+                <td>Primary accent, buttons, links</td>
+            </tr>
+            <tr>
+                <td><span class="color-swatch" style="background: #A84639;"></span>Terracotta Dark</td>
+                <td>#A84639</td>
+                <td>Hover states, emphasis</td>
+            </tr>
+            <tr>
+                <td><span class="color-swatch" style="background: #F5E6E3;"></span>Terracotta Light</td>
+                <td>#F5E6E3</td>
+                <td>Backgrounds, highlights</td>
+            </tr>
+            <tr>
+                <td><span class="color-swatch" style="background: #2D2926;"></span>Charcoal</td>
+                <td>#2D2926</td>
+                <td>Primary text</td>
+            </tr>
+        </table>
+        
+        <h2>Bullet Points & Lists</h2>
+        <ul>
+            <li>First bullet point with standard formatting</li>
+            <li>Second bullet point demonstrating list styling</li>
+            <li>Third bullet point for reference</li>
+        </ul>
+        
+        <ol>
+            <li>Numbered list item one</li>
+            <li>Numbered list item two</li>
+            <li>Numbered list item three</li>
+        </ol>
+        
+        <h2>Call to Action</h2>
+        <p>Use the brand button style for important calls to action:</p>
+        <a href="#" class="button">Primary Button</a>
+        
+        <div class="footer">
+            <p>OITH - One In The Hand | Confidential</p>
+            <p>© 2024 OITH LLC. All rights reserved.</p>
+        </div>
+    </div>
+    
+    <div style="text-align: center; padding: 20px; color: #5A524E;">
+        <p><strong>Instructions:</strong> Open this file in a browser, then print to PDF or use as visual reference when creating Word documents.</p>
+        <p>Fonts used: <a href="https://fonts.google.com/specimen/Cormorant+Garamond" style="color: #C4584A;">Cormorant Garamond</a> | <a href="https://fonts.google.com/specimen/DM+Sans" style="color: #C4584A;">DM Sans</a></p>
+    </div>
+</body>
+</html>
+

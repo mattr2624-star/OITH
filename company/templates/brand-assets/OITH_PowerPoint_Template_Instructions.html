@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OITH PowerPoint Template Reference</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'DM Sans', Arial, sans-serif;
+            background: #2D2926;
+            color: #FDF9F7;
+            padding: 40px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #9A918C;
+            margin-bottom: 40px;
+        }
+        
+        .slide-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+        
+        .slide-wrapper {
+            text-align: center;
+        }
+        
+        .slide-label {
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #C4584A;
+        }
+        
+        .slide {
+            width: 640px;
+            height: 360px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        /* Title Slide */
+        .slide-title {
+            background: linear-gradient(135deg, #C4584A 0%, #A84639 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .slide-title h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .slide-title p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+        
+        .slide-title .logo {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+            font-size: 24px;
+        }
+        
+        /* Section Slide */
+        .slide-section {
+            background: #FDF9F7;
+            display: flex;
+        }
+        
+        .slide-section .accent-bar {
+            width: 20px;
+            background: #C4584A;
+        }
+        
+        .slide-section .content {
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .slide-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: #2D2926;
+            margin-bottom: 10px;
+        }
+        
+        .slide-section p {
+            font-size: 18px;
+            color: #5A524E;
+        }
+        
+        /* Content Slide */
+        .slide-content {
+            background: #FDF9F7;
+            padding: 40px 50px;
+            text-align: left;
+        }
+        
+        .slide-content h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #2D2926;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #C4584A;
+            margin-bottom: 25px;
+        }
+        
+        .slide-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .slide-content li {
+            font-size: 18px;
+            color: #2D2926;
+            margin-bottom: 15px;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .slide-content li::before {
+            content: '•';
+            color: #C4584A;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            font-size: 24px;
+            line-height: 1;
+        }
+        
+        /* Two Column Slide */
+        .slide-two-col {
+            background: #FDF9F7;
+            padding: 40px 50px;
+            text-align: left;
+        }
+        
+        .slide-two-col h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 700;
+            color: #2D2926;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #C4584A;
+            margin-bottom: 25px;
+        }
+        
+        .slide-two-col .columns {
+            display: flex;
+            gap: 40px;
+        }
+        
+        .slide-two-col .column {
+            flex: 1;
+        }
+        
+        .slide-two-col h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #C4584A;
+            margin-bottom: 10px;
+        }
+        
+        .slide-two-col p {
+            font-size: 14px;
+            color: #5A524E;
+        }
+        
+        /* Image Slide */
+        .slide-image {
+            background: #FDF9F7;
+            display: flex;
+        }
+        
+        .slide-image .image-area {
+            width: 60%;
+            background: linear-gradient(135deg, #E8E2DE 0%, #D4CCC7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9A918C;
+            font-size: 14px;
+        }
+        
+        .slide-image .text-area {
+            width: 40%;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .slide-image h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: #2D2926;
+            margin-bottom: 15px;
+        }
+        
+        .slide-image p {
+            font-size: 14px;
+            color: #5A524E;
+            line-height: 1.6;
+        }
+        
+        /* End Slide */
+        .slide-end {
+            background: #2D2926;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .slide-end .logo-large {
+            width: 80px;
+            height: 80px;
+            background: #C4584A;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        .slide-end h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .slide-end p {
+            color: #9A918C;
+            font-size: 16px;
+        }
+        
+        .slide-end .contact {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #C4584A;
+        }
+        
+        .instructions {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #3D3936;
+            padding: 30px;
+            border-radius: 12px;
+        }
+        
+        .instructions h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #C4584A;
+        }
+        
+        .instructions ul {
+            margin-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .instructions code {
+            background: #2D2926;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>OITH PowerPoint Template</h1>
+    <p class="subtitle">Slide layout reference guide - Use these designs in your PowerPoint presentations</p>
+    
+    <div class="slide-container">
+        <!-- Title Slide -->
+        <div class="slide-wrapper">
+            <p class="slide-label">1. Title Slide</p>
+            <div class="slide slide-title">
+                <h2>Presentation Title</h2>
+                <p>Subtitle or Date</p>
+                <div class="logo">O</div>
+            </div>
+        </div>
+        
+        <!-- Section Slide -->
+        <div class="slide-wrapper">
+            <p class="slide-label">2. Section Header</p>
+            <div class="slide slide-section">
+                <div class="accent-bar"></div>
+                <div class="content">
+                    <h2>Section Title</h2>
+                    <p>Brief description or subtitle</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Slide -->
+        <div class="slide-wrapper">
+            <p class="slide-label">3. Content Slide</p>
+            <div class="slide slide-content">
+                <h2>Slide Title Here</h2>
+                <ul>
+                    <li>First key point with supporting detail</li>
+                    <li>Second key point with explanation</li>
+                    <li>Third key point with context</li>
+                    <li>Fourth key point with evidence</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Two Column Slide -->
+        <div class="slide-wrapper">
+            <p class="slide-label">4. Two Column Layout</p>
+            <div class="slide slide-two-col">
+                <h2>Comparison Title</h2>
+                <div class="columns">
+                    <div class="column">
+                        <h3>Left Column</h3>
+                        <p>Content for the left side of the slide. Use for comparisons, pros/cons, or related topics.</p>
+                    </div>
+                    <div class="column">
+                        <h3>Right Column</h3>
+                        <p>Content for the right side of the slide. Keep text balanced between columns.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Image Slide -->
+        <div class="slide-wrapper">
+            <p class="slide-label">5. Image + Text</p>
+            <div class="slide slide-image">
+                <div class="image-area">
+                    [Image Placeholder]<br>60% width
+                </div>
+                <div class="text-area">
+                    <h2>Image Title</h2>
+                    <p>Supporting text that describes the image or provides context. Keep it concise and focused.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- End Slide -->
+        <div class="slide-wrapper">
+            <p class="slide-label">6. Closing Slide</p>
+            <div class="slide slide-end">
+                <div class="logo-large">O</div>
+                <h2>Thank You</h2>
+                <p>Questions?</p>
+                <div class="contact">contact@oith.app | oith.app</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h2>How to Use This Template</h2>
+        <ul>
+            <li>Open PowerPoint and create a new blank presentation</li>
+            <li>Go to <strong>View → Slide Master</strong> to edit master layouts</li>
+            <li>Create custom color theme with OITH brand colors (see Brand Guide)</li>
+            <li>Install fonts: <code>Cormorant Garamond</code> and <code>DM Sans</code> from Google Fonts</li>
+            <li>Recreate each slide layout shown above in the Slide Master</li>
+            <li>Save as <code>.potx</code> template file for reuse</li>
+        </ul>
+        
+        <h2 style="margin-top: 20px;">Quick Color Reference</h2>
+        <ul>
+            <li>Primary Accent: <code>#C4584A</code></li>
+            <li>Background Light: <code>#FDF9F7</code></li>
+            <li>Background Dark: <code>#2D2926</code></li>
+            <li>Text Dark: <code>#2D2926</code></li>
+            <li>Text Light: <code>#FFFFFF</code></li>
+        </ul>
+    </div>
+</body>
+</html>
+

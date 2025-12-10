@@ -459,8 +459,17 @@ async function syncToServer(email, userData, registeredUserData) {
                     education: user.education || '',
                     bio: (user.bio || '').substring(0, 500),
                     photo: user.photos?.[0] || '',
+                    photos: user.photos || [], // All photos
                     height: user.height || '',
                     bodyType: user.bodyType || '',
+                    // Lifestyle fields
+                    drinking: user.drinking || '',
+                    smoking: user.smoking || '',
+                    exercise: user.exercise || '',
+                    children: user.children || '',
+                    religion: user.religion || '',
+                    politics: user.politics || '',
+                    interests: user.interests || [],
                     // Include preferences for auto-matching
                     preferences: {
                         interestedIn: prefs.interestedIn || 'everyone',
