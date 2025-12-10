@@ -634,6 +634,101 @@ async function syncPhotosToAWS() {
 }
 
 /**
+ * Sync user activity (login/logout status) to AWS
+ */
+async function syncActivityToAWS(isLoggedIn = true) {
+    const email = appState.user?.email;
+    if (!email) return false;
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/activity`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                isLoggedIn: isLoggedIn,
+                sessionDuration: appState.sessionStartTime ? 
+                    Math.floor((Date.now() - appState.sessionStartTime) / 1000) : 0
+            })
+        });
+        
+        if (response.ok) {
+            console.log(`☁️ Activity synced to AWS (${isLoggedIn ? 'logged in' : 'logged out'})`);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.warn('⚠️ Failed to sync activity:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Sync billing transaction to AWS
+ */
+async function syncBillingToAWS(transaction) {
+    const email = appState.user?.email;
+    if (!email || !transaction) return false;
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/billing`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                transaction: {
+                    id: transaction.id || `tx_${Date.now()}`,
+                    date: transaction.date || new Date().toISOString(),
+                    amount: transaction.amount,
+                    description: transaction.description || 'Subscription Payment',
+                    status: transaction.status || 'paid',
+                    provider: transaction.provider || 'stripe',
+                    plan: transaction.plan || 'monthly'
+                }
+            })
+        });
+        
+        if (response.ok) {
+            console.log('☁️ Billing transaction synced to AWS');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.warn('⚠️ Failed to sync billing:', error.message);
+        return false;
+    }
+}
+
+/**
+ * Sync match history to AWS
+ */
+async function syncMatchToAWS(matchedWith) {
+    const email = appState.user?.email;
+    if (!email || !matchedWith) return false;
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/like`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                fromEmail: email,
+                toEmail: matchedWith
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log(`☁️ Match synced to AWS (mutual: ${result.isMatch})`);
+            return result;
+        }
+        return false;
+    } catch (error) {
+        console.warn('⚠️ Failed to sync match:', error.message);
+        return false;
+    }
+}
+
+/**
  * Load FULL user data from AWS on login
  * This restores all user data including subscription, settings, etc.
  */
@@ -6128,6 +6223,7 @@ function handleLogin(event) {
     
     // Mark as logged in
     appState.isLoggedIn = true;
+    appState.sessionStartTime = Date.now(); // Track session for activity sync
     
     // Ensure email is set (in case loadUserData overwrote it)
     appState.user.email = userEmail;
@@ -6145,6 +6241,9 @@ function handleLogin(event) {
     
     // Save login state
     saveUserData();
+    
+    // Sync activity to AWS (login event)
+    syncActivityToAWS(true).catch(err => console.log('Activity sync:', err.message));
     
     // Load full user data from AWS (subscription, settings, emergency contact, etc.)
     // This runs in background and merges AWS data with local data
@@ -6912,6 +7011,19 @@ function handlePaymentSuccess() {
         provider: 'stripe'
     };
     
+    // Add to billing history locally
+    if (!appState.user.billingHistory) appState.user.billingHistory = [];
+    const transaction = {
+        id: `tx_${Date.now()}`,
+        date: new Date().toISOString(),
+        amount: plan.price,
+        description: 'Premium Monthly Subscription',
+        status: 'paid',
+        provider: 'stripe',
+        plan: 'monthly'
+    };
+    appState.user.billingHistory.push(transaction);
+    
     // Clear pending payment
     delete appState.user.pendingPayment;
     
@@ -6920,6 +7032,9 @@ function handlePaymentSuccess() {
     
     // Sync subscription to AWS for cross-device persistence
     syncSubscriptionToAWS();
+    
+    // Sync billing transaction to AWS
+    syncBillingToAWS(transaction);
     
     // Show success screen
     showScreen('payment');

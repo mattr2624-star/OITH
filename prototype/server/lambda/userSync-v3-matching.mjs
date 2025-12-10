@@ -78,7 +78,7 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ success: true, email }) };
         }
         
-        // GET /users - Get all VISIBLE users with subscription data (not hidden/matched)
+        // GET /users - Get all VISIBLE users with FULL data (subscription, matches, activity, etc)
         if (method === 'GET' && path.endsWith('/users')) {
             // Get all profiles
             const profileResult = await docClient.send(new ScanCommand({ 
@@ -94,6 +94,41 @@ export const handler = async (event) => {
                 ExpressionAttributeValues: { ':sk': 'SUBSCRIPTION' }
             }));
             
+            // Get all matches
+            const matchResult = await docClient.send(new ScanCommand({ 
+                TableName: TABLE_NAME,
+                FilterExpression: 'begins_with(pk, :pk)',
+                ExpressionAttributeValues: { ':pk': 'MATCH#' }
+            }));
+            
+            // Get all activity data
+            const activityResult = await docClient.send(new ScanCommand({ 
+                TableName: TABLE_NAME,
+                FilterExpression: 'sk = :sk',
+                ExpressionAttributeValues: { ':sk': 'ACTIVITY' }
+            }));
+            
+            // Get all emergency contacts
+            const emergencyResult = await docClient.send(new ScanCommand({ 
+                TableName: TABLE_NAME,
+                FilterExpression: 'sk = :sk',
+                ExpressionAttributeValues: { ':sk': 'EMERGENCY_CONTACT' }
+            }));
+            
+            // Get all billing history
+            const billingResult = await docClient.send(new ScanCommand({ 
+                TableName: TABLE_NAME,
+                FilterExpression: 'sk = :sk',
+                ExpressionAttributeValues: { ':sk': 'BILLING_HISTORY' }
+            }));
+            
+            // Get all conversations
+            const chatResult = await docClient.send(new ScanCommand({ 
+                TableName: TABLE_NAME,
+                FilterExpression: 'begins_with(pk, :pk)',
+                ExpressionAttributeValues: { ':pk': 'CHAT#' }
+            }));
+            
             // Build subscription lookup by email
             const subscriptions = {};
             subResult.Items?.forEach(item => {
@@ -103,24 +138,104 @@ export const handler = async (event) => {
                     status: item.status || 'active',
                     startDate: item.startDate,
                     endDate: item.endDate,
+                    nextBillingDate: item.nextBillingDate,
+                    amount: item.amount,
                     canceledAt: item.canceledAt
                 };
+            });
+            
+            // Build match history lookup by email
+            const matchHistory = {};
+            matchResult.Items?.forEach(item => {
+                const email = item.pk.replace('MATCH#', '');
+                if (!matchHistory[email]) matchHistory[email] = [];
+                matchHistory[email].push({
+                    matchId: item.matchId,
+                    matchedWith: item.sk.replace('WITH#', ''),
+                    matchedAt: item.matchedAt,
+                    user1: item.user1,
+                    user2: item.user2
+                });
+            });
+            
+            // Build activity lookup by email
+            const activities = {};
+            activityResult.Items?.forEach(item => {
+                const email = item.pk.replace('USER#', '');
+                activities[email] = {
+                    isLoggedIn: item.isLoggedIn || false,
+                    lastSeen: item.lastSeen,
+                    lastLoginAt: item.lastLoginAt,
+                    loginCount: item.loginCount || 0,
+                    totalTimeSpent: item.totalTimeSpent || 0
+                };
+            });
+            
+            // Build emergency contact lookup by email
+            const emergencyContacts = {};
+            emergencyResult.Items?.forEach(item => {
+                const email = item.pk.replace('USER#', '');
+                emergencyContacts[email] = {
+                    name: item.contactName,
+                    phone: item.contactPhone,
+                    relationship: item.relationship,
+                    updatedAt: item.updatedAt
+                };
+            });
+            
+            // Build billing history lookup by email
+            const billingHistories = {};
+            billingResult.Items?.forEach(item => {
+                const email = item.pk.replace('USER#', '');
+                billingHistories[email] = item.transactions || [];
+            });
+            
+            // Build conversation lookup by email
+            const conversations = {};
+            chatResult.Items?.forEach(item => {
+                // CHAT#email1_email2 format
+                const chatId = item.pk.replace('CHAT#', '');
+                const emails = chatId.split('_');
+                emails.forEach(email => {
+                    if (!conversations[email]) conversations[email] = {};
+                    const otherEmail = emails.find(e => e !== email);
+                    if (otherEmail) {
+                        conversations[email][otherEmail] = {
+                            messages: item.messages || [],
+                            lastMessageAt: item.lastMessageAt,
+                            messageCount: (item.messages || []).length
+                        };
+                    }
+                });
             });
             
             const users = {};
             profileResult.Items?.forEach(item => {
                 if (item.email) {
-                    users[item.email] = {
+                    const email = item.email;
+                    const activity = activities[email] || {};
+                    const userMatches = matchHistory[email] || [];
+                    const userConversations = conversations[email] || {};
+                    
+                    // Calculate total messages
+                    let totalMessages = 0;
+                    Object.values(userConversations).forEach(conv => {
+                        totalMessages += conv.messageCount || 0;
+                    });
+                    
+                    users[email] = {
+                        // Basic profile
                         firstName: item.firstName,
                         age: item.age,
                         gender: item.gender,
                         location: item.location,
-                        coordinates: item.coordinates || null, // GPS coordinates for distance matching
+                        coordinates: item.coordinates || null,
                         occupation: item.occupation,
                         photo: item.photo,
                         photos: item.photos || [],
                         bio: item.bio,
                         education: item.education,
+                        // Lifestyle fields
                         height: item.height || '',
                         bodyType: item.bodyType || '',
                         drinking: item.drinking || '',
@@ -130,16 +245,32 @@ export const handler = async (event) => {
                         religion: item.religion || '',
                         politics: item.politics || '',
                         interests: item.interests || [],
-                        online: item.online,
+                        // Activity status
+                        online: activity.isLoggedIn || item.online || false,
+                        isLoggedIn: activity.isLoggedIn || false,
                         isHidden: item.isHidden || false,
-                        lastSeen: item.lastSeen,
-                        registeredAt: item.createdAt,
-                        // Include subscription data
-                        subscription: subscriptions[item.email] || null
+                        lastSeen: activity.lastSeen || item.lastSeen,
+                        lastLoginAt: activity.lastLoginAt,
+                        loginCount: activity.loginCount || 0,
+                        registeredAt: item.createdAt || item.updatedAt,
+                        // Subscription data
+                        subscription: subscriptions[email] || null,
+                        // Match history
+                        matchHistory: userMatches,
+                        matchCount: userMatches.length,
+                        // Active connection (most recent match)
+                        activeConnection: userMatches.length > 0 ? userMatches[userMatches.length - 1] : null,
+                        // Conversations
+                        conversations: userConversations,
+                        totalMessages: totalMessages,
+                        // Emergency contact
+                        emergencyContact: emergencyContacts[email] || null,
+                        // Billing history
+                        billingHistory: billingHistories[email] || []
                     };
                 }
             });
-            console.log(`📊 Returning ${Object.keys(users).length} visible users with subscription data`);
+            console.log(`📊 Returning ${Object.keys(users).length} users with FULL data (matches, chats, activity, etc)`);
             return { statusCode: 200, headers, body: JSON.stringify(users) };
         }
         
@@ -346,6 +477,109 @@ export const handler = async (event) => {
                 statusCode: 200, 
                 headers, 
                 body: JSON.stringify({ subscription: result.Item || { type: 'free', status: 'inactive' } }) 
+            };
+        }
+        
+        // ============ ACTIVITY TRACKING ============
+        
+        // POST /activity - Update user activity/login status
+        if (method === 'POST' && path.includes('/activity')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email, isLoggedIn, sessionDuration } = body;
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            const emailLower = email.toLowerCase();
+            const now = new Date().toISOString();
+            
+            // Get existing activity data
+            const existing = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: `USER#${emailLower}`, sk: 'ACTIVITY' }
+            }));
+            
+            const currentData = existing.Item || { loginCount: 0, totalTimeSpent: 0 };
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: `USER#${emailLower}`,
+                    sk: 'ACTIVITY',
+                    email: emailLower,
+                    isLoggedIn: isLoggedIn || false,
+                    lastSeen: now,
+                    lastLoginAt: isLoggedIn ? now : currentData.lastLoginAt,
+                    loginCount: isLoggedIn ? (currentData.loginCount || 0) + 1 : currentData.loginCount || 0,
+                    totalTimeSpent: (currentData.totalTimeSpent || 0) + (sessionDuration || 0),
+                    updatedAt: now
+                }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // ============ BILLING HISTORY ============
+        
+        // POST /billing - Add transaction to billing history
+        if (method === 'POST' && path.includes('/billing')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email, transaction } = body;
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            const emailLower = email.toLowerCase();
+            
+            // Get existing billing history
+            const existing = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: `USER#${emailLower}`, sk: 'BILLING_HISTORY' }
+            }));
+            
+            const transactions = existing.Item?.transactions || [];
+            
+            // Add new transaction
+            if (transaction) {
+                transactions.push({
+                    ...transaction,
+                    id: transaction.id || `tx_${Date.now()}`,
+                    date: transaction.date || new Date().toISOString()
+                });
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: `USER#${emailLower}`,
+                    sk: 'BILLING_HISTORY',
+                    email: emailLower,
+                    transactions: transactions,
+                    updatedAt: new Date().toISOString()
+                }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, transactionCount: transactions.length }) };
+        }
+        
+        // GET /billing/{email} - Get billing history
+        if (method === 'GET' && path.includes('/billing/')) {
+            const email = path.split('/billing/')[1]?.toLowerCase();
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: `USER#${email}`, sk: 'BILLING_HISTORY' }
+            }));
+            
+            return { 
+                statusCode: 200, 
+                headers, 
+                body: JSON.stringify({ transactions: result.Item?.transactions || [] }) 
             };
         }
         
