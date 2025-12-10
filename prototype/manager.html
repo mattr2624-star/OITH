@@ -1465,6 +1465,25 @@
                 <span class="live-dot"></span>
                 <span>Live Data</span>
             </div>
+            <div class="sync-traffic-indicator" id="syncTrafficIndicator" style="display: flex; align-items: center; gap: 12px; margin-left: 20px; padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                        <path d="M12 19V5M5 12l7-7 7 7"/>
+                    </svg>
+                    <span id="uploadCount" style="color: #10b981;">0</span>
+                    <span style="color: #666;">sent</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                        <path d="M12 5v14M5 12l7 7 7-7"/>
+                    </svg>
+                    <span id="downloadCount" style="color: #3b82f6;">0</span>
+                    <span style="color: #666;">received</span>
+                </div>
+                <div style="color: #666; border-left: 1px solid #333; padding-left: 10px;">
+                    <span id="totalSyncBytes" style="color: #f59e0b;">0 KB</span>
+                </div>
+            </div>
         </div>
         <div class="header-actions">
             <button class="btn btn-secondary btn-icon" onclick="refreshData()" title="Refresh from AWS">
@@ -1478,8 +1497,21 @@
 
     <div class="main-container">
         <nav class="sidebar">
+            <!-- SIDEBAR EDIT CONTROLS -->
+            <div id="sidebarEditControls" style="padding: 8px 12px; margin-bottom: 10px; display: flex; gap: 8px; align-items: center;">
+                <button id="editSidebarBtn" onclick="toggleSidebarEdit()" class="btn btn-secondary" style="font-size: 0.7rem; padding: 4px 10px; flex: 1;">
+                    ✏️ Edit Layout
+                </button>
+                <button id="saveSidebarBtn" onclick="saveSidebarOrder()" class="btn btn-primary" style="font-size: 0.7rem; padding: 4px 10px; display: none; flex: 1;">
+                    💾 Save
+                </button>
+                <button id="cancelSidebarBtn" onclick="cancelSidebarEdit()" class="btn btn-secondary" style="font-size: 0.7rem; padding: 4px 8px; display: none;">
+                    ✕
+                </button>
+            </div>
+            
             <!-- COMPANY/ADMIN SECTION -->
-            <div class="nav-section" style="border-left: 3px solid var(--accent); margin-left: -1px; padding-left: 13px;">
+            <div class="nav-section" id="nav-section-admin" data-section="admin" style="border-left: 3px solid var(--accent); margin-left: -1px; padding-left: 13px;">
                 <div class="nav-section-title" style="color: var(--accent);">🏢 Company / Admin</div>
                 <div class="nav-item active" onclick="showSection('overview')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1504,7 +1536,6 @@
                         <circle cx="21" cy="8" r="2"/>
                     </svg>
                     Analytics & AI
-                    <span class="nav-badge" style="background: var(--purple)">NEW</span>
                 </div>
                 <div class="nav-item" onclick="showSection('mlmodels')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1515,7 +1546,6 @@
                         <path d="M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24"/>
                     </svg>
                     ML Models
-                    <span class="nav-badge" style="background: var(--info)">EVAL</span>
                 </div>
                 <div class="nav-item" onclick="showSection('revenue')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1561,7 +1591,6 @@
                         <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
                     </svg>
                     Experiments
-                    <span class="nav-badge" style="background: var(--purple)">NEW</span>
                 </div>
                 <div class="nav-item" onclick="showSection('org-hierarchy')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1574,7 +1603,6 @@
                         <path d="M12 6v4M6 14v4M12 14v4M18 14v4M6 10h12"/>
                     </svg>
                     Hierarchy
-                    <span class="nav-badge" style="background: var(--info)">NEW</span>
                 </div>
                 <div class="nav-item" onclick="showSection('payroll')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1583,7 +1611,6 @@
                         <circle cx="12" cy="12" r="3"/>
                     </svg>
                     Payroll
-                    <span class="nav-badge" style="background: var(--success)">NEW</span>
                 </div>
                 <div class="nav-item" onclick="showSection('tax')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1593,12 +1620,11 @@
                         <line x1="9" y1="15" x2="15" y2="15"/>
                     </svg>
                     Tax
-                    <span class="nav-badge" style="background: var(--warning)">NEW</span>
                 </div>
             </div>
 
             <!-- USER APP / INDEX SECTION -->
-            <div class="nav-section" style="border-left: 3px solid var(--info); margin-left: -1px; padding-left: 13px; margin-top: 16px;">
+            <div class="nav-section" id="nav-section-app" data-section="app" style="border-left: 3px solid var(--info); margin-left: -1px; padding-left: 13px; margin-top: 16px;">
                 <div class="nav-section-title" style="color: var(--info);">📱 User App (index.html)</div>
                 <div class="nav-item" onclick="showSection('users')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1672,12 +1698,11 @@
                         <path d="M2 12l10 5 10-5"/>
                     </svg>
                     Site Diagnostics
-                    <span class="nav-badge" style="background: var(--info);">NEW</span>
                 </div>
             </div>
 
             <!-- ACTIONS SECTION -->
-            <div class="nav-section" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <div class="nav-section" id="nav-section-actions" data-section="actions" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
                 <div class="nav-section-title">Actions</div>
                 <div class="nav-item" onclick="exportSyncData()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -6942,6 +6967,45 @@
         // INITIALIZATION
         // ==========================================
         
+        // AWS Sync Traffic Tracking
+        let syncTraffic = {
+            uploads: 0,
+            downloads: 0,
+            bytesUp: 0,
+            bytesDown: 0
+        };
+        
+        function trackSyncUpload(bytes) {
+            syncTraffic.uploads++;
+            syncTraffic.bytesUp += bytes || 0;
+            updateSyncTrafficUI();
+        }
+        
+        function trackSyncDownload(bytes) {
+            syncTraffic.downloads++;
+            syncTraffic.bytesDown += bytes || 0;
+            updateSyncTrafficUI();
+        }
+        
+        function updateSyncTrafficUI() {
+            const uploadEl = document.getElementById('uploadCount');
+            const downloadEl = document.getElementById('downloadCount');
+            const bytesEl = document.getElementById('totalSyncBytes');
+            
+            if (uploadEl) uploadEl.textContent = syncTraffic.uploads;
+            if (downloadEl) downloadEl.textContent = syncTraffic.downloads;
+            if (bytesEl) {
+                const totalBytes = syncTraffic.bytesUp + syncTraffic.bytesDown;
+                if (totalBytes >= 1048576) {
+                    bytesEl.textContent = (totalBytes / 1048576).toFixed(2) + ' MB';
+                } else if (totalBytes >= 1024) {
+                    bytesEl.textContent = (totalBytes / 1024).toFixed(1) + ' KB';
+                } else {
+                    bytesEl.textContent = totalBytes + ' B';
+                }
+            }
+        }
+        
         // Auto-refresh timer for users section
         let autoRefreshInterval = null;
         const AUTO_REFRESH_SECONDS = 15; // Refresh every 15 seconds
@@ -7888,8 +7952,12 @@
                 const response = await fetch(`${awsApiUrl}/users`);
                 if (!response.ok) return;
                 
-                const awsUsers = await response.json();
-                console.log(`☁️ Fetched ${Object.keys(awsUsers).length} users from DynamoDB`);
+                const responseText = await response.text();
+                const responseBytes = new Blob([responseText]).size;
+                trackSyncDownload(responseBytes);
+                
+                const awsUsers = JSON.parse(responseText);
+                console.log(`☁️ Fetched ${Object.keys(awsUsers).length} users from DynamoDB (${(responseBytes/1024).toFixed(1)}KB)`);
                 
                 // CLEAR existing local users first
                 const existingUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
@@ -8078,10 +8146,13 @@
                 
                 // Step 3: Bulk upload all users
                 console.log(`📤 Uploading ${usersToUpload.length} users...`);
+                const uploadBody = JSON.stringify({ users: usersToUpload });
+                trackSyncUpload(new Blob([uploadBody]).size);
+                
                 const response = await fetch(`${awsApiUrl}/users/bulk`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ users: usersToUpload })
+                    body: uploadBody
                 });
                 
                 if (!response.ok) {
@@ -8220,6 +8291,143 @@
         // ==========================================
         // NAVIGATION
         // ==========================================
+        
+        // ==========================================
+        // SIDEBAR EDIT / REORDER FUNCTIONALITY
+        // ==========================================
+        
+        let sidebarEditMode = false;
+        let originalSidebarOrder = [];
+        
+        function toggleSidebarEdit() {
+            sidebarEditMode = !sidebarEditMode;
+            
+            const editBtn = document.getElementById('editSidebarBtn');
+            const saveBtn = document.getElementById('saveSidebarBtn');
+            const cancelBtn = document.getElementById('cancelSidebarBtn');
+            
+            if (sidebarEditMode) {
+                // Save original order
+                originalSidebarOrder = getSidebarOrder();
+                
+                // Show save/cancel buttons
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'block';
+                cancelBtn.style.display = 'block';
+                
+                // Add reorder controls to each nav-item
+                document.querySelectorAll('.nav-item').forEach((item, index) => {
+                    if (!item.querySelector('.reorder-controls')) {
+                        const controls = document.createElement('div');
+                        controls.className = 'reorder-controls';
+                        controls.innerHTML = `
+                            <button onclick="event.stopPropagation(); moveNavItem(this.closest('.nav-item'), -1)" style="background: none; border: none; color: #666; cursor: pointer; padding: 2px;">▲</button>
+                            <button onclick="event.stopPropagation(); moveNavItem(this.closest('.nav-item'), 1)" style="background: none; border: none; color: #666; cursor: pointer; padding: 2px;">▼</button>
+                        `;
+                        controls.style.cssText = 'margin-left: auto; display: flex; flex-direction: column; gap: 0;';
+                        item.appendChild(controls);
+                    }
+                });
+                
+                // Add visual edit indicator
+                document.querySelector('.sidebar').style.border = '2px dashed var(--accent)';
+                
+            } else {
+                exitSidebarEditMode();
+            }
+        }
+        
+        function exitSidebarEditMode() {
+            sidebarEditMode = false;
+            
+            const editBtn = document.getElementById('editSidebarBtn');
+            const saveBtn = document.getElementById('saveSidebarBtn');
+            const cancelBtn = document.getElementById('cancelSidebarBtn');
+            
+            editBtn.style.display = 'block';
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            
+            // Remove reorder controls
+            document.querySelectorAll('.reorder-controls').forEach(el => el.remove());
+            
+            // Remove visual indicator
+            document.querySelector('.sidebar').style.border = 'none';
+        }
+        
+        function moveNavItem(item, direction) {
+            const parent = item.parentElement;
+            const items = Array.from(parent.querySelectorAll('.nav-item'));
+            const currentIndex = items.indexOf(item);
+            const newIndex = currentIndex + direction;
+            
+            if (newIndex < 0 || newIndex >= items.length) return;
+            
+            if (direction === -1) {
+                parent.insertBefore(item, items[newIndex]);
+            } else {
+                parent.insertBefore(items[newIndex], item);
+            }
+        }
+        
+        function getSidebarOrder() {
+            const order = [];
+            document.querySelectorAll('.nav-section').forEach(section => {
+                const sectionId = section.dataset.section || section.id;
+                const items = [];
+                section.querySelectorAll('.nav-item').forEach(item => {
+                    const onclick = item.getAttribute('onclick') || '';
+                    const match = onclick.match(/showSection\('([^']+)'\)/);
+                    if (match) items.push(match[1]);
+                });
+                order.push({ section: sectionId, items });
+            });
+            return order;
+        }
+        
+        function saveSidebarOrder() {
+            const order = getSidebarOrder();
+            localStorage.setItem('oith_sidebar_order', JSON.stringify(order));
+            showToast('✅ Sidebar layout saved!', 'success');
+            exitSidebarEditMode();
+        }
+        
+        function cancelSidebarEdit() {
+            // Restore original order
+            restoreSidebarOrder(originalSidebarOrder);
+            exitSidebarEditMode();
+            showToast('Sidebar changes cancelled', 'info');
+        }
+        
+        function restoreSidebarOrder(order) {
+            order.forEach(sectionData => {
+                const section = document.querySelector(`[data-section="${sectionData.section}"]`) || 
+                               document.getElementById(`nav-section-${sectionData.section}`);
+                if (!section) return;
+                
+                sectionData.items.forEach(itemId => {
+                    const item = section.querySelector(`[onclick*="showSection('${itemId}')"]`);
+                    if (item) section.appendChild(item);
+                });
+            });
+        }
+        
+        function loadSavedSidebarOrder() {
+            const saved = localStorage.getItem('oith_sidebar_order');
+            if (saved) {
+                try {
+                    const order = JSON.parse(saved);
+                    restoreSidebarOrder(order);
+                } catch (e) {
+                    console.log('Could not restore sidebar order');
+                }
+            }
+        }
+        
+        // Load saved sidebar order on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(loadSavedSidebarOrder, 100);
+        });
         
         function showSection(section) {
             // Track current section for refresh
@@ -9712,10 +9920,8 @@
                 testBroadcastConnection();
             }, 500);
             
-            // Auto-run diagnostics on page load for immediate visibility
-            setTimeout(() => {
-                runSiteDiagnostics();
-            }, 300);
+            // Site diagnostics now runs only when user clicks "Run Analysis" button
+            // (removed auto-run to give user control over when to generate reports)
         }
 
         function renderAdminArchitectureMap() {
