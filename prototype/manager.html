@@ -14918,59 +14918,165 @@
             showToast('✅ Bank account settings saved successfully!');
         }
         
-        function renderTransactionsTable() {
-            // Get all transactions from user billing histories
-            const transactions = [];
-            
-            Object.keys(allUserData).forEach(email => {
-                const userData = allUserData[email];
-                const billingHistory = userData.user?.billingHistory || [];
-                
-                billingHistory.forEach(transaction => {
-                    transactions.push({
-                        ...transaction,
-                        userEmail: email,
-                        userName: userData.user?.firstName || email.split('@')[0]
-                    });
-                });
-            });
-            
-            // Sort by date descending
-            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            const tbody = document.getElementById('transactionsTable');
-            
-            if (transactions.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
-                            No transactions yet. Transactions will appear as users subscribe.
-                        </td>
-                    </tr>
-                `;
-                return;
+        // Stripe API URL for transactions
+        const STRIPE_API_URL = 'https://ludksg8e3g.execute-api.us-east-1.amazonaws.com/api';
+        
+        // Cache for Stripe transactions
+        let stripeTransactionsCache = null;
+        let stripeTransactionsLastFetch = null;
+        
+        async function fetchStripeTransactions() {
+            // Use cache if less than 30 seconds old
+            if (stripeTransactionsCache && stripeTransactionsLastFetch && 
+                (Date.now() - stripeTransactionsLastFetch) < 30000) {
+                return stripeTransactionsCache;
             }
             
-            const bankSettings = JSON.parse(localStorage.getItem('oith_bank_settings') || '{}');
-            const bankDisplay = bankSettings.bankName ? `${bankSettings.bankName} ****${bankSettings.accountNumber?.slice(-4) || ''}` : 'Not configured';
-            
-            tbody.innerHTML = transactions.slice(0, 20).map(t => {
-                const date = new Date(t.date).toLocaleDateString();
-                const status = t.status === 'paid' ? 
-                    '<span class="status-badge active">Paid</span>' : 
-                    '<span class="status-badge warning">Pending</span>';
+            try {
+                const response = await fetch(`${STRIPE_API_URL}/transactions`);
+                if (!response.ok) throw new Error('Failed to fetch transactions');
                 
-                return `
-                    <tr>
-                        <td>${date}</td>
-                        <td>${t.userName}</td>
-                        <td>${t.description || 'Subscription'}</td>
-                        <td style="color: var(--success); font-weight: 500;">$${t.amount?.toFixed(2) || '10.00'}</td>
-                        <td>${status}</td>
-                        <td style="font-size: 0.8rem; color: var(--text-muted);">${bankDisplay}</td>
-                    </tr>
-                `;
-            }).join('');
+                const data = await response.json();
+                stripeTransactionsCache = data;
+                stripeTransactionsLastFetch = Date.now();
+                return data;
+            } catch (error) {
+                console.error('Error fetching Stripe transactions:', error);
+                return null;
+            }
+        }
+        
+        async function renderTransactionsTable() {
+            const tbody = document.getElementById('transactionsTable');
+            
+            // Show loading state
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <svg class="animate-spin" style="width: 20px; height: 20px; animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                                <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
+                            </svg>
+                            Loading transactions from Stripe...
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            // Fetch from Stripe API
+            const stripeData = await fetchStripeTransactions();
+            
+            if (stripeData && stripeData.transactions && stripeData.transactions.length > 0) {
+                const transactions = stripeData.transactions;
+                
+                // Update revenue stats from Stripe data
+                if (stripeData.summary) {
+                    const summary = stripeData.summary;
+                    updateEl('dailyRevenue', '$' + summary.dailyRevenue.toFixed(2));
+                    updateEl('mtdRevenue', '$' + summary.monthlyRevenue.toFixed(2));
+                    updateEl('ytdRevenue', '$' + summary.yearlyRevenue.toFixed(2));
+                }
+                
+                tbody.innerHTML = transactions.slice(0, 20).map(t => {
+                    const date = new Date(t.date).toLocaleDateString();
+                    const time = new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    let statusBadge = '';
+                    if (t.refunded) {
+                        statusBadge = '<span class="status-badge" style="background: var(--danger);">Refunded</span>';
+                    } else if (t.status === 'paid' || t.status === 'succeeded') {
+                        statusBadge = '<span class="status-badge active">Paid</span>';
+                    } else if (t.status === 'pending') {
+                        statusBadge = '<span class="status-badge warning">Pending</span>';
+                    } else {
+                        statusBadge = `<span class="status-badge">${t.status}</span>`;
+                    }
+                    
+                    const userName = t.customerName || t.customerEmail?.split('@')[0] || 'Customer';
+                    const cardInfo = t.paymentMethod ? `${t.paymentMethod.toUpperCase()} ****${t.last4}` : 'Card';
+                    
+                    return `
+                        <tr>
+                            <td>
+                                <div>${date}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${time}</div>
+                            </td>
+                            <td>
+                                <div>${userName}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${t.customerEmail || ''}</div>
+                            </td>
+                            <td>${t.description || 'Subscription'}</td>
+                            <td style="color: ${t.refunded ? 'var(--danger)' : 'var(--success)'}; font-weight: 500;">
+                                ${t.refunded ? '-' : ''}$${t.amount?.toFixed(2) || '0.00'}
+                            </td>
+                            <td>${statusBadge}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">
+                                <div>${cardInfo}</div>
+                                ${t.receiptUrl ? `<a href="${t.receiptUrl}" target="_blank" style="color: var(--accent); font-size: 0.7rem;">Receipt</a>` : ''}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                // Add last updated timestamp
+                const lastUpdated = stripeData.lastUpdated ? new Date(stripeData.lastUpdated).toLocaleTimeString() : 'now';
+                const headerEl = document.querySelector('#transactionsTable')?.closest('.card')?.querySelector('.card-header h3');
+                if (headerEl) {
+                    headerEl.innerHTML = `📋 Recent Transactions <span style="font-size: 0.7rem; font-weight: normal; color: var(--text-muted);">Updated ${lastUpdated}</span>`;
+                }
+                
+            } else {
+                // Fallback to local data if Stripe API fails
+                const transactions = [];
+                
+                Object.keys(allUserData).forEach(email => {
+                    const userData = allUserData[email];
+                    const billingHistory = userData.user?.billingHistory || [];
+                    
+                    billingHistory.forEach(transaction => {
+                        transactions.push({
+                            ...transaction,
+                            userEmail: email,
+                            userName: userData.user?.firstName || email.split('@')[0]
+                        });
+                    });
+                });
+                
+                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                if (transactions.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                No transactions yet. Transactions will appear as users subscribe.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                const bankSettings = JSON.parse(localStorage.getItem('oith_bank_settings') || '{}');
+                const bankDisplay = bankSettings.bankName ? `${bankSettings.bankName} ****${bankSettings.accountNumber?.slice(-4) || ''}` : 'Not configured';
+                
+                tbody.innerHTML = transactions.slice(0, 20).map(t => {
+                    const date = new Date(t.date).toLocaleDateString();
+                    const status = t.status === 'paid' ? 
+                        '<span class="status-badge active">Paid</span>' : 
+                        '<span class="status-badge warning">Pending</span>';
+                    
+                    return `
+                        <tr>
+                            <td>${date}</td>
+                            <td>${t.userName}</td>
+                            <td>${t.description || 'Subscription'}</td>
+                            <td style="color: var(--success); font-weight: 500;">$${t.amount?.toFixed(2) || '10.00'}</td>
+                            <td>${status}</td>
+                            <td style="font-size: 0.8rem; color: var(--text-muted);">${bankDisplay}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
         }
         
         function exportTransactions() {

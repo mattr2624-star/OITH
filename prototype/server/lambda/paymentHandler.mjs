@@ -293,6 +293,116 @@ export const handler = async (event) => {
             };
         }
         
+        // ============ LIST TRANSACTIONS (Admin Dashboard) ============
+        if (method === 'GET' && path.includes('/transactions')) {
+            const stripeClient = await getStripe();
+            
+            try {
+                // Get recent payment intents (successful charges)
+                const paymentIntents = await stripeClient.paymentIntents.list({
+                    limit: 100,
+                });
+                
+                // Get recent invoices for subscription payments
+                const invoices = await stripeClient.invoices.list({
+                    limit: 100,
+                    status: 'paid'
+                });
+                
+                // Get charges for more details
+                const charges = await stripeClient.charges.list({
+                    limit: 100
+                });
+                
+                // Combine and format transactions
+                const transactions = [];
+                
+                // Process charges (most reliable for transaction history)
+                for (const charge of charges.data) {
+                    // Get customer email
+                    let customerEmail = charge.billing_details?.email || '';
+                    let customerName = charge.billing_details?.name || '';
+                    
+                    if (charge.customer && !customerEmail) {
+                        try {
+                            const customer = await stripeClient.customers.retrieve(charge.customer);
+                            customerEmail = customer.email || '';
+                            customerName = customerName || customer.name || '';
+                        } catch (e) {
+                            // Customer may have been deleted
+                        }
+                    }
+                    
+                    transactions.push({
+                        id: charge.id,
+                        date: new Date(charge.created * 1000).toISOString(),
+                        amount: charge.amount / 100, // Convert cents to dollars
+                        currency: charge.currency.toUpperCase(),
+                        status: charge.status === 'succeeded' ? 'paid' : charge.status,
+                        description: charge.description || 'Subscription Payment',
+                        customerEmail: customerEmail,
+                        customerName: customerName,
+                        paymentMethod: charge.payment_method_details?.card?.brand || 'card',
+                        last4: charge.payment_method_details?.card?.last4 || '****',
+                        receiptUrl: charge.receipt_url,
+                        refunded: charge.refunded,
+                        metadata: charge.metadata
+                    });
+                }
+                
+                // Sort by date descending
+                transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                // Calculate summary stats
+                const now = new Date();
+                const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const startOfYear = new Date(now.getFullYear(), 0, 1);
+                
+                const paidTransactions = transactions.filter(t => t.status === 'paid' && !t.refunded);
+                
+                const dailyRevenue = paidTransactions
+                    .filter(t => new Date(t.date) >= startOfDay)
+                    .reduce((sum, t) => sum + t.amount, 0);
+                    
+                const monthlyRevenue = paidTransactions
+                    .filter(t => new Date(t.date) >= startOfMonth)
+                    .reduce((sum, t) => sum + t.amount, 0);
+                    
+                const yearlyRevenue = paidTransactions
+                    .filter(t => new Date(t.date) >= startOfYear)
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const totalRevenue = paidTransactions
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        transactions: transactions,
+                        summary: {
+                            totalTransactions: transactions.length,
+                            paidTransactions: paidTransactions.length,
+                            dailyRevenue: dailyRevenue,
+                            monthlyRevenue: monthlyRevenue,
+                            yearlyRevenue: yearlyRevenue,
+                            totalRevenue: totalRevenue
+                        },
+                        lastUpdated: new Date().toISOString()
+                    })
+                };
+                
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+                return {
+                    statusCode: 500,
+                    headers,
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
+        }
+        
         // ============ CANCEL SUBSCRIPTION ============
         if (method === 'POST' && path.includes('/cancel-subscription')) {
             const stripeClient = await getStripe();
