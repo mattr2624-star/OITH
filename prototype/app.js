@@ -2330,6 +2330,16 @@ function syncUsersToMatchPool() {
             return;
         }
         
+        // Get user coordinates for distance calculation
+        const userCoords = user.coordinates || userData.coordinates || getCoordinates(user.location || regUser.location);
+        
+        // Get user's match preferences
+        const userPrefs = user.matchPreferences || user.preferences || userData.matchPreferences || {};
+        
+        // Check visibility status - user is not visible if currently in an active match
+        const isVisible = !userData.activeConnection && 
+                          !(userData.oneMatch?.current && !userData.oneMatch?.decisionMade);
+        
         // Create profile from user data
         const userProfile = {
             id: `user_${email.replace(/[^a-z0-9]/gi, '_')}`,
@@ -2340,14 +2350,18 @@ function syncUsersToMatchPool() {
             photos: user.photos || [],
             occupation: user.occupation || 'Professional',
             location: user.location || regUser.location || 'Unknown',
+            coordinates: userCoords,
             bio: user.bio || 'Looking to meet new people!',
-            distance: Math.floor(Math.random() * 15) + 1,
-            distanceText: `${Math.floor(Math.random() * 15) + 1} miles`,
-            compatibility: Math.floor(Math.random() * 25) + 70,
+            // Distance will be calculated dynamically based on current user's location
+            distance: 0,
+            distanceText: '0 miles',
+            // Compatibility will be calculated based on preference alignment
+            compatibility: 0,
             gender: (user.gender || regUser.gender || 'female').toLowerCase(),
             ethnicity: user.ethnicity || 'not specified',
             bodyType: user.bodyType || 'Average',
             height: user.height || "5'6\"",
+            heightInches: parseHeightToInches(user.height || "5'6\""),
             education: user.education || 'bachelors',
             children: user.children || 'not specified',
             drinking: user.drinking || 'socially',
@@ -2356,6 +2370,10 @@ function syncUsersToMatchPool() {
             religion: user.religion || 'not specified',
             interests: user.interests || ['Movies', 'Travel', 'Dining'],
             lookingFor: user.lookingFor || 'relationship',
+            // Store their match preferences for mutual matching
+            matchPreferences: userPrefs,
+            // Visibility tracking
+            isVisible: isVisible,
             isRealUser: true,
             isTestBot: false,
             online: true,
@@ -2384,6 +2402,14 @@ function syncUsersToMatchPool() {
         const botCoords = getCoordinates(botLocation);
         const calculatedDistance = getDistanceToProfile({ location: botLocation, coordinates: botCoords });
         
+        // Bot's simulated preferences (attracted to opposite gender by default)
+        const botPrefs = bot.matchPreferences || {
+            interestedIn: bot.gender?.toLowerCase() === 'male' ? 'women' : 'men',
+            ageMin: 21,
+            ageMax: 45,
+            maxDistance: 50
+        };
+        
         const botProfile = {
             id: bot.id || `bot_${bot.name.replace(/\s+/g, '_')}`,
             name: bot.name,
@@ -2393,20 +2419,28 @@ function syncUsersToMatchPool() {
             location: botLocation,
             coordinates: botCoords,
             bio: bot.bio || 'Looking to meet new people!',
+            // Distance calculated from coordinates
             distance: calculatedDistance,
             distanceText: `${calculatedDistance} miles`,
-            compatibility: Math.floor(Math.random() * 20) + 75,
+            // Compatibility will be calculated based on preference alignment
+            compatibility: 0,
             gender: (bot.gender || 'female').toLowerCase(),
             ethnicity: bot.ethnicity || 'white',
             bodyType: bot.bodyType || 'Average',
             height: bot.height || "5'6\"",
+            heightInches: parseHeightToInches(bot.height || "5'6\""),
             education: bot.education || 'bachelors',
             children: bot.wantsKids || 'someday',
             drinking: bot.drinking || 'socially',
             smoking: bot.smoking || 'never',
+            exercise: bot.exercise || 'sometimes',
             religion: bot.religion || 'spiritual',
             interests: bot.interests || ['Movies', 'Travel', 'Dining'],
             lookingFor: bot.relationshipGoal || 'relationship',
+            // Store bot's simulated preferences for mutual matching
+            matchPreferences: botPrefs,
+            // Bots are always visible
+            isVisible: true,
             isTestBot: true,
             isRealUser: false,
             online: true,
@@ -3029,11 +3063,18 @@ function syncTestBotsToMatchPool(testBots) {
 
 /**
  * Get the next match from the pool
- * In production, this would be AI-powered matching
+ * IMPROVED MATCHING ALGORITHM:
+ * 1. Both users must be VISIBLE (not in an active match)
+ * 2. MUTUAL MATCHING: Each user must fit the other's preferences
+ * 3. Distance calculated from actual coordinates
+ * 4. Compatibility calculated from preference alignment
+ * 5. Results sorted by compatibility percentage
+ * 
  * ONE PROFILE AT A TIME - returns single best match
  */
 function getNextMatch() {
     const currentUserEmail = appState.user?.email?.toLowerCase();
+    const currentUser = appState.user;
     
     // Sync ALL users (real users + active test bots) to match pool
     syncUsersToMatchPool();
@@ -3042,66 +3083,80 @@ function getNextMatch() {
     const testBots = JSON.parse(localStorage.getItem('oith_test_bots') || '[]');
     const activeBots = testBots.filter(bot => bot.active);
     
-    console.log(`📊 Database sync complete. Pool has ${appState.matchPool.length} profiles`);
-    console.log(`   - Active test bots: ${activeBots.length}`);
-    console.log(`   - Current user: ${currentUserEmail}`);
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`🔍 MATCHING ALGORITHM - Finding matches for: ${currentUser?.firstName || currentUserEmail}`);
+    console.log(`${'='.repeat(60)}`);
+    console.log(`📊 Pool has ${appState.matchPool.length} profiles (${activeBots.length} active bots)`);
     
-    // Filter matches - include real users AND active test bots, exclude self
+    // Get current user's preferences and profile
+    const myPrefs = currentUser?.matchPreferences || currentUser?.preferences || {};
+    const myProfile = {
+        gender: currentUser?.gender?.toLowerCase() || 'unknown',
+        age: currentUser?.age || 25,
+        location: currentUser?.location,
+        coordinates: currentUser?.coordinates,
+        height: currentUser?.height,
+        heightInches: parseHeightToInches(currentUser?.height),
+        bodyType: currentUser?.bodyType,
+        ethnicity: currentUser?.ethnicity,
+        education: currentUser?.education,
+        smoking: currentUser?.smoking,
+        drinking: currentUser?.drinking,
+        exercise: currentUser?.exercise,
+        children: currentUser?.children,
+        religion: currentUser?.religion,
+        lookingFor: currentUser?.lookingFor,
+        interests: currentUser?.interests || []
+    };
+    
+    console.log(`👤 My preferences:`, myPrefs);
+    console.log(`👤 My profile:`, { gender: myProfile.gender, age: myProfile.age, location: myProfile.location });
+    
+    // STEP 1: Filter out invalid matches (self, already connected, passed, inactive)
     const availableMatches = appState.matchPool.filter(match => {
         // Never show current user to themselves
         if (match.email && match.email.toLowerCase() === currentUserEmail) {
-            console.log(`  ⏭️ ${match.name}: Skipping (this is the current user)`);
             return false;
         }
         
+        // Check if already connected or passed
         const wasConnected = appState.connections.some(c => c.id === match.id);
         const wasPassed = appState.passedMatches && appState.passedMatches.includes(match.id);
         
-        if (wasConnected) {
-            console.log(`  ❌ ${match.name}: Already connected`);
-            return false;
-        }
-        if (wasPassed) {
-            console.log(`  ❌ ${match.name}: Already passed`);
+        if (wasConnected || wasPassed) {
+            console.log(`  ⏭️ ${match.name}: Already ${wasConnected ? 'connected' : 'passed'}`);
             return false;
         }
         
-        // Include real users
-        if (match.isRealUser) {
-            console.log(`  ✅ ${match.name}: Real user - included`);
-            return true;
+        // VISIBILITY CHECK: Skip profiles that are currently in an active match
+        if (match.isVisible === false) {
+            console.log(`  👁️ ${match.name}: Not visible (in active match)`);
+            return false;
         }
         
-        // Include active test bots
+        // Check if test bot is active
         if (match.isTestBot) {
             const isActive = activeBots.some(b => 
                 b.name.toLowerCase() === match.name.toLowerCase() || b.id === match.id
             );
-            if (isActive) {
-                console.log(`  🤖 ${match.name}: Active test bot - included`);
-                return true;
-            } else {
-                console.log(`  ⏭️ ${match.name}: Inactive test bot - skipped`);
+            if (!isActive) {
+                console.log(`  🤖 ${match.name}: Inactive test bot - skipped`);
                 return false;
             }
         }
         
-        // Skip hardcoded demo profiles if we have real users or bots
+        // Skip demo profiles if we have real users or bots
         const hasRealMatches = appState.matchPool.some(m => m.isRealUser || m.isTestBot);
         if (hasRealMatches && !match.isRealUser && !match.isTestBot) {
-            console.log(`  ⏭️ ${match.name}: Demo profile skipped (real users available)`);
             return false;
         }
         
-        // Include demo profiles only if no real users or bots are available
-        console.log(`  📝 ${match.name}: Demo profile - included (no real users)`);
         return true;
     });
     
-    console.log(`🎯 Available matches after filtering: ${availableMatches.length}`, availableMatches.map(m => m.name));
+    console.log(`\n📋 Available profiles after basic filtering: ${availableMatches.length}`);
     
     if (availableMatches.length === 0) {
-        // All matches exhausted - reset passed matches if preferences changed
         if (appState.preferencesChanged) {
             appState.passedMatches = [];
             appState.preferencesChanged = false;
@@ -3110,139 +3165,317 @@ function getNextMatch() {
         return null;
     }
     
-    // Get user's match preferences (use matchPreferences if set, fall back to basic preferences)
-    const prefs = appState.user.matchPreferences || appState.user.preferences || {};
+    // STEP 2: MUTUAL PREFERENCE MATCHING
+    // For each potential match, check:
+    // A) Does the match fit MY preferences?
+    // B) Do I fit the MATCH'S preferences?
+    console.log(`\n🔄 MUTUAL MATCHING CHECK:`);
     
-    console.log('🔍 Filtering matches with preferences:', prefs);
-    
-    // Filter by ALL match preferences
-    const filteredMatches = availableMatches.filter(match => {
-        // Age filter
-        const ageMin = prefs.ageMin || 18;
-        const ageMax = prefs.ageMax || 99;
-        if (match.age < ageMin || match.age > ageMax) {
-            console.log(`  ❌ ${match.name}: Age ${match.age} not in range ${ageMin}-${ageMax}`);
+    const mutualMatches = availableMatches.filter(match => {
+        console.log(`\n  Checking: ${match.name} (${match.gender}, ${match.age})`);
+        
+        // A) Check if MATCH fits MY preferences
+        const matchFitsMyPrefs = checkProfileFitsPreferences(match, myPrefs, myProfile, '    [A] Match→Me:');
+        if (!matchFitsMyPrefs.passes) {
+            console.log(`    ❌ ${match.name} does NOT fit my preferences: ${matchFitsMyPrefs.reason}`);
             return false;
         }
+        console.log(`    ✅ ${match.name} fits my preferences`);
         
-        // Distance filter
-        const maxDistance = prefs.maxDistance || prefs.distance || 100;
-        if (match.distance > maxDistance) {
-            console.log(`  ❌ ${match.name}: Distance ${match.distance}mi exceeds max ${maxDistance}mi`);
+        // B) Check if I fit the MATCH'S preferences
+        const theirPrefs = match.matchPreferences || {};
+        const iFitTheirPrefs = checkProfileFitsPreferences(myProfile, theirPrefs, match, '    [B] Me→Match:');
+        if (!iFitTheirPrefs.passes) {
+            console.log(`    ❌ I do NOT fit ${match.name}'s preferences: ${iFitTheirPrefs.reason}`);
             return false;
         }
+        console.log(`    ✅ I fit ${match.name}'s preferences`);
         
-        // Body type filter (if specified)
-        if (prefs.bodyType && prefs.bodyType.length > 0) {
-            const matchBodyType = match.bodyType?.toLowerCase().replace('-', '');
-            const prefsBodyTypes = prefs.bodyType.map(bt => bt.toLowerCase().replace('-', ''));
-            if (!prefsBodyTypes.some(bt => matchBodyType?.includes(bt) || bt.includes(matchBodyType))) {
-                console.log(`  ❌ ${match.name}: Body type "${match.bodyType}" not in [${prefs.bodyType.join(', ')}]`);
-                return false;
-            }
-        }
-        
-        // Ethnicity filter (if specified)
-        if (prefs.ethnicity && prefs.ethnicity !== '' && prefs.ethnicity !== 'any') {
-            if (match.ethnicity?.toLowerCase() !== prefs.ethnicity.toLowerCase()) {
-                console.log(`  ❌ ${match.name}: Ethnicity "${match.ethnicity}" doesn't match "${prefs.ethnicity}"`);
-                return false;
-            }
-        }
-        
-        // Education filter (if specified)
-        if (prefs.education && prefs.education !== '' && prefs.education !== 'any') {
-            const educationLevels = ['high-school', 'some-college', 'bachelors', 'masters', 'doctorate'];
-            const minEducationIndex = educationLevels.indexOf(prefs.education);
-            const matchEducationIndex = educationLevels.indexOf(match.education);
-            if (minEducationIndex > -1 && matchEducationIndex < minEducationIndex) {
-                console.log(`  ❌ ${match.name}: Education "${match.education}" below minimum "${prefs.education}"`);
-                return false;
-            }
-        }
-        
-        // Smoking filter (if specified)
-        if (prefs.smoking && prefs.smoking.length > 0) {
-            const matchSmoking = match.smoking?.toLowerCase();
-            const prefsSmoking = prefs.smoking.map(s => s.toLowerCase());
-            if (!prefsSmoking.includes(matchSmoking)) {
-                console.log(`  ❌ ${match.name}: Smoking "${match.smoking}" not in [${prefs.smoking.join(', ')}]`);
-                return false;
-            }
-        }
-        
-        // Drinking filter (if specified)
-        if (prefs.drinking && prefs.drinking.length > 0) {
-            const matchDrinking = match.drinking?.toLowerCase();
-            const prefsDrinking = prefs.drinking.map(d => d.toLowerCase());
-            if (!prefsDrinking.includes(matchDrinking)) {
-                console.log(`  ❌ ${match.name}: Drinking "${match.drinking}" not in [${prefs.drinking.join(', ')}]`);
-                return false;
-            }
-        }
-        
-        // Exercise filter (if specified)
-        if (prefs.exercise && prefs.exercise !== '' && prefs.exercise !== 'any') {
-            if (match.exercise?.toLowerCase() !== prefs.exercise.toLowerCase()) {
-                console.log(`  ❌ ${match.name}: Exercise "${match.exercise}" doesn't match "${prefs.exercise}"`);
-                return false;
-            }
-        }
-        
-        // Children filter (if specified)
-        if (prefs.children && prefs.children !== '' && prefs.children !== 'any') {
-            if (match.children !== prefs.children) {
-                console.log(`  ❌ ${match.name}: Children preference "${match.children}" doesn't match "${prefs.children}"`);
-                return false;
-            }
-        }
-        
-        // Religion filter (if specified)
-        if (prefs.religion && prefs.religion !== '' && prefs.religion !== 'any') {
-            if (match.religion?.toLowerCase() !== prefs.religion.toLowerCase()) {
-                console.log(`  ❌ ${match.name}: Religion "${match.religion}" doesn't match "${prefs.religion}"`);
-                return false;
-            }
-        }
-        
-        // Looking for filter (if specified)
-        if (prefs.lookingFor && prefs.lookingFor.length > 0) {
-            const matchLookingFor = match.lookingFor?.toLowerCase();
-            const prefsLookingFor = prefs.lookingFor.map(lf => lf.toLowerCase());
-            if (!prefsLookingFor.includes(matchLookingFor)) {
-                console.log(`  ❌ ${match.name}: Looking for "${match.lookingFor}" not in [${prefs.lookingFor.join(', ')}]`);
-                return false;
-            }
-        }
-        
-        // Height filter (if specified)
-        if (prefs.heightMin && match.heightInches) {
-            if (match.heightInches < prefs.heightMin) {
-                console.log(`  ❌ ${match.name}: Height ${match.heightInches}in below min ${prefs.heightMin}in`);
-                return false;
-            }
-        }
-        if (prefs.heightMax && match.heightInches) {
-            if (match.heightInches > prefs.heightMax) {
-                console.log(`  ❌ ${match.name}: Height ${match.heightInches}in above max ${prefs.heightMax}in`);
-                return false;
-            }
-        }
-        
-        console.log(`  ✅ ${match.name}: Matches all preferences!`);
+        console.log(`    🎉 MUTUAL MATCH: ${match.name}`);
         return true;
     });
     
-    console.log(`📊 Found ${filteredMatches.length} matches out of ${availableMatches.length} available`);
+    console.log(`\n💕 Mutual matches found: ${mutualMatches.length}`);
     
-    if (filteredMatches.length === 0) {
-        console.log('⚠️ No matches within preferences - consider adjusting filters');
-        // Return null to show "no matches" message instead of ignoring preferences
+    if (mutualMatches.length === 0) {
+        console.log('⚠️ No mutual matches found - consider adjusting preferences');
         return null;
     }
     
-    // Return the highest compatibility match - ONE AT A TIME
-    return filteredMatches.sort((a, b) => b.compatibility - a.compatibility)[0];
+    // STEP 3: Calculate distance and compatibility for each mutual match
+    console.log(`\n📊 CALCULATING COMPATIBILITY & DISTANCE:`);
+    
+    const scoredMatches = mutualMatches.map(match => {
+        // Calculate real distance from coordinates
+        const distance = calculateDistanceBetween(myProfile.coordinates, match.coordinates);
+        
+        // Calculate compatibility score
+        const compatibility = calculateMatchCompatibility(myProfile, match, myPrefs);
+        
+        console.log(`  ${match.name}: ${distance}mi away, ${compatibility}% compatible`);
+        
+        return {
+            ...match,
+            distance: distance,
+            distanceText: `${distance} miles`,
+            compatibility: compatibility
+        };
+    });
+    
+    // STEP 4: Sort by compatibility (highest first) and return best match
+    scoredMatches.sort((a, b) => b.compatibility - a.compatibility);
+    
+    console.log(`\n🏆 TOP MATCHES (sorted by compatibility):`);
+    scoredMatches.slice(0, 5).forEach((m, i) => {
+        console.log(`  ${i + 1}. ${m.name}: ${m.compatibility}% compatible, ${m.distance}mi away`);
+    });
+    
+    const bestMatch = scoredMatches[0];
+    console.log(`\n✨ Selected match: ${bestMatch.name} (${bestMatch.compatibility}% compatible)`);
+    console.log(`${'='.repeat(60)}\n`);
+    
+    return bestMatch;
+}
+
+/**
+ * Check if a profile fits a set of preferences
+ * Returns { passes: boolean, reason: string }
+ */
+function checkProfileFitsPreferences(profile, prefs, viewer, logPrefix = '') {
+    // Gender preference check
+    const interestedIn = prefs.interestedIn || 'everyone';
+    if (interestedIn !== 'everyone') {
+        const profileGender = profile.gender?.toLowerCase();
+        const wantsGender = interestedIn.toLowerCase();
+        
+        // Map preference terms to gender
+        const genderMap = {
+            'men': 'male',
+            'women': 'female',
+            'male': 'male',
+            'female': 'female'
+        };
+        
+        const targetGender = genderMap[wantsGender] || wantsGender;
+        if (profileGender !== targetGender) {
+            return { passes: false, reason: `Gender mismatch (wants ${interestedIn}, is ${profileGender})` };
+        }
+    }
+    
+    // Age range check
+    const ageMin = prefs.ageMin || 18;
+    const ageMax = prefs.ageMax || 99;
+    const profileAge = profile.age || 25;
+    if (profileAge < ageMin || profileAge > ageMax) {
+        return { passes: false, reason: `Age ${profileAge} not in range ${ageMin}-${ageMax}` };
+    }
+    
+    // Distance check (using viewer's coordinates)
+    const maxDistance = prefs.maxDistance || prefs.distance || 100;
+    const distance = calculateDistanceBetween(viewer?.coordinates, profile.coordinates);
+    if (distance > maxDistance) {
+        return { passes: false, reason: `Distance ${distance}mi exceeds max ${maxDistance}mi` };
+    }
+    
+    // Height check
+    if (prefs.heightMin) {
+        const minInches = typeof prefs.heightMin === 'number' ? prefs.heightMin : parseHeightToInches(prefs.heightMin);
+        const profileInches = profile.heightInches || parseHeightToInches(profile.height);
+        if (profileInches && minInches && profileInches < minInches) {
+            return { passes: false, reason: `Height below minimum` };
+        }
+    }
+    if (prefs.heightMax) {
+        const maxInches = typeof prefs.heightMax === 'number' ? prefs.heightMax : parseHeightToInches(prefs.heightMax);
+        const profileInches = profile.heightInches || parseHeightToInches(profile.height);
+        if (profileInches && maxInches && profileInches > maxInches) {
+            return { passes: false, reason: `Height above maximum` };
+        }
+    }
+    
+    // Body type check
+    if (prefs.bodyType && prefs.bodyType.length > 0) {
+        const matchType = profile.bodyType?.toLowerCase().replace('-', '');
+        const prefTypes = prefs.bodyType.map(bt => bt.toLowerCase().replace('-', ''));
+        if (matchType && !prefTypes.some(bt => matchType.includes(bt) || bt.includes(matchType))) {
+            return { passes: false, reason: `Body type "${profile.bodyType}" not preferred` };
+        }
+    }
+    
+    // Ethnicity check
+    if (prefs.ethnicity && prefs.ethnicity !== '' && prefs.ethnicity !== 'any') {
+        if (profile.ethnicity?.toLowerCase() !== prefs.ethnicity.toLowerCase()) {
+            return { passes: false, reason: `Ethnicity mismatch` };
+        }
+    }
+    
+    // Smoking check
+    if (prefs.smoking && prefs.smoking.length > 0) {
+        const matchSmoking = profile.smoking?.toLowerCase();
+        const prefsSmoking = prefs.smoking.map(s => s.toLowerCase());
+        if (matchSmoking && !prefsSmoking.includes(matchSmoking)) {
+            return { passes: false, reason: `Smoking preference mismatch` };
+        }
+    }
+    
+    // Drinking check
+    if (prefs.drinking && prefs.drinking.length > 0) {
+        const matchDrinking = profile.drinking?.toLowerCase();
+        const prefsDrinking = prefs.drinking.map(d => d.toLowerCase());
+        if (matchDrinking && !prefsDrinking.includes(matchDrinking)) {
+            return { passes: false, reason: `Drinking preference mismatch` };
+        }
+    }
+    
+    // Religion check
+    if (prefs.religion && prefs.religion !== '' && prefs.religion !== 'any') {
+        if (profile.religion?.toLowerCase() !== prefs.religion.toLowerCase()) {
+            return { passes: false, reason: `Religion mismatch` };
+        }
+    }
+    
+    // Children check
+    if (prefs.children && prefs.children !== '' && prefs.children !== 'any') {
+        if (profile.children !== prefs.children) {
+            return { passes: false, reason: `Children preference mismatch` };
+        }
+    }
+    
+    // Looking for check
+    if (prefs.lookingFor && prefs.lookingFor.length > 0) {
+        const matchLookingFor = profile.lookingFor?.toLowerCase();
+        const prefsLookingFor = prefs.lookingFor.map(lf => lf.toLowerCase());
+        if (matchLookingFor && !prefsLookingFor.includes(matchLookingFor)) {
+            return { passes: false, reason: `Looking for "${profile.lookingFor}" not compatible` };
+        }
+    }
+    
+    return { passes: true, reason: 'All preferences match' };
+}
+
+/**
+ * Calculate distance between two coordinate pairs
+ * Uses Haversine formula for accurate distance
+ */
+function calculateDistanceBetween(coords1, coords2) {
+    if (!coords1 || !coords2) return 10; // Default fallback
+    
+    const lat1 = coords1.lat || coords1.latitude;
+    const lng1 = coords1.lng || coords1.longitude;
+    const lat2 = coords2.lat || coords2.latitude;
+    const lng2 = coords2.lng || coords2.longitude;
+    
+    if (!lat1 || !lng1 || !lat2 || !lng2) return 10;
+    
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    
+    return Math.round(R * c);
+}
+
+/**
+ * Calculate compatibility score between two profiles
+ * Based on shared interests, lifestyle alignment, and preference match
+ * Returns 0-100 percentage
+ */
+function calculateMatchCompatibility(myProfile, theirProfile, myPrefs) {
+    let score = 50; // Base score
+    let factors = 0;
+    
+    // Interest overlap (up to +25 points)
+    const myInterests = myProfile.interests || [];
+    const theirInterests = theirProfile.interests || [];
+    if (myInterests.length > 0 && theirInterests.length > 0) {
+        const overlap = myInterests.filter(i => 
+            theirInterests.some(ti => ti.toLowerCase() === i.toLowerCase())
+        ).length;
+        const maxPossible = Math.min(myInterests.length, theirInterests.length);
+        const interestScore = maxPossible > 0 ? (overlap / maxPossible) * 25 : 0;
+        score += interestScore;
+        factors++;
+    }
+    
+    // Lifestyle alignment (up to +15 points)
+    let lifestyleMatch = 0;
+    let lifestyleFactors = 0;
+    
+    // Drinking
+    if (myProfile.drinking && theirProfile.drinking) {
+        if (myProfile.drinking.toLowerCase() === theirProfile.drinking.toLowerCase()) {
+            lifestyleMatch += 3;
+        }
+        lifestyleFactors++;
+    }
+    
+    // Smoking
+    if (myProfile.smoking && theirProfile.smoking) {
+        if (myProfile.smoking.toLowerCase() === theirProfile.smoking.toLowerCase()) {
+            lifestyleMatch += 3;
+        }
+        lifestyleFactors++;
+    }
+    
+    // Exercise
+    if (myProfile.exercise && theirProfile.exercise) {
+        if (myProfile.exercise.toLowerCase() === theirProfile.exercise.toLowerCase()) {
+            lifestyleMatch += 3;
+        }
+        lifestyleFactors++;
+    }
+    
+    // Children preference
+    if (myProfile.children && theirProfile.children) {
+        if (myProfile.children === theirProfile.children) {
+            lifestyleMatch += 3;
+        }
+        lifestyleFactors++;
+    }
+    
+    // Religion
+    if (myProfile.religion && theirProfile.religion) {
+        if (myProfile.religion.toLowerCase() === theirProfile.religion.toLowerCase()) {
+            lifestyleMatch += 3;
+        }
+        lifestyleFactors++;
+    }
+    
+    if (lifestyleFactors > 0) {
+        score += lifestyleMatch;
+        factors++;
+    }
+    
+    // Looking for alignment (+10 points)
+    if (myProfile.lookingFor && theirProfile.lookingFor) {
+        if (myProfile.lookingFor.toLowerCase() === theirProfile.lookingFor.toLowerCase()) {
+            score += 10;
+        }
+        factors++;
+    }
+    
+    // Proximity bonus (closer = better, up to +5 points)
+    const distance = calculateDistanceBetween(myProfile.coordinates, theirProfile.coordinates);
+    if (distance < 5) score += 5;
+    else if (distance < 10) score += 4;
+    else if (distance < 20) score += 3;
+    else if (distance < 30) score += 2;
+    else if (distance < 50) score += 1;
+    
+    // Age compatibility bonus (+5 if within preferred range center)
+    const ageMin = myPrefs.ageMin || 18;
+    const ageMax = myPrefs.ageMax || 99;
+    const idealAge = (ageMin + ageMax) / 2;
+    const ageDiff = Math.abs(theirProfile.age - idealAge);
+    if (ageDiff <= 3) score += 5;
+    else if (ageDiff <= 5) score += 3;
+    else if (ageDiff <= 8) score += 1;
+    
+    // Cap at 100
+    return Math.min(100, Math.max(0, Math.round(score)));
 }
 
 /**
