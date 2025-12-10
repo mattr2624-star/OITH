@@ -866,7 +866,17 @@
                     <!-- Location -->
                     <div class="input-group" style="margin-bottom: 20px;">
                         <label>Location</label>
-                        <input type="text" id="setupLocation" placeholder="City, State" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-primary);">
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="setupLocation" placeholder="City, State" style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-primary);">
+                            <button type="button" onclick="useMyLocation()" id="useLocationBtn" style="padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;" title="Use my current location">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+                                </svg>
+                                <span id="useLocationBtnText">📍</span>
+                            </button>
+                        </div>
+                        <p id="locationStatus" style="margin-top: 6px; font-size: 0.75rem; color: var(--text-muted); display: none;"></p>
                     </div>
 
                     <!-- Work & Education -->

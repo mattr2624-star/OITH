@@ -234,6 +234,173 @@ function updateUserCoordinates() {
 }
 
 /**
+ * Use device GPS to get user's current location
+ * Reverse geocodes coordinates to city, state format
+ */
+async function useMyLocation() {
+    const btn = document.getElementById('useLocationBtn');
+    const btnText = document.getElementById('useLocationBtnText');
+    const statusEl = document.getElementById('locationStatus');
+    const locationInput = document.getElementById('setupLocation');
+    
+    // Check if geolocation is supported
+    if (!navigator.geolocation) {
+        showToast('Location not supported on this device', 'error');
+        if (statusEl) {
+            statusEl.textContent = 'Geolocation not supported';
+            statusEl.style.display = 'block';
+            statusEl.style.color = 'var(--danger)';
+        }
+        return;
+    }
+    
+    // Show loading state
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.textContent = '⏳';
+    if (statusEl) {
+        statusEl.textContent = 'Getting your location...';
+        statusEl.style.display = 'block';
+        statusEl.style.color = 'var(--text-muted)';
+    }
+    
+    try {
+        // Get current position
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000 // Cache for 5 minutes
+            });
+        });
+        
+        const { latitude, longitude } = position.coords;
+        console.log(`📍 Got GPS coordinates: ${latitude}, ${longitude}`);
+        
+        // Update status
+        if (statusEl) {
+            statusEl.textContent = 'Finding your city...';
+        }
+        
+        // Reverse geocode using free OpenStreetMap Nominatim API
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1`,
+            {
+                headers: {
+                    'Accept-Language': 'en-US,en',
+                    'User-Agent': 'OITH-Dating-App'
+                }
+            }
+        );
+        
+        if (!response.ok) {
+            throw new Error('Could not determine city');
+        }
+        
+        const data = await response.json();
+        const address = data.address || {};
+        
+        // Build location string (City, State format)
+        const city = address.city || address.town || address.village || address.municipality || address.county || '';
+        const state = address.state || address.region || '';
+        const stateAbbr = getStateAbbreviation(state);
+        
+        let locationString = '';
+        if (city && stateAbbr) {
+            locationString = `${city}, ${stateAbbr}`;
+        } else if (city) {
+            locationString = city;
+        } else if (address.county && stateAbbr) {
+            locationString = `${address.county}, ${stateAbbr}`;
+        } else {
+            throw new Error('Could not determine your city');
+        }
+        
+        console.log(`📍 Reverse geocoded to: ${locationString}`);
+        
+        // Set the location input
+        if (locationInput) {
+            locationInput.value = locationString;
+            // Trigger input event for any listeners
+            locationInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        
+        // Store coordinates for distance calculations
+        if (appState.user) {
+            appState.user.coordinates = { lat: latitude, lng: longitude };
+        }
+        
+        // Success feedback
+        if (statusEl) {
+            statusEl.textContent = `✓ Location set to ${locationString}`;
+            statusEl.style.color = 'var(--success)';
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
+        }
+        
+        showToast(`Location set to ${locationString}`, 'success');
+        
+    } catch (error) {
+        console.error('Location error:', error);
+        
+        let errorMessage = 'Could not get location';
+        if (error.code === 1) {
+            errorMessage = 'Location permission denied. Please enable in settings.';
+        } else if (error.code === 2) {
+            errorMessage = 'Location unavailable. Try again.';
+        } else if (error.code === 3) {
+            errorMessage = 'Location request timed out. Try again.';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
+        if (statusEl) {
+            statusEl.textContent = errorMessage;
+            statusEl.style.color = 'var(--danger)';
+            statusEl.style.display = 'block';
+        }
+        
+        showToast(errorMessage, 'error');
+    } finally {
+        // Reset button
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.textContent = '📍';
+    }
+}
+
+/**
+ * Convert full state name to abbreviation
+ */
+function getStateAbbreviation(stateName) {
+    if (!stateName) return '';
+    
+    const stateMap = {
+        'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR',
+        'california': 'CA', 'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE',
+        'florida': 'FL', 'georgia': 'GA', 'hawaii': 'HI', 'idaho': 'ID',
+        'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA', 'kansas': 'KS',
+        'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
+        'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS',
+        'missouri': 'MO', 'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV',
+        'new hampshire': 'NH', 'new jersey': 'NJ', 'new mexico': 'NM', 'new york': 'NY',
+        'north carolina': 'NC', 'north dakota': 'ND', 'ohio': 'OH', 'oklahoma': 'OK',
+        'oregon': 'OR', 'pennsylvania': 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
+        'south dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT',
+        'vermont': 'VT', 'virginia': 'VA', 'washington': 'WA', 'west virginia': 'WV',
+        'wisconsin': 'WI', 'wyoming': 'WY', 'district of columbia': 'DC'
+    };
+    
+    const normalized = stateName.toLowerCase().trim();
+    
+    // Check if already an abbreviation
+    if (stateName.length === 2) {
+        return stateName.toUpperCase();
+    }
+    
+    return stateMap[normalized] || stateName;
+}
+
+/**
  * Get user-specific storage key based on email
  */
 function getUserStorageKey(email) {
