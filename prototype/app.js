@@ -852,6 +852,447 @@ async function syncActivityToAWS(isLoggedIn = true) {
     }
 }
 
+// ==========================================
+// REPORT, BLOCK, AND ACCOUNT MANAGEMENT
+// ==========================================
+
+/**
+ * Report a user for inappropriate behavior
+ */
+async function reportUser(reportedEmail, reason, details = '') {
+    const myEmail = appState.user?.email;
+    if (!myEmail || !reportedEmail) {
+        showToast('Unable to submit report', 'error');
+        return false;
+    }
+    
+    const validReasons = ['harassment', 'fake_profile', 'inappropriate_content', 'scam', 'underage', 'other'];
+    if (!validReasons.includes(reason)) {
+        showToast('Please select a valid reason', 'error');
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                reporterEmail: myEmail,
+                reportedEmail: reportedEmail,
+                reason: reason,
+                details: details
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Report submitted. This user has been blocked.', 'success');
+            
+            // If this was our active match, clear it
+            if (appState.activeConnection?.email === reportedEmail) {
+                appState.activeConnection = null;
+                appState.oneMatch.current = null;
+                appState.oneMatch.status = null;
+                saveUserData();
+                showScreen('home');
+            }
+            
+            return true;
+        } else {
+            showToast(result.error || 'Failed to submit report', 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error('Report error:', error);
+        showToast('Failed to submit report', 'error');
+        return false;
+    }
+}
+
+/**
+ * Block a user
+ */
+async function blockUser(blockedEmail, reason = 'User blocked') {
+    const myEmail = appState.user?.email;
+    if (!myEmail || !blockedEmail) {
+        showToast('Unable to block user', 'error');
+        return false;
+    }
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/block`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                blockerEmail: myEmail,
+                blockedEmail: blockedEmail,
+                reason: reason
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('User blocked successfully', 'success');
+            
+            // If this was our active match, clear it
+            if (appState.activeConnection?.email === blockedEmail) {
+                appState.activeConnection = null;
+                appState.oneMatch.current = null;
+                appState.oneMatch.status = null;
+                saveUserData();
+                showScreen('home');
+            }
+            
+            return true;
+        } else {
+            showToast(result.error || 'Failed to block user', 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error('Block error:', error);
+        showToast('Failed to block user', 'error');
+        return false;
+    }
+}
+
+/**
+ * Unblock a user
+ */
+async function unblockUser(blockedEmail) {
+    const myEmail = appState.user?.email;
+    if (!myEmail || !blockedEmail) return false;
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/block`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                blockerEmail: myEmail,
+                blockedEmail: blockedEmail
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('User unblocked', 'success');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Unblock error:', error);
+        return false;
+    }
+}
+
+/**
+ * Get list of blocked users
+ */
+async function getBlockedUsers() {
+    const myEmail = appState.user?.email;
+    if (!myEmail) return [];
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/blocks?userEmail=${encodeURIComponent(myEmail)}`);
+        const result = await response.json();
+        return result.blockedUsers || [];
+    } catch (error) {
+        console.error('Get blocked users error:', error);
+        return [];
+    }
+}
+
+/**
+ * Delete account (GDPR compliance)
+ */
+async function deleteAccount() {
+    const myEmail = appState.user?.email;
+    if (!myEmail) {
+        showToast('Not logged in', 'error');
+        return false;
+    }
+    
+    // Show confirmation dialog
+    const confirmed = confirm(
+        '⚠️ DELETE YOUR ACCOUNT\n\n' +
+        'This will PERMANENTLY delete:\n' +
+        '• Your profile and photos\n' +
+        '• All matches and conversations\n' +
+        '• Your subscription\n\n' +
+        'This action cannot be undone.\n\n' +
+        'Are you sure you want to delete your account?'
+    );
+    
+    if (!confirmed) return false;
+    
+    // Second confirmation
+    const doubleConfirmed = confirm(
+        'FINAL CONFIRMATION\n\n' +
+        `Type your email to confirm: ${myEmail}\n\n` +
+        'Click OK to permanently delete your account.'
+    );
+    
+    if (!doubleConfirmed) return false;
+    
+    try {
+        showToast('Deleting account...', 'info');
+        
+        const response = await fetch(`${AWS_API_URL}/account`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userEmail: myEmail,
+                confirmEmail: myEmail
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('Account deleted. Goodbye! 👋', 'success');
+            
+            // Clear all local data
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('oith_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            
+            // Reset app state
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+            
+            return true;
+        } else {
+            showToast(result.error || 'Failed to delete account', 'error');
+            return false;
+        }
+    } catch (error) {
+        console.error('Delete account error:', error);
+        showToast('Failed to delete account. Please contact support.', 'error');
+        return false;
+    }
+}
+
+/**
+ * Show report dialog
+ */
+function showReportDialog(userEmail, userName) {
+    const reasons = [
+        { value: 'harassment', label: '🚫 Harassment or bullying' },
+        { value: 'fake_profile', label: '🎭 Fake profile / Catfishing' },
+        { value: 'inappropriate_content', label: '⚠️ Inappropriate content' },
+        { value: 'scam', label: '💰 Scam or fraud' },
+        { value: 'underage', label: '🔞 Underage user' },
+        { value: 'other', label: '📝 Other' }
+    ];
+    
+    const modal = document.createElement('div');
+    modal.className = 'report-modal-overlay';
+    modal.innerHTML = `
+        <div class="report-modal">
+            <h3>Report ${userName || 'User'}</h3>
+            <p>Why are you reporting this user?</p>
+            <div class="report-reasons">
+                ${reasons.map(r => `
+                    <label class="report-reason">
+                        <input type="radio" name="reportReason" value="${r.value}">
+                        <span>${r.label}</span>
+                    </label>
+                `).join('')}
+            </div>
+            <textarea id="reportDetails" placeholder="Additional details (optional)..." rows="3"></textarea>
+            <div class="report-actions">
+                <button class="btn-cancel" onclick="this.closest('.report-modal-overlay').remove()">Cancel</button>
+                <button class="btn-report" onclick="submitReport('${userEmail}')">Submit Report</button>
+            </div>
+        </div>
+    `;
+    
+    // Add styles if not already present
+    if (!document.getElementById('reportModalStyles')) {
+        const styles = document.createElement('style');
+        styles.id = 'reportModalStyles';
+        styles.textContent = `
+            .report-modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                padding: 20px;
+            }
+            .report-modal {
+                background: var(--bg-secondary, #1a1a2e);
+                border-radius: 16px;
+                padding: 24px;
+                max-width: 400px;
+                width: 100%;
+                color: white;
+            }
+            .report-modal h3 {
+                margin: 0 0 8px 0;
+                color: #ff4757;
+            }
+            .report-modal p {
+                margin: 0 0 16px 0;
+                opacity: 0.7;
+            }
+            .report-reasons {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+            .report-reason {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px;
+                background: var(--bg-tertiary, #252542);
+                border-radius: 8px;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .report-reason:hover {
+                background: var(--bg-hover, #2a2a4a);
+            }
+            .report-reason input {
+                accent-color: #ff4757;
+            }
+            #reportDetails {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid var(--border, #333);
+                border-radius: 8px;
+                background: var(--bg-tertiary, #252542);
+                color: white;
+                resize: none;
+                margin-bottom: 16px;
+            }
+            .report-actions {
+                display: flex;
+                gap: 12px;
+            }
+            .report-actions button {
+                flex: 1;
+                padding: 12px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            .btn-cancel {
+                background: var(--bg-tertiary, #252542);
+                color: white;
+            }
+            .btn-report {
+                background: #ff4757;
+                color: white;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+    
+    document.body.appendChild(modal);
+}
+
+/**
+ * Submit report from dialog
+ */
+async function submitReport(userEmail) {
+    const reasonEl = document.querySelector('input[name="reportReason"]:checked');
+    const detailsEl = document.getElementById('reportDetails');
+    
+    if (!reasonEl) {
+        showToast('Please select a reason', 'error');
+        return;
+    }
+    
+    const success = await reportUser(userEmail, reasonEl.value, detailsEl?.value || '');
+    
+    if (success) {
+        document.querySelector('.report-modal-overlay')?.remove();
+    }
+}
+
+/**
+ * Show block confirmation
+ */
+function showBlockConfirmation(userEmail, userName) {
+    const confirmed = confirm(
+        `Block ${userName || 'this user'}?\n\n` +
+        'They won\'t be able to see your profile or match with you.\n' +
+        'If you\'re currently matched, the match will end.'
+    );
+    
+    if (confirmed) {
+        blockUser(userEmail);
+    }
+}
+
+/**
+ * Show blocked users list
+ */
+async function showBlockedUsers() {
+    showToast('Loading blocked users...', 'info');
+    
+    const blockedUsers = await getBlockedUsers();
+    
+    const modal = document.createElement('div');
+    modal.className = 'report-modal-overlay';
+    modal.innerHTML = `
+        <div class="report-modal" style="max-height: 80vh; overflow-y: auto;">
+            <h3>Blocked Users</h3>
+            ${blockedUsers.length === 0 
+                ? '<p style="opacity: 0.7; text-align: center; padding: 20px;">No blocked users</p>'
+                : `<div class="blocked-users-list">
+                    ${blockedUsers.map(user => `
+                        <div class="blocked-user-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-tertiary, #252542); border-radius: 8px; margin-bottom: 8px;">
+                            <div>
+                                <div style="font-weight: 500;">${user.email}</div>
+                                <div style="font-size: 0.75rem; opacity: 0.6;">Blocked ${new Date(user.blockedAt).toLocaleDateString()}</div>
+                            </div>
+                            <button class="btn btn-small" onclick="unblockAndRefresh('${user.email}')" style="padding: 6px 12px; font-size: 0.8rem;">Unblock</button>
+                        </div>
+                    `).join('')}
+                </div>`
+            }
+            <div class="report-actions" style="margin-top: 16px;">
+                <button class="btn-cancel" onclick="this.closest('.report-modal-overlay').remove()" style="width: 100%;">Close</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Update the count in settings
+    const countEl = document.getElementById('blockedUsersCount');
+    if (countEl) countEl.textContent = blockedUsers.length;
+}
+
+/**
+ * Unblock user and refresh the list
+ */
+async function unblockAndRefresh(email) {
+    const success = await unblockUser(email);
+    if (success) {
+        document.querySelector('.report-modal-overlay')?.remove();
+        showBlockedUsers();
+    }
+}
+
 /**
  * Fetch unread notifications from AWS (for offline matching)
  * Called when user opens app to check for matches/messages received while offline

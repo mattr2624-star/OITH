@@ -2471,6 +2471,18 @@
                         <button class="btn btn-danger" onclick="confirmEndMatch()">End Match</button>
                             </div>
                     
+                    <div class="end-match-safety" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Having issues with this user?</p>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-text" onclick="closeModal(); showReportDialog(appState.activeConnection?.email, appState.activeConnection?.name)" style="color: #ff6b6b; font-size: 0.85rem;">
+                                🚨 Report User
+                            </button>
+                            <button class="btn btn-text" onclick="closeModal(); showBlockConfirmation(appState.activeConnection?.email, appState.activeConnection?.name)" style="color: #ff6b6b; font-size: 0.85rem;">
+                                🚫 Block User
+                            </button>
+                        </div>
+                    </div>
+                    
                     <p class="end-match-note">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10"/>
@@ -3685,11 +3697,25 @@
                         </div>
                     </div>
                     </div>
+                    <div class="settings-section">
+                        <h4>Privacy</h4>
+                        <div class="settings-list">
+                            <div class="settings-item clickable" onclick="showBlockedUsers()">
+                                <span>Blocked Users</span>
+                                <div class="settings-value-row">
+                                    <span class="settings-value" id="blockedUsersCount">0</span>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 18l6-6-6-6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button class="btn btn-secondary" onclick="exportMyProfile()" style="width: 100%; margin-bottom: 12px;">
                         <span style="margin-right: 8px;">📤</span> Export My Profile Data
                     </button>
                     <button class="btn btn-text logout-btn" onclick="logout()">Log Out</button>
-                    <button class="btn btn-text danger delete-account-btn" onclick="resetAllData()">Delete Account & Data</button>
+                    <button class="btn btn-text danger delete-account-btn" onclick="deleteAccount()">🗑️ Delete Account Permanently</button>
                 </div>
             </div>
 
