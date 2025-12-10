@@ -35,6 +35,9 @@
             }
         })();
     </script>
+    
+    <!-- Stripe.js for embedded payments -->
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <div class="phone-frame">
@@ -1220,7 +1223,7 @@
                         <span id="subscribeBtnPrice" style="opacity: 0.9;"> - $10.00/month</span>
                     </button>
                     <p class="payment-note" style="text-align: center; margin-top: 12px; font-size: 0.8rem; color: var(--text-muted);">
-                        🔒 Secure payment via Square • Cancel anytime • 7-day money-back guarantee
+                        🔒 Secure payment via Stripe • Cancel anytime • 7-day money-back guarantee
                     </p>
                     
                     <!-- Payment Method Icons -->
@@ -1259,43 +1262,41 @@
                         </div>
                     </div>
                     
-                    <!-- Card Details Form (test mode) or redirects to Square Checkout (live) -->
-                    <form id="paymentCardForm" onsubmit="processPayment(event)">
-                        <div class="form-group" style="margin-bottom: 16px;">
-                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Cardholder Name</label>
-                            <input type="text" id="cardName" placeholder="Name on card" required style="width: 100%; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem;">
-                        </div>
+                    <!-- Stripe Payment Element (Embedded Checkout) -->
+                    <form id="paymentCardForm" onsubmit="processStripePayment(event)">
+                        <!-- Stripe Payment Element will be mounted here -->
+                        <div id="payment-element" style="margin-bottom: 24px; padding: 16px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border);"></div>
                         
-                        <div class="form-group" style="margin-bottom: 16px;">
-                            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Card Number</label>
-                            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required maxlength="19" oninput="formatCardNumber(this)" style="width: 100%; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem; letter-spacing: 2px;">
-                        </div>
+                        <!-- Payment error message -->
+                        <div id="payment-message" style="display: none; color: #ef4444; font-size: 0.85rem; margin-bottom: 16px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 8px;"></div>
                         
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
-                            <div class="form-group">
-                                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Expiry Date</label>
-                                <input type="text" id="cardExpiry" placeholder="MM/YY" required maxlength="5" oninput="formatExpiry(this)" style="width: 100%; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem;">
-                            </div>
-                            <div class="form-group">
-                                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">CVV</label>
-                                <input type="text" id="cardCvv" placeholder="123" required maxlength="4" style="width: 100%; padding: 14px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); font-size: 1rem;">
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1rem; font-weight: 600;">
-                            Pay $10.00 & Subscribe
+                        <button type="submit" id="stripe-submit-btn" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 1rem; font-weight: 600;">
+                            <span id="stripe-btn-text">Pay $10.00 & Subscribe</span>
+                            <span id="stripe-spinner" style="display: none;">
+                                <svg class="animate-spin" style="width: 20px; height: 20px; margin-left: 8px; animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                                    <path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"></path>
+                                </svg>
+                            </span>
                         </button>
                     </form>
                     
+                    <style>
+                        @keyframes spin {
+                            from { transform: rotate(0deg); }
+                            to { transform: rotate(360deg); }
+                        }
+                    </style>
+                    
                     <p style="text-align: center; margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">
-                        🔒 Powered by Square • Secure payment
+                        🔒 Powered by Stripe • Secure payment
                     </p>
                     
                     <!-- Payment Method Icons -->
                     <div style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 16px; opacity: 0.7;">
                         <svg width="60" height="24" viewBox="0 0 60 24" fill="currentColor" style="color: var(--text-secondary);">
                             <rect width="24" height="24" rx="4" fill="currentColor"/>
-                            <text x="30" y="16" font-size="10" fill="currentColor">Square</text>
+                            <text x="30" y="16" font-size="10" fill="currentColor">Stripe</text>
                         </svg>
                         <span style="padding: 4px 8px; background: var(--bg-secondary); border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Visa</span>
                         <span style="padding: 4px 8px; background: var(--bg-secondary); border-radius: 4px; font-size: 0.7rem; font-weight: 600;">Mastercard</span>

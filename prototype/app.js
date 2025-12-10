@@ -6355,53 +6355,61 @@ function formatExpiry(input) {
  * Process payment and show success screen
  */
 // ==========================================
-// PAYMENT CONFIGURATION - SQUARE CHECKOUT
+// PAYMENT CONFIGURATION - STRIPE EMBEDDED CHECKOUT
 // ==========================================
 const PAYMENT_CONFIG = {
-    // Square Checkout Link - Create this in your Square Dashboard
-    // Go to: Square Dashboard → Online → Checkout Links → Create Link
-    // Set price to $10.00, name it "OITH Premium Monthly"
-    // After creating, paste the link URL here:
-    squareCheckoutUrl: 'YOUR_SQUARE_CHECKOUT_LINK', // e.g., 'https://square.link/u/XXXXXXXX'
+    // Stripe Publishable Key - Get from Stripe Dashboard → Developers → API Keys
+    stripePublishableKey: 'pk_test_51Sct6cL2lGx1shIrYphU6V7KQ7wRrtoIhRBGnFjscJmUVXY4QtFBuCHkstJe6ABm0CAlU7KGSaLptYbG3mYHKlY100cDIYEw7d',
+    
+    // Backend API URL for payment processing
+    apiUrl: 'http://localhost:3000/api',
     
     // Redirect URL after successful payment (your app URL + success screen)
     successRedirectUrl: 'https://main.d3cpep2ztx08x2.amplifyapp.com/prototype/index.html#payment-success',
     
-    // Test mode - set to false when checkout link is configured
-    testMode: true,
+    // Test mode - set to false when backend is running
+    testMode: false,
     
     plans: {
         monthly: { price: 10.00, interval: 'month', label: '$10.00/month' }
     },
     
-    // Test card numbers that bypass payment (for testers)
-    // Share these with test users - they won't be charged!
+    // Test card numbers for Stripe (in test mode)
+    // Use these with the embedded payment form
     testCards: {
-        // Success cards - payment will be simulated as successful
+        // Success cards - Stripe test cards
         success: [
             '4242424242424242',  // Standard test card
-            '4111111111111111',  // Visa test
-            '5555555555554444',  // Mastercard test
-            '1234567890123456',  // Easy to remember test
-            '0000000000000000',  // All zeros test
+            '4000002500003155',  // Requires 3D Secure authentication
+            '4000000000000077',  // Successful charge
         ],
-        // Decline cards - payment will be simulated as declined (for testing error handling)
+        // Decline cards - Stripe decline test cards
         decline: [
             '4000000000000002',  // Generic decline
+            '4000000000009995',  // Insufficient funds
         ]
     }
 };
 
+// Stripe instance and elements
+let stripe = null;
+let elements = null;
+let paymentElement = null;
+let clientSecret = null;
+
 // Selected plan (default to yearly for best value)
 let selectedPlan = 'monthly'; // Default to monthly (only option now)
 
-// Show the payment details form
-function showPaymentForm() {
+// Show the payment details form and initialize Stripe
+async function showPaymentForm() {
     const planView = document.getElementById('paymentFormView');
     const detailsView = document.getElementById('paymentDetailsView');
     
     if (planView) planView.style.display = 'none';
     if (detailsView) detailsView.style.display = 'block';
+    
+    // Initialize Stripe Payment Element
+    await initStripePaymentElement();
 }
 
 // Show the plan selection view
@@ -6473,137 +6481,216 @@ function selectPlan(planId) {
     console.log(`📋 Selected plan: ${planId}`);
 }
 
-// Initialize payment screen with Square Checkout
+// Initialize payment screen with Stripe
 async function initPaymentScreen() {
-    // Check if Square Checkout is configured
-    const isSquareConfigured = PAYMENT_CONFIG.squareCheckoutUrl && 
-                               !PAYMENT_CONFIG.squareCheckoutUrl.includes('YOUR_');
-    
-    // Show/hide test mode banner
-    const testBanner = document.getElementById('testModeBanner');
-    if (testBanner) {
-        testBanner.style.display = isSquareConfigured ? 'none' : 'block';
+    // Initialize Stripe instance
+    if (!stripe && window.Stripe) {
+        stripe = Stripe(PAYMENT_CONFIG.stripePublishableKey);
+        console.log('💳 Stripe initialized');
     }
     
-    // Hide Square SDK container (not needed for Checkout Links)
-    const squareContainer = document.getElementById('square-payment-container');
-    if (squareContainer) squareContainer.style.display = 'none';
+    // Show/hide test mode banner based on publishable key type
+    const isLiveMode = PAYMENT_CONFIG.stripePublishableKey.startsWith('pk_live');
+    const testBanner = document.getElementById('testModeBanner');
+    if (testBanner) {
+        testBanner.style.display = isLiveMode ? 'none' : 'block';
+    }
     
     // Select default plan
     selectPlan('monthly');
     
-    console.log(`💳 Payment initialized - Mode: ${isSquareConfigured ? 'SQUARE CHECKOUT' : 'TEST'}`);
+    console.log(`💳 Payment initialized - Mode: ${isLiveMode ? 'LIVE' : 'TEST'}`);
 }
 
-// Redirect to Square Checkout
-function redirectToSquareCheckout() {
-    const checkoutUrl = PAYMENT_CONFIG.squareCheckoutUrl;
-    
-    if (!checkoutUrl || checkoutUrl.includes('YOUR_')) {
-        showToast('Payment not configured yet', 'error');
-        return;
-    }
-    
-    // Save pending payment state
-    appState.user.pendingPayment = {
-        startedAt: new Date().toISOString(),
-        plan: selectedPlan,
-        amount: PAYMENT_CONFIG.plans[selectedPlan].price
-    };
-    saveUserData();
-    
-    console.log('💳 Redirecting to Square Checkout...');
-    
-    // Redirect to Square hosted checkout
-    window.location.href = checkoutUrl;
-}
-
-// Process payment from the payment details form
-async function processPayment(event) {
-    if (event) event.preventDefault();
-    
-    // Validate form fields
-    const cardName = document.getElementById('cardName')?.value?.trim();
-    const cardNumber = document.getElementById('cardNumber')?.value?.replace(/\s/g, '');
-    const cardExpiry = document.getElementById('cardExpiry')?.value;
-    const cardCvv = document.getElementById('cardCvv')?.value;
-    
-    if (!cardName || !cardNumber || !cardExpiry || !cardCvv) {
-        showToast('Please fill in all payment details', 'error');
-        return;
-    }
-    
-    if (cardNumber.length < 13) {
-        showToast('Please enter a valid card number', 'error');
-        return;
-    }
-    
-    // Show processing view
-    const detailsView = document.getElementById('paymentDetailsView');
-    const processingView = document.getElementById('paymentProcessingView');
-    
-    if (detailsView) detailsView.style.display = 'none';
-    if (processingView) processingView.style.display = 'block';
-    
-    try {
-        // ========================================
-        // CHECK FOR TEST CARDS FIRST (bypass payment)
-        // ========================================
-        if (PAYMENT_CONFIG.testCards.success.includes(cardNumber)) {
-            console.log('🧪 TEST CARD DETECTED - Simulating successful payment (no charge)');
-            showToast('🧪 Test card detected - Free access granted!', 'info');
-            await simulateTestPayment();
+// Initialize Stripe Payment Element
+async function initStripePaymentElement() {
+    if (!stripe) {
+        if (window.Stripe) {
+            stripe = Stripe(PAYMENT_CONFIG.stripePublishableKey);
+        } else {
+            console.error('Stripe.js not loaded');
+            showToast('Payment system loading...', 'info');
             return;
         }
+    }
+    
+    // Show loading state
+    const paymentElementContainer = document.getElementById('payment-element');
+    if (paymentElementContainer) {
+        paymentElementContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading payment form...</div>';
+    }
+    
+    try {
+        // Get user email for the payment
+        const userEmail = appState.user?.email || appState.user?.profile?.email || 'user@example.com';
+        const userId = appState.user?.id || 'unknown';
         
-        if (PAYMENT_CONFIG.testCards.decline.includes(cardNumber)) {
-            console.log('🧪 TEST DECLINE CARD - Simulating declined payment');
-            throw new Error('Card declined (test mode)');
+        // Create payment intent via backend
+        const response = await fetch(`${PAYMENT_CONFIG.apiUrl}/create-payment-intent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                plan: selectedPlan,
+                email: userEmail,
+                userId: userId
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to create payment intent');
         }
         
-        // ========================================
-        // REAL PAYMENT FLOW
-        // ========================================
-        // Check if Square Checkout is configured
-        const isSquareConfigured = PAYMENT_CONFIG.squareCheckoutUrl && 
-                                   !PAYMENT_CONFIG.squareCheckoutUrl.includes('YOUR_');
+        const data = await response.json();
+        clientSecret = data.clientSecret;
         
-        if (isSquareConfigured) {
-            // Redirect to Square Checkout
-            redirectToSquareCheckout();
-            return; // Don't continue - we're redirecting
-        } else {
-            // Use test mode - simulate payment
-            await simulateTestPayment();
-        }
+        // Create Stripe Elements with custom appearance
+        const appearance = {
+            theme: 'night',
+            variables: {
+                colorPrimary: '#c4584a',
+                colorBackground: '#1a1a2e',
+                colorText: '#ffffff',
+                colorDanger: '#ef4444',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                borderRadius: '12px',
+                spacingUnit: '4px'
+            },
+            rules: {
+                '.Input': {
+                    backgroundColor: '#16213e',
+                    border: '1px solid #2d3748',
+                    padding: '14px'
+                },
+                '.Input:focus': {
+                    border: '1px solid #c4584a',
+                    boxShadow: '0 0 0 1px #c4584a'
+                },
+                '.Label': {
+                    color: '#a0aec0',
+                    marginBottom: '8px'
+                },
+                '.Error': {
+                    color: '#ef4444'
+                }
+            }
+        };
+        
+        elements = stripe.elements({ 
+            appearance, 
+            clientSecret,
+            loader: 'auto'
+        });
+        
+        // Create and mount the Payment Element
+        paymentElement = elements.create('payment', {
+            layout: {
+                type: 'tabs',
+                defaultCollapsed: false
+            }
+        });
+        
+        paymentElement.mount('#payment-element');
+        
+        console.log('💳 Stripe Payment Element mounted');
+        
     } catch (error) {
-        console.error('Payment error:', error);
-        showToast('Payment failed: ' + error.message, 'error');
+        console.error('Error initializing Stripe:', error);
         
-        // Show details view again on error
-        if (detailsView) detailsView.style.display = 'block';
-        if (processingView) processingView.style.display = 'none';
-        
-        // Re-enable button
-        if (btn) {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-        }
-        if (btnText) {
-            btnText.textContent = originalText;
+        // Show fallback message
+        if (paymentElementContainer) {
+            paymentElementContainer.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p style="color: var(--text-muted); margin-bottom: 12px;">
+                        Unable to load payment form.
+                    </p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">
+                        Please ensure the server is running at ${PAYMENT_CONFIG.apiUrl}
+                    </p>
+                    <button onclick="initStripePaymentElement()" class="btn btn-secondary" style="margin-top: 12px; padding: 8px 16px;">
+                        Retry
+                    </button>
+                </div>
+            `;
         }
     }
 }
 
-// Check if user is returning from Square Checkout
-function checkSquarePaymentReturn() {
+// Process Stripe payment
+async function processStripePayment(event) {
+    if (event) event.preventDefault();
+    
+    if (!stripe || !elements || !clientSecret) {
+        showToast('Payment not ready. Please wait...', 'error');
+        return;
+    }
+    
+    // Disable button and show loading
+    const submitBtn = document.getElementById('stripe-submit-btn');
+    const btnText = document.getElementById('stripe-btn-text');
+    const spinner = document.getElementById('stripe-spinner');
+    const messageEl = document.getElementById('payment-message');
+    
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.textContent = 'Processing...';
+    if (spinner) spinner.style.display = 'inline-block';
+    if (messageEl) messageEl.style.display = 'none';
+    
+    try {
+        // Confirm the payment
+        const { error, paymentIntent } = await stripe.confirmPayment({
+            elements,
+            confirmParams: {
+                return_url: PAYMENT_CONFIG.successRedirectUrl || window.location.href + '#payment-success',
+            },
+            redirect: 'if_required'
+        });
+        
+        if (error) {
+            // Show error message
+            if (messageEl) {
+                messageEl.textContent = error.message;
+                messageEl.style.display = 'block';
+            }
+            showToast(error.message, 'error');
+        } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+            // Payment successful!
+            console.log('✅ Payment successful!', paymentIntent);
+            handlePaymentSuccess();
+        } else if (paymentIntent && paymentIntent.status === 'requires_action') {
+            // 3D Secure or other action required - Stripe handles this
+            console.log('🔐 Additional authentication required');
+        }
+        
+    } catch (error) {
+        console.error('Payment error:', error);
+        if (messageEl) {
+            messageEl.textContent = 'An unexpected error occurred. Please try again.';
+            messageEl.style.display = 'block';
+        }
+        showToast('Payment failed. Please try again.', 'error');
+    } finally {
+        // Re-enable button
+        if (submitBtn) submitBtn.disabled = false;
+        if (btnText) btnText.textContent = 'Pay $10.00 & Subscribe';
+        if (spinner) spinner.style.display = 'none';
+    }
+}
+
+// Process payment from the payment details form (legacy - now uses Stripe Payment Element)
+async function processPayment(event) {
+    // Redirect to the new Stripe payment flow
+    return processStripePayment(event);
+}
+
+// Check if user is returning from Stripe Checkout
+function checkStripePaymentReturn() {
     const urlHash = window.location.hash;
     const urlParams = new URLSearchParams(window.location.search);
     
     // Check for payment success indicators
-    // Square may add query params or you can use a specific hash
+    // Stripe may add query params or you can use a specific hash
     if (urlHash === '#payment-success' || urlParams.get('payment') === 'success') {
-        console.log('✅ User returned from Square Checkout - Payment successful!');
+        console.log('✅ User returned from Stripe Checkout - Payment successful!');
         handlePaymentSuccess();
         return true;
     }
@@ -6615,7 +6702,7 @@ function checkSquarePaymentReturn() {
         const minutesSincePending = (now - pendingTime) / (1000 * 60);
         
         // If they started payment less than 30 mins ago and are back, assume success
-        // In production, you'd verify this with Square API via webhook
+        // In production, you'd verify this with Stripe API via webhook
         if (minutesSincePending < 30 && urlHash === '#payment-success') {
             handlePaymentSuccess();
             return true;
@@ -6625,7 +6712,7 @@ function checkSquarePaymentReturn() {
     return false;
 }
 
-// Handle successful payment (from Square Checkout return)
+// Handle successful payment (from Stripe Checkout return)
 function handlePaymentSuccess() {
     console.log('✅ Processing successful payment...');
     
@@ -6642,7 +6729,7 @@ function handlePaymentSuccess() {
         startDate: new Date().toISOString(),
         nextBillingDate: nextBilling.toISOString(),
         amount: plan.price,
-        provider: 'square'
+        provider: 'stripe'
     };
     
     // Clear pending payment
@@ -13346,8 +13433,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Try to load saved user data
     const hasData = loadUserData();
     
-    // Check if returning from Square Checkout payment
-    if (checkSquarePaymentReturn()) {
+    // Check if returning from Stripe Checkout payment
+    if (checkStripePaymentReturn()) {
         return; // Payment success screen will be shown
     }
     

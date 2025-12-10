@@ -81,7 +81,72 @@ app.get('/api/plans', (req, res) => {
 });
 
 // ==========================================
-// STRIPE CHECKOUT (Recommended)
+// EMBEDDED PAYMENT (Payment Element)
+// ==========================================
+
+// Create Payment Intent for embedded checkout
+app.post('/api/create-payment-intent', async (req, res) => {
+    try {
+        const { plan, email, userId } = req.body;
+        
+        if (!SUBSCRIPTION_PLANS[plan]) {
+            return res.status(400).json({ error: 'Invalid plan' });
+        }
+
+        const planDetails = SUBSCRIPTION_PLANS[plan];
+        
+        // Create or get Stripe customer
+        let customer;
+        if (email) {
+            const customers = await stripe.customers.list({ email, limit: 1 });
+            if (customers.data.length > 0) {
+                customer = customers.data[0];
+            } else {
+                customer = await stripe.customers.create({ 
+                    email,
+                    metadata: { userId: userId || 'unknown' }
+                });
+            }
+        }
+
+        // Create a subscription with incomplete status to get client_secret
+        const subscription = await stripe.subscriptions.create({
+            customer: customer.id,
+            items: [{
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: planDetails.name,
+                    },
+                    unit_amount: planDetails.price,
+                    recurring: {
+                        interval: planDetails.interval
+                    }
+                }
+            }],
+            payment_behavior: 'default_incomplete',
+            payment_settings: { save_default_payment_method: 'on_subscription' },
+            expand: ['latest_invoice.payment_intent'],
+            metadata: {
+                userId: userId || 'unknown',
+                plan: plan
+            }
+        });
+
+        res.json({
+            subscriptionId: subscription.id,
+            clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+            customerId: customer.id
+        });
+
+    } catch (error) {
+        console.error('Payment intent error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
+// STRIPE CHECKOUT (Redirect option)
 // ==========================================
 
 // Create Stripe Checkout Session
@@ -405,7 +470,8 @@ app.listen(PORT, () => {
 ║  Endpoints:                                                  ║
 ║  • GET  /api/health           - Health check                 ║
 ║  • GET  /api/plans            - Get subscription plans       ║
-║  • POST /api/create-checkout-session - Start payment         ║
+║  • POST /api/create-payment-intent   - Embedded payment      ║
+║  • POST /api/create-checkout-session - Redirect payment      ║
 ║  • POST /api/create-payment-link     - Create payment link   ║
 ║  • GET  /api/subscription/:id        - Get subscription      ║
 ║  • POST /api/cancel-subscription     - Cancel subscription   ║
