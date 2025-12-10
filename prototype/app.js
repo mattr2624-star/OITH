@@ -420,6 +420,195 @@ const AWS_API_URL = localStorage.getItem('oith_aws_api_url') || 'https://emeapbg
 
 const API_BASE_URL = AWS_API_URL || 'http://localhost:3001/api';
 
+// ==========================================
+// MATCHING MODE CONFIGURATION
+// ==========================================
+// Set to true to use server-side matching (scalable, production)
+// Set to false to use client-side matching (development, testing)
+const USE_SERVER_SIDE_MATCHING = localStorage.getItem('oith_server_matching') === 'true' || false;
+
+/**
+ * Get next match from server-side matching Lambda
+ * More scalable than client-side matching for production
+ */
+async function getNextMatchFromServer() {
+    try {
+        const userEmail = appState.user?.email;
+        if (!userEmail) {
+            console.log('❌ No user email for server matching');
+            return null;
+        }
+        
+        console.log(`🔄 Fetching next match from server for: ${userEmail}`);
+        
+        const response = await fetch(`${AWS_API_URL}/api/match/next`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userEmail })
+        });
+        
+        if (!response.ok) {
+            console.log('❌ Server matching failed:', response.status);
+            return null;
+        }
+        
+        const data = await response.json();
+        
+        if (data.match) {
+            console.log(`✅ Server returned match: ${data.match.firstName} (${data.match.compatibility}% compatible)`);
+            console.log(`📊 Stats:`, data.stats);
+            
+            // Convert server response to app format
+            return {
+                id: `server_${data.match.email.replace(/[^a-z0-9]/gi, '_')}`,
+                email: data.match.email,
+                name: data.match.firstName,
+                age: data.match.age,
+                photo: data.match.photo,
+                photos: data.match.photos || [],
+                occupation: data.match.occupation || 'Professional',
+                location: data.match.location || 'Nearby',
+                bio: data.match.bio || '',
+                interests: data.match.interests || [],
+                height: data.match.height || "5'6\"",
+                distance: data.match.distance || 10,
+                distanceText: `${data.match.distance || 10} miles`,
+                compatibility: data.match.compatibility || 75,
+                gender: data.match.gender || 'unknown',
+                isRealUser: true,
+                fromServer: true
+            };
+        } else {
+            console.log('📭 No matches available from server');
+            return null;
+        }
+    } catch (error) {
+        console.error('❌ Server matching error:', error);
+        return null;
+    }
+}
+
+/**
+ * Record match accept action on server
+ */
+async function acceptMatchOnServer(matchEmail) {
+    try {
+        const userEmail = appState.user?.email;
+        if (!userEmail || !matchEmail) return { success: false };
+        
+        console.log(`💕 Recording accept on server: ${userEmail} → ${matchEmail}`);
+        
+        const response = await fetch(`${AWS_API_URL}/api/match/accept`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userEmail, matchEmail })
+        });
+        
+        const data = await response.json();
+        console.log('Accept response:', data);
+        
+        return data;
+    } catch (error) {
+        console.error('❌ Accept error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Record match pass action on server
+ */
+async function passMatchOnServer(matchEmail) {
+    try {
+        const userEmail = appState.user?.email;
+        if (!userEmail || !matchEmail) return { success: false };
+        
+        console.log(`👋 Recording pass on server: ${userEmail} → ${matchEmail}`);
+        
+        const response = await fetch(`${AWS_API_URL}/api/match/pass`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userEmail, matchEmail })
+        });
+        
+        const data = await response.json();
+        console.log('Pass response:', data);
+        
+        return data;
+    } catch (error) {
+        console.error('❌ Pass error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Get matching pool statistics from server
+ */
+async function getMatchingPoolStats() {
+    try {
+        const userEmail = appState.user?.email;
+        const response = await fetch(`${AWS_API_URL}/api/match/pool-stats?userEmail=${encodeURIComponent(userEmail)}`);
+        return await response.json();
+    } catch (error) {
+        console.error('❌ Pool stats error:', error);
+        return { error: error.message };
+    }
+}
+
+/**
+ * Upload photo to S3 via image service
+ */
+async function uploadPhotoToS3(file, photoIndex) {
+    try {
+        const userEmail = appState.user?.email;
+        if (!userEmail) throw new Error('No user email');
+        
+        console.log(`📤 Uploading photo ${photoIndex} to S3...`);
+        
+        // Step 1: Get presigned upload URL
+        const uploadUrlResponse = await fetch(`${AWS_API_URL}/api/images/upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userEmail,
+                contentType: file.type,
+                photoIndex
+            })
+        });
+        
+        if (!uploadUrlResponse.ok) throw new Error('Failed to get upload URL');
+        const { uploadUrl, publicUrl, photoId } = await uploadUrlResponse.json();
+        
+        // Step 2: Upload directly to S3
+        const uploadResponse = await fetch(uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': file.type },
+            body: file
+        });
+        
+        if (!uploadResponse.ok) throw new Error('S3 upload failed');
+        
+        // Step 3: Confirm upload
+        const confirmResponse = await fetch(`${AWS_API_URL}/api/images/confirm`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userEmail,
+                photoId,
+                publicUrl,
+                photoIndex
+            })
+        });
+        
+        const result = await confirmResponse.json();
+        console.log(`✅ Photo uploaded successfully: ${publicUrl}`);
+        
+        return { success: true, url: publicUrl, photos: result.photos };
+    } catch (error) {
+        console.error('❌ Photo upload error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 /**
  * Sync user data to the backend server
  * This allows admin dashboard to see users regardless of domain
@@ -2148,9 +2337,11 @@ function getExperimentInfo() {
 /**
  * Present the user's ONE match
  * This is the core of the "one match at a time" system
+ * Supports both client-side and server-side matching
  */
-function presentMatch() {
+async function presentMatch() {
     console.log('🎯 presentMatch called');
+    console.log(`   Mode: ${USE_SERVER_SIDE_MATCHING ? 'SERVER' : 'CLIENT'}-side matching`);
     
     // Check if user already has an active connection
     if (appState.activeConnection) {
@@ -2199,9 +2390,20 @@ function presentMatch() {
         }
     }
     
-    // Get next match from pool
-    console.log('   -> Getting next match from pool...');
-    const nextMatch = getNextMatch();
+    // Get next match - use server-side or client-side based on configuration
+    console.log('   -> Getting next match...');
+    
+    let nextMatch;
+    if (USE_SERVER_SIDE_MATCHING) {
+        // SERVER-SIDE MATCHING (scalable, production)
+        console.log('   -> Using server-side matching API');
+        nextMatch = await getNextMatchFromServer();
+    } else {
+        // CLIENT-SIDE MATCHING (development, testing)
+        console.log('   -> Using client-side matching');
+        nextMatch = getNextMatch();
+    }
+    
     console.log('   -> Next match:', nextMatch ? nextMatch.name : 'NONE');
     
     if (nextMatch) {
