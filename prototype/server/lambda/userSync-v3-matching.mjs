@@ -47,6 +47,7 @@ export const handler = async (event) => {
                     age: user.age || null,
                     gender: user.gender || '',
                     location: user.location || '',
+                    coordinates: user.coordinates || null, // GPS coordinates for distance matching
                     occupation: user.occupation || '',
                     bio: (user.bio || '').substring(0, 300),
                     photo: user.photo || '',
@@ -104,6 +105,7 @@ export const handler = async (event) => {
                         age: item.age,
                         gender: item.gender,
                         location: item.location,
+                        coordinates: item.coordinates || null, // GPS coordinates for distance matching
                         occupation: item.occupation,
                         photo: item.photo,
                         photos: item.photos,

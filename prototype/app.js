@@ -439,6 +439,9 @@ async function syncToServer(email, userData, registeredUserData) {
         // Only send essential profile data to avoid DynamoDB 400KB limit
         const user = userData?.user || {};
         const prefs = user.matchPreferences || user.preferences || {};
+        // Get coordinates from GPS or lookup table
+        const userCoords = user.coordinates || getCoordinates(user.location);
+        
         const minimalPayload = {
             email: email,
             name: user.firstName || registeredUserData?.firstName || '',
@@ -451,6 +454,7 @@ async function syncToServer(email, userData, registeredUserData) {
                     birthday: user.birthday || '',
                     gender: user.gender || '',
                     location: user.location || '',
+                    coordinates: userCoords || null, // GPS or lookup coordinates for distance matching
                     occupation: user.occupation || '',
                     education: user.education || '',
                     bio: (user.bio || '').substring(0, 500),
