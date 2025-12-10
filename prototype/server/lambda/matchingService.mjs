@@ -29,11 +29,12 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 // Table names - split by domain for clarity and scalability
 const TABLES = {
-    PROFILES: 'oith-profiles',         // Dating user profiles (email as key)
-    MATCHES: 'oith-matches',            // Active match pairings
+    PROFILES: 'oith-profiles',           // Dating user profiles (email as key)
+    MATCHES: 'oith-matches',             // Active match pairings
     MATCH_HISTORY: 'oith-match-history', // Pass/accept history
     CONVERSATIONS: 'oith-conversations', // Chat messages
-    COMPANY: 'oith-users'               // Company/admin data (legacy name)
+    NOTIFICATIONS: 'oith-notifications', // Push/in-app notifications
+    COMPANY: 'oith-users'                // Company/admin data (legacy name)
 };
 
 // CORS headers
@@ -43,6 +44,60 @@ const headers = {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 };
+
+// ==========================================
+// NOTIFICATION UTILITIES
+// ==========================================
+
+/**
+ * Create a notification for a user
+ * Notifications are stored and retrieved when user comes online
+ */
+async function createNotification(userEmail, type, data) {
+    const notificationId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const notification = {
+        notificationId,
+        userEmail: userEmail.toLowerCase(),
+        type,  // 'mutual_match', 'new_message', 'like_received', etc.
+        data,  // Additional context (matchEmail, matchName, etc.)
+        read: false,
+        createdAt: new Date().toISOString()
+    };
+    
+    try {
+        await docClient.send(new PutCommand({
+            TableName: TABLES.NOTIFICATIONS,
+            Item: notification
+        }));
+        console.log(`📬 Notification created for ${userEmail}: ${type}`);
+        return notification;
+    } catch (error) {
+        console.log(`⚠️ Could not create notification (table may not exist): ${error.message}`);
+        return null;
+    }
+}
+
+/**
+ * Get all unread notifications for a user
+ */
+async function getUnreadNotifications(userEmail) {
+    try {
+        const result = await docClient.send(new QueryCommand({
+            TableName: TABLES.NOTIFICATIONS,
+            KeyConditionExpression: 'userEmail = :email',
+            FilterExpression: '#read = :unread',
+            ExpressionAttributeNames: { '#read': 'read' },
+            ExpressionAttributeValues: {
+                ':email': userEmail.toLowerCase(),
+                ':unread': false
+            }
+        }));
+        return result.Items || [];
+    } catch (error) {
+        console.log(`Could not fetch notifications: ${error.message}`);
+        return [];
+    }
+}
 
 // ==========================================
 // GEOHASH UTILITIES
@@ -280,6 +335,21 @@ export const handler = async (event) => {
         // GET /api/match/pool-stats - Get matching pool statistics
         if (path.includes('/match/pool-stats') && method === 'GET') {
             return await getPoolStats(event);
+        }
+        
+        // GET /api/notifications - Get unread notifications for user
+        if (path.includes('/notifications') && method === 'GET') {
+            return await getNotifications(event);
+        }
+        
+        // POST /api/notifications/read - Mark notifications as read
+        if (path.includes('/notifications/read') && method === 'POST') {
+            return await markNotificationsRead(event);
+        }
+        
+        // POST /api/notifications/token - Register push notification token
+        if (path.includes('/notifications/token') && method === 'POST') {
+            return await registerPushToken(event);
         }
         
         return {
@@ -543,26 +613,64 @@ async function acceptMatch(event) {
     if (isMutual) {
         console.log(`🎉 MUTUAL MATCH: ${userEmail} <-> ${matchEmail}`);
         
-        // Update both users' visibility to hidden in profiles table
-        await docClient.send(new UpdateCommand({
-            TableName: TABLES.PROFILES,
-            Key: { email: userEmail.toLowerCase() },
-            UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match',
-            ExpressionAttributeValues: {
-                ':false': false,
-                ':match': matchEmail.toLowerCase()
-            }
-        }));
+        // Get both user profiles for notification details
+        const [userProfile, matchProfile] = await Promise.all([
+            docClient.send(new GetCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: userEmail.toLowerCase() }
+            })),
+            docClient.send(new GetCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: matchEmail.toLowerCase() }
+            }))
+        ]);
         
-        await docClient.send(new UpdateCommand({
-            TableName: TABLES.PROFILES,
-            Key: { email: matchEmail.toLowerCase() },
-            UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match',
-            ExpressionAttributeValues: {
-                ':false': false,
-                ':match': userEmail.toLowerCase()
-            }
-        }));
+        const userData = userProfile.Item || {};
+        const matchData = matchProfile.Item || {};
+        
+        // Update both users' visibility to hidden in profiles table
+        await Promise.all([
+            docClient.send(new UpdateCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: userEmail.toLowerCase() },
+                UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match, matchedAt = :time',
+                ExpressionAttributeValues: {
+                    ':false': false,
+                    ':match': matchEmail.toLowerCase(),
+                    ':time': new Date().toISOString()
+                }
+            })),
+            docClient.send(new UpdateCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: matchEmail.toLowerCase() },
+                UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match, matchedAt = :time',
+                ExpressionAttributeValues: {
+                    ':false': false,
+                    ':match': userEmail.toLowerCase(),
+                    ':time': new Date().toISOString()
+                }
+            }))
+        ]);
+        
+        // Create notifications for BOTH users (especially important for offline users)
+        await Promise.all([
+            // Notify the user who just accepted
+            createNotification(userEmail, 'mutual_match', {
+                matchEmail: matchEmail.toLowerCase(),
+                matchName: matchData.firstName || 'Someone',
+                matchPhoto: matchData.photos?.[0] || matchData.photo || null,
+                message: `You matched with ${matchData.firstName || 'someone'}! Start a conversation.`
+            }),
+            // Notify the other user (may be offline - they'll see when they open the app)
+            createNotification(matchEmail, 'mutual_match', {
+                matchEmail: userEmail.toLowerCase(),
+                matchName: userData.firstName || 'Someone',
+                matchPhoto: userData.photos?.[0] || userData.photo || null,
+                message: `You matched with ${userData.firstName || 'someone'}! Start a conversation.`
+            })
+        ]);
+        
+        console.log(`📬 Notifications sent to both ${userEmail} and ${matchEmail}`);
     }
     
     return {
@@ -685,5 +793,177 @@ async function getPoolStats(event) {
             scannedCount: scanResult.ScannedCount || 0
         })
     };
+}
+
+// ==========================================
+// NOTIFICATION HANDLERS
+// ==========================================
+
+/**
+ * GET /api/notifications - Get unread notifications for user
+ * Called when user opens app to check for matches/messages received while offline
+ */
+async function getNotifications(event) {
+    const userEmail = event.queryStringParameters?.userEmail;
+    
+    if (!userEmail) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'userEmail is required' })
+        };
+    }
+    
+    console.log(`📬 Fetching notifications for: ${userEmail}`);
+    
+    try {
+        // Get all notifications (both read and unread)
+        const result = await docClient.send(new QueryCommand({
+            TableName: TABLES.NOTIFICATIONS,
+            KeyConditionExpression: 'userEmail = :email',
+            ExpressionAttributeValues: {
+                ':email': userEmail.toLowerCase()
+            },
+            ScanIndexForward: false, // Most recent first
+            Limit: 50
+        }));
+        
+        const notifications = result.Items || [];
+        const unreadCount = notifications.filter(n => !n.read).length;
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                notifications,
+                unreadCount,
+                total: notifications.length
+            })
+        };
+    } catch (error) {
+        // Table might not exist yet
+        console.log(`Could not fetch notifications: ${error.message}`);
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                notifications: [],
+                unreadCount: 0,
+                total: 0,
+                warning: 'Notifications table not configured'
+            })
+        };
+    }
+}
+
+/**
+ * POST /api/notifications/read - Mark notifications as read
+ */
+async function markNotificationsRead(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { userEmail, notificationIds } = body;
+    
+    if (!userEmail) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'userEmail is required' })
+        };
+    }
+    
+    console.log(`✅ Marking notifications as read for: ${userEmail}`);
+    
+    try {
+        if (notificationIds && notificationIds.length > 0) {
+            // Mark specific notifications as read
+            await Promise.all(notificationIds.map(id => 
+                docClient.send(new UpdateCommand({
+                    TableName: TABLES.NOTIFICATIONS,
+                    Key: { userEmail: userEmail.toLowerCase(), notificationId: id },
+                    UpdateExpression: 'SET #read = :true, readAt = :time',
+                    ExpressionAttributeNames: { '#read': 'read' },
+                    ExpressionAttributeValues: {
+                        ':true': true,
+                        ':time': new Date().toISOString()
+                    }
+                }))
+            ));
+        } else {
+            // Mark ALL unread notifications as read
+            const unread = await getUnreadNotifications(userEmail);
+            await Promise.all(unread.map(n => 
+                docClient.send(new UpdateCommand({
+                    TableName: TABLES.NOTIFICATIONS,
+                    Key: { userEmail: userEmail.toLowerCase(), notificationId: n.notificationId },
+                    UpdateExpression: 'SET #read = :true, readAt = :time',
+                    ExpressionAttributeNames: { '#read': 'read' },
+                    ExpressionAttributeValues: {
+                        ':true': true,
+                        ':time': new Date().toISOString()
+                    }
+                }))
+            ));
+        }
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ success: true })
+        };
+    } catch (error) {
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ success: false, warning: error.message })
+        };
+    }
+}
+
+/**
+ * POST /api/notifications/token - Register push notification token
+ * Used for future mobile push notifications
+ */
+async function registerPushToken(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { userEmail, token, platform } = body; // platform: 'ios', 'android', 'web'
+    
+    if (!userEmail || !token) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'userEmail and token are required' })
+        };
+    }
+    
+    console.log(`📱 Registering push token for ${userEmail} (${platform || 'unknown'})`);
+    
+    try {
+        // Store the token in the user's profile
+        await docClient.send(new UpdateCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email: userEmail.toLowerCase() },
+            UpdateExpression: 'SET pushToken = :token, pushPlatform = :platform, tokenUpdatedAt = :time',
+            ExpressionAttributeValues: {
+                ':token': token,
+                ':platform': platform || 'unknown',
+                ':time': new Date().toISOString()
+            }
+        }));
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ 
+                success: true,
+                message: 'Push token registered successfully'
+            })
+        };
+    } catch (error) {
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
 }
 

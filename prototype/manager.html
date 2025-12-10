@@ -5870,7 +5870,7 @@
                                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                                     <div id="dynamoConnectionDot" style="width: 12px; height: 12px; background: var(--text-muted); border-radius: 50%;"></div>
                                     <div>
-                                        <div style="font-weight: 600;" id="dynamoTableName">oith-profiles • oith-matches • oith-users</div>
+                                        <div style="font-weight: 600;" id="dynamoTableName">oith-profiles • oith-matches • oith-notifications • oith-users</div>
                                         <div style="font-size: 0.75rem; color: var(--text-muted);" id="dynamoRegion">us-east-1</div>
                                     </div>
                                     <div style="margin-left: auto; text-align: right;">
@@ -20283,6 +20283,7 @@
                 'oith-matches': 0,
                 'oith-match-history': 0,
                 'oith-conversations': 0,
+                'oith-notifications': 0,
                 'oith-users': 0
             },
             lastSync: null
@@ -20298,6 +20299,7 @@
                 { name: 'oith-matches', purpose: 'Active match pairings', key: 'matchId' },
                 { name: 'oith-match-history', purpose: 'Pass/accept history', key: 'userEmail + matchEmail' },
                 { name: 'oith-conversations', purpose: 'Chat messages', key: 'conversationId + timestamp' },
+                { name: 'oith-notifications', purpose: 'Push/in-app notifications', key: 'userEmail + notificationId' },
                 { name: 'oith-users', purpose: 'Company/admin data', key: 'pk + sk' }
             ],
             keySchema: {
@@ -20391,6 +20393,25 @@
                         { name: 'senderEmail', type: 'String', description: 'Message sender' },
                         { name: 'message', type: 'String', description: 'Message content' },
                         { name: 'read', type: 'Boolean', description: 'Read status' }
+                    ]
+                },
+                {
+                    name: 'NOTIFICATION',
+                    table: 'oith-notifications',
+                    color: '#F59E0B',
+                    icon: '🔔',
+                    pkPattern: 'userEmail',
+                    skPattern: 'notificationId',
+                    description: 'Push/in-app notifications for offline matching',
+                    usedBy: ['index.html: app load', 'matchingService Lambda'],
+                    attributes: [
+                        { name: 'userEmail', type: 'String', example: 'john@email.com', primary: true },
+                        { name: 'notificationId', type: 'String', example: '1734567890_abc123', primary: true },
+                        { name: 'type', type: 'String', description: 'mutual_match, new_message, like_received' },
+                        { name: 'data', type: 'Map', description: 'Notification context (matchEmail, matchName, etc.)' },
+                        { name: 'read', type: 'Boolean', description: 'Has notification been read' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' },
+                        { name: 'readAt', type: 'String', description: 'When notification was read' }
                     ]
                 },
                 {

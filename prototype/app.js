@@ -853,6 +853,102 @@ async function syncActivityToAWS(isLoggedIn = true) {
 }
 
 /**
+ * Fetch unread notifications from AWS (for offline matching)
+ * Called when user opens app to check for matches/messages received while offline
+ */
+async function fetchNotificationsFromAWS() {
+    const email = appState.user?.email;
+    if (!email) return [];
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/notifications?userEmail=${encodeURIComponent(email)}`);
+        if (!response.ok) return [];
+        
+        const data = await response.json();
+        const notifications = data.notifications || [];
+        const unreadCount = data.unreadCount || 0;
+        
+        if (unreadCount > 0) {
+            console.log(`🔔 You have ${unreadCount} new notification(s)!`);
+            
+            // Show notifications to user
+            notifications.filter(n => !n.read).forEach(notification => {
+                showNotificationToUser(notification);
+            });
+            
+            // Mark notifications as read after showing
+            markNotificationsAsRead(email);
+        }
+        
+        return notifications;
+    } catch (error) {
+        console.log('Could not fetch notifications:', error.message);
+        return [];
+    }
+}
+
+/**
+ * Show a notification to the user based on type
+ */
+function showNotificationToUser(notification) {
+    const { type, data } = notification;
+    
+    switch (type) {
+        case 'mutual_match':
+            // Show match notification
+            showToast(`🎉 ${data.message || 'You have a new match!'}`, 'success');
+            
+            // If the user is on the home screen, refresh to show the matched connection
+            if (appState.activeMatchEmail !== data.matchEmail) {
+                // Update app state with the match
+                appState.activeConnection = {
+                    email: data.matchEmail,
+                    name: data.matchName,
+                    photo: data.matchPhoto
+                };
+                appState.activeMatchEmail = data.matchEmail;
+                
+                // Refresh the current screen if on home or match screen
+                if (typeof refreshCurrentScreen === 'function') {
+                    setTimeout(refreshCurrentScreen, 1500);
+                }
+            }
+            break;
+            
+        case 'new_message':
+            showToast(`💬 New message from ${data.senderName || 'your match'}!`, 'info');
+            break;
+            
+        case 'like_received':
+            // Don't reveal who liked them (that's part of the mystery!)
+            showToast(`💗 Someone is interested in you!`, 'info');
+            break;
+            
+        default:
+            if (data.message) {
+                showToast(data.message, 'info');
+            }
+    }
+}
+
+/**
+ * Mark all notifications as read for a user
+ */
+async function markNotificationsAsRead(email) {
+    if (!email) return;
+    
+    try {
+        await fetch(`${AWS_API_URL}/notifications/read`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userEmail: email })
+        });
+    } catch (error) {
+        console.log('Could not mark notifications as read:', error.message);
+    }
+}
+
+/**
  * Sync billing transaction to AWS
  */
 async function syncBillingToAWS(transaction) {
@@ -6679,6 +6775,13 @@ function handleLogin(event) {
     
     // Sync activity to AWS (login event)
     syncActivityToAWS(true).catch(err => console.log('Activity sync:', err.message));
+    
+    // Check for notifications (matches/messages received while offline)
+    fetchNotificationsFromAWS().then(notifications => {
+        if (notifications.length > 0) {
+            console.log(`🔔 Received ${notifications.length} notification(s) while offline`);
+        }
+    }).catch(err => console.log('Notification fetch:', err.message));
     
     // Load full user data from AWS (subscription, settings, emergency contact, etc.)
     // This runs in background and merges AWS data with local data

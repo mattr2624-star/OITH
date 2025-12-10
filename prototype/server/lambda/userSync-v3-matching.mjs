@@ -1295,7 +1295,20 @@ export const handler = async (event) => {
                 console.log('Could not scan oith-conversations:', e.message);
             }
             
-            // 5. Scan oith-users (company data) for remaining entities
+            // 5. Count notifications from oith-notifications table
+            try {
+                const notifScan = await docClient.send(new ScanCommand({
+                    TableName: 'oith-notifications',
+                    Select: 'COUNT'
+                }));
+                stats.notifications = notifScan.Count || 0;
+                stats.tables['oith-notifications'] = notifScan.Count || 0;
+                stats.totalItems += notifScan.Count || 0;
+            } catch (e) {
+                console.log('Could not scan oith-notifications:', e.message);
+            }
+            
+            // 6. Scan oith-users (company data) for remaining entities
             let lastEvaluatedKey;
             do {
                 const scanResult = await docClient.send(new ScanCommand({
