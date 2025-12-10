@@ -6361,8 +6361,8 @@ const PAYMENT_CONFIG = {
     // Stripe Publishable Key - Get from Stripe Dashboard → Developers → API Keys
     stripePublishableKey: 'pk_test_51Sct6cL2lGx1shIrYphU6V7KQ7wRrtoIhRBGnFjscJmUVXY4QtFBuCHkstJe6ABm0CAlU7KGSaLptYbG3mYHKlY100cDIYEw7d',
     
-    // Backend API URL for payment processing
-    apiUrl: 'http://localhost:3000/api',
+    // Backend API URL for payment processing (AWS Lambda)
+    apiUrl: 'https://ludksg8e3g.execute-api.us-east-1.amazonaws.com/api',
     
     // Redirect URL after successful payment (your app URL + success screen)
     successRedirectUrl: 'https://main.d3cpep2ztx08x2.amplifyapp.com/prototype/index.html#payment-success',
