@@ -37,6 +37,20 @@ const TABLES = {
     COMPANY: 'oith-users'                // Company/admin data (legacy name)
 };
 
+// ==========================================
+// MATCHING CONFIGURATION
+// ==========================================
+const CONFIG = {
+    // Match expiration - auto-pass if no response in 24 hours
+    MATCH_EXPIRATION_HOURS: 24,
+    
+    // Only show users active within this many days
+    ACTIVE_USER_DAYS: 14,
+    
+    // Maximum profiles to scan per request (pagination for scale)
+    MAX_SCAN_LIMIT: 500
+};
+
 // CORS headers
 const headers = {
     'Content-Type': 'application/json',
@@ -96,6 +110,69 @@ async function getUnreadNotifications(userEmail) {
     } catch (error) {
         console.log(`Could not fetch notifications: ${error.message}`);
         return [];
+    }
+}
+
+// ==========================================
+// MATCH EXPIRATION UTILITIES
+// ==========================================
+
+/**
+ * Auto-pass matches that were presented but not acted on within 24 hours
+ * This prevents users from seeing the same match forever
+ */
+async function autoPassExpiredMatches(userEmail) {
+    const expirationTime = new Date(Date.now() - CONFIG.MATCH_EXPIRATION_HOURS * 60 * 60 * 1000).toISOString();
+    
+    try {
+        // Find matches that are still "presented" and older than expiration time
+        const matchesResult = await docClient.send(new ScanCommand({
+            TableName: TABLES.MATCHES,
+            FilterExpression: 'userEmail = :email AND #status = :presented AND presentedAt < :expiry',
+            ExpressionAttributeNames: { '#status': 'status' },
+            ExpressionAttributeValues: {
+                ':email': userEmail,
+                ':presented': 'presented',
+                ':expiry': expirationTime
+            }
+        }));
+        
+        const expiredMatches = matchesResult.Items || [];
+        
+        if (expiredMatches.length > 0) {
+            console.log(`⏰ Auto-passing ${expiredMatches.length} expired matches for ${userEmail}`);
+            
+            // Auto-pass each expired match
+            for (const match of expiredMatches) {
+                await docClient.send(new PutCommand({
+                    TableName: TABLES.MATCH_HISTORY,
+                    Item: {
+                        userEmail: userEmail,
+                        matchEmail: match.matchEmail,
+                        action: 'auto_pass',
+                        reason: 'expired',
+                        timestamp: new Date().toISOString()
+                    }
+                }));
+                
+                // Update match status to expired
+                await docClient.send(new UpdateCommand({
+                    TableName: TABLES.MATCHES,
+                    Key: { matchId: match.matchId },
+                    UpdateExpression: 'SET #status = :status, expiredAt = :time',
+                    ExpressionAttributeNames: { '#status': 'status' },
+                    ExpressionAttributeValues: {
+                        ':status': 'expired',
+                        ':time': new Date().toISOString()
+                    }
+                }));
+            }
+        }
+        
+        return expiredMatches.length;
+    } catch (error) {
+        console.log(`Could not check expired matches: ${error.message}`);
+        return 0;
     }
 }
 
@@ -337,6 +414,11 @@ export const handler = async (event) => {
             return await getPoolStats(event);
         }
         
+        // POST /api/match/unmatch - End a match and restore visibility
+        if (path.includes('/match/unmatch') && method === 'POST') {
+            return await unmatch(event);
+        }
+        
         // GET /api/notifications - Get unread notifications for user
         if (path.includes('/notifications') && method === 'GET') {
             return await getNotifications(event);
@@ -433,16 +515,47 @@ async function getNextMatch(event) {
     const connectedIds = matchHistory.filter(h => h.action === 'accept').map(h => h.matchEmail);
     const excludeEmails = [...passedIds, ...connectedIds, userEmail.toLowerCase()];
     
-    // 3. Get potential matches from oith-profiles table
-    // In production, use GSI with geohash prefix for efficient location query
-    const scanResult = await docClient.send(new ScanCommand({
-        TableName: TABLES.PROFILES,
-        FilterExpression: 'attribute_exists(firstName) AND (attribute_not_exists(isVisible) OR isVisible <> :false)',
-        ExpressionAttributeValues: { ':false': false },
-        Limit: 100 // Limit for performance
-    }));
+    // 2b. Check for expired presented matches and auto-pass them
+    await autoPassExpiredMatches(userEmail.toLowerCase());
     
-    const potentialMatches = (scanResult.Items || []).filter(user => 
+    // 3. Get potential matches from oith-profiles table with PAGINATION
+    // Filter: visible, active within 14 days, has first name (complete profile)
+    const activeThreshold = new Date(Date.now() - CONFIG.ACTIVE_USER_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    
+    let allProfiles = [];
+    let lastEvaluatedKey = null;
+    let scanCount = 0;
+    const maxScans = 10; // Safety limit to prevent infinite loops
+    
+    do {
+        const scanParams = {
+            TableName: TABLES.PROFILES,
+            FilterExpression: 'attribute_exists(firstName) AND (attribute_not_exists(isVisible) OR isVisible <> :false) AND (attribute_not_exists(lastSeen) OR lastSeen > :activeThreshold)',
+            ExpressionAttributeValues: { 
+                ':false': false,
+                ':activeThreshold': activeThreshold
+            },
+            Limit: CONFIG.MAX_SCAN_LIMIT
+        };
+        
+        if (lastEvaluatedKey) {
+            scanParams.ExclusiveStartKey = lastEvaluatedKey;
+        }
+        
+        const scanResult = await docClient.send(new ScanCommand(scanParams));
+        allProfiles = allProfiles.concat(scanResult.Items || []);
+        lastEvaluatedKey = scanResult.LastEvaluatedKey;
+        scanCount++;
+        
+        // Stop if we have enough profiles or hit safety limit
+        if (allProfiles.length >= 1000 || scanCount >= maxScans) {
+            break;
+        }
+    } while (lastEvaluatedKey);
+    
+    console.log(`📊 Scanned ${allProfiles.length} profiles in ${scanCount} scan(s)`);
+    
+    const potentialMatches = allProfiles.filter(user => 
         !excludeEmails.includes(user.email?.toLowerCase())
     );
     
@@ -602,6 +715,7 @@ async function acceptMatch(event) {
     }));
     
     // Check if it's a mutual match (other user also accepted)
+    // Use atomic conditional update to prevent race conditions
     const reverseMatchId = `${matchEmail.toLowerCase()}_${userEmail.toLowerCase()}`;
     const reverseResult = await docClient.send(new GetCommand({
         TableName: TABLES.MATCHES,
@@ -613,64 +727,86 @@ async function acceptMatch(event) {
     if (isMutual) {
         console.log(`🎉 MUTUAL MATCH: ${userEmail} <-> ${matchEmail}`);
         
-        // Get both user profiles for notification details
-        const [userProfile, matchProfile] = await Promise.all([
-            docClient.send(new GetCommand({
-                TableName: TABLES.PROFILES,
-                Key: { email: userEmail.toLowerCase() }
-            })),
-            docClient.send(new GetCommand({
-                TableName: TABLES.PROFILES,
-                Key: { email: matchEmail.toLowerCase() }
-            }))
-        ]);
-        
-        const userData = userProfile.Item || {};
-        const matchData = matchProfile.Item || {};
-        
-        // Update both users' visibility to hidden in profiles table
-        await Promise.all([
-            docClient.send(new UpdateCommand({
-                TableName: TABLES.PROFILES,
-                Key: { email: userEmail.toLowerCase() },
-                UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match, matchedAt = :time',
+        // Use conditional update to ensure only ONE process handles the mutual match
+        // This prevents race conditions when both users accept simultaneously
+        try {
+            await docClient.send(new UpdateCommand({
+                TableName: TABLES.MATCHES,
+                Key: { matchId },
+                UpdateExpression: 'SET mutualMatchProcessed = :true, processedAt = :time',
+                ConditionExpression: 'attribute_not_exists(mutualMatchProcessed)',
                 ExpressionAttributeValues: {
-                    ':false': false,
-                    ':match': matchEmail.toLowerCase(),
+                    ':true': true,
                     ':time': new Date().toISOString()
                 }
-            })),
-            docClient.send(new UpdateCommand({
-                TableName: TABLES.PROFILES,
-                Key: { email: matchEmail.toLowerCase() },
-                UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match, matchedAt = :time',
-                ExpressionAttributeValues: {
-                    ':false': false,
-                    ':match': userEmail.toLowerCase(),
-                    ':time': new Date().toISOString()
-                }
-            }))
-        ]);
-        
-        // Create notifications for BOTH users (especially important for offline users)
-        await Promise.all([
-            // Notify the user who just accepted
-            createNotification(userEmail, 'mutual_match', {
-                matchEmail: matchEmail.toLowerCase(),
-                matchName: matchData.firstName || 'Someone',
-                matchPhoto: matchData.photos?.[0] || matchData.photo || null,
-                message: `You matched with ${matchData.firstName || 'someone'}! Start a conversation.`
-            }),
-            // Notify the other user (may be offline - they'll see when they open the app)
-            createNotification(matchEmail, 'mutual_match', {
-                matchEmail: userEmail.toLowerCase(),
-                matchName: userData.firstName || 'Someone',
-                matchPhoto: userData.photos?.[0] || userData.photo || null,
-                message: `You matched with ${userData.firstName || 'someone'}! Start a conversation.`
-            })
-        ]);
-        
-        console.log(`📬 Notifications sent to both ${userEmail} and ${matchEmail}`);
+            }));
+            
+            // We won the race - process the mutual match
+            console.log(`🏆 Won race condition for ${matchId} - processing mutual match`);
+            
+            // Get both user profiles for notification details
+            const [userProfile, matchProfile] = await Promise.all([
+                docClient.send(new GetCommand({
+                    TableName: TABLES.PROFILES,
+                    Key: { email: userEmail.toLowerCase() }
+                })),
+                docClient.send(new GetCommand({
+                    TableName: TABLES.PROFILES,
+                    Key: { email: matchEmail.toLowerCase() }
+                }))
+            ]);
+            
+            const userData = userProfile.Item || {};
+            const matchData = matchProfile.Item || {};
+            
+            // Update both users' visibility to hidden (with condition to prevent double-update)
+            await Promise.all([
+                docClient.send(new UpdateCommand({
+                    TableName: TABLES.PROFILES,
+                    Key: { email: userEmail.toLowerCase() },
+                    UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match, matchedAt = :time',
+                    ConditionExpression: 'attribute_not_exists(activeMatchEmail) OR activeMatchEmail = :match',
+                    ExpressionAttributeValues: {
+                        ':false': false,
+                        ':match': matchEmail.toLowerCase(),
+                        ':time': new Date().toISOString()
+                    }
+                })).catch(e => console.log('User already matched:', e.message)),
+                docClient.send(new UpdateCommand({
+                    TableName: TABLES.PROFILES,
+                    Key: { email: matchEmail.toLowerCase() },
+                    UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match, matchedAt = :time',
+                    ConditionExpression: 'attribute_not_exists(activeMatchEmail) OR activeMatchEmail = :match',
+                    ExpressionAttributeValues: {
+                        ':false': false,
+                        ':match': userEmail.toLowerCase(),
+                        ':time': new Date().toISOString()
+                    }
+                })).catch(e => console.log('Match already matched:', e.message))
+            ]);
+            
+            // Create notifications for BOTH users
+            await Promise.all([
+                createNotification(userEmail, 'mutual_match', {
+                    matchEmail: matchEmail.toLowerCase(),
+                    matchName: matchData.firstName || 'Someone',
+                    matchPhoto: matchData.photos?.[0] || matchData.photo || null,
+                    message: `You matched with ${matchData.firstName || 'someone'}! Start a conversation.`
+                }),
+                createNotification(matchEmail, 'mutual_match', {
+                    matchEmail: userEmail.toLowerCase(),
+                    matchName: userData.firstName || 'Someone',
+                    matchPhoto: userData.photos?.[0] || userData.photo || null,
+                    message: `You matched with ${userData.firstName || 'someone'}! Start a conversation.`
+                })
+            ]);
+            
+            console.log(`📬 Notifications sent to both ${userEmail} and ${matchEmail}`);
+            
+        } catch (conditionError) {
+            // Lost the race - the other process already handled it
+            console.log(`⏭️ Race condition: mutual match already processed by other request`);
+        }
     }
     
     return {
@@ -732,6 +868,102 @@ async function passMatch(event) {
         body: JSON.stringify({
             success: true,
             message: 'Match passed. Getting next match...'
+        })
+    };
+}
+
+// ==========================================
+// UNMATCH - End match and restore visibility
+// ==========================================
+
+async function unmatch(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { userEmail, matchEmail, reason } = body;
+    
+    if (!userEmail) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'userEmail is required' })
+        };
+    }
+    
+    console.log(`💔 ${userEmail} unmatching from ${matchEmail || 'active match'}`);
+    
+    // Get current user's profile to find their active match
+    const userResult = await docClient.send(new GetCommand({
+        TableName: TABLES.PROFILES,
+        Key: { email: userEmail.toLowerCase() }
+    }));
+    
+    const user = userResult.Item;
+    const activeMatch = matchEmail || user?.activeMatchEmail;
+    
+    if (!activeMatch) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'No active match to unmatch from' })
+        };
+    }
+    
+    // Record the unmatch in history (prevents re-matching)
+    await Promise.all([
+        // User's history
+        docClient.send(new PutCommand({
+            TableName: TABLES.MATCH_HISTORY,
+            Item: {
+                userEmail: userEmail.toLowerCase(),
+                matchEmail: activeMatch.toLowerCase(),
+                action: 'unmatch',
+                reason: reason || 'user_initiated',
+                timestamp: new Date().toISOString()
+            }
+        })),
+        // Match's history (they also can't match with this user again)
+        docClient.send(new PutCommand({
+            TableName: TABLES.MATCH_HISTORY,
+            Item: {
+                userEmail: activeMatch.toLowerCase(),
+                matchEmail: userEmail.toLowerCase(),
+                action: 'unmatched_by',
+                reason: reason || 'other_user_initiated',
+                timestamp: new Date().toISOString()
+            }
+        }))
+    ]);
+    
+    // Restore visibility for BOTH users
+    await Promise.all([
+        docClient.send(new UpdateCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email: userEmail.toLowerCase() },
+            UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt',
+            ExpressionAttributeValues: { ':true': true }
+        })),
+        docClient.send(new UpdateCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email: activeMatch.toLowerCase() },
+            UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt',
+            ExpressionAttributeValues: { ':true': true }
+        }))
+    ]);
+    
+    // Notify the other user that they've been unmatched
+    await createNotification(activeMatch, 'unmatched', {
+        message: 'Your match has ended. You\'re back in the matching pool!',
+        unmatchedBy: userEmail.toLowerCase()
+    });
+    
+    console.log(`✅ Both ${userEmail} and ${activeMatch} are now visible again`);
+    
+    return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+            success: true,
+            message: 'Match ended. You\'re back in the matching pool!',
+            restoredVisibility: true
         })
     };
 }
