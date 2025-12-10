@@ -5837,7 +5837,7 @@
                 <div class="page-header">
                     <div>
                         <h2 class="page-title">🗄️ Database Schema</h2>
-                        <p class="page-subtitle">DynamoDB single-table design - synced with AWS</p>
+                        <p class="page-subtitle">DynamoDB multi-table design - synced with AWS</p>
                     </div>
                     <div class="header-actions">
                         <button class="btn btn-primary" onclick="syncDynamoDBSchema()" id="syncSchemaBtn">
@@ -20279,47 +20279,109 @@
             lastSync: null
         };
         
-        // DynamoDB Single-Table Schema Definition
-        // Table: oith-users (pk, sk as composite key)
+        // DynamoDB Multi-Table Schema Definition
+        // Tables split by domain for clarity and scalability
         const dynamoDBSchema = {
-            tableName: 'oith-users',
+            tableName: 'oith-profiles (primary)', // Primary table for display
             region: 'us-east-1',
+            tables: [
+                { name: 'oith-profiles', purpose: 'Dating user profiles', key: 'email' },
+                { name: 'oith-matches', purpose: 'Active match pairings', key: 'matchId' },
+                { name: 'oith-match-history', purpose: 'Pass/accept history', key: 'userEmail + matchEmail' },
+                { name: 'oith-conversations', purpose: 'Chat messages', key: 'conversationId + timestamp' },
+                { name: 'oith-users', purpose: 'Company/admin data', key: 'pk + sk' }
+            ],
             keySchema: {
-                pk: { type: 'String', description: 'Partition Key - Entity type prefix + identifier' },
-                sk: { type: 'String', description: 'Sort Key - Sub-entity type or identifier' }
+                email: { type: 'String', description: 'User email (partition key for profiles)' }
             },
             entities: [
                 {
                     name: 'USER_PROFILE',
+                    table: 'oith-profiles',
                     color: '#3B82F6',
                     icon: '👤',
-                    pkPattern: 'USER#{email}',
-                    skPattern: 'PROFILE',
-                    description: 'User profile data - core account info',
-                    usedBy: ['index.html: signup, login, profile edit'],
+                    pkPattern: 'email',
+                    skPattern: '(none - simple key)',
+                    description: 'Dating user profile data',
+                    usedBy: ['index.html: signup, login, profile edit', 'matchingService Lambda'],
                     attributes: [
-                        { name: 'pk', type: 'String', example: 'USER#john@email.com', primary: true },
-                        { name: 'sk', type: 'String', example: 'PROFILE', primary: true },
-                        { name: 'email', type: 'String', description: 'User email (lowercase)' },
+                        { name: 'email', type: 'String', example: 'john@email.com', primary: true },
                         { name: 'firstName', type: 'String', description: 'First name' },
                         { name: 'age', type: 'Number', description: 'User age' },
                         { name: 'gender', type: 'String', description: 'male/female/other' },
                         { name: 'location', type: 'String', description: 'City, State' },
+                        { name: 'coordinates', type: 'Map', description: '{lat, lng} for distance calc' },
                         { name: 'occupation', type: 'String', description: 'Job title' },
-                        { name: 'bio', type: 'String', description: 'Bio (max 500 chars)' },
+                        { name: 'bio', type: 'String', description: 'Bio (max 300 chars)' },
                         { name: 'photo', type: 'String', description: 'Primary photo URL' },
-                        { name: 'photos', type: 'List', description: 'Array of photo URLs' },
+                        { name: 'photos', type: 'List', description: 'Array of S3 photo URLs' },
                         { name: 'education', type: 'String', description: 'Education level' },
                         { name: 'height', type: 'String', description: 'Height value' },
                         { name: 'bodyType', type: 'String', description: 'Body type' },
-                        { name: 'politics', type: 'String', description: 'Political views' },
+                        { name: 'drinking', type: 'String', description: 'Drinking habits' },
+                        { name: 'smoking', type: 'String', description: 'Smoking habits' },
+                        { name: 'religion', type: 'String', description: 'Religion' },
+                        { name: 'interests', type: 'List', description: 'Array of interests' },
+                        { name: 'lookingFor', type: 'String', description: 'Relationship goal' },
                         { name: 'matchPreferences', type: 'Map', description: 'Age/distance/gender prefs' },
-                        { name: 'profileVisibility', type: 'Map', description: '{isHidden, reason}' },
-                        { name: 'subscription', type: 'Map', description: 'Subscription info' },
-                        { name: 'emergencyContact', type: 'Map', description: 'Emergency contact' },
-                        { name: 'settings', type: 'Map', description: 'User settings' },
+                        { name: 'isVisible', type: 'Boolean', description: 'Visible in matching pool' },
+                        { name: 'activeMatchEmail', type: 'String', description: 'Current active match' },
                         { name: 'online', type: 'Boolean', description: 'Online status' },
+                        { name: 'createdAt', type: 'String', description: 'ISO timestamp' },
                         { name: 'updatedAt', type: 'String', description: 'ISO timestamp' }
+                    ]
+                },
+                {
+                    name: 'MATCH',
+                    table: 'oith-matches',
+                    color: '#EC4899',
+                    icon: '💕',
+                    pkPattern: 'matchId',
+                    skPattern: '(none)',
+                    description: 'Active match between two users',
+                    usedBy: ['matchingService Lambda'],
+                    attributes: [
+                        { name: 'matchId', type: 'String', example: 'user1@email.com_user2@email.com', primary: true },
+                        { name: 'userEmail', type: 'String', description: 'User who was shown match' },
+                        { name: 'matchEmail', type: 'String', description: 'The potential match' },
+                        { name: 'status', type: 'String', description: 'presented/accepted/passed' },
+                        { name: 'compatibility', type: 'Number', description: 'Compatibility score 0-100' },
+                        { name: 'distance', type: 'Number', description: 'Distance in miles' },
+                        { name: 'presentedAt', type: 'String', description: 'When match was shown' },
+                        { name: 'acceptedAt', type: 'String', description: 'When user accepted' }
+                    ]
+                },
+                {
+                    name: 'MATCH_HISTORY',
+                    table: 'oith-match-history',
+                    color: '#8B5CF6',
+                    icon: '📋',
+                    pkPattern: 'userEmail',
+                    skPattern: 'matchEmail',
+                    description: 'Historical pass/accept actions',
+                    usedBy: ['matchingService Lambda'],
+                    attributes: [
+                        { name: 'userEmail', type: 'String', primary: true },
+                        { name: 'matchEmail', type: 'String', primary: true },
+                        { name: 'action', type: 'String', description: 'accept/pass' },
+                        { name: 'timestamp', type: 'String', description: 'When action occurred' }
+                    ]
+                },
+                {
+                    name: 'CONVERSATION',
+                    table: 'oith-conversations',
+                    color: '#10B981',
+                    icon: '💬',
+                    pkPattern: 'conversationId',
+                    skPattern: 'timestamp',
+                    description: 'Chat messages between matched users',
+                    usedBy: ['index.html: chat'],
+                    attributes: [
+                        { name: 'conversationId', type: 'String', example: 'user1_user2', primary: true },
+                        { name: 'timestamp', type: 'String', primary: true },
+                        { name: 'senderEmail', type: 'String', description: 'Message sender' },
+                        { name: 'message', type: 'String', description: 'Message content' },
+                        { name: 'read', type: 'Boolean', description: 'Read status' }
                     ]
                 },
                 {

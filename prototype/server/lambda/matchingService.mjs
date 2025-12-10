@@ -27,10 +27,14 @@ import {
 const client = new DynamoDBClient({ region: 'us-east-1' });
 const docClient = DynamoDBDocumentClient.from(client);
 
-// Table names
-const USERS_TABLE = 'oith-users';
-const MATCHES_TABLE = 'oith-matches';
-const MATCH_HISTORY_TABLE = 'oith-match-history';
+// Table names - split by domain for clarity and scalability
+const TABLES = {
+    PROFILES: 'oith-profiles',         // Dating user profiles (email as key)
+    MATCHES: 'oith-matches',            // Active match pairings
+    MATCH_HISTORY: 'oith-match-history', // Pass/accept history
+    CONVERSATIONS: 'oith-conversations', // Chat messages
+    COMPANY: 'oith-users'               // Company/admin data (legacy name)
+};
 
 // CORS headers
 const headers = {
@@ -312,9 +316,9 @@ async function getNextMatch(event) {
     
     console.log(`🔍 Finding next match for: ${userEmail}`);
     
-    // 1. Get current user's profile and preferences
+    // 1. Get current user's profile and preferences from oith-profiles
     const userResult = await docClient.send(new GetCommand({
-        TableName: USERS_TABLE,
+        TableName: TABLES.PROFILES,
         Key: { email: userEmail.toLowerCase() }
     }));
     
@@ -346,7 +350,7 @@ async function getNextMatch(event) {
     let matchHistory = [];
     try {
         const historyResult = await docClient.send(new QueryCommand({
-            TableName: MATCH_HISTORY_TABLE,
+            TableName: TABLES.MATCH_HISTORY,
             KeyConditionExpression: 'userEmail = :email',
             ExpressionAttributeValues: { ':email': userEmail.toLowerCase() }
         }));
@@ -359,11 +363,11 @@ async function getNextMatch(event) {
     const connectedIds = matchHistory.filter(h => h.action === 'accept').map(h => h.matchEmail);
     const excludeEmails = [...passedIds, ...connectedIds, userEmail.toLowerCase()];
     
-    // 3. Get potential matches from DynamoDB
+    // 3. Get potential matches from oith-profiles table
     // In production, use GSI with geohash prefix for efficient location query
     const scanResult = await docClient.send(new ScanCommand({
-        TableName: USERS_TABLE,
-        FilterExpression: 'attribute_exists(firstName) AND isVisible <> :false',
+        TableName: TABLES.PROFILES,
+        FilterExpression: 'attribute_exists(firstName) AND (attribute_not_exists(isVisible) OR isVisible <> :false)',
         ExpressionAttributeValues: { ':false': false },
         Limit: 100 // Limit for performance
     }));
@@ -453,7 +457,7 @@ async function getNextMatch(event) {
     // 6. Record that we presented this match
     try {
         await docClient.send(new PutCommand({
-            TableName: MATCHES_TABLE,
+            TableName: TABLES.MATCHES,
             Item: {
                 matchId: `${userEmail.toLowerCase()}_${bestMatch.email}`,
                 userEmail: userEmail.toLowerCase(),
@@ -505,7 +509,7 @@ async function acceptMatch(event) {
     
     // Record the accept action
     await docClient.send(new PutCommand({
-        TableName: MATCH_HISTORY_TABLE,
+        TableName: TABLES.MATCH_HISTORY,
         Item: {
             userEmail: userEmail.toLowerCase(),
             matchEmail: matchEmail.toLowerCase(),
@@ -517,7 +521,7 @@ async function acceptMatch(event) {
     // Update match status
     const matchId = `${userEmail.toLowerCase()}_${matchEmail.toLowerCase()}`;
     await docClient.send(new UpdateCommand({
-        TableName: MATCHES_TABLE,
+        TableName: TABLES.MATCHES,
         Key: { matchId },
         UpdateExpression: 'SET #status = :status, acceptedAt = :time',
         ExpressionAttributeNames: { '#status': 'status' },
@@ -530,7 +534,7 @@ async function acceptMatch(event) {
     // Check if it's a mutual match (other user also accepted)
     const reverseMatchId = `${matchEmail.toLowerCase()}_${userEmail.toLowerCase()}`;
     const reverseResult = await docClient.send(new GetCommand({
-        TableName: MATCHES_TABLE,
+        TableName: TABLES.MATCHES,
         Key: { matchId: reverseMatchId }
     }));
     
@@ -539,9 +543,9 @@ async function acceptMatch(event) {
     if (isMutual) {
         console.log(`🎉 MUTUAL MATCH: ${userEmail} <-> ${matchEmail}`);
         
-        // Update both users' visibility to hidden
+        // Update both users' visibility to hidden in profiles table
         await docClient.send(new UpdateCommand({
-            TableName: USERS_TABLE,
+            TableName: TABLES.PROFILES,
             Key: { email: userEmail.toLowerCase() },
             UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match',
             ExpressionAttributeValues: {
@@ -551,7 +555,7 @@ async function acceptMatch(event) {
         }));
         
         await docClient.send(new UpdateCommand({
-            TableName: USERS_TABLE,
+            TableName: TABLES.PROFILES,
             Key: { email: matchEmail.toLowerCase() },
             UpdateExpression: 'SET isVisible = :false, activeMatchEmail = :match',
             ExpressionAttributeValues: {
@@ -592,7 +596,7 @@ async function passMatch(event) {
     
     // Record the pass action
     await docClient.send(new PutCommand({
-        TableName: MATCH_HISTORY_TABLE,
+        TableName: TABLES.MATCH_HISTORY,
         Item: {
             userEmail: userEmail.toLowerCase(),
             matchEmail: matchEmail.toLowerCase(),
@@ -604,7 +608,7 @@ async function passMatch(event) {
     // Update match status
     const matchId = `${userEmail.toLowerCase()}_${matchEmail.toLowerCase()}`;
     await docClient.send(new UpdateCommand({
-        TableName: MATCHES_TABLE,
+        TableName: TABLES.MATCHES,
         Key: { matchId },
         UpdateExpression: 'SET #status = :status, passedAt = :time',
         ExpressionAttributeNames: { '#status': 'status' },
@@ -639,9 +643,9 @@ async function getMatchStatus(event) {
         };
     }
     
-    // Get user's current active match
+    // Get user's current active match from profiles table
     const userResult = await docClient.send(new GetCommand({
-        TableName: USERS_TABLE,
+        TableName: TABLES.PROFILES,
         Key: { email: userEmail.toLowerCase() }
     }));
     
@@ -665,10 +669,10 @@ async function getMatchStatus(event) {
 async function getPoolStats(event) {
     const userEmail = event.queryStringParameters?.userEmail;
     
-    // Count total visible users
+    // Count total visible users in profiles table
     const scanResult = await docClient.send(new ScanCommand({
-        TableName: USERS_TABLE,
-        FilterExpression: 'isVisible <> :false',
+        TableName: TABLES.PROFILES,
+        FilterExpression: 'attribute_not_exists(isVisible) OR isVisible <> :false',
         ExpressionAttributeValues: { ':false': false },
         Select: 'COUNT'
     }));

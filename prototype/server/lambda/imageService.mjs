@@ -26,7 +26,7 @@ const docClient = DynamoDBDocumentClient.from(dynamoClient);
 
 // Configuration
 const BUCKET_NAME = process.env.S3_BUCKET || 'oith-user-photos';
-const USERS_TABLE = 'oith-users';
+const PROFILES_TABLE = 'oith-profiles';  // Dating user profiles (simple email key)
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN || null;
 
 // CORS headers
@@ -168,9 +168,9 @@ async function confirmUpload(event) {
     
     console.log(`✅ Confirming upload for ${userEmail}: ${publicUrl}`);
     
-    // Get current user photos
+    // Get current user photos from profiles table
     const userResult = await docClient.send(new GetCommand({
-        TableName: USERS_TABLE,
+        TableName: PROFILES_TABLE,
         Key: { email: userEmail.toLowerCase() }
     }));
     
@@ -210,7 +210,7 @@ async function confirmUpload(event) {
     
     // Update user in DynamoDB
     await docClient.send(new UpdateCommand({
-        TableName: USERS_TABLE,
+        TableName: PROFILES_TABLE,
         Key: { email: userEmail.toLowerCase() },
         UpdateExpression: 'SET photos = :photos, updatedAt = :time',
         ExpressionAttributeValues: {
@@ -250,7 +250,7 @@ async function deletePhoto(event) {
     
     // Get current user
     const userResult = await docClient.send(new GetCommand({
-        TableName: USERS_TABLE,
+        TableName: PROFILES_TABLE,
         Key: { email: userEmail.toLowerCase() }
     }));
     
@@ -296,7 +296,7 @@ async function deletePhoto(event) {
     
     // Update user in DynamoDB
     await docClient.send(new UpdateCommand({
-        TableName: USERS_TABLE,
+        TableName: PROFILES_TABLE,
         Key: { email: userEmail.toLowerCase() },
         UpdateExpression: 'SET photos = :photos, updatedAt = :time',
         ExpressionAttributeValues: {
@@ -335,7 +335,7 @@ async function getUserPhotos(event) {
     }
     
     const userResult = await docClient.send(new GetCommand({
-        TableName: USERS_TABLE,
+        TableName: PROFILES_TABLE,
         Key: { email: userEmail.toLowerCase() }
     }));
     

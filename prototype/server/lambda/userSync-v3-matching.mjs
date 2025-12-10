@@ -8,6 +8,17 @@ import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, QueryComma
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
+
+// Table configuration - split by domain
+const TABLES = {
+    PROFILES: 'oith-profiles',           // Dating user profiles (email as key)
+    MATCHES: 'oith-matches',              // Active match pairings  
+    MATCH_HISTORY: 'oith-match-history',  // Pass/accept history
+    CONVERSATIONS: 'oith-conversations',  // Chat messages
+    COMPANY: 'oith-users'                 // Company/admin data (legacy)
+};
+
+// Legacy table name for backward compatibility
 const TABLE_NAME = process.env.DYNAMODB_TABLE || 'oith-users';
 
 export const handler = async (event) => {
@@ -28,7 +39,7 @@ export const handler = async (event) => {
     try {
         // ============ USER PROFILES ============
         
-        // POST /users - Save user profile
+        // POST /users - Save user profile to oith-profiles table
         if (method === 'POST' && path.endsWith('/users')) {
             const body = JSON.parse(event.body || '{}');
             const { email, name, userData } = body;
@@ -37,17 +48,16 @@ export const handler = async (event) => {
             const user = userData?.user || {};
             const prefs = user.preferences || user.matchPreferences || {};
             
+            // Write to NEW oith-profiles table (simple email key)
             await docClient.send(new PutCommand({
-                TableName: TABLE_NAME,
+                TableName: TABLES.PROFILES,
                 Item: {
-                    pk: `USER#${email.toLowerCase()}`,
-                    sk: 'PROFILE',
                     email: email.toLowerCase(),
                     firstName: user.firstName || name || '',
                     age: user.age || null,
                     gender: user.gender || '',
                     location: user.location || '',
-                    coordinates: user.coordinates || null, // GPS coordinates for distance matching
+                    coordinates: user.coordinates || null,
                     occupation: user.occupation || '',
                     bio: (user.bio || '').substring(0, 300),
                     photo: user.photo || '',
@@ -62,29 +72,37 @@ export const handler = async (event) => {
                     religion: user.religion || '',
                     politics: user.politics || '',
                     interests: user.interests || [],
-                    // Preferences for auto-matching
-                    preferences: {
+                    lookingFor: user.lookingFor || 'relationship',
+                    // Preferences for matching algorithm
+                    matchPreferences: {
                         interestedIn: prefs.interestedIn || 'everyone',
                         ageMin: prefs.ageMin || 18,
                         ageMax: prefs.ageMax || 99,
-                        maxDistance: prefs.maxDistance || 100
+                        maxDistance: prefs.maxDistance || 100,
+                        bodyType: prefs.bodyType || [],
+                        smoking: prefs.smoking || [],
+                        drinking: prefs.drinking || [],
+                        religion: prefs.religion || '',
+                        children: prefs.children || ''
                     },
+                    // Visibility for matching pool
+                    isVisible: true,
                     online: true,
-                    isHidden: false,
                     lastSeen: new Date().toISOString(),
+                    createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 }
             }));
-            return { statusCode: 200, headers, body: JSON.stringify({ success: true, email }) };
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, email, table: 'oith-profiles' }) };
         }
         
-        // GET /users - Get all VISIBLE users with FULL data (subscription, matches, activity, etc)
+        // GET /users - Get all VISIBLE users with FULL data from oith-profiles
         if (method === 'GET' && path.endsWith('/users')) {
-            // Get all profiles
+            // Get all profiles from new profiles table
             const profileResult = await docClient.send(new ScanCommand({ 
-                TableName: TABLE_NAME,
-                FilterExpression: 'sk = :sk AND (attribute_not_exists(isHidden) OR isHidden = :false)',
-                ExpressionAttributeValues: { ':sk': 'PROFILE', ':false': false }
+                TableName: TABLES.PROFILES,
+                FilterExpression: 'attribute_not_exists(isVisible) OR isVisible = :true',
+                ExpressionAttributeValues: { ':true': true }
             }));
             
             // Get all subscriptions
