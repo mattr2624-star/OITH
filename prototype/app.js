@@ -12509,6 +12509,18 @@ function downloadICSFile() {
 // Event Listeners
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize app configs in localStorage (shared with admin dashboard)
+    if (!localStorage.getItem('oith_app_config')) {
+        localStorage.setItem('oith_app_config', JSON.stringify({
+            version: '1.0',
+            initialized: new Date().toISOString(),
+            pricing: {
+                monthly: { price: 9.99, currency: 'USD', interval: 'month' },
+                yearly: { price: 79.99, currency: 'USD', interval: 'year' }
+            }
+        }));
+    }
+    
     // Toggle button functionality
     document.querySelectorAll('.toggle-group').forEach(group => {
         group.addEventListener('click', (e) => {

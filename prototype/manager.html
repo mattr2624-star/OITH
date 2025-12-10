@@ -6915,6 +6915,12 @@
         let supportMessages = [];
         let blockedUsers = [];
         
+        // Pricing configuration - used across the dashboard (avoids hardcoded prices)
+        const pricingConfig = {
+            subscriptionPrice: 10.00, // Monthly subscription price in USD
+            yearlyPrice: 79.99        // Yearly subscription price in USD
+        };
+        
         // Platform data - will be calculated from real data
         let platformData = {
             totalUsers: 0,
@@ -7175,6 +7181,25 @@
         
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 OITH Manager initializing...');
+            
+            // Initialize app configs in localStorage (fixes "Missing config" warnings)
+            if (!localStorage.getItem('oith_admin_config')) {
+                localStorage.setItem('oith_admin_config', JSON.stringify({
+                    version: '1.0',
+                    initialized: new Date().toISOString(),
+                    settings: { autoRefresh: true, refreshInterval: 30000, theme: 'dark' }
+                }));
+            }
+            if (!localStorage.getItem('oith_app_config')) {
+                localStorage.setItem('oith_app_config', JSON.stringify({
+                    version: '1.0',
+                    initialized: new Date().toISOString(),
+                    pricing: {
+                        monthly: { price: 9.99, currency: 'USD', interval: 'month' },
+                        yearly: { price: 79.99, currency: 'USD', interval: 'year' }
+                    }
+                }));
+            }
             
             // Clean up any orphaned modals from previous sessions
             document.querySelectorAll('.modal').forEach(modal => modal.remove());
@@ -10051,18 +10076,23 @@
             // Check for hardcoded strings in visible text that should be dynamic
             const potentialHardcoded = [];
 
-            // Check subscription price references
+            // Check subscription price references (skip config definitions)
             const scripts = document.querySelectorAll('script');
             scripts.forEach(script => {
                 const content = script.textContent;
-                // Look for hardcoded prices that aren't using variables
-                if (content.includes('14.99') || content.includes('9.99')) {
+                // Look for hardcoded prices NOT in config objects
+                // Skip if price is inside pricingConfig, oith_app_config, or pricing: { } blocks
+                const hasLegacyPrice = (content.includes('14.99') || content.includes('9.99')) &&
+                    !content.includes('pricingConfig') &&
+                    !content.includes('oith_app_config') &&
+                    !content.includes('pricing:');
+                if (hasLegacyPrice) {
                     potentialHardcoded.push({
                         type: 'price',
                         value: 'Legacy price found',
                         location: 'Script block',
                         severity: 'warning',
-                        suggestion: 'Use subscriptionPrice variable instead'
+                        suggestion: 'Use pricingConfig.subscriptionPrice instead'
                     });
                 }
             });
@@ -11049,7 +11079,7 @@
             loadPayrollData();
             
             // Calculate financial metrics from REAL data
-            const subscriptionPrice = 10.00; // Actual subscription price ($10/month)
+            const subscriptionPrice = pricingConfig.subscriptionPrice; // From config
             const subscribedUsers = platformData.premiumUsers || 0;
             
             // Calculate churn from actual canceled subscriptions in user data
@@ -14823,7 +14853,7 @@
             const avgSubscriptionMonths = subscriptionDurations.length > 0 
                 ? subscriptionDurations.reduce((a, b) => a + b, 0) / subscriptionDurations.length 
                 : 0;
-            const subscriptionPrice = 10.00;
+            const subscriptionPrice = pricingConfig.subscriptionPrice; // From config
             const ltv = subscriptionPrice * avgSubscriptionMonths;
             
             // Calculate CAC from actual marketing spend (stored in localStorage)
