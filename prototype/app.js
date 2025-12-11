@@ -7119,6 +7119,187 @@ function getCurrentMatchPreferences() {
 }
 
 // ==========================================
+// Device Limit (Single Device Per Subscription)
+// ==========================================
+
+/**
+ * Generate a unique device ID for this browser/device
+ * Uses a combination of browser fingerprinting techniques
+ */
+function generateDeviceId() {
+    // Check if we already have a device ID stored
+    let deviceId = localStorage.getItem('oith_device_id');
+    if (deviceId) return deviceId;
+    
+    // Generate new device ID based on browser fingerprint
+    const fingerprint = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + 'x' + screen.height,
+        screen.colorDepth,
+        new Date().getTimezoneOffset(),
+        navigator.hardwareConcurrency || 'unknown',
+        navigator.platform
+    ].join('|');
+    
+    // Simple hash function
+    let hash = 0;
+    for (let i = 0; i < fingerprint.length; i++) {
+        const char = fingerprint.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    
+    // Create unique ID with timestamp
+    deviceId = 'dev_' + Math.abs(hash).toString(36) + '_' + Date.now().toString(36);
+    
+    // Store permanently on this device
+    localStorage.setItem('oith_device_id', deviceId);
+    
+    return deviceId;
+}
+
+/**
+ * Get the current device ID
+ */
+function getDeviceId() {
+    return localStorage.getItem('oith_device_id') || generateDeviceId();
+}
+
+/**
+ * Register this device as the active device for the user
+ */
+async function registerActiveDevice(email) {
+    const deviceId = getDeviceId();
+    const deviceInfo = {
+        id: deviceId,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        registeredAt: new Date().toISOString()
+    };
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/register-device`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                device: deviceInfo
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.previousDevice && data.previousDevice !== deviceId) {
+                console.log('📱 New device registered, previous device logged out');
+            }
+            return { success: true, deviceId };
+        }
+    } catch (error) {
+        console.warn('Device registration failed:', error.message);
+    }
+    
+    return { success: false, deviceId };
+}
+
+/**
+ * Check if this device is still the active device
+ */
+async function verifyActiveDevice(email) {
+    const deviceId = getDeviceId();
+    
+    try {
+        const response = await fetch(`${AWS_API_URL}/verify-device`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: email,
+                deviceId: deviceId
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data.isActive;
+        }
+    } catch (error) {
+        console.warn('Device verification failed:', error.message);
+        // If we can't verify, allow access (offline mode)
+        return true;
+    }
+    
+    return true;
+}
+
+/**
+ * Force logout user on this device (another device logged in)
+ */
+function forceLogoutOtherDevice(reason = 'another_device') {
+    console.log('🚫 Force logout: ', reason);
+    
+    // Clear session
+    appState.isLoggedIn = false;
+    appState.sessionStartTime = null;
+    
+    // Show logout message
+    const messages = {
+        'another_device': 'You\'ve been logged out because you signed in on another device. OITH allows only 1 device per subscription.',
+        'subscription_expired': 'Your subscription has expired. Please renew to continue.',
+        'account_suspended': 'Your account has been suspended. Please contact support.'
+    };
+    
+    // Show modal or redirect to login
+    showDeviceLogoutModal(messages[reason] || messages['another_device']);
+    
+    // Navigate to login screen
+    setTimeout(() => {
+        showScreen('login');
+    }, 100);
+}
+
+/**
+ * Show device logout modal
+ */
+function showDeviceLogoutModal(message) {
+    // Remove any existing modal
+    const existing = document.getElementById('deviceLogoutModal');
+    if (existing) existing.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'deviceLogoutModal';
+    modal.className = 'modal active';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 360px; text-align: center; padding: 32px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📱</div>
+            <h2 style="margin-bottom: 12px; font-size: 1.2rem;">Signed Out</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px; line-height: 1.5;">${message}</p>
+            <button class="btn btn-primary" onclick="document.getElementById('deviceLogoutModal').remove(); showScreen('login');">
+                Sign In Again
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+/**
+ * Check device on app load and periodically
+ */
+async function checkDeviceAccess() {
+    if (!appState.isLoggedIn || !appState.user?.email) return true;
+    
+    const isActive = await verifyActiveDevice(appState.user.email);
+    
+    if (!isActive) {
+        forceLogoutOtherDevice('another_device');
+        return false;
+    }
+    
+    return true;
+}
+
+// ==========================================
 // Authentication
 // ==========================================
 function handleLogin(event) {
@@ -7236,10 +7417,20 @@ function handleLogin(event) {
         }
     }).catch(err => console.log('AWS data load:', err.message));
     
+    // Register this device as active (single device limit)
+    registerActiveDevice(userEmail).then(result => {
+        if (result.success) {
+            console.log('📱 Device registered:', result.deviceId);
+        }
+    }).catch(err => console.log('Device registration:', err.message));
+    
     // Check for and apply any active experiment treatments
     checkAndApplyExperiments();
     
     showToast(`Welcome back, ${appState.user.firstName || 'User'}! 👋`, 'success');
+    
+    // Check subscription status for payment issues (runs in background)
+    checkSubscriptionStatus().catch(err => console.log('Subscription check:', err.message));
     
     console.log('🔄 Navigating after login...');
     console.log('   Profile complete:', !!appState.profileComplete);
@@ -7941,59 +8132,100 @@ async function processPayment(event) {
 }
 
 // Check if user is returning from Stripe Checkout
-function checkStripePaymentReturn() {
-    const urlHash = window.location.hash;
+async function checkStripePaymentReturn() {
     const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    const paymentStatus = urlParams.get('payment');
     
-    // Check for payment success indicators
-    // Stripe may add query params or you can use a specific hash
-    if (urlHash === '#payment-success' || urlParams.get('payment') === 'success') {
-        console.log('✅ User returned from Stripe Checkout - Payment successful!');
-        handlePaymentSuccess();
-        return true;
+    // If cancelled, just clean up URL and show payment screen
+    if (paymentStatus === 'cancelled') {
+        console.log('⚠️ User cancelled payment');
+        history.replaceState(null, '', window.location.pathname);
+        showToast('Payment cancelled. You can try again anytime.', 'info');
+        return false;
     }
     
-    // Check if user has a pending payment that was completed
-    if (appState.user?.pendingPayment) {
-        const pendingTime = new Date(appState.user.pendingPayment.startedAt);
-        const now = new Date();
-        const minutesSincePending = (now - pendingTime) / (1000 * 60);
+    // If success indicator present, MUST verify with server
+    if (paymentStatus === 'success' && sessionId) {
+        console.log('🔍 Verifying payment with server...', sessionId);
         
-        // If they started payment less than 30 mins ago and are back, assume success
-        // In production, you'd verify this with Stripe API via webhook
-        if (minutesSincePending < 30 && urlHash === '#payment-success') {
-            handlePaymentSuccess();
-            return true;
+        // Show processing state while verifying
+        showScreen('payment');
+        const processingView = document.getElementById('paymentProcessingView');
+        const formView = document.getElementById('paymentFormView');
+        if (processingView) processingView.style.display = 'block';
+        if (formView) formView.style.display = 'none';
+        
+        try {
+            // CRITICAL: Verify payment with server - don't trust URL params alone
+            const verified = await verifyPaymentWithServer(sessionId);
+            
+            if (verified.success) {
+                console.log('✅ Payment verified by server!');
+                handleVerifiedPaymentSuccess(verified.subscription);
+                return true;
+            } else {
+                console.error('❌ Payment verification failed:', verified.status);
+                showToast('Payment verification failed. Please contact support.', 'error');
+                if (processingView) processingView.style.display = 'none';
+                if (formView) formView.style.display = 'block';
+                history.replaceState(null, '', window.location.pathname);
+                return false;
+            }
+        } catch (error) {
+            console.error('❌ Error verifying payment:', error);
+            showToast('Error verifying payment. Please contact support.', 'error');
+            if (processingView) processingView.style.display = 'none';
+            if (formView) formView.style.display = 'block';
+            history.replaceState(null, '', window.location.pathname);
+            return false;
         }
     }
     
+    // No payment return detected
     return false;
 }
 
-// Handle successful payment (from Stripe Checkout return)
-function handlePaymentSuccess() {
-    console.log('✅ Processing successful payment...');
+// Verify payment with server (SECURE - doesn't trust client)
+async function verifyPaymentWithServer(sessionId) {
+    try {
+        const response = await fetch(`${PAYMENT_CONFIG.apiUrl}/verify-payment/${sessionId}`);
+        
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Payment verification error:', error);
+        throw error;
+    }
+}
+
+// Handle verified successful payment (uses server-verified data)
+function handleVerifiedPaymentSuccess(verifiedSubscription) {
+    console.log('✅ Processing verified payment...', verifiedSubscription);
     
-    // Calculate billing dates
-    const plan = PAYMENT_CONFIG.plans['monthly'];
-    const nextBilling = new Date();
-    nextBilling.setMonth(nextBilling.getMonth() + 1);
+    const plan = PAYMENT_CONFIG.plans.monthly;
     
-    // Update subscription status
+    // Use server-verified data for subscription
     appState.user.subscription = {
         type: 'premium',
-        plan: 'monthly',
-        status: 'active',
+        plan: verifiedSubscription?.plan || 'monthly',
+        status: verifiedSubscription?.status || 'active',
+        stripeSubscriptionId: verifiedSubscription?.id,
         startDate: new Date().toISOString(),
-        nextBillingDate: nextBilling.toISOString(),
+        nextBillingDate: verifiedSubscription?.currentPeriodEnd || new Date(Date.now() + 30*24*60*60*1000).toISOString(),
         amount: plan.price,
-        provider: 'stripe'
+        provider: 'stripe',
+        verified: true // Mark as server-verified
     };
     
     // Add to billing history locally
     if (!appState.user.billingHistory) appState.user.billingHistory = [];
     const transaction = {
-        id: `tx_${Date.now()}`,
+        id: verifiedSubscription?.id ? `tx_${verifiedSubscription.id}` : `tx_${Date.now()}`,
         date: new Date().toISOString(),
         amount: plan.price,
         description: 'Premium Monthly Subscription',
@@ -8029,7 +8261,11 @@ function handlePaymentSuccess() {
     if (processingView) processingView.style.display = 'none';
     if (successView) successView.style.display = 'block';
     
-    // Update next billing date display
+    // Update next billing date display from verified data
+    const nextBilling = verifiedSubscription?.currentPeriodEnd 
+        ? new Date(verifiedSubscription.currentPeriodEnd) 
+        : new Date(Date.now() + 30*24*60*60*1000);
+    
     const nextBillingEl = document.getElementById('nextBillingDate');
     if (nextBillingEl) {
         nextBillingEl.textContent = nextBilling.toLocaleDateString('en-US', { 
@@ -8056,14 +8292,10 @@ async function simulateTestPayment() {
     // Simulate processing delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    // Calculate billing dates based on selected plan
-    const plan = PAYMENT_CONFIG.plans[selectedPlan];
+    // Calculate billing dates based on plan (monthly only)
+    const plan = PAYMENT_CONFIG.plans.monthly;
     const nextBilling = new Date();
-    if (selectedPlan === 'yearly') {
-        nextBilling.setFullYear(nextBilling.getFullYear() + 1);
-    } else {
-        nextBilling.setMonth(nextBilling.getMonth() + 1);
-    }
+    nextBilling.setMonth(nextBilling.getMonth() + 1);
     
     // Show success view
     document.getElementById('paymentProcessingView').style.display = 'none';
@@ -8594,6 +8826,295 @@ function showCancelSubscription() {
         modal.style.display = 'flex';
         modal.classList.add('active');
     }
+}
+
+// ==========================================
+// Subscription Status & Payment Failure Notifications
+// ==========================================
+
+/**
+ * Check subscription status and show notifications for issues
+ * Should be called on app init and periodically
+ */
+async function checkSubscriptionStatus() {
+    if (!appState.user?.subscription?.stripeSubscriptionId) {
+        return; // No subscription to check
+    }
+    
+    try {
+        // Check status from server
+        const response = await fetch(
+            `${PAYMENT_CONFIG.apiUrl}/subscription/${appState.user.subscription.stripeCustomerId || appState.user.email}`
+        );
+        
+        if (!response.ok) {
+            console.warn('Could not check subscription status');
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.active && data.subscription) {
+            // Update local subscription data
+            appState.user.subscription = {
+                ...appState.user.subscription,
+                status: data.subscription.status,
+                nextBillingDate: data.subscription.currentPeriodEnd,
+                cancelAtPeriodEnd: data.subscription.cancelAtPeriodEnd
+            };
+            saveUserData();
+            
+            // Handle different status states
+            handleSubscriptionStatus(data.subscription.status, data.subscription);
+        } else if (!data.active) {
+            // Subscription is no longer active
+            handleSubscriptionExpired();
+        }
+    } catch (error) {
+        console.warn('Subscription status check failed:', error.message);
+    }
+}
+
+/**
+ * Handle subscription status notifications
+ */
+function handleSubscriptionStatus(status, subscription) {
+    // Remove any existing payment notification
+    removePaymentNotification();
+    
+    switch (status) {
+        case 'past_due':
+            showPaymentFailedNotification();
+            break;
+        case 'canceled':
+        case 'cancelled':
+            if (subscription.cancelAtPeriodEnd) {
+                showCancellationPendingNotification(subscription.currentPeriodEnd);
+            }
+            break;
+        case 'unpaid':
+            showPaymentFailedNotification(true); // Critical - access may be revoked
+            break;
+        case 'active':
+            // All good - ensure premium features are enabled
+            appState.user.subscription.type = 'premium';
+            break;
+    }
+}
+
+/**
+ * Show payment failed notification banner
+ */
+function showPaymentFailedNotification(isCritical = false) {
+    // Don't show duplicate notifications
+    if (document.getElementById('paymentFailedBanner')) return;
+    
+    const banner = document.createElement('div');
+    banner.id = 'paymentFailedBanner';
+    banner.className = 'payment-notification-banner' + (isCritical ? ' critical' : '');
+    banner.innerHTML = `
+        <div class="payment-notification-content">
+            <div class="payment-notification-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <div class="payment-notification-text">
+                <strong>${isCritical ? 'Action Required' : 'Payment Issue'}</strong>
+                <p>${isCritical 
+                    ? 'Your subscription payment failed. Update your payment method to avoid losing access.' 
+                    : 'We couldn\'t process your last payment. Please update your payment method.'}</p>
+            </div>
+            <button class="btn btn-small btn-primary" onclick="showUpdatePaymentMethod()">Update Payment</button>
+            <button class="payment-notification-close" onclick="dismissPaymentNotification()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    // Insert at top of app container
+    const appContainer = document.querySelector('.app-container') || document.body;
+    appContainer.insertBefore(banner, appContainer.firstChild);
+    
+    // Add styles if not already present
+    addPaymentNotificationStyles();
+}
+
+/**
+ * Show cancellation pending notification
+ */
+function showCancellationPendingNotification(endDate) {
+    if (document.getElementById('cancellationPendingBanner')) return;
+    
+    const formattedDate = new Date(endDate).toLocaleDateString('en-US', {
+        month: 'long', day: 'numeric', year: 'numeric'
+    });
+    
+    const banner = document.createElement('div');
+    banner.id = 'cancellationPendingBanner';
+    banner.className = 'payment-notification-banner info';
+    banner.innerHTML = `
+        <div class="payment-notification-content">
+            <div class="payment-notification-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="payment-notification-text">
+                <strong>Subscription Ending</strong>
+                <p>Your Premium access ends on ${formattedDate}. Resubscribe to keep your benefits.</p>
+            </div>
+            <button class="btn btn-small btn-primary" onclick="resubscribe()">Keep Premium</button>
+            <button class="payment-notification-close" onclick="dismissPaymentNotification()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+    `;
+    
+    const appContainer = document.querySelector('.app-container') || document.body;
+    appContainer.insertBefore(banner, appContainer.firstChild);
+    addPaymentNotificationStyles();
+}
+
+/**
+ * Handle subscription expiration
+ */
+function handleSubscriptionExpired() {
+    appState.user.subscription = {
+        ...appState.user.subscription,
+        status: 'expired',
+        type: 'free'
+    };
+    saveUserData();
+    
+    showToast('Your subscription has expired. Upgrade to continue using premium features.', 'warning');
+}
+
+/**
+ * Remove payment notification banner
+ */
+function removePaymentNotification() {
+    const banners = document.querySelectorAll('.payment-notification-banner');
+    banners.forEach(b => b.remove());
+}
+
+/**
+ * Dismiss payment notification (user clicked X)
+ */
+function dismissPaymentNotification() {
+    removePaymentNotification();
+    // Store dismissal so we don't show again for a while
+    localStorage.setItem('oith_payment_notification_dismissed', Date.now().toString());
+}
+
+/**
+ * Show update payment method modal/screen
+ */
+function showUpdatePaymentMethod() {
+    // Navigate to subscription management
+    showScreen('manage-subscription');
+    showToast('Update your payment method below', 'info');
+}
+
+/**
+ * Resubscribe after cancellation
+ */
+function resubscribe() {
+    showScreen('payment');
+    showToast('Complete payment to reactivate your subscription', 'info');
+}
+
+/**
+ * Add payment notification styles dynamically
+ */
+function addPaymentNotificationStyles() {
+    if (document.getElementById('paymentNotificationStyles')) return;
+    
+    const styles = document.createElement('style');
+    styles.id = 'paymentNotificationStyles';
+    styles.textContent = `
+        .payment-notification-banner {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+            color: white;
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+        }
+        .payment-notification-banner.info {
+            background: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
+        }
+        .payment-notification-banner.critical {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        .payment-notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .payment-notification-icon {
+            flex-shrink: 0;
+        }
+        .payment-notification-text {
+            flex: 1;
+        }
+        .payment-notification-text strong {
+            display: block;
+            font-size: 0.95rem;
+        }
+        .payment-notification-text p {
+            margin: 4px 0 0;
+            font-size: 0.85rem;
+            opacity: 0.95;
+        }
+        .payment-notification-banner .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            background: white;
+            color: #333;
+        }
+        .payment-notification-close {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            opacity: 0.8;
+            color: white;
+        }
+        .payment-notification-close:hover {
+            opacity: 1;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @media (max-width: 480px) {
+            .payment-notification-content {
+                flex-wrap: wrap;
+            }
+            .payment-notification-text {
+                flex-basis: calc(100% - 40px);
+            }
+            .payment-notification-banner .btn-small {
+                flex: 1;
+                margin-top: 8px;
+            }
+        }
+    `;
+    document.head.appendChild(styles);
 }
 
 function resetAllData() {
@@ -13505,8 +14026,7 @@ document.addEventListener('DOMContentLoaded', () => {
             version: '1.0',
             initialized: new Date().toISOString(),
             pricing: {
-                monthly: { price: 9.99, currency: 'USD', interval: 'month' },
-                yearly: { price: 79.99, currency: 'USD', interval: 'year' }
+                monthly: { price: 10.00, currency: 'USD', interval: 'month' }
             }
         }));
     }
@@ -14730,8 +15250,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Try to load saved user data
     const hasData = loadUserData();
     
-    // Check if returning from Stripe Checkout payment
-    if (checkStripePaymentReturn()) {
+    // Check if returning from Stripe Checkout payment (server-verified)
+    if (await checkStripePaymentReturn()) {
         return; // Payment success screen will be shown
     }
     
@@ -15519,9 +16039,10 @@ function formatRenewalDate(date) {
 }
 
 /**
- * Update subscription display dates
+ * Update subscription display dates and status indicators
  */
 function updateSubscriptionDates() {
+    const subscription = appState.user?.subscription;
     const renewalDate = getSubscriptionRenewalDate();
     const formattedDate = formatRenewalDate(renewalDate);
     
@@ -15535,6 +16056,94 @@ function updateSubscriptionDates() {
     const subRenewal = document.getElementById('subscriptionRenewalDate');
     if (subRenewal) {
         subRenewal.textContent = formattedDate;
+    }
+    
+    // Update status indicators based on subscription state
+    updateSubscriptionStatusIndicators(subscription);
+}
+
+/**
+ * Update subscription status indicators in settings and manage-subscription screens
+ */
+function updateSubscriptionStatusIndicators(subscription) {
+    const settingsStatus = document.getElementById('settingsSubStatus');
+    const settingsDetails = document.getElementById('settingsSubDetails');
+    const planStatus = document.getElementById('planStatus');
+    
+    if (!subscription || subscription.type === 'free') {
+        // No subscription
+        if (settingsStatus) {
+            settingsStatus.textContent = 'Free';
+            settingsStatus.className = 'subscription-status inactive';
+        }
+        if (settingsDetails) {
+            settingsDetails.innerHTML = 'Upgrade to Premium for full access';
+        }
+        if (planStatus) {
+            planStatus.textContent = 'No active subscription';
+        }
+        return;
+    }
+    
+    const status = subscription.status || 'active';
+    const renewalDate = subscription.nextBillingDate 
+        ? new Date(subscription.nextBillingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : 'loading...';
+    
+    // Map status to display values
+    const statusConfig = {
+        'active': {
+            label: 'Active',
+            class: 'active',
+            details: `$10/month • Renews ${renewalDate}`,
+            planText: `Active • Renews ${renewalDate}`
+        },
+        'past_due': {
+            label: 'Payment Issue',
+            class: 'warning',
+            details: '$10/month • Payment failed - update payment method',
+            planText: 'Payment failed • Update payment method'
+        },
+        'canceled': {
+            label: 'Canceling',
+            class: 'canceling',
+            details: `$10/month • Ends ${renewalDate}`,
+            planText: `Canceling • Access until ${renewalDate}`
+        },
+        'cancelled': {
+            label: 'Canceling',
+            class: 'canceling',
+            details: `$10/month • Ends ${renewalDate}`,
+            planText: `Canceling • Access until ${renewalDate}`
+        },
+        'expired': {
+            label: 'Expired',
+            class: 'inactive',
+            details: 'Your subscription has ended',
+            planText: 'Expired • Resubscribe to continue'
+        },
+        'unpaid': {
+            label: 'Unpaid',
+            class: 'danger',
+            details: '$10/month • Immediate action required',
+            planText: 'Unpaid • Update payment to restore access'
+        }
+    };
+    
+    const config = statusConfig[status] || statusConfig['active'];
+    
+    if (settingsStatus) {
+        settingsStatus.textContent = config.label;
+        settingsStatus.className = `subscription-status ${config.class}`;
+    }
+    
+    if (settingsDetails) {
+        settingsDetails.innerHTML = config.details;
+    }
+    
+    if (planStatus) {
+        planStatus.textContent = config.planText;
+        planStatus.className = `plan-status ${config.class}`;
     }
 }
 
@@ -15612,70 +16221,72 @@ function loadPlatformStats() {
 }
 
 /**
- * Update billing history from user's subscription data
+ * Update billing history from user's actual billing records
  */
 function updateBillingHistory() {
     const historyList = document.getElementById('billingHistoryList');
     if (!historyList) return;
     
     const subscription = appState.user?.subscription;
-    const startDate = subscription?.startDate ? new Date(subscription.startDate) : null;
+    const billingHistory = appState.user?.billingHistory || [];
     
-    if (!startDate || subscription?.type === 'free') {
+    // If no subscription or billing history
+    if (!subscription || subscription.type === 'free' || billingHistory.length === 0) {
         historyList.innerHTML = `
             <div class="history-item" style="text-align: center; padding: 20px; color: var(--text-muted);">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 10px; opacity: 0.5;">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
                 <p>No billing history</p>
-                <small>Subscribe to Premium to see billing records</small>
+                <small>Your payment history will appear here</small>
             </div>
         `;
         return;
     }
     
-    // Generate billing history based on subscription start date
-    const billingRecords = [];
-    const planPrice = subscription.type === 'monthly' ? '$10.00' : '$96.00';
-    const planName = subscription.type === 'monthly' ? 'Premium Monthly' : 'Premium Annual';
-    
-    // Generate records for each billing cycle since start
-    let currentDate = new Date(startDate);
-    const today = new Date();
-    
-    while (currentDate <= today) {
-        billingRecords.push({
-            date: new Date(currentDate),
-            description: planName,
-            amount: planPrice
-        });
-        
-        // Move to next billing cycle
-        if (subscription.type === 'monthly') {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-        } else {
-            currentDate.setFullYear(currentDate.getFullYear() + 1);
-        }
-    }
-    
-    // Reverse to show most recent first
-    billingRecords.reverse();
+    // Sort by date (most recent first)
+    const sortedHistory = [...billingHistory].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    );
     
     // Generate HTML
-    if (billingRecords.length === 0) {
-        historyList.innerHTML = `
-            <div class="history-item" style="text-align: center; padding: 20px; color: var(--text-muted);">
-                <p>First billing on ${formatBillingDate(startDate)}</p>
-            </div>
-        `;
-    } else {
-        historyList.innerHTML = billingRecords.map(record => `
+    historyList.innerHTML = sortedHistory.map(record => {
+        const date = new Date(record.date);
+        const statusClass = record.status === 'paid' ? 'success' : 
+                           record.status === 'failed' ? 'danger' : '';
+        const statusIcon = record.status === 'paid' 
+            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'
+            : record.status === 'failed'
+            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+            : '';
+        
+        return `
             <div class="history-item">
                 <div class="history-info">
-                    <span class="history-date">${formatBillingDate(record.date)}</span>
-                    <span class="history-desc">${record.description}</span>
+                    <span class="history-date">${formatBillingDate(date)}</span>
+                    <span class="history-desc">${record.description || 'Premium Subscription'}</span>
                 </div>
-                <span class="history-amount">${record.amount}</span>
+                <div class="history-right">
+                    <span class="history-amount ${statusClass}">$${record.amount?.toFixed(2) || '10.00'}</span>
+                    ${statusIcon}
+                </div>
             </div>
-        `).join('');
-    }
+        `;
+    }).join('');
+    
+    // Add "View Receipt" links for Stripe payments
+    historyList.querySelectorAll('.history-item').forEach((item, index) => {
+        const record = sortedHistory[index];
+        if (record.receiptUrl) {
+            const viewBtn = document.createElement('a');
+            viewBtn.href = record.receiptUrl;
+            viewBtn.target = '_blank';
+            viewBtn.className = 'history-receipt-link';
+            viewBtn.textContent = 'Receipt';
+            item.querySelector('.history-right')?.appendChild(viewBtn);
+        }
+    });
 }
 
 /**
@@ -15718,17 +16329,9 @@ function updateSubscription() {
     showToast('Subscription updated successfully!', 'success');
 }
 
-function showCancelSubscription() {
-    if (confirm('Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.')) {
-        appState.user.subscription = {
-            ...appState.user.subscription,
-            status: 'cancelled',
-            cancelledAt: new Date().toISOString()
-        };
-        saveUserData();
-        showToast('Subscription cancelled. You will have access until the end of your billing period.', 'info');
-    }
-}
+// Note: showCancelSubscription() is defined earlier in the file (line ~8632)
+// It shows the cancel-subscription-modal with platform-specific instructions
+// (iOS/Android) since cancellation must be done through app stores, not in-app.
 
 // ==========================================
 // Password Management Functions

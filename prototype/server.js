@@ -372,30 +372,48 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     }
 
     // Handle the event
+    // Note: In production, webhook handling is done by the Lambda function (paymentHandler.mjs)
+    // This local handler is for development/testing purposes
     switch (event.type) {
         case 'checkout.session.completed':
             const session = event.data.object;
             console.log('✅ Payment successful:', session.id);
-            // TODO: Update user's subscription in your database
-            // await updateUserSubscription(session.metadata.userId, session.subscription);
+            console.log('   Customer:', session.customer);
+            console.log('   Email:', session.customer_email);
+            console.log('   Subscription:', session.subscription);
+            console.log('   User ID:', session.metadata?.userId);
+            // In production: Lambda saves subscription to DynamoDB
             break;
 
         case 'customer.subscription.updated':
             const subscription = event.data.object;
             console.log('📝 Subscription updated:', subscription.id);
-            // TODO: Update subscription status in your database
+            console.log('   Status:', subscription.status);
+            console.log('   Cancel at period end:', subscription.cancel_at_period_end);
+            // In production: Lambda updates subscription status in DynamoDB
             break;
 
         case 'customer.subscription.deleted':
             const deletedSub = event.data.object;
             console.log('❌ Subscription cancelled:', deletedSub.id);
-            // TODO: Remove premium access from user
+            console.log('   Customer:', deletedSub.customer);
+            // In production: Lambda marks subscription as canceled in DynamoDB
             break;
 
         case 'invoice.payment_failed':
             const invoice = event.data.object;
             console.log('⚠️ Payment failed:', invoice.id);
-            // TODO: Notify user about failed payment
+            console.log('   Customer:', invoice.customer);
+            console.log('   Subscription:', invoice.subscription);
+            console.log('   Error:', invoice.last_finalization_error?.message || 'Unknown');
+            // In production: Lambda updates status to past_due and notifies user
+            break;
+
+        case 'invoice.paid':
+            const paidInvoice = event.data.object;
+            console.log('💰 Invoice paid:', paidInvoice.id);
+            console.log('   Amount:', paidInvoice.amount_paid / 100, 'USD');
+            // In production: Lambda reactivates subscription if it was past_due
             break;
 
         default:

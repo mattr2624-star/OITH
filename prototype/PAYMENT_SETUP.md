@@ -22,7 +22,7 @@ No setup required! The app automatically runs in test mode if Stripe isn't confi
 ### Option 2: Stripe Payment Links (No Code)
 1. Go to [Stripe Dashboard](https://dashboard.stripe.com/payment-links)
 2. Create a new payment link
-3. Set price: $9.99/month or $79.99/year
+3. Set price: $10.00/month
 4. Copy the link
 5. Replace the checkout redirect URL in `app.js`
 
@@ -177,12 +177,11 @@ In Stripe Dashboard → Settings → Payouts:
 
 ## 💰 Pricing Configuration
 
-### Current Plans
+### Current Plan
 
 | Plan | Price | Interval |
 |------|-------|----------|
-| Monthly | $9.99 | Per month |
-| Yearly | $79.99 | Per year (save 33%) |
+| Monthly | $10.00 | Per month |
 
 ### Changing Prices
 
@@ -190,12 +189,8 @@ In Stripe Dashboard → Settings → Payouts:
 ```javascript
 const SUBSCRIPTION_PLANS = {
     monthly: {
-        price: 999, // $9.99 in cents
+        price: 1000, // $10.00 in cents
         interval: 'month'
-    },
-    yearly: {
-        price: 7999, // $79.99 in cents
-        interval: 'year'
     }
 };
 ```
@@ -204,8 +199,7 @@ const SUBSCRIPTION_PLANS = {
 ```javascript
 const PAYMENT_CONFIG = {
     plans: {
-        monthly: { price: 9.99, interval: 'month', label: '$9.99/month' },
-        yearly: { price: 79.99, interval: 'year', label: '$79.99/year' }
+        monthly: { price: 10.00, interval: 'month', label: '$10.00/month' }
     }
 };
 ```

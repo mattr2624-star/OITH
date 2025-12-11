@@ -4883,6 +4883,48 @@ body {
     margin-bottom: 4px;
 }
 
+.subscription-status.active {
+    background: var(--success);
+}
+
+.subscription-status.warning,
+.subscription-status.past_due {
+    background: #f39c12;
+}
+
+.subscription-status.canceling {
+    background: #6c757d;
+}
+
+.subscription-status.inactive,
+.subscription-status.expired {
+    background: var(--text-muted);
+}
+
+.subscription-status.danger,
+.subscription-status.unpaid {
+    background: var(--danger);
+}
+
+.plan-status {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.plan-status.warning,
+.plan-status.past_due {
+    color: #f39c12;
+}
+
+.plan-status.danger,
+.plan-status.unpaid {
+    color: var(--danger);
+}
+
+.plan-status.canceling {
+    color: #6c757d;
+}
+
 .subscription-info p {
     font-size: 0.875rem;
     color: var(--text-secondary);
@@ -6691,6 +6733,33 @@ body {
 .history-amount {
     font-weight: 600;
     color: var(--text-primary);
+}
+
+.history-amount.success {
+    color: var(--success);
+}
+
+.history-amount.danger {
+    color: var(--danger);
+}
+
+.history-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-receipt-link {
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-decoration: none;
+    padding: 4px 8px;
+    background: rgba(196, 88, 74, 0.1);
+    border-radius: 4px;
+}
+
+.history-receipt-link:hover {
+    background: rgba(196, 88, 74, 0.2);
 }
 
 /* ==========================================

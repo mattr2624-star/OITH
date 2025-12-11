@@ -24890,12 +24890,17 @@
             showToast('Calendar exported!', 'success');
         }
 
-        // Initialize calendar when section is shown
+        // Initialize calendar and ML models when section is shown
         const originalShowSection = showSection;
         showSection = function(section) {
             originalShowSection(section);
             if (section === 'calendar') {
                 initCalendarSection();
+            }
+            if (section === 'ml-models') {
+                if (typeof initMLModels === 'function') {
+                    initMLModels();
+                }
             }
         };
 
@@ -26690,9 +26695,166 @@
         let currentViewingEvent = null;
         let isEditMode = false;
         
+        function createEventDetailsModal() {
+            const modalHTML = `
+                <div class="modal-content event-details-modal">
+                    <div class="event-details-header" id="eventDetailsHeader">
+                        <div class="event-details-header-left">
+                            <div class="event-details-icon" id="eventDetailsIcon">📅</div>
+                            <div>
+                                <h2 id="eventDetailsTitle">Event Title</h2>
+                                <p id="eventDetailsCategory">Category</p>
+                            </div>
+                        </div>
+                        <button onclick="closeEventDetails()" class="scheduler-close-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/>
+                                <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="event-details-body">
+                        <div id="eventViewMode">
+                            <div class="event-detail-row">
+                                <div class="event-detail-icon">📅</div>
+                                <div class="event-detail-content">
+                                    <div class="event-detail-label">Date & Time</div>
+                                    <div class="event-detail-value" id="eventDetailsDateTime">--</div>
+                                </div>
+                            </div>
+                            
+                            <div class="event-detail-row" id="eventDetailsLocationRow" style="display: none;">
+                                <div class="event-detail-icon">📍</div>
+                                <div class="event-detail-content">
+                                    <div class="event-detail-label">Location</div>
+                                    <div class="event-detail-value" id="eventDetailsLocation">--</div>
+                                </div>
+                            </div>
+                            
+                            <div class="event-detail-row" id="eventDetailsZoomRow" style="display: none;">
+                                <div class="event-detail-icon" style="color: var(--info);">📹</div>
+                                <div class="event-detail-content">
+                                    <div class="event-detail-label">Zoom Meeting</div>
+                                    <div class="event-detail-value" id="eventDetailsZoom">--</div>
+                                </div>
+                            </div>
+                            
+                            <div class="event-detail-row" id="eventDetailsAttendeesRow" style="display: none;">
+                                <div class="event-detail-icon">👥</div>
+                                <div class="event-detail-content">
+                                    <div class="event-detail-label">Attendees</div>
+                                    <div class="event-detail-value" id="eventDetailsAttendees">--</div>
+                                </div>
+                            </div>
+                            
+                            <div class="event-detail-row" id="eventDetailsDescRow" style="display: none;">
+                                <div class="event-detail-icon">📝</div>
+                                <div class="event-detail-content">
+                                    <div class="event-detail-label">Description</div>
+                                    <div class="event-detail-value" id="eventDetailsDesc">--</div>
+                                </div>
+                            </div>
+                            
+                            <div class="event-detail-row" id="eventDetailsSectionRow">
+                                <div class="event-detail-icon">📂</div>
+                                <div class="event-detail-content">
+                                    <div class="event-detail-label">Related Section</div>
+                                    <div class="event-detail-value" id="eventDetailsSection">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="eventEditMode" style="display: none;">
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Event Title</label>
+                                <input type="text" id="editEventTitle" class="form-control" placeholder="Enter event title..." style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Date</label>
+                                <input type="date" id="editEventDate" class="form-control" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Time</label>
+                                <input type="time" id="editEventTime" class="form-control" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Location (optional)</label>
+                                <input type="text" id="editEventLocation" class="form-control" placeholder="Enter location..." style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Description (optional)</label>
+                                <textarea id="editEventDesc" class="form-control" rows="3" placeholder="Enter description..." style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); resize: vertical;"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="event-details-footer">
+                        <div class="event-details-actions" id="eventViewActions">
+                            <button type="button" class="btn btn-secondary" id="editEventBtn" onclick="toggleEventEditMode(true)" style="display: flex; align-items: center; gap: 6px;">
+                                ✏️ Edit
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="shareEvent()" style="display: flex; align-items: center; gap: 6px;">
+                                📤 Share
+                            </button>
+                            <button type="button" class="btn btn-danger" id="deleteEventBtn" onclick="deleteEventFromDetails()" style="display: none; align-items: center; gap: 6px;">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                        <div class="event-details-actions" id="eventEditActions" style="display: none;">
+                            <button type="button" class="btn btn-secondary" onclick="toggleEventEditMode(false)">
+                                Cancel
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="saveEventChanges()" style="display: flex; align-items: center; gap: 6px;">
+                                💾 Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'eventDetailsModal';
+            modal.style.cssText = 'z-index: 2200; display: none;';
+            modal.innerHTML = modalHTML;
+            
+            // Add click handler for closing on backdrop
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) closeEventDetails();
+            });
+            
+            document.body.appendChild(modal);
+            console.log('📅 Event details modal created dynamically');
+            return modal;
+        }
+        
         function openEventDetails(event) {
+            console.log('📅 Opening event details:', event);
+            
+            if (!event) {
+                console.error('No event provided to openEventDetails');
+                return;
+            }
+            
             currentViewingEvent = event;
             isEditMode = false;
+            
+            // Create modal dynamically if it doesn't exist
+            let modal = document.getElementById('eventDetailsModal');
+            if (!modal) {
+                modal = createEventDetailsModal();
+            }
+            
+            // Get modal elements
+            const iconEl = document.getElementById('eventDetailsIcon');
+            const titleEl = document.getElementById('eventDetailsTitle');
+            const categoryEl = document.getElementById('eventDetailsCategory');
+            const headerEl = document.getElementById('eventDetailsHeader');
             
             // Get category icon
             const categoryIcons = {
@@ -26715,14 +26877,13 @@
             
             const icon = categoryIcons[event.category] || '📅';
             
-            // Update header
-            document.getElementById('eventDetailsIcon').textContent = icon;
-            document.getElementById('eventDetailsTitle').textContent = event.title;
-            document.getElementById('eventDetailsCategory').textContent = event.category || 'Event';
+            // Update header with null checks
+            if (iconEl) iconEl.textContent = icon;
+            if (titleEl) titleEl.textContent = event.title;
+            if (categoryEl) categoryEl.textContent = event.category || 'Event';
             
             // Apply category color to header
-            const header = document.getElementById('eventDetailsHeader');
-            header.className = 'event-details-header ' + (event.category || '');
+            if (headerEl) headerEl.className = 'event-details-header ' + (event.category || '');
             
             // Format date/time
             const eventDate = new Date(event.date);
@@ -26743,64 +26904,80 @@
                 timeStr = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
             }
             
-            document.getElementById('eventDetailsDateTime').innerHTML = timeStr 
-                ? `${dateStr}<br><span style="color: var(--text-muted);">${timeStr}</span>` 
-                : dateStr;
+            const dateTimeEl = document.getElementById('eventDetailsDateTime');
+            if (dateTimeEl) {
+                dateTimeEl.innerHTML = timeStr 
+                    ? `${dateStr}<br><span style="color: var(--text-muted);">${timeStr}</span>` 
+                    : dateStr;
+            }
             
             // Location
             const locationRow = document.getElementById('eventDetailsLocationRow');
+            const locationEl = document.getElementById('eventDetailsLocation');
             if (event.meetingDetails?.location) {
-                locationRow.style.display = 'flex';
-                document.getElementById('eventDetailsLocation').textContent = event.meetingDetails.location;
+                if (locationRow) locationRow.style.display = 'flex';
+                if (locationEl) locationEl.textContent = event.meetingDetails.location;
             } else {
-                locationRow.style.display = 'none';
+                if (locationRow) locationRow.style.display = 'none';
             }
             
             // Zoom details
             const zoomRow = document.getElementById('eventDetailsZoomRow');
+            const zoomEl = document.getElementById('eventDetailsZoom');
             if (event.meetingDetails?.zoomMeetingId) {
-                zoomRow.style.display = 'flex';
+                if (zoomRow) zoomRow.style.display = 'flex';
                 const zoomInfo = `Meeting ID: ${event.meetingDetails.zoomMeetingId}` +
                     (event.meetingDetails.zoomPasscode ? `<br>Passcode: ${event.meetingDetails.zoomPasscode}` : '');
-                document.getElementById('eventDetailsZoom').innerHTML = zoomInfo;
+                if (zoomEl) zoomEl.innerHTML = zoomInfo;
             } else {
-                zoomRow.style.display = 'none';
+                if (zoomRow) zoomRow.style.display = 'none';
             }
             
             // Attendees
             const attendeesRow = document.getElementById('eventDetailsAttendeesRow');
+            const attendeesEl = document.getElementById('eventDetailsAttendees');
             if (event.meetingDetails?.invitees?.length > 0) {
-                attendeesRow.style.display = 'flex';
+                if (attendeesRow) attendeesRow.style.display = 'flex';
                 const attendeesList = event.meetingDetails.invitees.map(i => i.value).join(', ');
-                document.getElementById('eventDetailsAttendees').textContent = attendeesList;
+                if (attendeesEl) attendeesEl.textContent = attendeesList;
             } else {
-                attendeesRow.style.display = 'none';
+                if (attendeesRow) attendeesRow.style.display = 'none';
             }
             
             // Description
             const descRow = document.getElementById('eventDetailsDescRow');
+            const descEl = document.getElementById('eventDetailsDescription') || document.getElementById('eventDetailsDesc');
             if (event.description) {
-                descRow.style.display = 'flex';
-                document.getElementById('eventDetailsDescription').textContent = event.description;
+                if (descRow) descRow.style.display = 'flex';
+                if (descEl) descEl.textContent = event.description;
             } else {
-                descRow.style.display = 'none';
+                if (descRow) descRow.style.display = 'none';
             }
             
-            // Section button
+            // Section info
             const sectionBtn = document.getElementById('eventDetailsGoToSection');
-            sectionBtn.textContent = `Go to ${event.section || 'Calendar'}`;
+            const sectionValueEl = document.getElementById('eventDetailsSection');
+            if (sectionBtn) sectionBtn.textContent = `Go to ${event.section || 'Calendar'}`;
+            if (sectionValueEl) sectionValueEl.textContent = event.section || 'General';
             
             // Show view mode, hide edit mode
-            document.getElementById('eventViewMode').style.display = 'block';
-            document.getElementById('eventEditMode').style.display = 'none';
-            document.getElementById('viewModeButtons').style.display = 'flex';
-            document.getElementById('editModeButtons').style.display = 'none';
+            const viewMode = document.getElementById('eventViewMode');
+            const editMode = document.getElementById('eventEditMode');
+            const viewBtns = document.getElementById('viewModeButtons') || document.getElementById('eventViewActions');
+            const editBtns = document.getElementById('editModeButtons') || document.getElementById('eventEditActions');
+            
+            if (viewMode) viewMode.style.display = 'block';
+            if (editMode) editMode.style.display = 'none';
+            if (viewBtns) viewBtns.style.display = 'flex';
+            if (editBtns) editBtns.style.display = 'none';
             
             // Show/hide delete button (only for custom events)
-            document.getElementById('deleteEventBtn').style.display = event.custom ? 'flex' : 'none';
+            const deleteBtn = document.getElementById('deleteEventBtn');
+            if (deleteBtn) deleteBtn.style.display = event.custom ? 'flex' : 'none';
             
             // Open modal
-            document.getElementById('eventDetailsModal').style.display = 'flex';
+            modal.style.display = 'flex';
+            console.log('📅 Event details modal opened');
         }
         
         function closeEventDetails() {
@@ -28124,17 +28301,6 @@ GMAIL_EMAIL=admin@oith.com</pre>
             } catch (error) {
                 console.log('⚠️ Could not sync models from AWS (using local storage):', error.message);
             }
-        }
-        
-        // Initialize models when ML section is shown
-        const originalShowSection = window.showSection;
-        if (typeof originalShowSection === 'function') {
-            window.showSection = function(section) {
-                originalShowSection(section);
-                if (section === 'ml-models') {
-                    initMLModels();
-                }
-            };
         }
         
         // Also initialize on page load if ML section is visible

@@ -453,7 +453,7 @@ export const handler = async (event) => {
                         await saveSubscriptionToDynamoDB(session.metadata.userId, session.customer, {
                             id: subscription.id,
                             status: 'active',
-                            plan: session.metadata.plan,
+                            plan: session.metadata.plan || 'monthly',
                             currentPeriodEnd: subscription.current_period_end
                         });
                     }
@@ -462,26 +462,55 @@ export const handler = async (event) => {
                 
                 case 'customer.subscription.updated': {
                     const subscription = stripeEvent.data.object;
-                    console.log('📝 Subscription updated:', subscription.id);
+                    console.log('📝 Subscription updated:', subscription.id, 'Status:', subscription.status);
+                    
+                    // Update subscription status in DynamoDB
+                    await updateSubscriptionByStripeId(subscription.id, {
+                        status: subscription.status,
+                        currentPeriodEnd: subscription.current_period_end,
+                        cancelAtPeriodEnd: subscription.cancel_at_period_end
+                    });
                     break;
                 }
                 
                 case 'customer.subscription.deleted': {
                     const subscription = stripeEvent.data.object;
                     console.log('❌ Subscription cancelled:', subscription.id);
-                    // Update subscription status in DynamoDB
+                    
+                    // Mark subscription as cancelled in DynamoDB
+                    await updateSubscriptionByStripeId(subscription.id, {
+                        status: 'canceled',
+                        canceledAt: new Date().toISOString()
+                    });
                     break;
                 }
                 
                 case 'invoice.payment_failed': {
                     const invoice = stripeEvent.data.object;
-                    console.log('⚠️ Payment failed:', invoice.id);
+                    console.log('⚠️ Payment failed:', invoice.id, 'Customer:', invoice.customer);
+                    
+                    // Update subscription status to past_due
+                    if (invoice.subscription) {
+                        await updateSubscriptionByStripeId(invoice.subscription, {
+                            status: 'past_due',
+                            lastPaymentFailed: new Date().toISOString(),
+                            failureReason: invoice.last_finalization_error?.message || 'Payment failed'
+                        });
+                    }
                     break;
                 }
                 
                 case 'invoice.paid': {
                     const invoice = stripeEvent.data.object;
                     console.log('💰 Invoice paid:', invoice.id);
+                    
+                    // Reactivate subscription if it was past_due
+                    if (invoice.subscription) {
+                        await updateSubscriptionByStripeId(invoice.subscription, {
+                            status: 'active',
+                            lastPaymentSucceeded: new Date().toISOString()
+                        });
+                    }
                     break;
                 }
             }
@@ -491,6 +520,104 @@ export const handler = async (event) => {
                 headers,
                 body: JSON.stringify({ received: true })
             };
+        }
+        
+        // ============ REGISTER DEVICE (Single Device Limit) ============
+        if (method === 'POST' && path.includes('/register-device')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email, device } = body;
+            
+            if (!email || !device?.id) {
+                return {
+                    statusCode: 400,
+                    headers,
+                    body: JSON.stringify({ error: 'Missing email or device ID' })
+                };
+            }
+            
+            try {
+                // Get current active device for this user
+                const getResult = await docClient.send(new GetCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: `USER#${email.toLowerCase()}`, sk: 'DEVICE' }
+                }));
+                
+                const previousDevice = getResult.Item?.deviceId;
+                
+                // Update active device
+                await docClient.send(new PutCommand({
+                    TableName: TABLE_NAME,
+                    Item: {
+                        pk: `USER#${email.toLowerCase()}`,
+                        sk: 'DEVICE',
+                        deviceId: device.id,
+                        deviceInfo: device,
+                        registeredAt: new Date().toISOString()
+                    }
+                }));
+                
+                console.log(`📱 Device registered for ${email}: ${device.id}`);
+                if (previousDevice && previousDevice !== device.id) {
+                    console.log(`📱 Previous device logged out: ${previousDevice}`);
+                }
+                
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        deviceId: device.id,
+                        previousDevice: previousDevice !== device.id ? previousDevice : null
+                    })
+                };
+            } catch (error) {
+                console.error('Device registration error:', error);
+                return {
+                    statusCode: 500,
+                    headers,
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
+        }
+        
+        // ============ VERIFY DEVICE ============
+        if (method === 'POST' && path.includes('/verify-device')) {
+            const body = JSON.parse(event.body || '{}');
+            const { email, deviceId } = body;
+            
+            if (!email || !deviceId) {
+                return {
+                    statusCode: 400,
+                    headers,
+                    body: JSON.stringify({ error: 'Missing email or device ID' })
+                };
+            }
+            
+            try {
+                const getResult = await docClient.send(new GetCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: `USER#${email.toLowerCase()}`, sk: 'DEVICE' }
+                }));
+                
+                const activeDeviceId = getResult.Item?.deviceId;
+                const isActive = activeDeviceId === deviceId;
+                
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        isActive: isActive,
+                        message: isActive ? 'Device is active' : 'Another device is active'
+                    })
+                };
+            } catch (error) {
+                console.error('Device verification error:', error);
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({ isActive: true }) // Allow access on error
+                };
+            }
         }
         
         // ============ 404 NOT FOUND ============
@@ -531,6 +658,92 @@ async function saveSubscriptionToDynamoDB(userId, customerId, subscription) {
         console.log('✅ Subscription saved to DynamoDB for user:', userId);
     } catch (error) {
         console.error('Error saving subscription to DynamoDB:', error);
+    }
+}
+
+// Helper: Update subscription by Stripe Subscription ID
+// This is used by webhooks where we only have the Stripe subscription ID
+async function updateSubscriptionByStripeId(stripeSubscriptionId, updates) {
+    if (!stripeSubscriptionId) {
+        console.error('No Stripe subscription ID provided');
+        return;
+    }
+    
+    try {
+        // First, find the subscription record by Stripe subscription ID
+        // We need to scan since we're searching by a non-key attribute
+        const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
+        
+        const scanResult = await docClient.send(new ScanCommand({
+            TableName: TABLE_NAME,
+            FilterExpression: 'stripeSubscriptionId = :subId AND sk = :sk',
+            ExpressionAttributeValues: {
+                ':subId': stripeSubscriptionId,
+                ':sk': 'SUBSCRIPTION'
+            }
+        }));
+        
+        if (!scanResult.Items || scanResult.Items.length === 0) {
+            console.log('⚠️ No subscription found for Stripe ID:', stripeSubscriptionId);
+            return;
+        }
+        
+        const subscription = scanResult.Items[0];
+        console.log('📝 Found subscription for user:', subscription.pk);
+        
+        // Build update expression dynamically
+        const updateParts = ['updatedAt = :updatedAt'];
+        const expressionValues = { ':updatedAt': new Date().toISOString() };
+        const expressionNames = {};
+        
+        if (updates.status !== undefined) {
+            updateParts.push('#status = :status');
+            expressionValues[':status'] = updates.status;
+            expressionNames['#status'] = 'status';
+        }
+        
+        if (updates.currentPeriodEnd !== undefined) {
+            updateParts.push('currentPeriodEnd = :periodEnd');
+            expressionValues[':periodEnd'] = new Date(updates.currentPeriodEnd * 1000).toISOString();
+        }
+        
+        if (updates.cancelAtPeriodEnd !== undefined) {
+            updateParts.push('cancelAtPeriodEnd = :cancelAt');
+            expressionValues[':cancelAt'] = updates.cancelAtPeriodEnd;
+        }
+        
+        if (updates.canceledAt !== undefined) {
+            updateParts.push('canceledAt = :canceledAt');
+            expressionValues[':canceledAt'] = updates.canceledAt;
+        }
+        
+        if (updates.lastPaymentFailed !== undefined) {
+            updateParts.push('lastPaymentFailed = :payFailed');
+            expressionValues[':payFailed'] = updates.lastPaymentFailed;
+        }
+        
+        if (updates.failureReason !== undefined) {
+            updateParts.push('failureReason = :failReason');
+            expressionValues[':failReason'] = updates.failureReason;
+        }
+        
+        if (updates.lastPaymentSucceeded !== undefined) {
+            updateParts.push('lastPaymentSucceeded = :paySuccess');
+            expressionValues[':paySuccess'] = updates.lastPaymentSucceeded;
+        }
+        
+        // Update the subscription record
+        await docClient.send(new UpdateCommand({
+            TableName: TABLE_NAME,
+            Key: { pk: subscription.pk, sk: 'SUBSCRIPTION' },
+            UpdateExpression: 'SET ' + updateParts.join(', '),
+            ExpressionAttributeValues: expressionValues,
+            ...(Object.keys(expressionNames).length > 0 && { ExpressionAttributeNames: expressionNames })
+        }));
+        
+        console.log('✅ Subscription updated for:', subscription.pk, 'New status:', updates.status || 'unchanged');
+    } catch (error) {
+        console.error('Error updating subscription by Stripe ID:', error);
     }
 }
 
