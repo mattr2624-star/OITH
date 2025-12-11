@@ -613,6 +613,31 @@
             color: white;
         }
 
+        /* Next Steps Clickable Items */
+        .next-step-schedulable:hover {
+            background: var(--bg-tertiary) !important;
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .next-step-schedulable:hover .next-step-schedule-btn {
+            opacity: 1 !important;
+            color: var(--accent-light);
+        }
+
+        .next-step-schedulable:active {
+            transform: translateX(2px);
+            background: var(--bg-hover) !important;
+        }
+
+        .next-step-schedule-btn svg {
+            transition: transform 0.2s ease;
+        }
+
+        .next-step-schedulable:hover .next-step-schedule-btn svg {
+            transform: scale(1.1);
+        }
+
         .scheduler-body {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -28106,11 +28131,21 @@
                                          step.priority === 'low' ? 'var(--text-muted)' : 'var(--info)';
                     const priorityBadge = step.priority === 'high' ? '🔴' : 
                                          step.priority === 'low' ? '🟢' : '🟡';
+                    const escapedText = step.text.replace(/'/g, "\\'").replace(/"/g, '\\"');
                     html += `
-                        <div class="next-step-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-secondary); border-radius: 6px; cursor: ${step.link ? 'pointer' : 'default'};" ${step.link ? `onclick="navigateToEvent('${step.link}')"` : ''}>
+                        <div class="next-step-item next-step-schedulable" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-secondary); border-radius: 6px; cursor: pointer; transition: all 0.2s ease;" onclick="scheduleNextStepMeeting('${escapedText}', '${step.priority || 'medium'}')">
                             <span style="font-size: 0.7rem;">${priorityBadge}</span>
                             <span style="flex: 1; font-size: 0.78rem; color: var(--text-primary);">${step.text}</span>
-                            ${step.link ? '<span style="font-size: 0.7rem; color: var(--text-muted);">→</span>' : ''}
+                            <span class="next-step-schedule-btn" style="display: flex; align-items: center; gap: 4px; font-size: 0.65rem; color: var(--accent); opacity: 0.7; transition: opacity 0.2s;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                    <path d="M12 14v4M10 16h4"/>
+                                </svg>
+                                Schedule
+                            </span>
                         </div>
                     `;
                 });
@@ -28132,6 +28167,161 @@
             } else {
                 showToast(`Event "${eventTitle}" not found`, 'info');
             }
+        }
+        
+        // Schedule a meeting for a Next Step task
+        function scheduleNextStepMeeting(taskText, priority) {
+            console.log('📅 Scheduling meeting for:', taskText, 'Priority:', priority);
+            
+            // Close any open event details modal first (with null check)
+            const eventModal = document.getElementById('eventDetailsModal');
+            if (eventModal) {
+                eventModal.style.display = 'none';
+            }
+            currentViewingEvent = null;
+            isEditMode = false;
+            
+            // Open the meeting scheduler modal
+            const schedulerModal = document.getElementById('meetingSchedulerModal');
+            if (!schedulerModal) {
+                console.error('Meeting scheduler modal not found!');
+                showToast('Unable to open scheduler - please refresh the page', 'error');
+                return;
+            }
+            schedulerModal.style.display = 'flex';
+            
+            // Set default date to tomorrow for planning time
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const meetingDateEl = document.getElementById('meetingDate');
+            if (meetingDateEl) meetingDateEl.valueAsDate = tomorrow;
+            
+            // Set default time based on priority
+            const now = new Date();
+            if (priority === 'high') {
+                // High priority: schedule for 9 AM
+                now.setHours(9, 0, 0, 0);
+            } else if (priority === 'low') {
+                // Low priority: schedule for 2 PM
+                now.setHours(14, 0, 0, 0);
+            } else {
+                // Medium priority: schedule for 10 AM
+                now.setHours(10, 0, 0, 0);
+            }
+            const meetingStartEl = document.getElementById('meetingStartTime');
+            if (meetingStartEl) {
+                meetingStartEl.value = 
+                    now.getHours().toString().padStart(2, '0') + ':' + 
+                    now.getMinutes().toString().padStart(2, '0');
+            }
+            
+            // Pre-fill the meeting title
+            const meetingTitle = `📋 ${taskText}`;
+            const meetingTitleEl = document.getElementById('meetingTitle');
+            if (meetingTitleEl) meetingTitleEl.value = meetingTitle;
+            
+            // Set category based on task type
+            const categorySelect = document.getElementById('meetingCategory');
+            if (categorySelect) {
+                if (taskText.toLowerCase().includes('review')) {
+                    categorySelect.value = 'review';
+                } else if (taskText.toLowerCase().includes('standup') || taskText.toLowerCase().includes('alignment')) {
+                    categorySelect.value = 'standup';
+                } else if (taskText.toLowerCase().includes('planning') || taskText.toLowerCase().includes('plan')) {
+                    categorySelect.value = 'planning';
+                } else if (taskText.toLowerCase().includes('training') || taskText.toLowerCase().includes('document')) {
+                    categorySelect.value = 'training';
+                } else {
+                    categorySelect.value = 'meeting';
+                }
+            }
+            
+            // Auto-generate meeting notes/agenda based on the task
+            const autoNotes = generateMeetingNotes(taskText, priority);
+            const meetingDescEl = document.getElementById('meetingDescription');
+            if (meetingDescEl) meetingDescEl.value = autoNotes;
+            
+            // Set appropriate duration based on task complexity
+            const durationSelect = document.getElementById('meetingDuration');
+            if (durationSelect) {
+                if (taskText.toLowerCase().includes('quick') || taskText.toLowerCase().includes('brief')) {
+                    durationSelect.value = '15';
+                } else if (priority === 'high') {
+                    durationSelect.value = '60';
+                } else if (priority === 'low') {
+                    durationSelect.value = '30';
+                } else {
+                    durationSelect.value = '45';
+                }
+            }
+            
+            // Check stored Zoom connection
+            const storedZoom = localStorage.getItem('oith_zoom_connection');
+            if (storedZoom) {
+                zoomUserData = JSON.parse(storedZoom);
+                zoomConnected = true;
+                if (typeof showZoomConnected === 'function') showZoomConnected();
+            }
+            
+            if (typeof toggleLocationFields === 'function') toggleLocationFields();
+            
+            showToast('Meeting scheduler opened with auto-generated notes!', 'success');
+        }
+        
+        // Generate meeting notes based on task text and priority
+        function generateMeetingNotes(taskText, priority) {
+            const priorityLabel = priority === 'high' ? '🔴 HIGH PRIORITY' : 
+                                 priority === 'low' ? '🟢 LOW PRIORITY' : '🟡 MEDIUM PRIORITY';
+            
+            let agenda = `${priorityLabel}\n\n`;
+            agenda += `📌 OBJECTIVE\n`;
+            agenda += `${taskText}\n\n`;
+            agenda += `📋 AGENDA\n`;
+            
+            // Generate contextual agenda items based on the task
+            if (taskText.toLowerCase().includes('configure') || taskText.toLowerCase().includes('set up')) {
+                agenda += `1. Review current configuration/setup status\n`;
+                agenda += `2. Identify requirements and dependencies\n`;
+                agenda += `3. Define implementation steps\n`;
+                agenda += `4. Assign action items and deadlines\n`;
+                agenda += `5. Schedule follow-up if needed\n`;
+            } else if (taskText.toLowerCase().includes('document') || taskText.toLowerCase().includes('api')) {
+                agenda += `1. Review existing documentation\n`;
+                agenda += `2. Identify gaps and areas for improvement\n`;
+                agenda += `3. Define documentation scope and format\n`;
+                agenda += `4. Assign writing responsibilities\n`;
+                agenda += `5. Set review and completion timeline\n`;
+            } else if (taskText.toLowerCase().includes('template') || taskText.toLowerCase().includes('create')) {
+                agenda += `1. Define requirements and use cases\n`;
+                agenda += `2. Review existing templates/examples\n`;
+                agenda += `3. Draft initial design/structure\n`;
+                agenda += `4. Gather feedback from stakeholders\n`;
+                agenda += `5. Finalize and distribute\n`;
+            } else if (taskText.toLowerCase().includes('review') || taskText.toLowerCase().includes('qa')) {
+                agenda += `1. Present work for review\n`;
+                agenda += `2. Discuss findings and feedback\n`;
+                agenda += `3. Identify issues and improvements\n`;
+                agenda += `4. Create action items from review\n`;
+                agenda += `5. Set timeline for revisions\n`;
+            } else {
+                // Default agenda structure
+                agenda += `1. Review current status and progress\n`;
+                agenda += `2. Discuss key objectives and goals\n`;
+                agenda += `3. Identify blockers and challenges\n`;
+                agenda += `4. Define next steps and action items\n`;
+                agenda += `5. Assign owners and set deadlines\n`;
+            }
+            
+            agenda += `\n📝 NOTES\n`;
+            agenda += `• \n`;
+            agenda += `• \n`;
+            agenda += `\n✅ ACTION ITEMS\n`;
+            agenda += `[ ] \n`;
+            agenda += `[ ] \n`;
+            agenda += `\n📅 FOLLOW-UP\n`;
+            agenda += `Next check-in: TBD`;
+            
+            return agenda;
         }
         
         function openEventDetails(event) {
