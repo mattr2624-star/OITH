@@ -5791,6 +5791,17 @@
                         <p class="page-subtitle">Company start: Nov 28, 2025 • Launch target: Feb 1, 2026</p>
                     </div>
                     <div class="header-actions">
+                        <button class="btn btn-primary" onclick="openMeetingScheduler()" style="margin-right: 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                                <line x1="12" y1="14" x2="12" y2="18"/>
+                                <line x1="10" y1="16" x2="14" y2="16"/>
+                            </svg>
+                            Schedule Meeting
+                        </button>
                         <button class="btn btn-secondary" onclick="exportCalendar()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
@@ -24231,7 +24242,7 @@
                     <div class="mail-icon-large">📧</div>
                     <div class="mail-title">
                         <h2>OITH Mail</h2>
-                        <p>admin@oith.com • Support Inbox</p>
+                        <p id="emailStatusIndicator">admin@oith.com • Support Inbox</p>
                     </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
@@ -24354,6 +24365,283 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Meeting Scheduler Modal -->
+    <div class="modal" id="meetingSchedulerModal" style="z-index: 2100;">
+        <div class="modal-content meeting-scheduler-modal">
+            <div class="scheduler-header">
+                <div class="scheduler-header-left">
+                    <div class="scheduler-icon">📅</div>
+                    <div>
+                        <h2>Schedule a Meeting</h2>
+                        <p>Create and invite participants to your meeting</p>
+                    </div>
+                </div>
+                <button onclick="closeMeetingScheduler()" class="scheduler-close-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="meetingSchedulerForm" onsubmit="saveMeeting(event)">
+                <div class="scheduler-body">
+                    <!-- Left Column - Meeting Details -->
+                    <div class="scheduler-column">
+                        <div class="scheduler-section">
+                            <div class="scheduler-section-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                Meeting Details
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Meeting Title *</label>
+                                <input type="text" id="meetingTitle" required placeholder="e.g., Weekly Team Standup" class="form-control">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Date *</label>
+                                    <input type="date" id="meetingDate" required class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Start Time *</label>
+                                    <input type="time" id="meetingStartTime" required class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Duration</label>
+                                    <select id="meetingDuration" class="form-control">
+                                        <option value="15">15 minutes</option>
+                                        <option value="30" selected>30 minutes</option>
+                                        <option value="45">45 minutes</option>
+                                        <option value="60">1 hour</option>
+                                        <option value="90">1.5 hours</option>
+                                        <option value="120">2 hours</option>
+                                        <option value="180">3 hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <select id="meetingCategory" class="form-control">
+                                        <option value="meeting">🤝 Meeting</option>
+                                        <option value="standup">📊 Standup</option>
+                                        <option value="interview">👤 Interview</option>
+                                        <option value="review">📝 Review</option>
+                                        <option value="planning">📋 Planning</option>
+                                        <option value="training">🎓 Training</option>
+                                        <option value="client">💼 Client Call</option>
+                                        <option value="webinar">📺 Webinar</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Event Type</label>
+                                    <select id="meetingEventType" class="form-control" onchange="toggleLocationFields()">
+                                        <option value="virtual">🖥️ Virtual (Zoom)</option>
+                                        <option value="in-person">🏢 In-Person</option>
+                                        <option value="hybrid">🔄 Hybrid</option>
+                                        <option value="phone">📞 Phone Call</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group" id="locationField">
+                                <label>Location</label>
+                                <input type="text" id="meetingLocation" placeholder="Enter physical location address..." class="form-control">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Description / Agenda</label>
+                                <textarea id="meetingDescription" rows="3" placeholder="Add meeting agenda, notes, or talking points..." class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column - Zoom & Invites -->
+                    <div class="scheduler-column">
+                        <!-- Zoom Integration Section -->
+                        <div class="scheduler-section" id="zoomSection">
+                            <div class="scheduler-section-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7c0-1.1.9-2 2-2z"/>
+                                </svg>
+                                Zoom Meeting Settings
+                            </div>
+                            
+                            <div class="zoom-status" id="zoomConnectionStatus">
+                                <div class="zoom-status-indicator disconnected"></div>
+                                <span>Not Connected</span>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="connectZoomAccount()">Connect Zoom</button>
+                            </div>
+                            
+                            <div id="zoomConnectedPanel" style="display: none;">
+                                <div class="zoom-connected-info">
+                                    <div class="zoom-avatar">👤</div>
+                                    <div>
+                                        <div class="zoom-user-name" id="zoomUserName">Connected User</div>
+                                        <div class="zoom-user-email" id="zoomUserEmail">user@example.com</div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline btn-sm" onclick="disconnectZoomAccount()">Disconnect</button>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Meeting ID</label>
+                                    <div class="zoom-id-row">
+                                        <input type="text" id="zoomMeetingId" readonly class="form-control" placeholder="Auto-generated">
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="generateZoomMeetingId()">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M23 4v6h-6M1 20v-6h6"/>
+                                                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                                            </svg>
+                                            Generate
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Passcode</label>
+                                    <input type="text" id="zoomPasscode" class="form-control" placeholder="Optional meeting passcode">
+                                </div>
+                                
+                                <div class="zoom-options">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="zoomWaitingRoom" checked>
+                                        <span>Enable Waiting Room</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="zoomMuteOnEntry" checked>
+                                        <span>Mute participants on entry</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="zoomRecording">
+                                        <span>Auto-record meeting</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Invite Attendees Section -->
+                        <div class="scheduler-section">
+                            <div class="scheduler-section-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                                </svg>
+                                Invite Attendees
+                            </div>
+                            
+                            <div class="invite-tabs">
+                                <button type="button" class="invite-tab active" onclick="switchInviteTab('email')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                        <polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                    Email
+                                </button>
+                                <button type="button" class="invite-tab" onclick="switchInviteTab('phone')">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                                    </svg>
+                                    SMS/Phone
+                                </button>
+                            </div>
+                            
+                            <div id="emailInvitePanel" class="invite-panel">
+                                <div class="form-group">
+                                    <label>Add by Email</label>
+                                    <div class="invite-input-row">
+                                        <input type="email" id="inviteEmail" placeholder="Enter email address..." class="form-control">
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="addEmailInvite()">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                            </svg>
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="phoneInvitePanel" class="invite-panel" style="display: none;">
+                                <div class="form-group">
+                                    <label>Add by Phone Number</label>
+                                    <div class="invite-input-row">
+                                        <input type="tel" id="invitePhone" placeholder="+1 (555) 123-4567" class="form-control">
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="addPhoneInvite()">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                            </svg>
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="invitees-list" id="inviteesList">
+                                <!-- Invitees will be added here -->
+                            </div>
+                            
+                            <div class="invitees-count" id="inviteesCount" style="display: none;">
+                                <span id="inviteesNumber">0</span> attendees invited
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="scheduler-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeMeetingScheduler()">Cancel</button>
+                    <div class="scheduler-footer-right">
+                        <button type="button" class="btn btn-outline" onclick="previewMeetingInvite()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            Preview
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                            </svg>
+                            Schedule & Send Invites
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Meeting Preview Modal -->
+    <div class="modal" id="meetingPreviewModal" style="z-index: 2200;">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <h3>📧 Meeting Invite Preview</h3>
+                <button onclick="closeMeetingPreview()" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-email-container" id="meetingPreviewContent">
+                    <!-- Preview content will be generated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeMeetingPreview()">Close</button>
+                <button class="btn btn-primary" onclick="copyMeetingDetails()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                    </svg>
+                    Copy to Clipboard
+                </button>
+            </div>
         </div>
     </div>
 
@@ -24721,30 +25009,70 @@
         // ADMIN MAIL CLIENT SYSTEM
         // ==========================================
         
+        const EMAIL_API_URL = 'http://localhost:3001/api/email';
         let currentMailFolder = 'inbox';
         let selectedMailId = null;
         let adminInbox = [];
+        let emailConfigured = false;
+        let emailStatus = null;
         
-        function openMailClient() {
-            loadAdminInbox();
+        async function openMailClient() {
+            document.getElementById('mailClientModal').classList.add('active');
+            await checkEmailStatus();
+            await loadAdminInbox();
             renderMailList();
             updateMailBadge();
-            document.getElementById('mailClientModal').classList.add('active');
         }
         
         function closeMailClient() {
             document.getElementById('mailClientModal').classList.remove('active');
         }
         
-        function loadAdminInbox() {
+        async function checkEmailStatus() {
+            try {
+                const response = await fetch(`${EMAIL_API_URL}/status`);
+                emailStatus = await response.json();
+                emailConfigured = emailStatus.configured;
+                
+                // Update UI to show email status
+                const statusIndicator = document.getElementById('emailStatusIndicator');
+                if (statusIndicator) {
+                    statusIndicator.innerHTML = emailConfigured 
+                        ? `<span style="color: #4ade80;">● Connected</span> ${emailStatus.email || ''}`
+                        : `<span style="color: #fbbf24;">● Not configured</span> <button class="btn btn-secondary" style="font-size: 0.7rem; padding: 4px 8px; margin-left: 8px;" onclick="showEmailSetup()">Setup</button>`;
+                }
+            } catch (e) {
+                console.log('Email API not available, using local storage');
+                emailConfigured = false;
+            }
+        }
+        
+        async function loadAdminInbox() {
+            // Try to fetch from backend first
+            try {
+                const response = await fetch(`${EMAIL_API_URL}/inbox`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.emails && data.emails.length > 0) {
+                        adminInbox = data.emails;
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.log('Using local inbox fallback');
+            }
+            
+            // Fallback to localStorage
             adminInbox = JSON.parse(localStorage.getItem('oith_admin_inbox') || '[]');
         }
         
-        function refreshMailInbox() {
-            loadAdminInbox();
+        async function refreshMailInbox() {
+            showToast('Refreshing inbox...');
+            await checkEmailStatus();
+            await loadAdminInbox();
             renderMailList();
             updateMailBadge();
-            showToast('Inbox refreshed');
+            showToast(emailConfigured ? 'Inbox synced with Gmail' : 'Inbox refreshed (local)');
         }
         
         function updateMailBadge() {
@@ -24759,7 +25087,92 @@
             const inboxCount = document.getElementById('inboxCount');
             const supportCount = document.getElementById('supportCount');
             if (inboxCount) inboxCount.textContent = adminInbox.length;
-            if (supportCount) supportCount.textContent = adminInbox.filter(m => m.subject).length;
+            if (supportCount) supportCount.textContent = adminInbox.filter(m => m.subject || m.type === 'support').length;
+        }
+        
+        function showEmailSetup() {
+            const viewContent = document.getElementById('mailViewContent');
+            document.getElementById('mailEmptyState').style.display = 'none';
+            viewContent.style.display = 'block';
+            
+            viewContent.innerHTML = `
+                <div style="padding: 20px;">
+                    <h3 style="margin-bottom: 20px; color: var(--text-primary);">📧 Email Setup Required</h3>
+                    
+                    <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="color: #4ade80; margin-bottom: 12px;">Step 1: Create Google Cloud Project</h4>
+                        <ol style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+                            <li>Go to <a href="https://console.cloud.google.com" target="_blank" style="color: #60a5fa;">Google Cloud Console</a></li>
+                            <li>Create a new project called "OITH Admin"</li>
+                            <li>Enable the <strong>Gmail API</strong></li>
+                        </ol>
+                    </div>
+                    
+                    <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="color: #4ade80; margin-bottom: 12px;">Step 2: Create OAuth Credentials</h4>
+                        <ol style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+                            <li>Go to APIs & Services → Credentials</li>
+                            <li>Create OAuth 2.0 Client ID (Web Application)</li>
+                            <li>Add redirect URI: <code style="background: #1a1a2e; padding: 2px 6px; border-radius: 4px;">http://localhost:3001/api/email/oauth/callback</code></li>
+                            <li>Copy Client ID and Client Secret</li>
+                        </ol>
+                    </div>
+                    
+                    <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="color: #4ade80; margin-bottom: 12px;">Step 3: Configure Backend</h4>
+                        <ol style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+                            <li>Open <code style="background: #1a1a2e; padding: 2px 6px; border-radius: 4px;">prototype/server/.env</code></li>
+                            <li>Add your credentials:
+                                <pre style="background: #1a1a2e; padding: 12px; border-radius: 8px; margin-top: 8px; font-size: 0.85rem; overflow-x: auto;">GMAIL_CLIENT_ID=your_client_id_here
+GMAIL_CLIENT_SECRET=your_client_secret_here
+GMAIL_EMAIL=admin@oith.com</pre>
+                            </li>
+                            <li>Restart the backend server</li>
+                        </ol>
+                    </div>
+                    
+                    <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <h4 style="color: #4ade80; margin-bottom: 12px;">Step 4: Complete OAuth Flow</h4>
+                        <ol style="color: var(--text-secondary); line-height: 1.8; padding-left: 20px;">
+                            <li>Click the button below to authorize Gmail access</li>
+                            <li>Sign in with your Google Workspace account</li>
+                            <li>Copy the refresh token to your .env file</li>
+                        </ol>
+                        <button class="btn btn-primary" onclick="startOAuthFlow()" style="margin-top: 12px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+                                <polyline points="10 17 15 12 10 7"/>
+                                <line x1="15" y1="12" x2="3" y2="12"/>
+                            </svg>
+                            Start OAuth Authorization
+                        </button>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #1e3a5f 0%, #1a1a2e 100%); border-radius: 12px; padding: 20px; border: 1px solid #3b82f6;">
+                        <h4 style="color: #60a5fa; margin-bottom: 8px;">💡 Tip: Using Google Workspace</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Once you set up Google Workspace for oith.com, you'll use that email account here. 
+                            The Gmail API will let you send and receive emails as <strong>admin@oith.com</strong> directly from this dashboard.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function startOAuthFlow() {
+            try {
+                const response = await fetch(`${EMAIL_API_URL}/oauth/url`);
+                const data = await response.json();
+                
+                if (data.authUrl) {
+                    window.open(data.authUrl, '_blank', 'width=600,height=700');
+                    showToast('Complete the authorization in the popup window', 'info');
+                } else if (data.error) {
+                    showToast('Configure GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET in .env first', 'warning');
+                }
+            } catch (e) {
+                showToast('Backend server not running. Start it with: cd prototype/server && npm start', 'error');
+            }
         }
         
         function switchMailFolder(folder) {
@@ -24828,7 +25241,7 @@
             }).join('');
         }
         
-        function viewMail(mailId) {
+        async function viewMail(mailId) {
             selectedMailId = mailId;
             const mail = adminInbox.find(m => m.id === mailId);
             
@@ -24839,6 +25252,15 @@
                 mail.read = true;
                 localStorage.setItem('oith_admin_inbox', JSON.stringify(adminInbox));
                 updateMailBadge();
+                
+                // Also mark on server if configured
+                if (emailConfigured) {
+                    try {
+                        await fetch(`${EMAIL_API_URL}/mark-read/${mailId}`, { method: 'POST' });
+                    } catch (e) {
+                        console.log('API mark-read failed');
+                    }
+                }
             }
             
             // Re-render list to update active state
@@ -24927,7 +25349,7 @@
             document.getElementById('replyMessage').value = '';
         }
         
-        function sendReply(mailId) {
+        async function sendReply(mailId) {
             const replyText = document.getElementById('replyMessage').value;
             if (!replyText.trim()) {
                 showToast('Please enter a reply message', 'warning');
@@ -24935,18 +25357,57 @@
             }
             
             const mail = adminInbox.find(m => m.id === mailId);
-            if (mail) {
+            if (!mail) return;
+            
+            // If email is configured, send via API
+            if (emailConfigured) {
+                try {
+                    const response = await fetch(`${EMAIL_API_URL}/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            to: mail.userEmail || mail.from,
+                            subject: `Re: ${mail.subject}`,
+                            body: replyText,
+                            replyTo: mail.id
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        mail.replied = true;
+                        mail.replyMessage = replyText;
+                        mail.replyTimestamp = new Date().toISOString();
+                        localStorage.setItem('oith_admin_inbox', JSON.stringify(adminInbox));
+                        cancelReply();
+                        showToast(`✅ Email sent to ${mail.userEmail || mail.from}`, 'success');
+                    } else {
+                        throw new Error(result.error || 'Failed to send');
+                    }
+                } catch (e) {
+                    showToast('Failed to send email: ' + e.message, 'error');
+                }
+            } else {
+                // Store locally for later
                 mail.replied = true;
                 mail.replyMessage = replyText;
                 mail.replyTimestamp = new Date().toISOString();
                 localStorage.setItem('oith_admin_inbox', JSON.stringify(adminInbox));
+                cancelReply();
+                showToast(`Reply saved (will send when email is configured)`, 'info');
             }
-            
-            cancelReply();
-            showToast(`Reply sent to ${mail.userEmail}`, 'success');
         }
         
-        function archiveMail(mailId) {
+        async function archiveMail(mailId) {
+            // Try API first
+            if (emailConfigured) {
+                try {
+                    await fetch(`${EMAIL_API_URL}/archive/${mailId}`, { method: 'DELETE' });
+                } catch (e) {
+                    console.log('API archive failed, using local');
+                }
+            }
+            
             const index = adminInbox.findIndex(m => m.id === mailId);
             if (index > -1) {
                 adminInbox.splice(index, 1);
@@ -24963,8 +25424,17 @@
             }
         }
         
-        function deleteMail(mailId) {
+        async function deleteMail(mailId) {
             if (!confirm('Are you sure you want to delete this email?')) return;
+            
+            // Try API first
+            if (emailConfigured) {
+                try {
+                    await fetch(`${EMAIL_API_URL}/archive/${mailId}`, { method: 'DELETE' });
+                } catch (e) {
+                    console.log('API delete failed, using local');
+                }
+            }
             
             const index = adminInbox.findIndex(m => m.id === mailId);
             if (index > -1) {

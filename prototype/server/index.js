@@ -15,6 +15,7 @@ const experimentsRoutes = require('./routes/experiments');
 const orgRoutes = require('./routes/org');
 const payrollRoutes = require('./routes/payroll');
 const syncRoutes = require('./routes/sync');
+const emailRoutes = require('./routes/email');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -57,6 +58,7 @@ app.use('/api/experiments', experimentsRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/email', emailRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -81,6 +83,10 @@ app.listen(PORT, () => {
     console.log(`    Region:      ${process.env.AWS_REGION || '⚠️  Not set'}`);
     console.log(`    S3 Bucket:   ${process.env.AWS_S3_BUCKET || '⚠️  Not set'}`);
     console.log(`    DynamoDB:    ${process.env.AWS_DYNAMODB_TABLE || '⚠️  Not set'}`);
+    console.log('');
+    console.log('  Email Configuration:');
+    console.log(`    Gmail:       ${process.env.GMAIL_CLIENT_ID ? '✅ Configured' : '⚠️  Not set'}`);
+    console.log(`    Email:       ${process.env.GMAIL_EMAIL || '⚠️  Not set'}`);
     console.log('═══════════════════════════════════════════════════════');
     console.log('');
 });

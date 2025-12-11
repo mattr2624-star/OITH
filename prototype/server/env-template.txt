@@ -15,3 +15,21 @@ AWS_DYNAMODB_TABLE=oith-admin-data
 # Server port
 PORT=3001
 
+# ===========================================
+# EMAIL CONFIGURATION (Google Workspace / Gmail API)
+# ===========================================
+# To set up:
+# 1. Go to https://console.cloud.google.com
+# 2. Create a new project or select existing
+# 3. Enable Gmail API
+# 4. Create OAuth 2.0 credentials (Web Application)
+# 5. Add http://localhost:3001/api/email/oauth/callback as redirect URI
+# 6. Copy Client ID and Client Secret below
+# 7. Start server and visit http://localhost:3001/api/email/oauth/url
+# 8. Complete OAuth flow and copy the refresh token
+
+GMAIL_CLIENT_ID=your_client_id_here
+GMAIL_CLIENT_SECRET=your_client_secret_here
+GMAIL_REFRESH_TOKEN=your_refresh_token_here
+GMAIL_EMAIL=admin@oith.com
+
