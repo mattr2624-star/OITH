@@ -543,6 +543,497 @@
             background: rgba(139, 92, 246, 0.05);
         }
 
+        /* Meeting Scheduler Modal Styles */
+        .meeting-scheduler-modal {
+            max-width: 900px !important;
+            width: 95% !important;
+            max-height: 92vh;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 20px;
+            background: var(--bg-secondary);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(139, 92, 246, 0.15);
+        }
+
+        .scheduler-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.1));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .scheduler-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .scheduler-icon {
+            font-size: 2rem;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scheduler-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .scheduler-header p {
+            margin: 4px 0 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .scheduler-close-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .scheduler-close-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .scheduler-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            max-height: calc(92vh - 180px);
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .scheduler-body {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .scheduler-column {
+            padding: 24px;
+        }
+
+        .scheduler-column:first-child {
+            border-right: 1px solid var(--border);
+        }
+
+        .scheduler-section {
+            margin-bottom: 24px;
+        }
+
+        .scheduler-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .scheduler-section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .scheduler-section-title svg {
+            color: var(--accent);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 500px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Zoom Connection Styles */
+        .zoom-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .zoom-status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .zoom-status-indicator.connected {
+            background: var(--success);
+            box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+        }
+
+        .zoom-status-indicator.disconnected {
+            background: var(--text-muted);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .zoom-status span {
+            flex: 1;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .zoom-connected-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+            border-radius: 12px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            margin-bottom: 16px;
+        }
+
+        .zoom-avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .zoom-user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .zoom-user-email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .zoom-connected-info .btn {
+            margin-left: auto;
+        }
+
+        .zoom-id-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .zoom-id-row .form-control {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 1px;
+        }
+
+        .zoom-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        /* Invite Tabs & Panel */
+        .invite-tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-tertiary);
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+        }
+
+        .invite-tab {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .invite-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .invite-tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .invite-panel {
+            margin-bottom: 16px;
+        }
+
+        .invite-input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .invite-input-row .form-control {
+            flex: 1;
+        }
+
+        .invitees-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .invitee-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            animation: slideIn 0.2s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .invitee-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .invitee-icon.email {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+            color: var(--info);
+        }
+
+        .invitee-icon.phone {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+            color: var(--success);
+        }
+
+        .invitee-details {
+            flex: 1;
+        }
+
+        .invitee-value {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .invitee-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .invitee-remove {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .invitee-remove:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .invitees-count {
+            padding: 10px 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+            border-top: 1px solid var(--border);
+            margin-top: 12px;
+        }
+
+        .invitees-count span {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .scheduler-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border);
+        }
+
+        .scheduler-footer-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+
+        /* Preview Email Styles */
+        .preview-email-container {
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 0.9rem;
+        }
+
+        .preview-email-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-email-icon {
+            font-size: 2rem;
+        }
+
+        .preview-email-subject {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .preview-email-from {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .preview-meeting-details {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .preview-detail-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .preview-detail-label {
+            width: 100px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .preview-detail-value {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .preview-zoom-box {
+            margin-top: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            border-radius: 10px;
+            border-left: 3px solid var(--info);
+        }
+
+        .preview-zoom-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--info);
+        }
+
+        .preview-zoom-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            word-break: break-all;
+        }
+
         /* Mail Client Placeholder */
         .mail-modal {
             position: fixed;
@@ -24184,7 +24675,7 @@
                         <div class="calendar-weekday">Fri</div>
                         <div class="calendar-weekday">Sat</div>
                     </div>
-                    <div class="calendar-grid" id="calendarGrid">
+                    <div class="calendar-grid" id="adminCalendarGrid">
                         <!-- Calendar days will be generated here -->
                     </div>
                 </div>
@@ -24781,7 +25272,8 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
-            const grid = document.getElementById('calendarGrid');
+            const grid = document.getElementById('adminCalendarGrid');
+            if (!grid) return;
             grid.innerHTML = '';
             
             // Add previous month's trailing days
@@ -25004,6 +25496,484 @@
             
             showToast('Event added successfully!');
         }
+        
+        // ==========================================
+        // MEETING SCHEDULER SYSTEM
+        // ==========================================
+        
+        let meetingInvitees = [];
+        let zoomConnected = false;
+        let zoomUserData = null;
+        
+        function openMeetingScheduler() {
+            document.getElementById('meetingSchedulerModal').style.display = 'flex';
+            // Set default date to today
+            document.getElementById('meetingDate').valueAsDate = new Date();
+            // Set default time to next hour
+            const now = new Date();
+            now.setHours(now.getHours() + 1, 0, 0, 0);
+            document.getElementById('meetingStartTime').value = 
+                now.getHours().toString().padStart(2, '0') + ':' + 
+                now.getMinutes().toString().padStart(2, '0');
+            
+            // Check stored Zoom connection
+            const storedZoom = localStorage.getItem('oith_zoom_connection');
+            if (storedZoom) {
+                zoomUserData = JSON.parse(storedZoom);
+                zoomConnected = true;
+                showZoomConnected();
+            }
+            
+            toggleLocationFields();
+        }
+        
+        function closeMeetingScheduler() {
+            document.getElementById('meetingSchedulerModal').style.display = 'none';
+            document.getElementById('meetingSchedulerForm').reset();
+            meetingInvitees = [];
+            renderInviteesList();
+        }
+        
+        function toggleLocationFields() {
+            const eventType = document.getElementById('meetingEventType').value;
+            const locationField = document.getElementById('locationField');
+            const zoomSection = document.getElementById('zoomSection');
+            
+            if (eventType === 'virtual') {
+                locationField.style.display = 'none';
+                zoomSection.style.display = 'block';
+            } else if (eventType === 'in-person') {
+                locationField.style.display = 'block';
+                zoomSection.style.display = 'none';
+            } else if (eventType === 'hybrid') {
+                locationField.style.display = 'block';
+                zoomSection.style.display = 'block';
+            } else if (eventType === 'phone') {
+                locationField.style.display = 'none';
+                zoomSection.style.display = 'none';
+            }
+        }
+        
+        // Zoom Integration Functions
+        function connectZoomAccount() {
+            // Simulate Zoom OAuth connection
+            showToast('Connecting to Zoom...', 'info');
+            
+            // Simulate OAuth popup delay
+            setTimeout(() => {
+                // In production, this would be a real OAuth flow
+                zoomUserData = {
+                    name: 'Matthew Ross',
+                    email: 'mattr@oith.com',
+                    accountId: 'OITH-ZM-' + Date.now().toString().slice(-6),
+                    pmid: '123 456 7890'
+                };
+                
+                localStorage.setItem('oith_zoom_connection', JSON.stringify(zoomUserData));
+                zoomConnected = true;
+                showZoomConnected();
+                generateZoomMeetingId();
+                
+                showToast('Successfully connected to Zoom!', 'success');
+            }, 1500);
+        }
+        
+        function showZoomConnected() {
+            document.getElementById('zoomConnectionStatus').innerHTML = `
+                <div class="zoom-status-indicator connected"></div>
+                <span>Connected</span>
+            `;
+            document.getElementById('zoomConnectedPanel').style.display = 'block';
+            document.getElementById('zoomUserName').textContent = zoomUserData.name;
+            document.getElementById('zoomUserEmail').textContent = zoomUserData.email;
+        }
+        
+        function disconnectZoomAccount() {
+            if (confirm('Are you sure you want to disconnect your Zoom account?')) {
+                localStorage.removeItem('oith_zoom_connection');
+                zoomConnected = false;
+                zoomUserData = null;
+                
+                document.getElementById('zoomConnectionStatus').innerHTML = `
+                    <div class="zoom-status-indicator disconnected"></div>
+                    <span>Not Connected</span>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="connectZoomAccount()">Connect Zoom</button>
+                `;
+                document.getElementById('zoomConnectedPanel').style.display = 'none';
+                document.getElementById('zoomMeetingId').value = '';
+                
+                showToast('Zoom account disconnected', 'info');
+            }
+        }
+        
+        function generateZoomMeetingId() {
+            // Generate a realistic Zoom-style meeting ID
+            const part1 = Math.floor(Math.random() * 900 + 100);
+            const part2 = Math.floor(Math.random() * 9000 + 1000);
+            const part3 = Math.floor(Math.random() * 9000 + 1000);
+            const meetingId = `${part1} ${part2} ${part3}`;
+            
+            document.getElementById('zoomMeetingId').value = meetingId;
+            
+            // Generate a passcode
+            const passcode = Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('zoomPasscode').value = passcode;
+            
+            showToast('Meeting ID generated!', 'success');
+        }
+        
+        // Invite Functions
+        function switchInviteTab(tab) {
+            document.querySelectorAll('.invite-tab').forEach(t => t.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            document.getElementById('emailInvitePanel').style.display = tab === 'email' ? 'block' : 'none';
+            document.getElementById('phoneInvitePanel').style.display = tab === 'phone' ? 'block' : 'none';
+        }
+        
+        function addEmailInvite() {
+            const emailInput = document.getElementById('inviteEmail');
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                showToast('Please enter an email address', 'error');
+                return;
+            }
+            
+            // Basic email validation
+            if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            // Check for duplicates
+            if (meetingInvitees.some(i => i.value === email)) {
+                showToast('This email is already added', 'error');
+                return;
+            }
+            
+            meetingInvitees.push({
+                type: 'email',
+                value: email,
+                id: Date.now()
+            });
+            
+            emailInput.value = '';
+            renderInviteesList();
+            showToast('Attendee added!', 'success');
+        }
+        
+        function addPhoneInvite() {
+            const phoneInput = document.getElementById('invitePhone');
+            const phone = phoneInput.value.trim();
+            
+            if (!phone) {
+                showToast('Please enter a phone number', 'error');
+                return;
+            }
+            
+            // Check for duplicates
+            if (meetingInvitees.some(i => i.value === phone)) {
+                showToast('This number is already added', 'error');
+                return;
+            }
+            
+            meetingInvitees.push({
+                type: 'phone',
+                value: phone,
+                id: Date.now()
+            });
+            
+            phoneInput.value = '';
+            renderInviteesList();
+            showToast('Attendee added!', 'success');
+        }
+        
+        function removeInvitee(id) {
+            meetingInvitees = meetingInvitees.filter(i => i.id !== id);
+            renderInviteesList();
+        }
+        
+        function renderInviteesList() {
+            const listEl = document.getElementById('inviteesList');
+            const countEl = document.getElementById('inviteesCount');
+            const countNumber = document.getElementById('inviteesNumber');
+            
+            if (meetingInvitees.length === 0) {
+                listEl.innerHTML = `
+                    <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.85rem;">
+                        <div style="font-size: 2rem; margin-bottom: 8px; opacity: 0.5;">👥</div>
+                        No attendees added yet
+                    </div>
+                `;
+                countEl.style.display = 'none';
+                return;
+            }
+            
+            listEl.innerHTML = meetingInvitees.map(inv => `
+                <div class="invitee-item">
+                    <div class="invitee-icon ${inv.type}">
+                        ${inv.type === 'email' ? '📧' : '📱'}
+                    </div>
+                    <div class="invitee-details">
+                        <div class="invitee-value">${inv.value}</div>
+                        <div class="invitee-type">${inv.type === 'email' ? 'Email invite' : 'SMS invite'}</div>
+                    </div>
+                    <button type="button" class="invitee-remove" onclick="removeInvitee(${inv.id})">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+            
+            countEl.style.display = 'block';
+            countNumber.textContent = meetingInvitees.length;
+        }
+        
+        // Preview Meeting
+        function previewMeetingInvite() {
+            const title = document.getElementById('meetingTitle').value || 'Untitled Meeting';
+            const date = document.getElementById('meetingDate').value;
+            const time = document.getElementById('meetingStartTime').value;
+            const duration = document.getElementById('meetingDuration').value;
+            const category = document.getElementById('meetingCategory').value;
+            const eventType = document.getElementById('meetingEventType').value;
+            const location = document.getElementById('meetingLocation').value;
+            const description = document.getElementById('meetingDescription').value;
+            const meetingId = document.getElementById('zoomMeetingId').value;
+            const passcode = document.getElementById('zoomPasscode').value;
+            
+            // Format date
+            const dateObj = new Date(date + 'T' + time);
+            const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const formattedTime = dateObj.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            // Calculate end time
+            const endTime = new Date(dateObj.getTime() + duration * 60000);
+            const formattedEndTime = endTime.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            
+            // Build location string
+            let locationStr = '';
+            if (eventType === 'virtual' && meetingId) {
+                locationStr = 'Zoom Meeting';
+            } else if (eventType === 'in-person' && location) {
+                locationStr = location;
+            } else if (eventType === 'hybrid') {
+                locationStr = location ? `${location} + Zoom` : 'Hybrid (Zoom available)';
+            } else if (eventType === 'phone') {
+                locationStr = 'Phone Call';
+            }
+            
+            // Generate attendees list
+            const attendeesStr = meetingInvitees.length > 0 
+                ? meetingInvitees.map(i => i.value).join(', ')
+                : 'No attendees invited';
+            
+            const previewContent = `
+                <div class="preview-email-header">
+                    <div class="preview-email-icon">📅</div>
+                    <div>
+                        <div class="preview-email-subject">${title}</div>
+                        <div class="preview-email-from">From: OITH Calendar &lt;calendar@oith.com&gt;</div>
+                    </div>
+                </div>
+                <div class="preview-meeting-details">
+                    <div class="preview-detail-row">
+                        <div class="preview-detail-label">📆 When:</div>
+                        <div class="preview-detail-value">${formattedDate}<br>${formattedTime} - ${formattedEndTime}</div>
+                    </div>
+                    <div class="preview-detail-row">
+                        <div class="preview-detail-label">📍 Where:</div>
+                        <div class="preview-detail-value">${locationStr || 'TBD'}</div>
+                    </div>
+                    <div class="preview-detail-row">
+                        <div class="preview-detail-label">🏷️ Category:</div>
+                        <div class="preview-detail-value" style="text-transform: capitalize;">${category}</div>
+                    </div>
+                    <div class="preview-detail-row">
+                        <div class="preview-detail-label">👥 Attendees:</div>
+                        <div class="preview-detail-value">${attendeesStr}</div>
+                    </div>
+                    ${description ? `
+                        <div class="preview-detail-row">
+                            <div class="preview-detail-label">📝 Agenda:</div>
+                            <div class="preview-detail-value">${description}</div>
+                        </div>
+                    ` : ''}
+                </div>
+                ${(eventType === 'virtual' || eventType === 'hybrid') && meetingId ? `
+                    <div class="preview-zoom-box">
+                        <div class="preview-zoom-title">🎥 Join Zoom Meeting</div>
+                        <div class="preview-zoom-link">
+                            https://zoom.us/j/${meetingId.replace(/\s/g, '')}<br>
+                            Meeting ID: ${meetingId}<br>
+                            ${passcode ? `Passcode: ${passcode}` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('meetingPreviewContent').innerHTML = previewContent;
+            document.getElementById('meetingPreviewModal').style.display = 'flex';
+        }
+        
+        function closeMeetingPreview() {
+            document.getElementById('meetingPreviewModal').style.display = 'none';
+        }
+        
+        function copyMeetingDetails() {
+            const previewEl = document.getElementById('meetingPreviewContent');
+            const text = previewEl.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Meeting details copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy to clipboard', 'error');
+            });
+        }
+        
+        // Save Meeting
+        function saveMeeting(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('meetingTitle').value;
+            const date = document.getElementById('meetingDate').value;
+            const time = document.getElementById('meetingStartTime').value;
+            const duration = parseInt(document.getElementById('meetingDuration').value);
+            const category = document.getElementById('meetingCategory').value;
+            const eventType = document.getElementById('meetingEventType').value;
+            const location = document.getElementById('meetingLocation').value;
+            const description = document.getElementById('meetingDescription').value;
+            const meetingId = document.getElementById('zoomMeetingId').value;
+            const passcode = document.getElementById('zoomPasscode').value;
+            
+            // Create the meeting event
+            const meetingDate = new Date(date + 'T' + time);
+            
+            const meetingEvent = {
+                id: Date.now(),
+                title: title,
+                date: meetingDate.toISOString(),
+                category: category === 'meeting' ? 'meeting' : category,
+                description: description,
+                section: 'calendar',
+                custom: true,
+                isMeeting: true,
+                meetingDetails: {
+                    duration: duration,
+                    eventType: eventType,
+                    location: location,
+                    zoomMeetingId: meetingId,
+                    zoomPasscode: passcode,
+                    zoomWaitingRoom: document.getElementById('zoomWaitingRoom')?.checked,
+                    zoomMuteOnEntry: document.getElementById('zoomMuteOnEntry')?.checked,
+                    zoomRecording: document.getElementById('zoomRecording')?.checked,
+                    invitees: [...meetingInvitees]
+                }
+            };
+            
+            // Save to localStorage
+            let savedEvents = JSON.parse(localStorage.getItem('oith_calendar_events') || '[]');
+            savedEvents.push(meetingEvent);
+            localStorage.setItem('oith_calendar_events', JSON.stringify(savedEvents));
+            
+            // Save to meetings list
+            let savedMeetings = JSON.parse(localStorage.getItem('oith_scheduled_meetings') || '[]');
+            savedMeetings.push(meetingEvent);
+            localStorage.setItem('oith_scheduled_meetings', JSON.stringify(savedMeetings));
+            
+            // Add to current calendar events
+            meetingEvent.date = meetingDate;
+            calendarEvents.push(meetingEvent);
+            
+            // Send invites (simulated)
+            if (meetingInvitees.length > 0) {
+                sendMeetingInvites(meetingEvent);
+            }
+            
+            // Re-render calendar
+            if (typeof renderCalendar === 'function') {
+                renderCalendar();
+            }
+            if (typeof renderUpcomingEvents === 'function') {
+                renderUpcomingEvents();
+            }
+            if (typeof updateCalendarBadge === 'function') {
+                updateCalendarBadge();
+            }
+            
+            closeMeetingScheduler();
+            
+            const inviteCount = meetingInvitees.length;
+            const inviteText = inviteCount > 0 ? ` and ${inviteCount} invite${inviteCount > 1 ? 's' : ''} sent` : '';
+            showToast(`Meeting scheduled${inviteText}! 🎉`, 'success');
+        }
+        
+        function sendMeetingInvites(meeting) {
+            // In production, this would send actual emails/SMS via your backend
+            console.log('Sending invites for meeting:', meeting);
+            
+            const emailInvites = meetingInvitees.filter(i => i.type === 'email');
+            const phoneInvites = meetingInvitees.filter(i => i.type === 'phone');
+            
+            // Log invite actions
+            if (emailInvites.length > 0) {
+                console.log(`📧 Email invites sent to: ${emailInvites.map(e => e.value).join(', ')}`);
+            }
+            if (phoneInvites.length > 0) {
+                console.log(`📱 SMS invites sent to: ${phoneInvites.map(p => p.value).join(', ')}`);
+            }
+            
+            // Store sent invites
+            let sentInvites = JSON.parse(localStorage.getItem('oith_sent_invites') || '[]');
+            sentInvites.push({
+                meetingId: meeting.id,
+                meetingTitle: meeting.title,
+                sentAt: new Date().toISOString(),
+                invitees: meetingInvitees
+            });
+            localStorage.setItem('oith_sent_invites', JSON.stringify(sentInvites));
+        }
+        
+        // Initialize meeting scheduler event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close on backdrop click
+            document.getElementById('meetingSchedulerModal')?.addEventListener('click', function(e) {
+                if (e.target === this) closeMeetingScheduler();
+            });
+            document.getElementById('meetingPreviewModal')?.addEventListener('click', function(e) {
+                if (e.target === this) closeMeetingPreview();
+            });
+            
+            // Enter key to add invites
+            document.getElementById('inviteEmail')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addEmailInvite();
+                }
+            });
+            document.getElementById('invitePhone')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addPhoneInvite();
+                }
+            });
+        });
         
         // ==========================================
         // ADMIN MAIL CLIENT SYSTEM
@@ -25488,5 +26458,4 @@ GMAIL_EMAIL=admin@oith.com</pre>
         }, 30000);
     </script>
 </body>
-</html>
 </html>
