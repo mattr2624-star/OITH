@@ -7299,6 +7299,46 @@ async function checkDeviceAccess() {
     return true;
 }
 
+// Device verification interval ID
+let deviceVerificationInterval = null;
+
+/**
+ * Start periodic device verification loop
+ * Checks every 5 minutes to ensure this device is still active
+ */
+function startDeviceVerificationLoop() {
+    // Clear any existing interval
+    if (deviceVerificationInterval) {
+        clearInterval(deviceVerificationInterval);
+    }
+    
+    // Check immediately
+    checkDeviceAccess();
+    
+    // Then check every 5 minutes
+    deviceVerificationInterval = setInterval(async () => {
+        if (appState.isLoggedIn && appState.user?.email) {
+            const isActive = await checkDeviceAccess();
+            if (!isActive) {
+                clearInterval(deviceVerificationInterval);
+            }
+        }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    console.log('📱 Device verification loop started');
+}
+
+/**
+ * Stop device verification loop (on logout)
+ */
+function stopDeviceVerificationLoop() {
+    if (deviceVerificationInterval) {
+        clearInterval(deviceVerificationInterval);
+        deviceVerificationInterval = null;
+        console.log('📱 Device verification loop stopped');
+    }
+}
+
 // ==========================================
 // Authentication
 // ==========================================
@@ -7431,6 +7471,9 @@ function handleLogin(event) {
     
     // Check subscription status for payment issues (runs in background)
     checkSubscriptionStatus().catch(err => console.log('Subscription check:', err.message));
+    
+    // Start periodic device verification (single device limit)
+    startDeviceVerificationLoop();
     
     console.log('🔄 Navigating after login...');
     console.log('   Profile complete:', !!appState.profileComplete);
@@ -8539,6 +8582,9 @@ function logout() {
     console.log('💾 User data saved before logout');
     console.log('   Profile: ' + (appState.user.firstName || 'Not set'));
     console.log('   Email: ' + (appState.user.email || 'Not set'));
+    
+    // Stop device verification loop
+    stopDeviceVerificationLoop();
     
     // Only mark as logged out - don't clear the data
     appState.isLoggedIn = false;

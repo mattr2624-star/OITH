@@ -742,8 +742,230 @@ async function updateSubscriptionByStripeId(stripeSubscriptionId, updates) {
         }));
         
         console.log('✅ Subscription updated for:', subscription.pk, 'New status:', updates.status || 'unchanged');
+        
+        // Send email notification for status changes
+        const userEmail = subscription.pk.replace('USER#', '');
+        if (updates.status === 'past_due') {
+            await sendPaymentFailedEmail(userEmail, updates.failureReason);
+        } else if (updates.status === 'canceled') {
+            await sendSubscriptionCanceledEmail(userEmail);
+        } else if (updates.status === 'active' && updates.lastPaymentSucceeded) {
+            await sendPaymentSuccessEmail(userEmail);
+        }
     } catch (error) {
         console.error('Error updating subscription by Stripe ID:', error);
+    }
+}
+
+// ==========================================
+// Email Notification Functions
+// ==========================================
+
+const EMAIL_API_URL = process.env.EMAIL_API_URL || 'https://your-email-api.com';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'OITH <noreply@oith.com>';
+
+/**
+ * Send payment failed notification email
+ */
+async function sendPaymentFailedEmail(userEmail, reason = 'Payment could not be processed') {
+    const subject = '⚠️ OITH Payment Failed - Action Required';
+    const body = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { text-align: center; padding: 20px 0; }
+                .logo { font-size: 24px; font-weight: bold; color: #C4584A; }
+                .content { background: #f9f9f9; border-radius: 12px; padding: 24px; margin: 20px 0; }
+                .alert { background: #fff3cd; border-left: 4px solid #f39c12; padding: 16px; margin: 16px 0; border-radius: 4px; }
+                .btn { display: inline-block; background: #C4584A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0; }
+                .footer { text-align: center; color: #666; font-size: 12px; padding: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">💕 OITH</div>
+                </div>
+                <div class="content">
+                    <h2>Payment Issue with Your Subscription</h2>
+                    <div class="alert">
+                        <strong>⚠️ Your last payment couldn't be processed.</strong><br>
+                        Reason: ${reason}
+                    </div>
+                    <p>To keep your Premium access and continue finding meaningful connections, please update your payment method.</p>
+                    <p><strong>What happens next?</strong></p>
+                    <ul>
+                        <li>Your Premium access is currently at risk</li>
+                        <li>Update your payment method to avoid interruption</li>
+                        <li>No action needed if you've already updated</li>
+                    </ul>
+                    <center>
+                        <a href="${DOMAIN}/prototype/index.html#manage-subscription" class="btn">Update Payment Method</a>
+                    </center>
+                </div>
+                <div class="footer">
+                    <p>Questions? Reply to this email or visit our Help Center.</p>
+                    <p>© ${new Date().getFullYear()} OITH - One Is the Hero</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    await sendEmail(userEmail, subject, body, 'payment_failed');
+}
+
+/**
+ * Send subscription canceled notification email
+ */
+async function sendSubscriptionCanceledEmail(userEmail) {
+    const subject = '😢 Your OITH Subscription Has Been Canceled';
+    const body = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { text-align: center; padding: 20px 0; }
+                .logo { font-size: 24px; font-weight: bold; color: #C4584A; }
+                .content { background: #f9f9f9; border-radius: 12px; padding: 24px; margin: 20px 0; }
+                .btn { display: inline-block; background: #C4584A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0; }
+                .footer { text-align: center; color: #666; font-size: 12px; padding: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">💕 OITH</div>
+                </div>
+                <div class="content">
+                    <h2>We're Sorry to See You Go</h2>
+                    <p>Your OITH Premium subscription has been canceled.</p>
+                    <p>We hope we helped you find some meaningful connections. If you ever want to come back, we'll be here!</p>
+                    <p><strong>What you'll miss:</strong></p>
+                    <ul>
+                        <li>One quality match per day</li>
+                        <li>AI-powered compatibility matching</li>
+                        <li>Unlimited messaging with matches</li>
+                        <li>AI date planning assistance</li>
+                    </ul>
+                    <center>
+                        <a href="${DOMAIN}/prototype/index.html#payment" class="btn">Resubscribe Anytime</a>
+                    </center>
+                </div>
+                <div class="footer">
+                    <p>We'd love to hear why you left. Reply to this email with feedback.</p>
+                    <p>© ${new Date().getFullYear()} OITH - One Is the Hero</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    await sendEmail(userEmail, subject, body, 'subscription_canceled');
+}
+
+/**
+ * Send payment success notification email
+ */
+async function sendPaymentSuccessEmail(userEmail) {
+    const subject = '✅ OITH Payment Received - Thank You!';
+    const body = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { text-align: center; padding: 20px 0; }
+                .logo { font-size: 24px; font-weight: bold; color: #C4584A; }
+                .content { background: #f9f9f9; border-radius: 12px; padding: 24px; margin: 20px 0; }
+                .success { background: #d4edda; border-left: 4px solid #28a745; padding: 16px; margin: 16px 0; border-radius: 4px; }
+                .footer { text-align: center; color: #666; font-size: 12px; padding: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <div class="logo">💕 OITH</div>
+                </div>
+                <div class="content">
+                    <h2>Payment Received!</h2>
+                    <div class="success">
+                        <strong>✅ Your subscription has been renewed.</strong><br>
+                        Amount: $10.00 USD
+                    </div>
+                    <p>Thank you for continuing with OITH Premium! Your subscription is active and you have full access to all features.</p>
+                    <p>Keep focusing on who's in front of you! 💕</p>
+                </div>
+                <div class="footer">
+                    <p>Questions about your billing? Reply to this email.</p>
+                    <p>© ${new Date().getFullYear()} OITH - One Is the Hero</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+    
+    await sendEmail(userEmail, subject, body, 'payment_success');
+}
+
+/**
+ * Send email via AWS SES or email API
+ */
+async function sendEmail(to, subject, htmlBody, emailType) {
+    try {
+        // Store email in queue for sending
+        await docClient.send(new PutCommand({
+            TableName: TABLE_NAME,
+            Item: {
+                pk: 'EMAIL#QUEUE',
+                sk: `${Date.now()}_${emailType}`,
+                to: to,
+                subject: subject,
+                body: htmlBody,
+                type: emailType,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            }
+        }));
+        
+        console.log(`📧 Email queued: ${emailType} to ${to}`);
+        
+        // Try to send via SES if configured
+        if (process.env.AWS_SES_ENABLED === 'true') {
+            const { SESClient, SendEmailCommand } = await import('@aws-sdk/client-ses');
+            const sesClient = new SESClient({});
+            
+            await sesClient.send(new SendEmailCommand({
+                Source: FROM_EMAIL,
+                Destination: { ToAddresses: [to] },
+                Message: {
+                    Subject: { Data: subject },
+                    Body: { Html: { Data: htmlBody } }
+                }
+            }));
+            
+            // Update status to sent
+            await docClient.send(new UpdateCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'EMAIL#QUEUE', sk: `${Date.now()}_${emailType}` },
+                UpdateExpression: 'SET #status = :status, sentAt = :time',
+                ExpressionAttributeNames: { '#status': 'status' },
+                ExpressionAttributeValues: { ':status': 'sent', ':time': new Date().toISOString() }
+            }));
+            
+            console.log(`📧 Email sent via SES: ${emailType} to ${to}`);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error(`Error sending ${emailType} email:`, error);
+        return false;
     }
 }
 

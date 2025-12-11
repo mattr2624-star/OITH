@@ -1036,33 +1036,34 @@
 
         /* Event Details Modal Styles */
         .event-details-modal {
-            max-width: 550px !important;
+            max-width: 750px !important;
             width: 95% !important;
             padding: 0;
             overflow: hidden;
-            border-radius: 20px;
+            border-radius: 16px;
+            font-size: 0.9rem;
         }
 
         .event-details-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
+            padding: 16px 20px;
             border-bottom: 1px solid var(--border);
         }
 
         .event-details-header-left {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         .event-details-icon {
-            font-size: 2rem;
-            width: 56px;
-            height: 56px;
+            font-size: 1.5rem;
+            width: 44px;
+            height: 44px;
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.15));
-            border-radius: 16px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1070,29 +1071,29 @@
 
         .event-details-header h2 {
             margin: 0;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--text-primary);
         }
 
         .event-details-header p {
-            margin: 4px 0 0;
-            font-size: 0.85rem;
+            margin: 3px 0 0;
+            font-size: 0.75rem;
             color: var(--text-muted);
             text-transform: capitalize;
         }
 
         .event-details-body {
-            padding: 24px;
-            max-height: 400px;
+            padding: 16px 20px;
+            max-height: 500px;
             overflow-y: auto;
         }
 
         .event-detail-row {
             display: flex;
             align-items: flex-start;
-            gap: 16px;
-            padding: 14px 0;
+            gap: 12px;
+            padding: 10px 0;
             border-bottom: 1px solid var(--border);
         }
 
@@ -1101,15 +1102,83 @@
         }
 
         .event-detail-icon {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: var(--bg-tertiary);
-            border-radius: 10px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .event-notes-section {
+            margin-top: 16px;
+            padding: 14px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        
+        .event-notes-section h4 {
+            margin: 0 0 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .event-notes-content {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .event-notes-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        
+        .event-notes-content li {
+            margin: 4px 0;
+        }
+        
+        .event-notes-content .sub-requirement {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+        
+        .event-notes-content .sub-requirement:last-child {
+            border-bottom: none;
+        }
+        
+        .sub-requirement-check {
+            color: var(--success);
+            font-size: 0.75rem;
+        }
+        
+        .sub-requirement-pending {
+            color: var(--warning);
+            font-size: 0.75rem;
+        }
+        
+        .event-time-estimate {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            color: var(--info);
+            margin-left: 8px;
         }
 
         .event-detail-content {
@@ -25926,6 +25995,529 @@
             }
         }
         
+        // Generate detailed notes for calendar events
+        function generateEventNotes(event) {
+            const eventNotes = {
+                // Business Formation & Legal
+                'Register LLC': {
+                    timeEstimate: '3-5 business days',
+                    subRequirements: [
+                        { text: 'Choose state of incorporation (Delaware recommended)', done: true },
+                        { text: 'Select registered agent service', done: true },
+                        { text: 'File Articles of Organization', done: false },
+                        { text: 'Pay state filing fees ($90-$500)', done: false },
+                        { text: 'Draft Operating Agreement', done: false }
+                    ],
+                    notes: 'Ensure all founders sign the Operating Agreement. Keep certified copies for bank account opening.'
+                },
+                'Obtain EIN': {
+                    timeEstimate: '15-30 minutes',
+                    subRequirements: [
+                        { text: 'Have LLC formation documents ready', done: true },
+                        { text: 'Complete IRS Form SS-4 online', done: false },
+                        { text: 'Receive EIN confirmation letter', done: false }
+                    ],
+                    notes: 'Apply online at IRS.gov for immediate EIN. Required for bank accounts and hiring.'
+                },
+                'Open Business Bank Account': {
+                    timeEstimate: '1-2 hours',
+                    subRequirements: [
+                        { text: 'Gather LLC formation documents', done: false },
+                        { text: 'Bring EIN confirmation', done: false },
+                        { text: 'Prepare initial deposit ($100+)', done: false },
+                        { text: 'Set up online banking access', done: false }
+                    ],
+                    notes: 'Consider Mercury, Brex, or traditional bank. Ensure business credit card option available.'
+                },
+                'Business Formation Complete': {
+                    timeEstimate: 'Milestone',
+                    subRequirements: [
+                        { text: 'LLC registered and active', done: false },
+                        { text: 'EIN obtained', done: false },
+                        { text: 'Bank account opened', done: false },
+                        { text: 'Operating Agreement executed', done: false }
+                    ],
+                    notes: 'All legal foundation complete. Ready to proceed with development and hiring.'
+                },
+                'D-U-N-S Number Received': {
+                    timeEstimate: '1-30 days',
+                    subRequirements: [
+                        { text: 'Apply via Dun & Bradstreet', done: false },
+                        { text: 'Verify business information', done: false },
+                        { text: 'Receive 9-digit D-U-N-S number', done: false }
+                    ],
+                    notes: 'Required for Apple Developer enrollment. Free application takes 30 days; expedited costs $229.'
+                },
+                'Developer Accounts (Apple & Google)': {
+                    timeEstimate: '1-7 days',
+                    subRequirements: [
+                        { text: 'Apple Developer Program ($99/year)', done: false },
+                        { text: 'D-U-N-S number verification for Apple', done: false },
+                        { text: 'Google Play Console ($25 one-time)', done: false },
+                        { text: 'Set up app signing certificates', done: false }
+                    ],
+                    notes: 'Apple requires D-U-N-S and takes longer to approve. Start Apple process first.'
+                },
+                'Legal Documents Ready': {
+                    timeEstimate: '2-3 weeks',
+                    subRequirements: [
+                        { text: 'Privacy Policy (GDPR/CCPA compliant)', done: false },
+                        { text: 'Terms of Service', done: false },
+                        { text: 'User Agreement', done: false },
+                        { text: 'Cookie Policy', done: false },
+                        { text: 'Community Guidelines', done: false }
+                    ],
+                    notes: 'Have legal counsel review all documents. Must be accessible in-app before launch.'
+                },
+                
+                // Development Milestones
+                'Development Kickoff': {
+                    timeEstimate: 'Ongoing',
+                    subRequirements: [
+                        { text: 'Development environment setup', done: false },
+                        { text: 'Git repository initialized', done: false },
+                        { text: 'CI/CD pipeline configured', done: false },
+                        { text: 'Team access permissions set', done: false }
+                    ],
+                    notes: 'All developers should have local environments ready. Review coding standards.'
+                },
+                'Infrastructure Setup Complete': {
+                    timeEstimate: '3-5 days',
+                    subRequirements: [
+                        { text: 'AWS account configured', done: false },
+                        { text: 'DynamoDB tables created', done: false },
+                        { text: 'S3 buckets for media storage', done: false },
+                        { text: 'Lambda functions deployed', done: false },
+                        { text: 'API Gateway configured', done: false }
+                    ],
+                    notes: 'Enable CloudWatch monitoring from day one. Set up cost alerts.'
+                },
+                'User Registration & Auth': {
+                    timeEstimate: '1-2 weeks',
+                    subRequirements: [
+                        { text: 'Email/password authentication', done: false },
+                        { text: 'Social login (Google, Apple)', done: false },
+                        { text: 'Email verification flow', done: false },
+                        { text: 'Password reset functionality', done: false },
+                        { text: 'Session management', done: false }
+                    ],
+                    notes: 'Use AWS Cognito for production. Implement rate limiting on auth endpoints.'
+                },
+                'API Architecture Ready': {
+                    timeEstimate: '1 week',
+                    subRequirements: [
+                        { text: 'RESTful API design complete', done: false },
+                        { text: 'API documentation (Swagger)', done: false },
+                        { text: 'Authentication middleware', done: false },
+                        { text: 'Error handling standards', done: false }
+                    ],
+                    notes: 'Follow REST best practices. Version API from start (v1/endpoints).'
+                },
+                'Profile Creation Complete': {
+                    timeEstimate: '1-2 weeks',
+                    subRequirements: [
+                        { text: 'Profile data model finalized', done: false },
+                        { text: 'Photo upload & processing', done: false },
+                        { text: 'Bio and preferences input', done: false },
+                        { text: 'Profile validation rules', done: false },
+                        { text: 'Profile preview functionality', done: false }
+                    ],
+                    notes: 'Implement image compression. Max 6 photos per profile.'
+                },
+                'Location Services': {
+                    timeEstimate: '3-5 days',
+                    subRequirements: [
+                        { text: 'Geolocation permission handling', done: false },
+                        { text: 'Distance calculation algorithm', done: false },
+                        { text: 'Location privacy controls', done: false },
+                        { text: 'Background location updates', done: false }
+                    ],
+                    notes: 'Request location only when needed. Provide clear privacy explanation.'
+                },
+                'Core Matching Algorithm Complete': {
+                    timeEstimate: '2-3 weeks',
+                    subRequirements: [
+                        { text: 'Compatibility scoring logic', done: false },
+                        { text: 'Preference matching', done: false },
+                        { text: 'Location-based filtering', done: false },
+                        { text: 'Match queue management', done: false },
+                        { text: 'Algorithm performance testing', done: false }
+                    ],
+                    notes: 'Start with simple scoring, iterate based on user feedback. Log all match decisions.'
+                },
+                'Match Notifications': {
+                    timeEstimate: '3-5 days',
+                    subRequirements: [
+                        { text: 'Push notification setup', done: false },
+                        { text: 'Match alert triggers', done: false },
+                        { text: 'Notification preferences', done: false },
+                        { text: 'Deep linking to matches', done: false }
+                    ],
+                    notes: 'Use Firebase Cloud Messaging. Respect user notification preferences.'
+                },
+                'User Reporting System': {
+                    timeEstimate: '1 week',
+                    subRequirements: [
+                        { text: 'Report categories defined', done: false },
+                        { text: 'Report submission UI', done: false },
+                        { text: 'Admin review dashboard', done: false },
+                        { text: 'Automated content flagging', done: false }
+                    ],
+                    notes: 'Critical for app store approval. Include block/unmatch functionality.'
+                },
+                'In-App Messaging/Chat': {
+                    timeEstimate: '2-3 weeks',
+                    subRequirements: [
+                        { text: 'Real-time messaging (WebSocket)', done: false },
+                        { text: 'Message persistence', done: false },
+                        { text: 'Read receipts', done: false },
+                        { text: 'Image sharing in chat', done: false },
+                        { text: 'Chat history management', done: false }
+                    ],
+                    notes: 'Consider using AWS AppSync or Socket.io. Implement message content moderation.'
+                },
+                'Push Notifications': {
+                    timeEstimate: '3-5 days',
+                    subRequirements: [
+                        { text: 'FCM/APNs integration', done: false },
+                        { text: 'Notification categories', done: false },
+                        { text: 'User preference management', done: false },
+                        { text: 'Deep link handling', done: false }
+                    ],
+                    notes: 'Test on physical devices. Handle notification permissions gracefully.'
+                },
+                'Payment Service': {
+                    timeEstimate: '1-2 weeks',
+                    subRequirements: [
+                        { text: 'Stripe integration', done: false },
+                        { text: 'In-app purchases (iOS/Android)', done: false },
+                        { text: 'Subscription management', done: false },
+                        { text: 'Receipt validation', done: false },
+                        { text: 'Refund handling', done: false }
+                    ],
+                    notes: 'Apple/Google take 30% commission. Implement server-side receipt validation.'
+                },
+                'MVP Feature-Complete': {
+                    timeEstimate: 'Milestone',
+                    subRequirements: [
+                        { text: 'All core features functional', done: false },
+                        { text: 'Basic UI/UX complete', done: false },
+                        { text: 'Critical bugs resolved', done: false },
+                        { text: 'Performance acceptable', done: false }
+                    ],
+                    notes: 'Focus on stability over features. Prepare for alpha testing.'
+                },
+                
+                // Testing & QA
+                'Alpha Testing Begins': {
+                    timeEstimate: '2 weeks',
+                    subRequirements: [
+                        { text: 'Internal team testing', done: false },
+                        { text: 'Bug tracking system ready', done: false },
+                        { text: 'Crash reporting enabled', done: false },
+                        { text: 'Feedback collection process', done: false }
+                    ],
+                    notes: 'Limit to 10-20 internal testers. Focus on critical user flows.'
+                },
+                'Unit Test Coverage >80%': {
+                    timeEstimate: 'Ongoing',
+                    subRequirements: [
+                        { text: 'Write unit tests for core logic', done: false },
+                        { text: 'Set up code coverage reporting', done: false },
+                        { text: 'Integrate with CI/CD', done: false }
+                    ],
+                    notes: 'Focus on business logic and API endpoints. Mock external services.'
+                },
+                'Closed Beta (50 users)': {
+                    timeEstimate: '2-4 weeks',
+                    subRequirements: [
+                        { text: 'TestFlight/Play Store internal track', done: false },
+                        { text: 'NDA for beta testers', done: false },
+                        { text: 'Feedback survey prepared', done: false },
+                        { text: 'Crash monitoring active', done: false }
+                    ],
+                    notes: 'Recruit diverse tester demographics. Respond to feedback within 48 hours.'
+                },
+                'Beta Testing 500+ Users': {
+                    timeEstimate: '4-6 weeks',
+                    subRequirements: [
+                        { text: 'Public beta program launch', done: false },
+                        { text: 'Onboarding flow optimized', done: false },
+                        { text: 'Load testing completed', done: false },
+                        { text: 'Analytics tracking verified', done: false }
+                    ],
+                    notes: 'Monitor server costs closely. Prepare scaling strategy.'
+                },
+                'End-to-End Testing': {
+                    timeEstimate: '1 week',
+                    subRequirements: [
+                        { text: 'User journey automation', done: false },
+                        { text: 'Cross-browser testing', done: false },
+                        { text: 'Mobile device testing', done: false },
+                        { text: 'Edge case validation', done: false }
+                    ],
+                    notes: 'Use Cypress or Detox for automation. Test on multiple device sizes.'
+                },
+                'Security Penetration Testing': {
+                    timeEstimate: '1-2 weeks',
+                    subRequirements: [
+                        { text: 'Hire security auditor', done: false },
+                        { text: 'OWASP vulnerability scan', done: false },
+                        { text: 'API security review', done: false },
+                        { text: 'Remediate findings', done: false }
+                    ],
+                    notes: 'Required before launch. Document all findings and fixes.'
+                },
+                'Load Testing (10K users)': {
+                    timeEstimate: '1 week',
+                    subRequirements: [
+                        { text: 'Set up load testing environment', done: false },
+                        { text: 'Simulate concurrent users', done: false },
+                        { text: 'Identify bottlenecks', done: false },
+                        { text: 'Optimize database queries', done: false }
+                    ],
+                    notes: 'Use k6 or Artillery. Test during off-peak hours on staging.'
+                },
+                'Open Beta (2,000 users)': {
+                    timeEstimate: '4-8 weeks',
+                    subRequirements: [
+                        { text: 'Marketing landing page', done: false },
+                        { text: 'Waitlist management', done: false },
+                        { text: 'User acquisition strategy', done: false },
+                        { text: 'Community building', done: false }
+                    ],
+                    notes: 'Gradual rollout by invitation. Monitor user retention closely.'
+                },
+                'All Critical Bugs Fixed': {
+                    timeEstimate: 'Milestone',
+                    subRequirements: [
+                        { text: 'Zero P0/P1 bugs', done: false },
+                        { text: 'Crash rate < 0.1%', done: false },
+                        { text: 'All security issues resolved', done: false }
+                    ],
+                    notes: 'Freeze features 2 weeks before launch. Focus only on stability.'
+                },
+                
+                // Compliance
+                'GDPR Compliance Review': {
+                    timeEstimate: '2-3 weeks',
+                    subRequirements: [
+                        { text: 'Data processing documentation', done: false },
+                        { text: 'User consent mechanisms', done: false },
+                        { text: 'Data export functionality', done: false },
+                        { text: 'Account deletion process', done: false },
+                        { text: 'Privacy impact assessment', done: false }
+                    ],
+                    notes: 'Required for EU users. Appoint Data Protection Officer if needed.'
+                },
+                'CCPA Compliance Review': {
+                    timeEstimate: '1-2 weeks',
+                    subRequirements: [
+                        { text: 'Privacy policy updates', done: false },
+                        { text: 'Do Not Sell opt-out', done: false },
+                        { text: 'Data deletion requests', done: false },
+                        { text: 'Consumer rights documentation', done: false }
+                    ],
+                    notes: 'Required for California users. Similar to GDPR but US-focused.'
+                },
+                'App Store Guidelines Compliance': {
+                    timeEstimate: '1 week',
+                    subRequirements: [
+                        { text: 'Content guidelines review', done: false },
+                        { text: 'In-app purchase compliance', done: false },
+                        { text: 'Privacy requirements met', done: false },
+                        { text: 'Age rating determined', done: false }
+                    ],
+                    notes: 'Dating apps often rated 17+. Expect 2-3 review iterations.'
+                },
+                'PCI DSS Compliance (Payments)': {
+                    timeEstimate: '2-4 weeks',
+                    subRequirements: [
+                        { text: 'Use PCI-compliant provider', done: false },
+                        { text: 'No card data on servers', done: false },
+                        { text: 'SSL/TLS everywhere', done: false },
+                        { text: 'Self-assessment questionnaire', done: false }
+                    ],
+                    notes: 'Stripe handles most PCI requirements. Never store card numbers.'
+                },
+                'ADA Accessibility Audit': {
+                    timeEstimate: '1-2 weeks',
+                    subRequirements: [
+                        { text: 'Screen reader compatibility', done: false },
+                        { text: 'Color contrast compliance', done: false },
+                        { text: 'Touch target sizes', done: false },
+                        { text: 'Alt text for images', done: false }
+                    ],
+                    notes: 'WCAG 2.1 AA compliance recommended. Test with VoiceOver/TalkBack.'
+                },
+                
+                // Meetings
+                'Weekly Safety Report': {
+                    timeEstimate: '30 minutes',
+                    subRequirements: [
+                        { text: 'Review new user reports', done: false },
+                        { text: 'Analyze flagged content', done: false },
+                        { text: 'Update moderation policies', done: false },
+                        { text: 'Team safety briefing', done: false }
+                    ],
+                    notes: 'Document all moderation decisions. Track report resolution times.'
+                },
+                'Leadership Standup': {
+                    timeEstimate: '15 minutes',
+                    subRequirements: [
+                        { text: 'Progress updates from each lead', done: false },
+                        { text: 'Blockers identification', done: false },
+                        { text: 'Priority alignment', done: false }
+                    ],
+                    notes: 'Keep concise. Move detailed discussions to separate meetings.'
+                },
+                'All Hands Meeting': {
+                    timeEstimate: '1 hour',
+                    subRequirements: [
+                        { text: 'Company updates', done: false },
+                        { text: 'Milestone celebrations', done: false },
+                        { text: 'Q&A session', done: false },
+                        { text: 'Team recognition', done: false }
+                    ],
+                    notes: 'Record for those who cannot attend. Send recap notes within 24 hours.'
+                },
+                'Sprint Planning': {
+                    timeEstimate: '2 hours',
+                    subRequirements: [
+                        { text: 'Review backlog items', done: false },
+                        { text: 'Estimate story points', done: false },
+                        { text: 'Assign tasks', done: false },
+                        { text: 'Define sprint goal', done: false }
+                    ],
+                    notes: 'Ensure team capacity considered. Leave buffer for bugs and support.'
+                },
+                'Monthly KPI Review': {
+                    timeEstimate: '1 hour',
+                    subRequirements: [
+                        { text: 'Gather metrics data', done: false },
+                        { text: 'Compare to targets', done: false },
+                        { text: 'Identify trends', done: false },
+                        { text: 'Set action items', done: false }
+                    ],
+                    notes: 'Focus on actionable insights. Track user growth, retention, and revenue.'
+                },
+                
+                // Patents
+                'PCT International Application Q4 2025': {
+                    timeEstimate: '2-3 months',
+                    subRequirements: [
+                        { text: 'Patent search completed', done: false },
+                        { text: 'Claims drafted', done: false },
+                        { text: 'Figures and drawings', done: false },
+                        { text: 'Attorney review', done: false },
+                        { text: 'PCT filing submitted', done: false }
+                    ],
+                    notes: 'Budget $3,000-$15,000 for filing. Consider provisional first.'
+                },
+                
+                // Payroll
+                'December Payroll': {
+                    timeEstimate: '2-3 hours',
+                    subRequirements: [
+                        { text: 'Verify hours/salaries', done: false },
+                        { text: 'Calculate deductions', done: false },
+                        { text: 'Process payments', done: false },
+                        { text: 'File tax documents', done: false }
+                    ],
+                    notes: 'Process 2 business days before pay date. Verify bank details.'
+                }
+            };
+            
+            // Try to find exact match first
+            if (eventNotes[event.title]) {
+                return eventNotes[event.title];
+            }
+            
+            // Try partial match
+            for (const key in eventNotes) {
+                if (event.title.includes(key) || key.includes(event.title)) {
+                    return eventNotes[key];
+                }
+            }
+            
+            // Generate generic notes based on category
+            const categoryNotes = {
+                'meeting': {
+                    timeEstimate: '30-60 minutes',
+                    subRequirements: [
+                        { text: 'Prepare agenda', done: false },
+                        { text: 'Send calendar invites', done: false },
+                        { text: 'Take meeting notes', done: false }
+                    ],
+                    notes: 'Ensure all participants are available. Share agenda 24 hours in advance.'
+                },
+                'milestone': {
+                    timeEstimate: 'Varies',
+                    subRequirements: [
+                        { text: 'Verify completion criteria', done: false },
+                        { text: 'Document deliverables', done: false },
+                        { text: 'Team sign-off', done: false }
+                    ],
+                    notes: 'Review milestone requirements with stakeholders before marking complete.'
+                },
+                'compliance': {
+                    timeEstimate: '1-2 weeks',
+                    subRequirements: [
+                        { text: 'Review requirements', done: false },
+                        { text: 'Document evidence', done: false },
+                        { text: 'Internal audit', done: false }
+                    ],
+                    notes: 'Maintain audit trail. Consult legal counsel for complex requirements.'
+                },
+                'report': {
+                    timeEstimate: '1-2 hours',
+                    subRequirements: [
+                        { text: 'Gather data', done: false },
+                        { text: 'Analyze findings', done: false },
+                        { text: 'Create summary', done: false }
+                    ],
+                    notes: 'Use consistent format. Archive all reports for future reference.'
+                },
+                'payroll': {
+                    timeEstimate: '2-3 hours',
+                    subRequirements: [
+                        { text: 'Verify employee data', done: false },
+                        { text: 'Calculate payments', done: false },
+                        { text: 'Process transactions', done: false }
+                    ],
+                    notes: 'Double-check all calculations. Process 2 business days early.'
+                },
+                'patent': {
+                    timeEstimate: '2-4 weeks',
+                    subRequirements: [
+                        { text: 'Prior art search', done: false },
+                        { text: 'Draft claims', done: false },
+                        { text: 'Attorney review', done: false }
+                    ],
+                    notes: 'Document all invention details. Maintain inventor records.'
+                },
+                'tax': {
+                    timeEstimate: '1-2 weeks',
+                    subRequirements: [
+                        { text: 'Gather financial records', done: false },
+                        { text: 'Calculate obligations', done: false },
+                        { text: 'File required forms', done: false }
+                    ],
+                    notes: 'Consult tax professional. Keep all receipts and documentation.'
+                }
+            };
+            
+            return categoryNotes[event.category] || {
+                timeEstimate: 'TBD',
+                subRequirements: [
+                    { text: 'Review event requirements', done: false },
+                    { text: 'Prepare necessary materials', done: false },
+                    { text: 'Complete event deliverables', done: false }
+                ],
+                notes: 'Add specific notes for this event as details become available.'
+            };
+        }
+        
         function openAdminCalendar() {
             initCalendarEvents();
             calendarCurrentDate = new Date();
@@ -26763,6 +27355,13 @@
                                     <div class="event-detail-value" id="eventDetailsSection">--</div>
                                 </div>
                             </div>
+                            
+                            <div class="event-notes-section" id="eventNotesSection">
+                                <h4>📋 Notes & Requirements</h4>
+                                <div class="event-notes-content" id="eventNotesContent">
+                                    <p>No notes available for this event.</p>
+                                </div>
+                            </div>
                         </div>
                         
                         <div id="eventEditMode" style="display: none;">
@@ -26959,6 +27558,44 @@
             const sectionValueEl = document.getElementById('eventDetailsSection');
             if (sectionBtn) sectionBtn.textContent = `Go to ${event.section || 'Calendar'}`;
             if (sectionValueEl) sectionValueEl.textContent = event.section || 'General';
+            
+            // Generate and display notes
+            const notesSection = document.getElementById('eventNotesSection');
+            const notesContent = document.getElementById('eventNotesContent');
+            if (notesContent) {
+                const notes = generateEventNotes(event);
+                let notesHTML = '';
+                
+                // Time estimate badge
+                if (notes.timeEstimate) {
+                    notesHTML += `<div style="margin-bottom: 12px;">
+                        <span class="event-time-estimate">⏱️ Est. ${notes.timeEstimate}</span>
+                    </div>`;
+                }
+                
+                // Sub-requirements
+                if (notes.subRequirements && notes.subRequirements.length > 0) {
+                    notesHTML += '<div style="margin-bottom: 12px;"><strong style="font-size: 0.75rem; color: var(--text-muted);">SUB-REQUIREMENTS:</strong></div>';
+                    notes.subRequirements.forEach(req => {
+                        const icon = req.done ? '✅' : '⬜';
+                        const style = req.done ? 'text-decoration: line-through; color: var(--text-muted);' : '';
+                        notesHTML += `<div class="sub-requirement">
+                            <span>${icon}</span>
+                            <span style="${style}">${req.text}</span>
+                        </div>`;
+                    });
+                }
+                
+                // Additional notes
+                if (notes.notes) {
+                    notesHTML += `<div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);">
+                        <strong style="font-size: 0.75rem; color: var(--text-muted);">NOTES:</strong>
+                        <p style="margin: 6px 0 0; color: var(--text-secondary);">${notes.notes}</p>
+                    </div>`;
+                }
+                
+                notesContent.innerHTML = notesHTML;
+            }
             
             // Show view mode, hide edit mode
             const viewMode = document.getElementById('eventViewMode');
