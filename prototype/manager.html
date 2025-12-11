@@ -6885,9 +6885,9 @@
                     <div class="card-header">
                         <h3 class="card-title">📆 Full Calendar View</h3>
                         <div style="display: flex; gap: 8px;">
-                            <button class="btn btn-secondary" onclick="calendarPrevMonth()" style="padding: 4px 10px;">←</button>
+                            <button class="btn btn-secondary" onclick="fullCalendarPrevMonth()" style="padding: 4px 10px;">←</button>
                             <span id="calendarMonthLabel" style="min-width: 120px; text-align: center; font-weight: 600;"></span>
-                            <button class="btn btn-secondary" onclick="calendarNextMonth()" style="padding: 4px 10px;">→</button>
+                            <button class="btn btn-secondary" onclick="fullCalendarNextMonth()" style="padding: 4px 10px;">→</button>
                         </div>
                     </div>
                     <div class="card-body">
@@ -24901,6 +24901,10 @@
         let calendarCurrentMonth = new Date('2025-12-01');
 
         function initCalendarSection() {
+            // Initialize calendarEvents if not already done (ensures custom events are loaded)
+            if (typeof initCalendarEvents === 'function' && calendarEvents.length === 0) {
+                initCalendarEvents();
+            }
             renderMilestones();
             renderUpcomingTasks();
             renderCalendarGrid();
@@ -24913,9 +24917,12 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
+            // Use calendarEvents (combined projectMilestones + custom events) for real-time updates
+            const eventsSource = (typeof calendarEvents !== 'undefined' && calendarEvents.length > 0) ? calendarEvents : projectMilestones;
+            
             // Include milestones AND critical deadlines from tax, legal, compliance
-            const milestones = projectMilestones.filter(m => 
-                m.type === 'milestone' || 
+            const milestones = eventsSource.filter(m => 
+                m.type === 'milestone' || m.category === 'milestone' ||
                 (m.critical && ['tax', 'legal', 'compliance', 'payroll'].includes(m.type || m.category))
             ).sort((a, b) => new Date(a.date) - new Date(b.date));
             
@@ -24974,8 +24981,11 @@
             const weekFromNow = new Date(today);
             weekFromNow.setDate(weekFromNow.getDate() + 7);
             
-            const upcoming = projectMilestones.filter(m => {
-                const mDate = new Date(m.date);
+            // Use calendarEvents (combined projectMilestones + custom events) for real-time updates
+            const eventsSource = (typeof calendarEvents !== 'undefined' && calendarEvents.length > 0) ? calendarEvents : projectMilestones;
+            
+            const upcoming = eventsSource.filter(m => {
+                const mDate = m.date instanceof Date ? m.date : new Date(m.date);
                 return mDate >= today && mDate <= weekFromNow;
             }).sort((a, b) => new Date(a.date) - new Date(b.date));
             
@@ -25042,10 +25052,17 @@
             // Days of the month
             for (let day = 1; day <= lastDay.getDate(); day++) {
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const dayEvents = projectMilestones.filter(m => m.date === dateStr);
-                const isToday = new Date(dateStr).toDateString() === today.toDateString();
+                const currentDate = new Date(year, month, day);
+                // Use calendarEvents (combined projectMilestones + custom events) for real-time updates
+                const dayEvents = (typeof calendarEvents !== 'undefined' && calendarEvents.length > 0 ? calendarEvents : projectMilestones).filter(m => {
+                    const eventDate = m.date instanceof Date ? m.date : new Date(m.date);
+                    return eventDate.getDate() === currentDate.getDate() && 
+                           eventDate.getMonth() === currentDate.getMonth() && 
+                           eventDate.getFullYear() === currentDate.getFullYear();
+                });
+                const isToday = currentDate.toDateString() === today.toDateString();
                 const hasCritical = dayEvents.some(e => e.critical);
-                const hasMilestone = dayEvents.some(e => e.type === 'milestone');
+                const hasMilestone = dayEvents.some(e => e.type === 'milestone' || e.category === 'milestone');
                 
                 html += `
                     <div style="padding: 6px; min-height: 70px; background: ${isToday ? 'rgba(0, 120, 212, 0.15)' : 'var(--bg-tertiary)'}; border-radius: 4px; border: 1px solid ${isToday ? 'var(--accent)' : 'var(--border-subtle)'};">
@@ -25079,12 +25096,12 @@
             container.innerHTML = html;
         }
 
-        function calendarPrevMonth() {
+        function fullCalendarPrevMonth() {
             calendarCurrentMonth.setMonth(calendarCurrentMonth.getMonth() - 1);
             renderCalendarGrid();
         }
 
-        function calendarNextMonth() {
+        function fullCalendarNextMonth() {
             calendarCurrentMonth.setMonth(calendarCurrentMonth.getMonth() + 1);
             renderCalendarGrid();
         }
@@ -25115,7 +25132,7 @@
             if (section === 'calendar') {
                 initCalendarSection();
             }
-            if (section === 'ml-models') {
+            if (section === 'mlmodels') {
                 if (typeof initMLModels === 'function') {
                     initMLModels();
                 }
@@ -26926,11 +26943,96 @@
         }
         
         function openAddEventModal() {
-            const modal = document.getElementById('addEventModal');
+            let modal = document.getElementById('addEventModal');
+            
+            // Create modal dynamically if it doesn't exist
             if (!modal) {
-                console.error('Add event modal not found');
-                return;
+                modal = document.createElement('div');
+                modal.id = 'addEventModal';
+                modal.className = 'modal';
+                modal.style.cssText = 'z-index: 2100; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center;';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 520px; background: var(--bg-card); border-radius: 16px; padding: 24px; border: 1px solid var(--border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent) 0%, var(--purple) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📅</div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">Add New Event</h3>
+                                    <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Create a calendar event</p>
+                                </div>
+                            </div>
+                            <button onclick="closeAddEventModal()" style="background: var(--bg-tertiary); border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">&times;</button>
+                        </div>
+                        <form id="addEventForm" onsubmit="saveCalendarEvent(event)">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Event Title *</label>
+                                <input type="text" id="eventTitle" required placeholder="Enter event title..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.95rem;">
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                                <div>
+                                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Date *</label>
+                                    <input type="date" id="eventDate" required style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Time</label>
+                                    <input type="time" id="eventTime" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                                <div>
+                                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Category</label>
+                                    <select id="eventCategory" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                                        <option value="meeting">🤝 Meeting</option>
+                                        <option value="milestone">🎯 Milestone</option>
+                                        <option value="task">📋 Task</option>
+                                        <option value="compliance">✅ Compliance</option>
+                                        <option value="tax">💰 Tax</option>
+                                        <option value="legal">📜 Legal</option>
+                                        <option value="payroll">💵 Payroll</option>
+                                        <option value="custom">⭐ Custom</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Section</label>
+                                    <select id="eventSection" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                                        <option value="overview">📊 Overview</option>
+                                        <option value="calendar">📅 Calendar</option>
+                                        <option value="compliance">✅ Compliance</option>
+                                        <option value="payroll">💵 Payroll</option>
+                                        <option value="tax">💰 Tax</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Location</label>
+                                <input type="text" id="eventLocation" placeholder="Add location or meeting link..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.95rem;">
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Description</label>
+                                <textarea id="eventDescription" rows="3" placeholder="Add details about this event..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); resize: vertical; font-size: 0.95rem;"></textarea>
+                            </div>
+                            <div style="display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                <button type="button" class="btn btn-secondary" onclick="closeAddEventModal()" style="flex: 1; padding: 12px;">Cancel</button>
+                                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                        <polyline points="17 21 17 13 7 13 7 21"/>
+                                        <polyline points="7 3 7 8 15 8"/>
+                                    </svg>
+                                    Save Event
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                
+                // Close on backdrop click
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeAddEventModal();
+                });
             }
+            
             modal.style.display = 'flex';
             
             // Set default date to today
@@ -27017,6 +27119,10 @@
             renderCalendar();
             renderUpcomingEvents();
             updateCalendarBadge();
+            // Also update Full Calendar View section
+            if (typeof renderCalendarGrid === 'function') renderCalendarGrid();
+            if (typeof renderMilestones === 'function') renderMilestones();
+            if (typeof renderUpcomingTasks === 'function') renderUpcomingTasks();
             closeAddEventModal();
             
             showToast('✅ Event added successfully!', 'success');
@@ -27441,6 +27547,10 @@
             if (typeof updateCalendarBadge === 'function') {
                 updateCalendarBadge();
             }
+            // Also update Full Calendar View section
+            if (typeof renderCalendarGrid === 'function') renderCalendarGrid();
+            if (typeof renderMilestones === 'function') renderMilestones();
+            if (typeof renderUpcomingTasks === 'function') renderUpcomingTasks();
             
             closeMeetingScheduler();
             
@@ -28518,6 +28628,10 @@
             if (typeof renderCalendar === 'function') renderCalendar();
             if (typeof renderUpcomingEvents === 'function') renderUpcomingEvents();
             if (typeof updateCalendarBadge === 'function') updateCalendarBadge();
+            // Also update Full Calendar View section
+            if (typeof renderCalendarGrid === 'function') renderCalendarGrid();
+            if (typeof renderMilestones === 'function') renderMilestones();
+            if (typeof renderUpcomingTasks === 'function') renderUpcomingTasks();
             
             // Close the modal
             document.getElementById('nextStepSchedulerModal')?.remove();
@@ -28913,6 +29027,10 @@
             if (typeof renderUpcomingEvents === 'function') {
                 renderUpcomingEvents();
             }
+            // Also update Full Calendar View section
+            if (typeof renderCalendarGrid === 'function') renderCalendarGrid();
+            if (typeof renderMilestones === 'function') renderMilestones();
+            if (typeof renderUpcomingTasks === 'function') renderUpcomingTasks();
             
             showToast('Event updated successfully!', 'success');
             closeEventDetails();
@@ -28953,6 +29071,10 @@
             if (typeof updateCalendarBadge === 'function') {
                 updateCalendarBadge();
             }
+            // Also update Full Calendar View section
+            if (typeof renderCalendarGrid === 'function') renderCalendarGrid();
+            if (typeof renderMilestones === 'function') renderMilestones();
+            if (typeof renderUpcomingTasks === 'function') renderUpcomingTasks();
             
             showToast('Event deleted', 'success');
             closeEventDetails();
@@ -29760,6 +29882,10 @@ GMAIL_EMAIL=admin@oith.com</pre>
                         // Reload calendar events
                         initCalendarEvents();
                         updateCalendarBadge();
+                        // Also update Full Calendar View section
+                        if (typeof renderCalendarGrid === 'function') renderCalendarGrid();
+                        if (typeof renderMilestones === 'function') renderMilestones();
+                        if (typeof renderUpcomingTasks === 'function') renderUpcomingTasks();
                         console.log('📅 Calendar synced from AWS');
                     }
                 }
@@ -29871,7 +29997,14 @@ GMAIL_EMAIL=admin@oith.com</pre>
             // Try to load from localStorage first
             const savedModels = localStorage.getItem('oith_ml_models');
             if (savedModels) {
-                mlModels = JSON.parse(savedModels);
+                const parsed = JSON.parse(savedModels);
+                // If localStorage has models, use them; otherwise use defaults
+                if (parsed && parsed.length > 0) {
+                    mlModels = parsed;
+                } else {
+                    mlModels = [...defaultModels];
+                    localStorage.setItem('oith_ml_models', JSON.stringify(mlModels));
+                }
             } else {
                 mlModels = [...defaultModels];
                 localStorage.setItem('oith_ml_models', JSON.stringify(mlModels));
@@ -30197,7 +30330,7 @@ GMAIL_EMAIL=admin@oith.com</pre>
             
             // Initialize models if on ML page
             setTimeout(() => {
-                const mlSection = document.getElementById('ml-models-section');
+                const mlSection = document.getElementById('mlmodels-section');
                 if (mlSection && mlSection.style.display !== 'none') {
                     initMLModels();
                 }

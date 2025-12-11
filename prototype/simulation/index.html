@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OITH - Matching Algorithm Stress Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a24;
+            --bg-hover: #22222e;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #2a2a3a;
+            --gradient-1: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --gradient-2: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 4px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            border: 1px solid var(--border);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.running {
+            background: var(--warning);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .control-panel h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .control-group input,
+        .control-group select {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--accent-glow);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+
+        .metric-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .metric-card .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .metric-card .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-card .value.success { color: var(--success); }
+        .metric-card .value.warning { color: var(--warning); }
+        .metric-card .value.danger { color: var(--danger); }
+
+        .metric-card .change {
+            font-size: 0.75rem;
+            margin-top: 8px;
+            color: var(--text-secondary);
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-card h3 .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .chart-container {
+            height: 250px;
+            position: relative;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: var(--gradient-1);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* Log Console */
+        .log-console {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .log-console h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-output {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.8;
+        }
+
+        .log-output .log-line {
+            display: flex;
+            gap: 12px;
+        }
+
+        .log-output .timestamp {
+            color: var(--text-muted);
+        }
+
+        .log-output .message { color: var(--text-secondary); }
+        .log-output .message.info { color: var(--accent-light); }
+        .log-output .message.success { color: var(--success); }
+        .log-output .message.warning { color: var(--warning); }
+        .log-output .message.error { color: var(--danger); }
+
+        /* Issues Panel */
+        .issues-panel {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .issues-panel h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .issue-item {
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--border);
+        }
+
+        .issue-item.high { border-left-color: var(--danger); }
+        .issue-item.medium { border-left-color: var(--warning); }
+        .issue-item.low { border-left-color: var(--success); }
+
+        .issue-item h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .issue-item p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .issue-item .recommendation {
+            font-size: 0.75rem;
+            color: var(--accent-light);
+            padding: 8px 12px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 4px;
+        }
+
+        /* Bar Chart Styles */
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            height: 100%;
+            justify-content: space-around;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bar-label {
+            width: 80px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 24px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .bar-fill.primary { background: var(--gradient-1); }
+        .bar-fill.success { background: var(--success); }
+        .bar-fill.warning { background: var(--warning); }
+        .bar-fill.danger { background: var(--danger); }
+
+        /* Scaling Chart */
+        .scaling-chart {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .scaling-row {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .scaling-row:last-child {
+            border-bottom: none;
+        }
+
+        .scaling-users {
+            width: 80px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .scaling-bars {
+            flex: 1;
+            display: flex;
+            gap: 8px;
+        }
+
+        .scaling-bar {
+            height: 20px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: white;
+            min-width: 30px;
+            transition: width 0.5s ease;
+        }
+
+        .scaling-bar.time { background: var(--accent); }
+        .scaling-bar.scans { background: var(--warning); opacity: 0.8; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h4 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        /* Loading Animation */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div>
+                <h1>⚡ OITH Matching Stress Test</h1>
+                <p class="subtitle">Simulate user load to identify scalability issues</p>
+            </div>
+            <div class="status-badge">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Ready</span>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <h2>⚙️ Simulation Parameters</h2>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>User Count</label>
+                    <select id="userCount">
+                        <option value="100">100 users</option>
+                        <option value="500">500 users</option>
+                        <option value="1000" selected>1,000 users</option>
+                        <option value="2500">2,500 users</option>
+                        <option value="5000">5,000 users</option>
+                        <option value="10000">10,000 users</option>
+                        <option value="25000">25,000 users</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Match Attempts</label>
+                    <input type="number" id="matchAttempts" value="100" min="10" max="1000">
+                </div>
+                <div class="control-group">
+                    <label>Use Geohash Index</label>
+                    <select id="useGeohash">
+                        <option value="true" selected>Yes (Recommended)</option>
+                        <option value="false">No (Baseline)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>City Focus</label>
+                    <select id="cityFocus">
+                        <option value="">Random Distribution</option>
+                        <option value="New York">New York</option>
+                        <option value="Los Angeles">Los Angeles</option>
+                        <option value="Chicago">Chicago</option>
+                        <option value="Austin">Austin</option>
+                    </select>
+                </div>
+                <div class="control-group" style="justify-content: flex-end;">
+                    <button class="btn btn-primary" id="runBtn" onclick="runSimulation()">
+                        🚀 Run Simulation
+                    </button>
+                </div>
+                <div class="control-group" style="justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="scalingBtn" onclick="runScalingTest()">
+                        📈 Run Scaling Test
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress -->
+        <div id="progressSection" style="display: none; margin-bottom: 24px;">
+            <div class="progress-bar">
+                <div class="fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                <span id="progressText">Generating users...</span>
+                <span id="progressPercent">0%</span>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <section class="metrics-grid" id="metricsGrid">
+            <div class="metric-card">
+                <div class="label">Total Users</div>
+                <div class="value" id="metricUsers">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Match Success Rate</div>
+                <div class="value" id="metricSuccess">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Avg Match Time</div>
+                <div class="value" id="metricAvgTime">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">P95 Response Time</div>
+                <div class="value" id="metricP95">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Profiles Scanned/Match</div>
+                <div class="value" id="metricScans">—</div>
+            </div>
+            <div class="metric-card">
+                <div class="label">Total Duration</div>
+                <div class="value" id="metricDuration">—</div>
+            </div>
+        </section>
+
+        <!-- Charts Grid -->
+        <section class="charts-grid">
+            <!-- Response Time Distribution -->
+            <div class="chart-card">
+                <h3>📊 Response Time Distribution</h3>
+                <div class="chart-container" id="timeChart">
+                    <div class="empty-state">
+                        <div class="icon">📊</div>
+                        <h4>No data yet</h4>
+                        <p>Run a simulation to see results</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scaling Performance -->
+            <div class="chart-card">
+                <h3>📈 Scaling Performance</h3>
+                <div class="chart-container" id="scalingChart">
+                    <div class="empty-state">
+                        <div class="icon">📈</div>
+                        <h4>No scaling data</h4>
+                        <p>Run scaling test to compare</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Distribution -->
+            <div class="chart-card">
+                <h3>👥 User Distribution</h3>
+                <div class="chart-container" id="userChart">
+                    <div class="empty-state">
+                        <div class="icon">👥</div>
+                        <h4>No users generated</h4>
+                        <p>Run a simulation to see distribution</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Match Analysis -->
+            <div class="chart-card">
+                <h3>❤️ Match Analysis</h3>
+                <div class="chart-container" id="matchChart">
+                    <div class="empty-state">
+                        <div class="icon">❤️</div>
+                        <h4>No match data</h4>
+                        <p>Run a simulation to analyze matches</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Log Console -->
+        <section class="log-console">
+            <h3>📋 Simulation Log</h3>
+            <div class="log-output" id="logOutput">
+                <div class="log-line">
+                    <span class="timestamp">[00:00:00]</span>
+                    <span class="message info">Ready to run simulation. Configure parameters above and click Run.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Issues Panel -->
+        <section class="issues-panel">
+            <h3>⚠️ Detected Issues & Recommendations</h3>
+            <div id="issuesList">
+                <div class="empty-state" style="padding: 40px;">
+                    <h4>No issues detected</h4>
+                    <p>Run a simulation to identify potential bottlenecks</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // In-browser simulation (mirrors the Node.js version)
+        
+        // User generation data
+        const DATA = {
+            firstNames: {
+                male: ['James', 'John', 'Michael', 'David', 'Robert', 'William', 'Christopher', 'Matthew', 'Daniel', 'Andrew', 'Joshua', 'Ryan', 'Brandon', 'Tyler', 'Kevin', 'Brian', 'Justin', 'Austin', 'Eric', 'Jason'],
+                female: ['Emma', 'Olivia', 'Sophia', 'Ava', 'Isabella', 'Mia', 'Charlotte', 'Amelia', 'Harper', 'Evelyn', 'Jessica', 'Ashley', 'Emily', 'Sarah', 'Amanda', 'Jennifer', 'Lauren', 'Samantha', 'Hannah', 'Rachel']
+            },
+            occupations: ['Software Engineer', 'Teacher', 'Nurse', 'Marketing Manager', 'Designer', 'Accountant', 'Sales Rep', 'Project Manager', 'Lawyer', 'Doctor', 'Consultant', 'Writer', 'Chef', 'Data Scientist'],
+            interests: ['Travel', 'Hiking', 'Cooking', 'Reading', 'Movies', 'Music', 'Fitness', 'Photography', 'Art', 'Gaming', 'Dancing', 'Yoga', 'Coffee', 'Wine', 'Sports', 'Dogs', 'Cats', 'Beach'],
+            heights: ['5\'4"', '5\'5"', '5\'6"', '5\'7"', '5\'8"', '5\'9"', '5\'10"', '5\'11"', '6\'0"', '6\'1"', '6\'2"'],
+            drinking: ['Never', 'Rarely', 'Socially', 'Often'],
+            smoking: ['Never', 'Occasionally', 'Regularly'],
+            exercise: ['Never', 'Sometimes', 'Regularly', 'Daily'],
+            children: ['No children', 'Want someday', 'Have & want more', 'Have, done', 'Not sure'],
+            religion: ['Christian', 'Catholic', 'Jewish', 'Muslim', 'Hindu', 'Buddhist', 'Spiritual', 'Agnostic', 'Atheist'],
+            lookingFor: ['relationship', 'casual', 'friendship', 'not_sure'],
+            cities: [
+                { name: 'New York, NY', lat: 40.7128, lng: -74.0060 },
+                { name: 'Los Angeles, CA', lat: 34.0522, lng: -118.2437 },
+                { name: 'Chicago, IL', lat: 41.8781, lng: -87.6298 },
+                { name: 'Houston, TX', lat: 29.7604, lng: -95.3698 },
+                { name: 'Phoenix, AZ', lat: 33.4484, lng: -112.0740 },
+                { name: 'Austin, TX', lat: 30.2672, lng: -97.7431 },
+                { name: 'Seattle, WA', lat: 47.6062, lng: -122.3321 },
+                { name: 'Denver, CO', lat: 39.7392, lng: -104.9903 },
+                { name: 'Boston, MA', lat: 42.3601, lng: -71.0589 },
+                { name: 'Miami, FL', lat: 25.7617, lng: -80.1918 }
+            ]
+        };
+
+        // Helper functions
+        const randomChoice = arr => arr[Math.floor(Math.random() * arr.length)];
+        const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const randomSubset = (arr, min, max) => {
+            const count = randomInt(min, Math.min(max, arr.length));
+            return [...arr].sort(() => Math.random() - 0.5).slice(0, count);
+        };
+
+        const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+        
+        function encodeGeohash(lat, lng, precision = 4) {
+            let idx = 0, bit = 0, evenBit = true, geohash = '';
+            let latMin = -90, latMax = 90, lngMin = -180, lngMax = 180;
+            
+            while (geohash.length < precision) {
+                if (evenBit) {
+                    const mid = (lngMin + lngMax) / 2;
+                    if (lng >= mid) { idx = idx * 2 + 1; lngMin = mid; }
+                    else { idx = idx * 2; lngMax = mid; }
+                } else {
+                    const mid = (latMin + latMax) / 2;
+                    if (lat >= mid) { idx = idx * 2 + 1; latMin = mid; }
+                    else { idx = idx * 2; latMax = mid; }
+                }
+                evenBit = !evenBit;
+                if (++bit === 5) { geohash += BASE32[idx]; bit = 0; idx = 0; }
+            }
+            return geohash;
+        }
+
+        function generateUser(index, cityFocus = null) {
+            const gender = Math.random() < 0.6 ? 'male' : 'female';
+            const age = randomInt(22, 45);
+            let city = randomChoice(DATA.cities);
+            
+            if (cityFocus) {
+                const focusCity = DATA.cities.find(c => c.name.includes(cityFocus));
+                if (focusCity && Math.random() < 0.5) city = focusCity;
+            }
+            
+            const coords = {
+                lat: city.lat + (Math.random() - 0.5) * 0.15,
+                lng: city.lng + (Math.random() - 0.5) * 0.15
+            };
+            
+            const interestedIn = gender === 'male' 
+                ? (Math.random() < 0.92 ? 'women' : 'everyone')
+                : (Math.random() < 0.92 ? 'men' : 'everyone');
+            
+            return {
+                email: `user_${index}@test.com`,
+                firstName: randomChoice(DATA.firstNames[gender]),
+                age,
+                gender,
+                location: city.name,
+                coordinates: coords,
+                geohash: encodeGeohash(coords.lat, coords.lng, 4),
+                occupation: randomChoice(DATA.occupations),
+                interests: randomSubset(DATA.interests, 3, 6),
+                drinking: randomChoice(DATA.drinking),
+                smoking: randomChoice(DATA.smoking),
+                exercise: randomChoice(DATA.exercise),
+                children: randomChoice(DATA.children),
+                religion: randomChoice(DATA.religion),
+                lookingFor: randomChoice(DATA.lookingFor),
+                matchPreferences: {
+                    interestedIn,
+                    ageMin: Math.max(18, age - randomInt(5, 12)),
+                    ageMax: Math.min(99, age + randomInt(5, 12)),
+                    maxDistance: randomChoice([15, 25, 50, 100])
+                },
+                isVisible: true
+            };
+        }
+
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            if (!lat1 || !lng1 || !lat2 || !lng2) return 9999;
+            const R = 3959;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLng/2) * Math.sin(dLng/2);
+            return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+        }
+
+        function checkPreferenceMatch(profile, prefs, viewerProfile) {
+            const interestedIn = prefs.interestedIn || 'everyone';
+            if (interestedIn !== 'everyone') {
+                const genderMap = { 'men': 'male', 'women': 'female' };
+                if (profile.gender !== genderMap[interestedIn]) return { matches: false };
+            }
+            
+            const profileAge = profile.age || 25;
+            if (profileAge < (prefs.ageMin || 18) || profileAge > (prefs.ageMax || 99)) {
+                return { matches: false };
+            }
+            
+            const distance = calculateDistance(
+                viewerProfile.coordinates?.lat, viewerProfile.coordinates?.lng,
+                profile.coordinates?.lat, profile.coordinates?.lng
+            );
+            if (distance > (prefs.maxDistance || 100)) {
+                return { matches: false, distance };
+            }
+            
+            return { matches: true, distance };
+        }
+
+        function calculateCompatibility(p1, p2) {
+            let score = 50;
+            const i1 = p1.interests || [], i2 = p2.interests || [];
+            if (i1.length && i2.length) {
+                const overlap = i1.filter(i => i2.includes(i)).length;
+                score += (overlap / Math.min(i1.length, i2.length)) * 25;
+            }
+            if (p1.drinking === p2.drinking) score += 3;
+            if (p1.smoking === p2.smoking) score += 3;
+            if (p1.exercise === p2.exercise) score += 3;
+            if (p1.lookingFor === p2.lookingFor) score += 10;
+            return Math.min(100, Math.round(score));
+        }
+
+        function simulateMatch(user, allUsers, excludeEmails, useGeohash) {
+            const start = performance.now();
+            const prefs = user.matchPreferences || {};
+            
+            let candidates;
+            if (useGeohash && user.geohash) {
+                candidates = allUsers.filter(u => 
+                    !excludeEmails.includes(u.email) && u.isVisible &&
+                    u.geohash?.substring(0, 3) === user.geohash.substring(0, 3)
+                );
+                if (candidates.length < 10) {
+                    candidates = allUsers.filter(u => !excludeEmails.includes(u.email) && u.isVisible);
+                }
+            } else {
+                candidates = allUsers.filter(u => !excludeEmails.includes(u.email) && u.isVisible);
+            }
+            
+            const matches = [];
+            let prefChecks = 0, compatCalcs = 0;
+            
+            for (const c of candidates) {
+                prefChecks++;
+                const fit1 = checkPreferenceMatch(c, prefs, user);
+                if (!fit1.matches) continue;
+                
+                prefChecks++;
+                const fit2 = checkPreferenceMatch(user, c.matchPreferences || {}, c);
+                if (!fit2.matches) continue;
+                
+                compatCalcs++;
+                matches.push({ email: c.email, compatibility: calculateCompatibility(user, c), distance: fit1.distance });
+            }
+            
+            matches.sort((a, b) => b.compatibility - a.compatibility);
+            
+            return {
+                duration: performance.now() - start,
+                scanned: candidates.length,
+                prefChecks,
+                compatCalcs,
+                match: matches[0] || null
+            };
+        }
+
+        // Logging
+        let logStartTime = 0;
+        
+        function log(message, type = 'info') {
+            const output = document.getElementById('logOutput');
+            const elapsed = logStartTime ? ((Date.now() - logStartTime) / 1000).toFixed(2) : '00.00';
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = `<span class="timestamp">[${elapsed}s]</span><span class="message ${type}">${message}</span>`;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('logOutput').innerHTML = '';
+            logStartTime = Date.now();
+        }
+
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressPercent').textContent = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+
+        // Main simulation function
+        let scalingResults = [];
+        
+        async function runSimulation() {
+            const userCount = parseInt(document.getElementById('userCount').value);
+            const matchAttempts = parseInt(document.getElementById('matchAttempts').value);
+            const useGeohash = document.getElementById('useGeohash').value === 'true';
+            const cityFocus = document.getElementById('cityFocus').value || null;
+            
+            // Update UI
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('scalingBtn').disabled = true;
+            document.getElementById('statusDot').classList.add('running');
+            document.getElementById('statusText').textContent = 'Running...';
+            document.getElementById('progressSection').style.display = 'block';
+            
+            clearLog();
+            log(`Starting simulation: ${userCount.toLocaleString()} users, ${matchAttempts} match attempts`, 'info');
+            log(`Geohash indexing: ${useGeohash ? 'Enabled' : 'Disabled'}`, 'info');
+            if (cityFocus) log(`City focus: ${cityFocus}`, 'info');
+            
+            // Generate users
+            updateProgress(10, 'Generating users...');
+            log(`Generating ${userCount.toLocaleString()} synthetic user profiles...`);
+            
+            await new Promise(r => setTimeout(r, 50)); // Allow UI update
+            
+            const users = [];
+            for (let i = 0; i < userCount; i++) {
+                users.push(generateUser(i, cityFocus));
+                if ((i + 1) % 1000 === 0) {
+                    updateProgress(10 + (i / userCount) * 20, `Generated ${i + 1} users...`);
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+            
+            log(`Generated ${userCount.toLocaleString()} users`, 'success');
+            
+            // Calculate pool stats
+            const genderStats = { male: 0, female: 0 };
+            const cityStats = {};
+            const geohashStats = {};
+            let totalAge = 0;
+            
+            for (const u of users) {
+                genderStats[u.gender]++;
+                cityStats[u.location] = (cityStats[u.location] || 0) + 1;
+                geohashStats[u.geohash] = (geohashStats[u.geohash] || 0) + 1;
+                totalAge += u.age;
+            }
+            
+            // Run matching
+            updateProgress(35, 'Running match simulations...');
+            log(`Running ${matchAttempts} match attempts...`);
+            
+            const results = [];
+            const matchHistory = new Map();
+            
+            for (let i = 0; i < matchAttempts; i++) {
+                const user = users[Math.floor(Math.random() * users.length)];
+                const excluded = matchHistory.get(user.email) || [user.email];
+                
+                const result = simulateMatch(user, users, excluded, useGeohash);
+                results.push(result);
+                
+                if (result.match) {
+                    const history = matchHistory.get(user.email) || [user.email];
+                    history.push(result.match.email);
+                    matchHistory.set(user.email, history);
+                }
+                
+                if ((i + 1) % 20 === 0) {
+                    updateProgress(35 + (i / matchAttempts) * 55, `Completed ${i + 1}/${matchAttempts} matches`);
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+            
+            // Calculate metrics
+            const times = results.map(r => r.duration);
+            const scans = results.map(r => r.scanned);
+            const successful = results.filter(r => r.match).length;
+            
+            const avgTime = (times.reduce((a, b) => a + b, 0) / times.length).toFixed(2);
+            const sortedTimes = [...times].sort((a, b) => a - b);
+            const p95 = sortedTimes[Math.floor(sortedTimes.length * 0.95)]?.toFixed(2) || 0;
+            const avgScans = (scans.reduce((a, b) => a + b, 0) / scans.length).toFixed(0);
+            const totalDuration = times.reduce((a, b) => a + b, 0).toFixed(0);
+            
+            updateProgress(95, 'Analyzing results...');
+            
+            // Update metrics display
+            document.getElementById('metricUsers').textContent = userCount.toLocaleString();
+            document.getElementById('metricSuccess').textContent = ((successful / matchAttempts) * 100).toFixed(1) + '%';
+            document.getElementById('metricSuccess').className = 'value ' + (successful / matchAttempts > 0.5 ? 'success' : 'warning');
+            document.getElementById('metricAvgTime').textContent = avgTime + 'ms';
+            document.getElementById('metricAvgTime').className = 'value ' + (parseFloat(avgTime) < 50 ? 'success' : parseFloat(avgTime) < 200 ? 'warning' : 'danger');
+            document.getElementById('metricP95').textContent = p95 + 'ms';
+            document.getElementById('metricP95').className = 'value ' + (parseFloat(p95) < 200 ? 'success' : parseFloat(p95) < 500 ? 'warning' : 'danger');
+            document.getElementById('metricScans').textContent = avgScans;
+            document.getElementById('metricScans').className = 'value ' + (parseInt(avgScans) < userCount * 0.3 ? 'success' : 'warning');
+            document.getElementById('metricDuration').textContent = totalDuration + 'ms';
+            
+            // Update charts
+            renderTimeChart(times);
+            renderUserChart(genderStats, Math.round(totalAge / userCount));
+            renderMatchChart(successful, matchAttempts, avgTime, avgScans);
+            
+            // Detect issues
+            const issues = [];
+            
+            if (parseInt(avgScans) > userCount * 0.5) {
+                issues.push({
+                    severity: 'high',
+                    title: 'Full Table Scans Detected',
+                    detail: `Scanning ${avgScans} profiles per match (${((avgScans / userCount) * 100).toFixed(1)}% of users)`,
+                    recommendation: 'Implement GSI on geohash_prefix for location-based filtering in DynamoDB'
+                });
+            }
+            
+            if (parseFloat(p95) > 200) {
+                issues.push({
+                    severity: 'high',
+                    title: 'Slow P95 Response Time',
+                    detail: `P95 is ${p95}ms (target: < 200ms for good UX)`,
+                    recommendation: 'Add caching layer (ElastiCache/Redis) or pre-compute compatibility scores'
+                });
+            }
+            
+            if (successful / matchAttempts < 0.5) {
+                issues.push({
+                    severity: 'medium',
+                    title: 'Low Match Success Rate',
+                    detail: `Only ${((successful / matchAttempts) * 100).toFixed(1)}% of attempts found matches`,
+                    recommendation: 'Consider expanding geohash search radius or relaxing preference matching'
+                });
+            }
+            
+            if (parseInt(avgScans) > 500) {
+                issues.push({
+                    severity: 'medium',
+                    title: 'High Scan Count May Hit Lambda Limits',
+                    detail: `Scanning ${avgScans} profiles may timeout on Lambda with 15s limit`,
+                    recommendation: 'Implement pagination or move to Step Functions for large pools'
+                });
+            }
+            
+            renderIssues(issues);
+            
+            // Log summary
+            log(`Simulation complete!`, 'success');
+            log(`Match success rate: ${((successful / matchAttempts) * 100).toFixed(1)}%`);
+            log(`Average match time: ${avgTime}ms | P95: ${p95}ms`);
+            log(`Avg profiles scanned per match: ${avgScans}`);
+            
+            if (issues.length > 0) {
+                log(`⚠️ ${issues.length} potential issues detected`, 'warning');
+            } else {
+                log(`✅ No critical issues at this scale`, 'success');
+            }
+            
+            // Store for scaling comparison
+            scalingResults.push({
+                userCount,
+                avgTime: parseFloat(avgTime),
+                p95: parseFloat(p95),
+                avgScans: parseInt(avgScans),
+                successRate: ((successful / matchAttempts) * 100).toFixed(1)
+            });
+            
+            if (scalingResults.length > 1) {
+                renderScalingChart(scalingResults);
+            }
+            
+            updateProgress(100, 'Complete!');
+            
+            // Reset UI
+            document.getElementById('runBtn').disabled = false;
+            document.getElementById('scalingBtn').disabled = false;
+            document.getElementById('statusDot').classList.remove('running');
+            document.getElementById('statusText').textContent = 'Complete';
+            
+            setTimeout(() => {
+                document.getElementById('progressSection').style.display = 'none';
+            }, 2000);
+        }
+
+        async function runScalingTest() {
+            scalingResults = [];
+            const counts = [100, 500, 1000, 2500, 5000];
+            
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('scalingBtn').disabled = true;
+            
+            clearLog();
+            log('Starting scaling test across multiple user counts...', 'info');
+            
+            for (const count of counts) {
+                document.getElementById('userCount').value = count;
+                await runSimulation();
+                await new Promise(r => setTimeout(r, 500));
+            }
+            
+            log('Scaling test complete!', 'success');
+            
+            // Analysis
+            if (scalingResults.length >= 2) {
+                const first = scalingResults[0];
+                const last = scalingResults[scalingResults.length - 1];
+                const userScale = last.userCount / first.userCount;
+                const timeScale = last.avgTime / first.avgTime;
+                
+                log(`User scale: ${userScale}x (${first.userCount} → ${last.userCount})`, 'info');
+                log(`Time scale: ${timeScale.toFixed(2)}x`, timeScale > userScale * 0.5 ? 'warning' : 'success');
+                
+                if (timeScale > userScale * 0.5) {
+                    log('⚠️ Algorithm appears to scale poorly (O(n) or worse)', 'warning');
+                } else {
+                    log('✅ Algorithm scales well (sub-linear complexity)', 'success');
+                }
+            }
+        }
+
+        function renderTimeChart(times) {
+            const container = document.getElementById('timeChart');
+            const buckets = [0, 10, 25, 50, 100, 200, 500, 1000];
+            const counts = new Array(buckets.length).fill(0);
+            
+            for (const t of times) {
+                for (let i = buckets.length - 1; i >= 0; i--) {
+                    if (t >= buckets[i]) { counts[i]++; break; }
+                }
+            }
+            
+            const max = Math.max(...counts);
+            
+            let html = '<div class="bar-chart">';
+            for (let i = 0; i < buckets.length - 1; i++) {
+                const label = `${buckets[i]}-${buckets[i+1]}ms`;
+                const pct = (counts[i] / max) * 100;
+                const colorClass = buckets[i] < 50 ? 'success' : buckets[i] < 200 ? 'warning' : 'danger';
+                html += `
+                    <div class="bar-row">
+                        <div class="bar-label">${label}</div>
+                        <div class="bar-track">
+                            <div class="bar-fill ${colorClass}" style="width: ${pct}%">${counts[i]}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function renderUserChart(genderStats, avgAge) {
+            const total = genderStats.male + genderStats.female;
+            const malePct = ((genderStats.male / total) * 100).toFixed(1);
+            const femalePct = ((genderStats.female / total) * 100).toFixed(1);
+            
+            const html = `
+                <div class="bar-chart">
+                    <div class="bar-row">
+                        <div class="bar-label">Male</div>
+                        <div class="bar-track">
+                            <div class="bar-fill primary" style="width: ${malePct}%">${genderStats.male} (${malePct}%)</div>
+                        </div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-label">Female</div>
+                        <div class="bar-track">
+                            <div class="bar-fill success" style="width: ${femalePct}%">${genderStats.female} (${femalePct}%)</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; text-align: center; color: var(--text-secondary);">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">Average Age</div>
+                        <div style="font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">${avgAge}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('userChart').innerHTML = html;
+        }
+
+        function renderMatchChart(successful, total, avgTime, avgScans) {
+            const successRate = ((successful / total) * 100).toFixed(1);
+            const failRate = (100 - successRate).toFixed(1);
+            
+            const html = `
+                <div class="bar-chart">
+                    <div class="bar-row">
+                        <div class="bar-label">Success</div>
+                        <div class="bar-track">
+                            <div class="bar-fill success" style="width: ${successRate}%">${successful} (${successRate}%)</div>
+                        </div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-label">No Match</div>
+                        <div class="bar-track">
+                            <div class="bar-fill danger" style="width: ${failRate}%">${total - successful} (${failRate}%)</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: center;">
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Avg Time</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">${avgTime}ms</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Avg Scans</div>
+                            <div style="font-size: 1.25rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;">${avgScans}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('matchChart').innerHTML = html;
+        }
+
+        function renderScalingChart(results) {
+            const maxTime = Math.max(...results.map(r => r.avgTime));
+            const maxScans = Math.max(...results.map(r => r.avgScans));
+            
+            let html = '<div class="scaling-chart">';
+            for (const r of results) {
+                const timePct = (r.avgTime / maxTime) * 60;
+                const scansPct = (r.avgScans / maxScans) * 60;
+                html += `
+                    <div class="scaling-row">
+                        <div class="scaling-users">${r.userCount.toLocaleString()}</div>
+                        <div class="scaling-bars">
+                            <div class="scaling-bar time" style="width: ${timePct}%">${r.avgTime}ms</div>
+                            <div class="scaling-bar scans" style="width: ${scansPct}%">${r.avgScans} scans</div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '<div style="margin-top: 12px; font-size: 0.7rem; color: var(--text-muted); display: flex; gap: 16px;">';
+            html += '<span><span style="display: inline-block; width: 12px; height: 12px; background: var(--accent); border-radius: 2px; margin-right: 4px;"></span> Avg Time</span>';
+            html += '<span><span style="display: inline-block; width: 12px; height: 12px; background: var(--warning); opacity: 0.8; border-radius: 2px; margin-right: 4px;"></span> Avg Scans</span>';
+            html += '</div></div>';
+            
+            document.getElementById('scalingChart').innerHTML = html;
+        }
+
+        function renderIssues(issues) {
+            if (issues.length === 0) {
+                document.getElementById('issuesList').innerHTML = `
+                    <div style="padding: 24px; text-align: center; color: var(--success);">
+                        <div style="font-size: 2rem; margin-bottom: 8px;">✅</div>
+                        <h4>No Critical Issues Detected</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem;">Algorithm is performing well at this scale</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            for (const issue of issues) {
+                html += `
+                    <div class="issue-item ${issue.severity}">
+                        <h4>
+                            ${issue.severity === 'high' ? '🔴' : issue.severity === 'medium' ? '🟡' : '🟢'}
+                            ${issue.title}
+                        </h4>
+                        <p>${issue.detail}</p>
+                        <div class="recommendation">💡 ${issue.recommendation}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('issuesList').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+
