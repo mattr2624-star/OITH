@@ -6779,6 +6779,208 @@
                 </div>
             </div>
 
+            <!-- Expenses & Cost Optimization Section -->
+            <div id="expenses-section" style="display: none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">💰 Expenses & Cost Optimization</h2>
+                        <p class="page-subtitle">Track all costs and discover optimization opportunities</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="exportExpenseReport()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            Export Report
+                        </button>
+                        <button class="btn btn-primary" onclick="addExpenseEntry()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Expense
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Total Expenses Summary -->
+                <div class="stats-grid" style="margin-bottom: 20px;">
+                    <div class="stat-card" style="border-color: var(--danger);">
+                        <div class="stat-card-header">
+                            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2); color: var(--danger);">💸</div>
+                            <span class="stat-change negative" id="expensesTrend">+12%</span>
+                        </div>
+                        <div class="stat-value" style="color: var(--danger);" id="totalExpensesToDate">$0.00</div>
+                        <div class="stat-label">Total Spent to Date</div>
+                    </div>
+                    <div class="stat-card" style="border-color: var(--warning);">
+                        <div class="stat-card-header">
+                            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--warning);">📅</div>
+                        </div>
+                        <div class="stat-value" id="monthlyBurn">$0.00</div>
+                        <div class="stat-label">Monthly Burn Rate</div>
+                    </div>
+                    <div class="stat-card" style="border-color: var(--success);">
+                        <div class="stat-card-header">
+                            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">💡</div>
+                        </div>
+                        <div class="stat-value" style="color: var(--success);" id="potentialSavings">$0.00</div>
+                        <div class="stat-label">Potential Savings</div>
+                    </div>
+                    <div class="stat-card" style="border-color: var(--info);">
+                        <div class="stat-card-header">
+                            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: var(--info);">📊</div>
+                        </div>
+                        <div class="stat-value" id="activeServices">0</div>
+                        <div class="stat-label">Active Services</div>
+                    </div>
+                </div>
+
+                <!-- Expense Categories Grid -->
+                <div class="cards-grid" style="margin-bottom: 20px;">
+                    <!-- Development Tools -->
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));">
+                            <h3 class="card-title">🛠️ Development Tools</h3>
+                            <span class="status-badge" style="background: var(--purple); color: white;" id="devToolsTotal">$0/mo</span>
+                        </div>
+                        <div class="card-body" id="devToolsExpenses">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Cloud Infrastructure -->
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05));">
+                            <h3 class="card-title">☁️ Cloud Infrastructure</h3>
+                            <span class="status-badge" style="background: var(--warning); color: white;" id="cloudTotal">$0/mo</span>
+                        </div>
+                        <div class="card-body" id="cloudExpenses">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cards-grid" style="margin-bottom: 20px;">
+                    <!-- Communication & Email -->
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));">
+                            <h3 class="card-title">📧 Communication & Email</h3>
+                            <span class="status-badge" style="background: var(--info); color: white;" id="emailTotal">$0/mo</span>
+                        </div>
+                        <div class="card-body" id="emailExpenses">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Legal & Compliance -->
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));">
+                            <h3 class="card-title">⚖️ Legal & Compliance</h3>
+                            <span class="status-badge" style="background: var(--success); color: white;" id="legalTotal">$0</span>
+                        </div>
+                        <div class="card-body" id="legalExpenses">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Expense Table -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 All Expenses</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="expenseFilterCategory" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; color: var(--text-primary); font-size: 12px;">
+                                <option value="all">All Categories</option>
+                                <option value="development">Development</option>
+                                <option value="cloud">Cloud/Infrastructure</option>
+                                <option value="communication">Communication</option>
+                                <option value="legal">Legal</option>
+                                <option value="marketing">Marketing</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <select id="expenseFilterPeriod" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 8px; color: var(--text-primary); font-size: 12px;">
+                                <option value="all">All Time</option>
+                                <option value="month">This Month</option>
+                                <option value="quarter">This Quarter</option>
+                                <option value="year">This Year</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container" style="border: none; margin: 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Service/Item</th>
+                                    <th>Category</th>
+                                    <th>Cost</th>
+                                    <th>Billing</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenseTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cost Optimization Recommendations -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--success);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));">
+                        <h3 class="card-title">💡 Cost Optimization Recommendations</h3>
+                        <span class="status-badge" style="background: var(--success); color: white;" id="optimizationCount">0 tips</span>
+                    </div>
+                    <div class="card-body" id="optimizationRecommendations">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Service-Specific Optimization Cards -->
+                <div class="cards-grid three" style="margin-bottom: 20px;">
+                    <!-- DynamoDB Optimization -->
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05));">
+                            <h3 class="card-title">🗄️ DynamoDB</h3>
+                        </div>
+                        <div class="card-body" id="dynamoOptimization">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Google Workspace Optimization -->
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(234, 67, 53, 0.2), rgba(234, 67, 53, 0.05));">
+                            <h3 class="card-title">📧 Google Workspace</h3>
+                        </div>
+                        <div class="card-body" id="googleOptimization">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Cursor/AI Tools Optimization -->
+                    <div class="card">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05));">
+                            <h3 class="card-title">🤖 AI & Dev Tools</h3>
+                        </div>
+                        <div class="card-body" id="cursorOptimization">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expense History Chart placeholder -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📈 Expense Trend</h3>
+                    </div>
+                    <div class="card-body" id="expenseChartContainer" style="min-height: 200px;">
+                        <!-- Chart rendered by JS -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Calendar Section -->
             <div id="calendar-section" style="display: none;">
                 <div class="page-header">
@@ -7006,6 +7208,49 @@
                                 </div>
                             </div>
 
+                            <!-- Real-Life Scenarios -->
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--purple);">
+                                <div style="font-size: 0.8rem; color: var(--purple); margin-bottom: 12px; font-weight: 600;">🎭 REAL-LIFE SCENARIOS</div>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simConcurrentUsers" checked style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Concurrent users (parallel requests)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simRateLimiting" checked style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Rate limiting (20 req/min)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simColdStarts" checked style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Lambda cold starts (~300ms)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simDbLatency" checked style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Database latency (5-50ms)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simBlockedUsers" style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Blocked/reported users (2%)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simPoolExhaustion" style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Match pool exhaustion</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simTimerExpiry" style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Timer expirations (24h)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simNetworkErrors" style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Network failures (0.5%)</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem;">
+                                        <input type="checkbox" id="simPeakHours" style="width: 16px; height: 16px; accent-color: var(--purple);">
+                                        <span>Peak hours traffic (3x spike)</span>
+                                    </label>
+                                </div>
+                            </div>
+
                             <!-- Quick Actions -->
                             <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
                                 <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">QUICK ACTIONS</div>
@@ -7015,6 +7260,9 @@
                                     </button>
                                     <button class="btn btn-secondary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(168, 85, 247, 0.2)); border-color: var(--danger);" onclick="runMassiveScaleTest()">
                                         🚀 Massive Scale (1M → 100M users)
+                                    </button>
+                                    <button class="btn btn-secondary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2)); border-color: var(--purple);" onclick="runRealLifeStressTest()">
+                                        🎭 Full Real-Life Stress Test
                                     </button>
                                     <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="runComparisonTest()">
                                         🔄 Compare Geohash vs Full Scan
@@ -11012,6 +11260,133 @@
         let simHistory = JSON.parse(localStorage.getItem('oithSimHistory') || '[]');
         let simLogStartTime = 0;
         
+        // Real-life scenario state
+        let simRealLifeMetrics = {
+            concurrentRequests: 0,
+            peakConcurrent: 0,
+            rateLimitHits: 0,
+            coldStarts: 0,
+            totalDbLatency: 0,
+            networkErrors: 0,
+            blockedUserHits: 0,
+            poolExhaustions: 0,
+            timerExpirations: 0,
+            raceConditions: 0,
+            throttledRequests: 0,
+            avgResponseTime: 0,
+            peakResponseTime: 0,
+            requestsInFlight: new Set(),
+            matchLocks: new Map(), // Track users currently being matched
+            lastRequestTime: new Map(), // For rate limiting
+            lambdaInstances: new Map(), // Track warm Lambda instances
+            currentHour: 0, // Simulated hour of day
+        };
+        
+        // Peak hours traffic pattern (requests per minute multiplier)
+        const PEAK_HOURS_PATTERN = {
+            0: 0.1, 1: 0.05, 2: 0.05, 3: 0.05, 4: 0.1, 5: 0.2,
+            6: 0.4, 7: 0.7, 8: 1.0, 9: 1.2, 10: 1.0, 11: 0.9,
+            12: 1.1, 13: 1.0, 14: 0.9, 15: 0.8, 16: 0.9, 17: 1.3,
+            18: 1.8, 19: 2.5, 20: 3.0, 21: 2.8, 22: 2.0, 23: 0.8
+        };
+        
+        // Simulate Lambda cold starts (warm instances last ~15 min)
+        function simCheckColdStart(userId) {
+            const instance = simRealLifeMetrics.lambdaInstances.get(userId % 10); // 10 Lambda instances
+            const now = Date.now();
+            if (!instance || (now - instance) > 900000) { // 15 min timeout
+                simRealLifeMetrics.lambdaInstances.set(userId % 10, now);
+                simRealLifeMetrics.coldStarts++;
+                return true;
+            }
+            return false;
+        }
+        
+        // Simulate rate limiting (20 requests/min per user)
+        function simCheckRateLimit(userId) {
+            const now = Date.now();
+            const lastRequest = simRealLifeMetrics.lastRequestTime.get(userId) || [];
+            const recentRequests = lastRequest.filter(t => now - t < 60000);
+            
+            if (recentRequests.length >= 20) {
+                simRealLifeMetrics.rateLimitHits++;
+                return true; // Rate limited
+            }
+            
+            recentRequests.push(now);
+            simRealLifeMetrics.lastRequestTime.set(userId, recentRequests);
+            return false;
+        }
+        
+        // Simulate database latency (5-50ms, with occasional spikes)
+        function simGetDbLatency(userCount) {
+            let baseLatency = 5 + Math.random() * 20; // 5-25ms base
+            
+            // Scale with user count (more records = slightly slower)
+            baseLatency += Math.log10(userCount) * 2;
+            
+            // Occasional spike (2% chance of 100-300ms latency)
+            if (Math.random() < 0.02) {
+                baseLatency = 100 + Math.random() * 200;
+            }
+            
+            // Concurrent load increases latency
+            const concurrentFactor = 1 + (simRealLifeMetrics.concurrentRequests * 0.05);
+            
+            simRealLifeMetrics.totalDbLatency += baseLatency * concurrentFactor;
+            return baseLatency * concurrentFactor;
+        }
+        
+        // Simulate network errors (0.5% failure rate, higher under load)
+        function simCheckNetworkError() {
+            const baseErrorRate = 0.005;
+            const loadFactor = Math.min(2, 1 + simRealLifeMetrics.concurrentRequests * 0.01);
+            
+            if (Math.random() < baseErrorRate * loadFactor) {
+                simRealLifeMetrics.networkErrors++;
+                return true;
+            }
+            return false;
+        }
+        
+        // Check for race condition (two users matching same person simultaneously)
+        function simCheckRaceCondition(targetEmail) {
+            if (simRealLifeMetrics.matchLocks.has(targetEmail)) {
+                simRealLifeMetrics.raceConditions++;
+                return true;
+            }
+            simRealLifeMetrics.matchLocks.set(targetEmail, Date.now());
+            return false;
+        }
+        
+        function simClearMatchLock(targetEmail) {
+            simRealLifeMetrics.matchLocks.delete(targetEmail);
+        }
+        
+        // Reset real-life metrics
+        function simResetRealLifeMetrics() {
+            simRealLifeMetrics = {
+                concurrentRequests: 0,
+                peakConcurrent: 0,
+                rateLimitHits: 0,
+                coldStarts: 0,
+                totalDbLatency: 0,
+                networkErrors: 0,
+                blockedUserHits: 0,
+                poolExhaustions: 0,
+                timerExpirations: 0,
+                raceConditions: 0,
+                throttledRequests: 0,
+                avgResponseTime: 0,
+                peakResponseTime: 0,
+                requestsInFlight: new Set(),
+                matchLocks: new Map(),
+                lastRequestTime: new Map(),
+                lambdaInstances: new Map(),
+                currentHour: 0
+            };
+        }
+        
         // User generation data
         const SIM_DATA = {
             firstNames: {
@@ -11164,27 +11539,110 @@
             return Math.min(100, Math.round(score));
         }
         
-        function simSimulateMatch(user, allUsers, excludeEmails, useGeohash) {
+        function simSimulateMatch(user, allUsers, excludeEmails, useGeohash, options = {}) {
             const start = performance.now();
             const prefs = user.matchPreferences || {};
+            const blockedUsers = options.blockedUsers || new Set();
+            const enableRealLife = options.enableRealLife || false;
+            const userCount = allUsers.length;
+            
+            let addedLatency = 0;
+            let wasRateLimited = false;
+            let hadColdStart = false;
+            let hadNetworkError = false;
+            let hadRaceCondition = false;
+            let wasBlocked = false;
+            let poolExhausted = false;
+            
+            // Real-life scenario: Cold start
+            if (enableRealLife && options.coldStarts) {
+                hadColdStart = simCheckColdStart(user.idx || 0);
+                if (hadColdStart) {
+                    addedLatency += 250 + Math.random() * 150; // 250-400ms cold start
+                }
+            }
+            
+            // Real-life scenario: Rate limiting
+            if (enableRealLife && options.rateLimiting) {
+                wasRateLimited = simCheckRateLimit(user.idx || 0);
+                if (wasRateLimited) {
+                    return {
+                        duration: performance.now() - start,
+                        scanned: 0,
+                        prefChecks: 0,
+                        compatCalcs: 0,
+                        match: null,
+                        error: 'RATE_LIMITED',
+                        addedLatency: 0
+                    };
+                }
+            }
+            
+            // Real-life scenario: Network error
+            if (enableRealLife && options.networkErrors) {
+                hadNetworkError = simCheckNetworkError();
+                if (hadNetworkError) {
+                    return {
+                        duration: performance.now() - start + Math.random() * 1000,
+                        scanned: 0,
+                        prefChecks: 0,
+                        compatCalcs: 0,
+                        match: null,
+                        error: 'NETWORK_ERROR',
+                        addedLatency: 0
+                    };
+                }
+            }
+            
+            // Real-life scenario: DB latency
+            if (enableRealLife && options.dbLatency) {
+                addedLatency += simGetDbLatency(userCount);
+            }
             
             let candidates;
             if (useGeohash && user.geohash) {
                 candidates = allUsers.filter(u => 
                     !excludeEmails.includes(u.email) && u.isVisible &&
+                    !blockedUsers.has(u.email) &&
                     u.geohash?.substring(0, 3) === user.geohash.substring(0, 3)
                 );
                 if (candidates.length < 10) {
-                    candidates = allUsers.filter(u => !excludeEmails.includes(u.email) && u.isVisible);
+                    candidates = allUsers.filter(u => 
+                        !excludeEmails.includes(u.email) && u.isVisible && !blockedUsers.has(u.email)
+                    );
                 }
             } else {
-                candidates = allUsers.filter(u => !excludeEmails.includes(u.email) && u.isVisible);
+                candidates = allUsers.filter(u => 
+                    !excludeEmails.includes(u.email) && u.isVisible && !blockedUsers.has(u.email)
+                );
+            }
+            
+            // Check for pool exhaustion
+            if (candidates.length === 0) {
+                poolExhausted = true;
+                if (enableRealLife) simRealLifeMetrics.poolExhaustions++;
+                return {
+                    duration: performance.now() - start + addedLatency,
+                    scanned: 0,
+                    prefChecks: 0,
+                    compatCalcs: 0,
+                    match: null,
+                    error: 'POOL_EXHAUSTED',
+                    addedLatency
+                };
             }
             
             const matches = [];
             let prefChecks = 0, compatCalcs = 0;
+            let blockedHits = 0;
             
             for (const c of candidates) {
+                // Check if this user is blocked
+                if (blockedUsers.has(c.email)) {
+                    blockedHits++;
+                    continue;
+                }
+                
                 prefChecks++;
                 const fit1 = simCheckPreferenceMatch(c, prefs, user);
                 if (!fit1.matches) continue;
@@ -11197,14 +11655,52 @@
                 matches.push({ email: c.email, compatibility: simCalculateCompatibility(user, c), distance: fit1.distance });
             }
             
+            if (enableRealLife && blockedHits > 0) {
+                simRealLifeMetrics.blockedUserHits += blockedHits;
+            }
+            
             matches.sort((a, b) => b.compatibility - a.compatibility);
             
+            const topMatch = matches[0] || null;
+            
+            // Real-life scenario: Race condition check
+            if (enableRealLife && options.concurrentUsers && topMatch) {
+                hadRaceCondition = simCheckRaceCondition(topMatch.email);
+                if (hadRaceCondition) {
+                    // Get next best match
+                    if (matches.length > 1) {
+                        simClearMatchLock(topMatch.email);
+                        const secondMatch = matches[1];
+                        hadRaceCondition = simCheckRaceCondition(secondMatch.email);
+                        if (!hadRaceCondition) {
+                            return {
+                                duration: performance.now() - start + addedLatency,
+                                scanned: candidates.length,
+                                prefChecks,
+                                compatCalcs,
+                                match: secondMatch,
+                                hadColdStart,
+                                hadRaceCondition: true,
+                                recoveredFromRace: true,
+                                addedLatency
+                            };
+                        }
+                    }
+                }
+            }
+            
+            const totalDuration = performance.now() - start + addedLatency;
+            
             return {
-                duration: performance.now() - start,
+                duration: totalDuration,
                 scanned: candidates.length,
                 prefChecks,
                 compatCalcs,
-                match: matches[0] || null
+                match: topMatch,
+                hadColdStart,
+                hadRaceCondition,
+                addedLatency,
+                poolExhausted
             };
         }
         
@@ -28647,12 +29143,12 @@
                 eventsContainer.appendChild(moreEl);
             }
             
-            dayEl.onclick = (e) => selectCalendarDay(e, date, dayEvents);
+            dayEl.onclick = (e) => selectCalendarDay(e, date);
             
             return dayEl;
         }
         
-        function selectCalendarDay(e, date, events) {
+        function selectCalendarDay(e, date) {
             // Remove selected class from all days
             document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
             
@@ -28663,8 +29159,16 @@
             
             calendarSelectedDate = date;
             
+            // Re-query events for this day (to get the latest data including newly added events)
+            const currentDayEvents = calendarEvents.filter(ev => {
+                const eventDate = new Date(ev.date);
+                return eventDate.getDate() === date.getDate() && 
+                       eventDate.getMonth() === date.getMonth() && 
+                       eventDate.getFullYear() === date.getFullYear();
+            });
+            
             // Update sidebar with selected day's events (show even if no events)
-            renderDayEvents(date, events);
+            renderDayEvents(date, currentDayEvents);
         }
         
         function renderDayEvents(date, events) {
