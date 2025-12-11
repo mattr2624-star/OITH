@@ -2133,6 +2133,171 @@
             display: block;
         }
         
+        /* Expense detail cards */
+        .expense-detail-card {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .expense-detail-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .expense-detail-card .click-hint {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            margin-top: 4px;
+        }
+        
+        .expense-detail-card:hover .click-hint {
+            opacity: 1;
+        }
+        
+        /* Expense detail modal */
+        .expense-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: modalFadeIn 0.2s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .expense-modal-content {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @keyframes modalSlideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .expense-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+        }
+        
+        .expense-modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .expense-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .expense-modal-close:hover {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .expense-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(80vh - 80px);
+        }
+        
+        .expense-modal-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .expense-modal-stat {
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .expense-modal-stat .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .expense-modal-stat .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .expense-modal-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .expense-modal-table th,
+        .expense-modal-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .expense-modal-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        
+        .expense-modal-table tr:hover td {
+            background: rgba(139, 92, 246, 0.1);
+        }
+        
+        .expense-modal-table .amount {
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .expense-modal-section {
+            margin-bottom: 20px;
+        }
+        
+        .expense-modal-section h4 {
+            margin: 0 0 12px 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
         .health-tooltip-row {
             display: flex;
             justify-content: space-between;
@@ -6920,41 +7085,59 @@
 
                 <!-- Total Expenses Summary -->
                 <div class="stats-grid" style="margin-bottom: 20px;">
-                    <div class="stat-card" style="border-color: var(--danger);">
+                    <div class="stat-card expense-detail-card" style="border-color: var(--danger); cursor: pointer;" onclick="showExpenseDetail('total')">
                         <div class="stat-card-header">
                             <div class="stat-icon" style="background: rgba(239, 68, 68, 0.2); color: var(--danger);">💸</div>
                             <span class="stat-change negative" id="expensesTrend">+12%</span>
                         </div>
                         <div class="stat-value" style="color: var(--danger);" id="totalExpensesToDate">$0.00</div>
                         <div class="stat-label">Total Spent to Date</div>
+                        <div class="click-hint">Click for details</div>
                     </div>
-                    <div class="stat-card" style="border-color: var(--warning);">
+                    <div class="stat-card expense-detail-card" style="border-color: var(--warning); cursor: pointer;" onclick="showExpenseDetail('burn')">
                         <div class="stat-card-header">
                             <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--warning);">📅</div>
                         </div>
                         <div class="stat-value" id="monthlyBurn">$0.00</div>
                         <div class="stat-label">Monthly Burn Rate</div>
+                        <div class="click-hint">Click for details</div>
                     </div>
-                    <div class="stat-card" style="border-color: var(--success);">
+                    <div class="stat-card expense-detail-card" style="border-color: var(--success); cursor: pointer;" onclick="showExpenseDetail('savings')">
                         <div class="stat-card-header">
                             <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--success);">💡</div>
                         </div>
                         <div class="stat-value" style="color: var(--success);" id="potentialSavings">$0.00</div>
                         <div class="stat-label">Potential Savings</div>
+                        <div class="click-hint">Click for details</div>
                     </div>
-                    <div class="stat-card" style="border-color: var(--info);">
+                    <div class="stat-card expense-detail-card" style="border-color: var(--info); cursor: pointer;" onclick="showExpenseDetail('services')">
                         <div class="stat-card-header">
                             <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: var(--info);">📊</div>
                         </div>
                         <div class="stat-value" id="activeServices">0</div>
                         <div class="stat-label">Active Services</div>
+                        <div class="click-hint">Click for details</div>
                     </div>
-                    <div class="stat-card" style="border-color: var(--purple);">
+                    <div class="stat-card expense-detail-card" style="border-color: var(--purple); cursor: pointer;" onclick="showExpenseDetail('payroll')">
                         <div class="stat-card-header">
                             <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2); color: var(--purple);">👥</div>
                         </div>
                         <div class="stat-value" style="color: var(--purple);" id="monthlyPayrollExpense">$0.00</div>
                         <div class="stat-label">Monthly Payroll</div>
+                        <div class="click-hint">Click for details</div>
+                    </div>
+                </div>
+                
+                <!-- Expense Detail Modal -->
+                <div id="expenseDetailModal" class="expense-modal" style="display: none;">
+                    <div class="expense-modal-content">
+                        <div class="expense-modal-header">
+                            <h3 id="expenseModalTitle">Expense Details</h3>
+                            <button class="expense-modal-close" onclick="closeExpenseDetail()">×</button>
+                        </div>
+                        <div class="expense-modal-body" id="expenseModalBody">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -8740,6 +8923,119 @@
                                     <span>0 KB</span>
                                     <span>5 MB Limit</span>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Transfer & Processing Costs -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--accent);">
+                    <div class="card-header" style="cursor: pointer; background: linear-gradient(135deg, rgba(0, 120, 212, 0.15), rgba(0, 120, 212, 0.05));" onclick="toggleSiteSection('dataTransfer')">
+                        <h3 class="card-title">📊 Data Transfer & Processing Costs</h3>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span id="dataTransferTotalCost" class="status-badge" style="background: var(--accent); color: white;">$0.00/mo</span>
+                            <svg id="dataTransferToggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s;">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="dataTransferBody" style="display: none;">
+                        <div class="card-body">
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+                                Measures data sizes across services and links them to actual expenses. Click "Analyze" to calculate current usage and estimated costs.
+                            </p>
+                            
+                            <!-- Quick Stats -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                                <div style="padding: 14px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border-left: 4px solid var(--purple);">
+                                    <div style="font-size: 1.3rem; font-weight: 700; color: var(--purple);" id="dtTotalDataSize">0 KB</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">Total Data Size</div>
+                                </div>
+                                <div style="padding: 14px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border-left: 4px solid var(--info);">
+                                    <div style="font-size: 1.3rem; font-weight: 700; color: var(--info);" id="dtApiCalls">0</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">Est. API Calls/Mo</div>
+                                </div>
+                                <div style="padding: 14px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border-left: 4px solid var(--warning);">
+                                    <div style="font-size: 1.3rem; font-weight: 700; color: var(--warning);" id="dtTransferCost">$0.00</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">Transfer Cost/Mo</div>
+                                </div>
+                                <div style="padding: 14px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border-left: 4px solid var(--success);">
+                                    <div style="font-size: 1.3rem; font-weight: 700; color: var(--success);" id="dtProcessingCost">$0.00</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">Processing Cost/Mo</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Service Breakdown -->
+                            <div style="margin-bottom: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">SERVICE BREAKDOWN (Linked to Expenses)</div>
+                                    <button class="btn btn-primary" onclick="analyzeDataTransfer()" style="font-size: 0.75rem; padding: 6px 12px;">
+                                        🔍 Analyze Now
+                                    </button>
+                                </div>
+                                <div id="dataTransferServiceList" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                        Click "Analyze Now" to measure data sizes and calculate costs...
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Detailed Breakdown Table -->
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 10px;">DATA SIZE BY CATEGORY</div>
+                                <div style="overflow-x: auto;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+                                        <thead>
+                                            <tr style="background: var(--bg-tertiary);">
+                                                <th style="padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border);">Data Category</th>
+                                                <th style="padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border);">Size</th>
+                                                <th style="padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border);">Records</th>
+                                                <th style="padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border);">Linked Service</th>
+                                                <th style="padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border);">Est. Cost/Mo</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dataTransferTable">
+                                            <tr>
+                                                <td colspan="5" style="padding: 30px; text-align: center; color: var(--text-muted);">
+                                                    Run analysis to see data breakdown...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Cost Projection -->
+                            <div style="padding: 16px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05)); border-radius: 10px; border: 1px solid rgba(139, 92, 246, 0.3);">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 12px;">📈 COST PROJECTION (At Scale)</div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">Current (Pre-Launch)</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--success);" id="dtCostCurrent">$0.00/mo</div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">1K Users</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--info);" id="dtCost1k">$0.00/mo</div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">10K Users</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--warning);" id="dtCost10k">$0.00/mo</div>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">100K Users</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--danger);" id="dtCost100k">$0.00/mo</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Link to Expenses -->
+                            <div style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                    💰 View full expense details for these services
+                                </div>
+                                <button class="btn btn-secondary" onclick="showSection('expenses')" style="font-size: 0.8rem; padding: 6px 12px;">
+                                    Go to Expenses →
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -15365,6 +15661,278 @@
             }
         }
 
+        // ==========================================
+        // DATA TRANSFER & PROCESSING COSTS ANALYSIS
+        // ==========================================
+        
+        // Service cost rates (per GB/month or per 1M requests)
+        const DATA_TRANSFER_COSTS = {
+            // AWS Services
+            's3': { 
+                storage: 0.023,          // per GB/month
+                transfer: 0.09,          // per GB outbound
+                requests: 0.0004,        // per 1K requests
+                linkedExpense: 'aws-s3'
+            },
+            'dynamodb': { 
+                storage: 0.25,           // per GB/month
+                read: 0.25,              // per 1M read units
+                write: 1.25,             // per 1M write units
+                linkedExpense: 'aws-dynamodb'
+            },
+            'lambda': { 
+                requests: 0.20,          // per 1M requests
+                compute: 0.0000166667,   // per GB-second
+                linkedExpense: 'aws-lambda'
+            },
+            'cognito': {
+                mau: 0.0055,             // per MAU after free tier
+                linkedExpense: 'aws-cognito'
+            },
+            'ses': {
+                emails: 0.10,            // per 1K emails
+                linkedExpense: 'aws-ses'
+            },
+            // Third-party Services
+            'google-workspace': {
+                storage: 0,              // 15GB included
+                transfer: 0,             // included
+                linkedExpense: 'google-workspace'
+            },
+            'cursor': {
+                requests: 0,             // flat monthly rate
+                linkedExpense: 'cursor'
+            }
+        };
+        
+        function analyzeDataTransfer() {
+            appendSiteDiagnosticsLog('📊 Starting data transfer analysis...');
+            
+            // Collect all data sizes from localStorage and app state
+            const dataCategories = [];
+            let totalSize = 0;
+            
+            // Analyze localStorage data
+            const localStorageData = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                const size = new Blob([value]).size;
+                
+                // Categorize by prefix
+                let category = 'other';
+                if (key.startsWith('oith_')) {
+                    if (key.includes('user')) category = 'users';
+                    else if (key.includes('match')) category = 'matching';
+                    else if (key.includes('chat') || key.includes('message')) category = 'messaging';
+                    else if (key.includes('expense') || key.includes('payroll')) category = 'finance';
+                    else if (key.includes('org') || key.includes('employee')) category = 'organization';
+                    else if (key.includes('calendar') || key.includes('event')) category = 'calendar';
+                    else if (key.includes('experiment')) category = 'experiments';
+                    else if (key.includes('admin') || key.includes('diagnostics')) category = 'admin';
+                    else category = 'app-data';
+                }
+                
+                if (!localStorageData[category]) {
+                    localStorageData[category] = { size: 0, count: 0, keys: [] };
+                }
+                localStorageData[category].size += size;
+                localStorageData[category].count++;
+                localStorageData[category].keys.push(key);
+                totalSize += size;
+            }
+            
+            // Map categories to services and calculate costs
+            const serviceMapping = {
+                'users': { service: 'dynamodb', name: 'AWS DynamoDB', icon: '🗄️' },
+                'matching': { service: 'lambda', name: 'AWS Lambda', icon: '⚡' },
+                'messaging': { service: 'dynamodb', name: 'AWS DynamoDB', icon: '💬' },
+                'finance': { service: 'dynamodb', name: 'AWS DynamoDB', icon: '💰' },
+                'organization': { service: 'dynamodb', name: 'AWS DynamoDB', icon: '🏢' },
+                'calendar': { service: 'google-workspace', name: 'Google Workspace', icon: '📅' },
+                'experiments': { service: 'dynamodb', name: 'AWS DynamoDB', icon: '🧪' },
+                'admin': { service: 'cursor', name: 'Cursor/Dev Tools', icon: '🛠️' },
+                'app-data': { service: 's3', name: 'AWS S3', icon: '📦' },
+                'other': { service: 's3', name: 'AWS S3', icon: '📁' }
+            };
+            
+            // Calculate costs for each category
+            const serviceBreakdown = {};
+            Object.entries(localStorageData).forEach(([category, data]) => {
+                const mapping = serviceMapping[category] || serviceMapping['other'];
+                const costs = DATA_TRANSFER_COSTS[mapping.service] || {};
+                
+                // Calculate estimated monthly cost based on data size
+                const sizeGB = data.size / (1024 * 1024 * 1024);
+                let monthlyCost = 0;
+                
+                if (costs.storage) monthlyCost += sizeGB * costs.storage;
+                if (costs.transfer) monthlyCost += sizeGB * costs.transfer * 10; // Assume 10x transfer
+                
+                // Aggregate by service
+                if (!serviceBreakdown[mapping.service]) {
+                    serviceBreakdown[mapping.service] = {
+                        name: mapping.name,
+                        icon: mapping.icon,
+                        size: 0,
+                        count: 0,
+                        cost: 0,
+                        categories: [],
+                        linkedExpense: costs.linkedExpense
+                    };
+                }
+                serviceBreakdown[mapping.service].size += data.size;
+                serviceBreakdown[mapping.service].count += data.count;
+                serviceBreakdown[mapping.service].cost += monthlyCost;
+                serviceBreakdown[mapping.service].categories.push(category);
+                
+                dataCategories.push({
+                    category,
+                    size: data.size,
+                    count: data.count,
+                    service: mapping.name,
+                    linkedExpense: costs.linkedExpense,
+                    cost: monthlyCost
+                });
+            });
+            
+            // Estimate API calls based on data patterns
+            const estimatedApiCalls = Object.values(localStorageData)
+                .reduce((sum, d) => sum + d.count * 100, 0); // Assume 100 API calls per storage key per month
+            
+            // Calculate total costs
+            let totalTransferCost = 0;
+            let totalProcessingCost = 0;
+            
+            Object.values(serviceBreakdown).forEach(service => {
+                if (['dynamodb', 's3'].includes(service.linkedExpense?.replace('aws-', ''))) {
+                    totalTransferCost += service.cost * 0.7; // 70% storage/transfer
+                    totalProcessingCost += service.cost * 0.3; // 30% processing
+                } else if (service.linkedExpense === 'aws-lambda') {
+                    totalProcessingCost += service.cost;
+                } else {
+                    totalTransferCost += service.cost;
+                }
+            });
+            
+            const totalMonthlyCost = totalTransferCost + totalProcessingCost;
+            
+            // Update UI - Quick Stats
+            document.getElementById('dtTotalDataSize').textContent = formatBytes(totalSize);
+            document.getElementById('dtApiCalls').textContent = formatNumber(estimatedApiCalls);
+            document.getElementById('dtTransferCost').textContent = `$${totalTransferCost.toFixed(2)}`;
+            document.getElementById('dtProcessingCost').textContent = `$${totalProcessingCost.toFixed(2)}`;
+            document.getElementById('dataTransferTotalCost').textContent = `$${totalMonthlyCost.toFixed(2)}/mo`;
+            
+            // Update Service Breakdown
+            const serviceListEl = document.getElementById('dataTransferServiceList');
+            if (serviceListEl) {
+                serviceListEl.innerHTML = Object.entries(serviceBreakdown)
+                    .sort((a, b) => b[1].size - a[1].size)
+                    .map(([serviceId, service]) => {
+                        const expense = expenseData.find(e => e.id === service.linkedExpense);
+                        const expenseCost = expense ? (expense.perUser ? expense.cost * (expense.users || 1) : expense.cost) : 0;
+                        const totalServiceCost = service.cost + expenseCost;
+                        
+                        return `
+                            <div style="padding: 14px; background: var(--bg-tertiary); border-radius: 10px; border-left: 4px solid ${getServiceColor(serviceId)};">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-size: 1.2rem;">${service.icon}</span>
+                                        <div>
+                                            <div style="font-weight: 600; font-size: 0.9rem;">${service.name}</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">${service.categories.join(', ')}</div>
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-weight: 700; color: var(--accent);">$${totalServiceCost.toFixed(2)}/mo</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">${formatBytes(service.size)}</div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 16px; font-size: 0.75rem; color: var(--text-secondary);">
+                                    <span>📊 ${service.count} records</span>
+                                    <span>💾 Data: $${service.cost.toFixed(2)}</span>
+                                    ${expense ? `<span>💳 Service: $${expenseCost.toFixed(2)}</span>` : ''}
+                                    ${expense ? `<a href="#" onclick="showSection('expenses'); return false;" style="color: var(--accent);">View in Expenses →</a>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+            }
+            
+            // Update Table
+            const tableEl = document.getElementById('dataTransferTable');
+            if (tableEl) {
+                tableEl.innerHTML = dataCategories
+                    .sort((a, b) => b.size - a.size)
+                    .map(cat => `
+                        <tr>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);">${cat.category}</td>
+                            <td style="padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border);">${formatBytes(cat.size)}</td>
+                            <td style="padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border);">${cat.count}</td>
+                            <td style="padding: 10px 12px; border-bottom: 1px solid var(--border);">
+                                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                                    ${cat.service}
+                                    ${cat.linkedExpense ? `<a href="#" onclick="showSection('expenses'); return false;" style="color: var(--accent); font-size: 0.7rem;">🔗</a>` : ''}
+                                </span>
+                            </td>
+                            <td style="padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border); color: var(--success);">$${cat.cost.toFixed(4)}</td>
+                        </tr>
+                    `).join('');
+            }
+            
+            // Cost Projections based on user scaling
+            const baseDataPerUser = totalSize / Math.max(1, localStorageData['users']?.count || 1);
+            const calculateScaleCost = (users) => {
+                const projectedDataGB = (baseDataPerUser * users) / (1024 * 1024 * 1024);
+                // DynamoDB: $0.25/GB storage + $1.25/M writes + $0.25/M reads
+                const dynamoDbCost = projectedDataGB * 0.25 + (users * 100 / 1000000) * 1.25 + (users * 500 / 1000000) * 0.25;
+                // Lambda: $0.20/M requests
+                const lambdaCost = (users * 50 / 1000000) * 0.20;
+                // S3: $0.023/GB
+                const s3Cost = projectedDataGB * 0.5 * 0.023;
+                // Add base service costs
+                const baseCosts = expenseData
+                    .filter(e => e.category === 'cloud' && e.status === 'active')
+                    .reduce((sum, e) => sum + (e.billing === 'monthly' ? e.cost : 0), 0);
+                return dynamoDbCost + lambdaCost + s3Cost + baseCosts;
+            };
+            
+            document.getElementById('dtCostCurrent').textContent = `$${totalMonthlyCost.toFixed(2)}/mo`;
+            document.getElementById('dtCost1k').textContent = `$${calculateScaleCost(1000).toFixed(2)}/mo`;
+            document.getElementById('dtCost10k').textContent = `$${calculateScaleCost(10000).toFixed(2)}/mo`;
+            document.getElementById('dtCost100k').textContent = `$${calculateScaleCost(100000).toFixed(2)}/mo`;
+            
+            appendSiteDiagnosticsLog(`✅ Analysis complete: ${formatBytes(totalSize)} total, $${totalMonthlyCost.toFixed(2)}/mo estimated`, 'success');
+        }
+        
+        function getServiceColor(serviceId) {
+            const colors = {
+                'dynamodb': '#FF9900',
+                'lambda': '#FF9900',
+                's3': '#569A31',
+                'cognito': '#DD344C',
+                'ses': '#232F3E',
+                'google-workspace': '#4285F4',
+                'cursor': '#8B5CF6'
+            };
+            return colors[serviceId] || 'var(--accent)';
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+
         function renderSiteDiagnostics() {
             appendSiteDiagnosticsLog('// Site Diagnostics view opened');
             renderAdminArchitectureMap();
@@ -20414,88 +20982,127 @@
         }
 
         // ==========================================
-        // REVENUE
+        // REVENUE - Fetches from AWS Stripe API
         // ==========================================
         
-        function renderRevenue() {
-            // Calculate actual revenue from user subscriptions - NO HARDCODED VALUES
+        async function renderRevenue() {
+            // Show loading state
+            document.getElementById('mrrValue').textContent = 'Loading...';
+            document.getElementById('premiumUsers').textContent = '...';
+            document.getElementById('conversionRate').textContent = '...';
+            document.getElementById('churnRate').textContent = '...';
+            
             let premiumUsers = 0;
             let freeUsers = 0;
             let trialUsers = 0;
             let canceledUsers = 0;
             let currentMRR = 0;
+            let churnRate = 0;
+            let conversionRate = 0;
+            let revenueByMonth = {};
+            let dataSource = 'localStorage';
             
-            // Track subscription start dates for LTV calculation
-            const subscriptionDurations = [];
-            const now = new Date();
-            
-            // Collect all transactions for revenue chart
-            const allTransactions = [];
-            
-            Object.keys(allUserData).forEach(email => {
-                const userData = allUserData[email];
-                const subscription = userData.user?.subscription;
+            // Try to fetch REAL data from AWS/Stripe first
+            try {
+                const PAYMENT_API_URL = localStorage.getItem('oith_payment_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+                const response = await fetch(`${PAYMENT_API_URL}/subscription-stats`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
                 
-                if (subscription?.type === 'premium' && subscription?.status === 'active') {
-                    premiumUsers++;
-                    currentMRR += subscription.amount || 10.00;
+                if (response.ok) {
+                    const stats = await response.json();
+                    console.log('📊 Revenue stats from Stripe:', stats);
                     
-                    // Calculate subscription duration for LTV
-                    if (subscription.startDate) {
-                        const startDate = new Date(subscription.startDate);
-                        const monthsActive = Math.max(1, Math.floor((now - startDate) / (1000 * 60 * 60 * 24 * 30)));
-                        subscriptionDurations.push(monthsActive);
-                    }
-                } else if (subscription?.type === 'trial') {
-                    trialUsers++;
-                } else if (subscription?.status === 'canceled') {
-                    canceledUsers++;
-                } else {
-                    freeUsers++;
+                    currentMRR = stats.mrr || 0;
+                    premiumUsers = stats.activeSubscriptions || 0;
+                    canceledUsers = stats.canceledSubscriptions || 0;
+                    churnRate = stats.monthlyChurnRate || 0;
+                    conversionRate = stats.conversionRate || 0;
+                    revenueByMonth = stats.revenueByMonth || {};
+                    freeUsers = (stats.totalCustomers || 0) - premiumUsers;
+                    dataSource = 'Stripe';
                 }
-                
-                // Collect billing history for chart
-                if (userData.user?.billingHistory) {
-                    userData.user.billingHistory.forEach(tx => {
-                        if (tx.status === 'paid' && tx.amount > 0) {
-                            allTransactions.push({
-                                date: new Date(tx.date),
-                                amount: tx.amount
-                            });
-                        }
-                    });
-                }
-            });
-            
-            // Also count registered users without full data
-            const totalRegistered = Object.keys(registeredUsers).length;
-            if (freeUsers === 0 && premiumUsers === 0 && trialUsers === 0) {
-                freeUsers = totalRegistered;
+            } catch (error) {
+                console.warn('⚠️ Could not fetch from Stripe API, falling back to localStorage:', error.message);
             }
             
-            // Update stat cards with REAL data
+            // Fallback to localStorage if API failed
+            if (dataSource === 'localStorage') {
+                const now = new Date();
+                const subscriptionDurations = [];
+                const allTransactions = [];
+                
+                Object.keys(allUserData).forEach(email => {
+                    const userData = allUserData[email];
+                    const subscription = userData.user?.subscription;
+                    
+                    if (subscription?.type === 'premium' && subscription?.status === 'active') {
+                        premiumUsers++;
+                        currentMRR += subscription.amount || 10.00;
+                        
+                        if (subscription.startDate) {
+                            const startDate = new Date(subscription.startDate);
+                            const monthsActive = Math.max(1, Math.floor((now - startDate) / (1000 * 60 * 60 * 24 * 30)));
+                            subscriptionDurations.push(monthsActive);
+                        }
+                    } else if (subscription?.type === 'trial') {
+                        trialUsers++;
+                    } else if (subscription?.status === 'canceled') {
+                        canceledUsers++;
+                    } else {
+                        freeUsers++;
+                    }
+                    
+                    if (userData.user?.billingHistory) {
+                        userData.user.billingHistory.forEach(tx => {
+                            if (tx.status === 'paid' && tx.amount > 0) {
+                                allTransactions.push({
+                                    date: new Date(tx.date),
+                                    amount: tx.amount
+                                });
+                            }
+                        });
+                    }
+                });
+                
+                const totalRegistered = Object.keys(registeredUsers).length;
+                if (freeUsers === 0 && premiumUsers === 0 && trialUsers === 0) {
+                    freeUsers = totalRegistered;
+                }
+                
+                const totalSubscribers = premiumUsers + canceledUsers;
+                churnRate = totalSubscribers > 0 ? Math.round((canceledUsers / totalSubscribers) * 100) : 0;
+                conversionRate = (freeUsers + premiumUsers) > 0 ? Math.round((premiumUsers / (freeUsers + premiumUsers)) * 100) : 0;
+                
+                // Build revenue by month from transactions
+                for (let i = 5; i >= 0; i--) {
+                    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+                    const monthKey = monthDate.toISOString().slice(0, 7);
+                    
+                    revenueByMonth[monthKey] = allTransactions
+                        .filter(tx => tx.date >= monthDate && tx.date <= monthEnd)
+                        .reduce((sum, tx) => sum + tx.amount, 0);
+                }
+            }
+            
+            // Update stat cards with data (from either source)
             document.getElementById('mrrValue').textContent = `$${currentMRR.toFixed(2)}`;
             document.getElementById('premiumUsers').textContent = premiumUsers;
-            document.getElementById('conversionRate').textContent = totalRegistered > 0 
-                ? `${Math.round((premiumUsers / totalRegistered) * 100)}%` 
-                : '0%';
+            document.getElementById('conversionRate').textContent = `${conversionRate}%`;
+            document.getElementById('churnRate').textContent = `${churnRate}%`;
             
-            // Generate revenue chart from ACTUAL transaction history
+            // Generate revenue chart
+            const now = new Date();
             const months = [];
             const values = [];
             
-            // Calculate actual revenue per month from transaction history
             for (let i = 5; i >= 0; i--) {
                 const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+                const monthKey = monthDate.toISOString().slice(0, 7);
                 months.push(monthDate.toLocaleDateString('en-US', { month: 'short' }));
-                
-                // Sum actual transactions for this month
-                const monthRevenue = allTransactions
-                    .filter(tx => tx.date >= monthDate && tx.date <= monthEnd)
-                    .reduce((sum, tx) => sum + tx.amount, 0);
-                
-                values.push(monthRevenue);
+                values.push(revenueByMonth[monthKey] || 0);
             }
             
             const maxVal = Math.max(...values, 1);
@@ -20521,25 +21128,22 @@
                 <div class="metric-row"><span class="metric-label">Free Users</span><span class="metric-value">${freeUsers} user${freeUsers !== 1 ? 's' : ''}</span></div>
                 <div class="metric-row"><span class="metric-label">Trial Users</span><span class="metric-value">${trialUsers} user${trialUsers !== 1 ? 's' : ''}</span></div>
                 <div class="metric-row"><span class="metric-label">Canceled</span><span class="metric-value" style="color: var(--danger);">${canceledUsers} user${canceledUsers !== 1 ? 's' : ''}</span></div>
+                <div style="margin-top: 8px; font-size: 0.7rem; color: var(--text-muted);">📡 Source: ${dataSource}</div>
             `;
 
-            // Calculate LTV from ACTUAL subscription duration data
-            const avgSubscriptionMonths = subscriptionDurations.length > 0 
-                ? subscriptionDurations.reduce((a, b) => a + b, 0) / subscriptionDurations.length 
-                : 0;
-            const subscriptionPrice = pricingConfig.subscriptionPrice; // From config
-            const ltv = subscriptionPrice * avgSubscriptionMonths;
+            // Calculate LTV/CAC
+            const subscriptionPrice = pricingConfig.subscriptionPrice;
+            const avgMonths = churnRate > 0 ? 100 / churnRate : 12; // Estimated months before churn
+            const ltv = subscriptionPrice * avgMonths;
             
-            // Calculate CAC from actual marketing spend (stored in localStorage)
             const marketingData = JSON.parse(localStorage.getItem('oith_marketing_spend') || '{}');
             const totalMarketingSpend = marketingData.total || 0;
-            const totalAcquiredUsers = premiumUsers + canceledUsers; // All users who ever subscribed
+            const totalAcquiredUsers = premiumUsers + canceledUsers;
             const cac = totalAcquiredUsers > 0 ? totalMarketingSpend / totalAcquiredUsers : 0;
             
             const ltvCacRatio = cac > 0 ? ltv / cac : 0;
             const paybackDays = cac > 0 && subscriptionPrice > 0 ? Math.round((cac / subscriptionPrice) * 30) : 0;
 
-            // Show actual data or indicate no data
             const ltvDisplay = ltv > 0 ? `$${ltv.toFixed(2)}` : '$0.00';
             const cacDisplay = cac > 0 ? `$${cac.toFixed(2)}` : 'No data';
             const ratioDisplay = ltvCacRatio > 0 ? `${ltvCacRatio.toFixed(1)}x` : 'N/A';
@@ -28215,6 +28819,511 @@
         
         function saveExpenses() {
             localStorage.setItem('oithExpenses', JSON.stringify(expenseData));
+        }
+        
+        // Show expense detail modal
+        function showExpenseDetail(type) {
+            const modal = document.getElementById('expenseDetailModal');
+            const title = document.getElementById('expenseModalTitle');
+            const body = document.getElementById('expenseModalBody');
+            
+            if (!modal || !body) return;
+            
+            // Calculate data for the modal
+            const now = new Date();
+            const startDate = new Date('2025-11-28');
+            const monthsActive = Math.max(1, Math.ceil((now - startDate) / (1000 * 60 * 60 * 24 * 30)));
+            
+            let html = '';
+            
+            switch(type) {
+                case 'total':
+                    title.innerHTML = '💸 Total Expenses Breakdown';
+                    html = generateTotalExpensesDetail(monthsActive);
+                    break;
+                case 'burn':
+                    title.innerHTML = '📅 Monthly Burn Rate Details';
+                    html = generateBurnRateDetail(monthsActive);
+                    break;
+                case 'savings':
+                    title.innerHTML = '💡 Potential Savings Opportunities';
+                    html = generateSavingsDetail();
+                    break;
+                case 'services':
+                    title.innerHTML = '📊 Active Services List';
+                    html = generateServicesDetail();
+                    break;
+                case 'payroll':
+                    title.innerHTML = '👥 Payroll Breakdown';
+                    html = generatePayrollDetail(monthsActive);
+                    break;
+            }
+            
+            body.innerHTML = html;
+            modal.style.display = 'flex';
+            
+            // Close on click outside
+            modal.onclick = function(e) {
+                if (e.target === modal) closeExpenseDetail();
+            };
+            
+            // Close on Escape key
+            document.addEventListener('keydown', function closeOnEscape(e) {
+                if (e.key === 'Escape') {
+                    closeExpenseDetail();
+                    document.removeEventListener('keydown', closeOnEscape);
+                }
+            });
+        }
+        
+        function closeExpenseDetail() {
+            const modal = document.getElementById('expenseDetailModal');
+            if (modal) modal.style.display = 'none';
+        }
+        
+        function generateTotalExpensesDetail(monthsActive) {
+            let serviceTotal = 0;
+            let oneTimeTotal = 0;
+            let yearlyTotal = 0;
+            
+            const servicesByCategory = {};
+            
+            expenseData.forEach(exp => {
+                if (exp.status === 'active' || exp.status === 'pending') {
+                    if (!servicesByCategory[exp.category]) {
+                        servicesByCategory[exp.category] = { monthly: 0, oneTime: 0, yearly: 0, items: [] };
+                    }
+                    
+                    const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                    servicesByCategory[exp.category].items.push(exp);
+                    
+                    if (exp.billing === 'monthly') {
+                        servicesByCategory[exp.category].monthly += cost;
+                        serviceTotal += cost * monthsActive;
+                    } else if (exp.billing === 'yearly') {
+                        servicesByCategory[exp.category].yearly += cost;
+                        yearlyTotal += cost;
+                    } else if (exp.billing === 'one-time') {
+                        servicesByCategory[exp.category].oneTime += cost;
+                        oneTimeTotal += cost;
+                    }
+                }
+            });
+            
+            // Get payroll data
+            const activeEmployees = orgData.employees ? orgData.employees.filter(e => e.status === 'active') : [];
+            const totalAnnualPayroll = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
+            const monthlyPayroll = totalAnnualPayroll / 12;
+            const payrollToDate = monthlyPayroll * monthsActive;
+            
+            const grandTotal = serviceTotal + oneTimeTotal + yearlyTotal + payrollToDate;
+            
+            return `
+                <div class="expense-modal-summary">
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--danger);">${formatCurrency(grandTotal)}</div>
+                        <div class="label">Grand Total</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--info);">${formatCurrency(serviceTotal)}</div>
+                        <div class="label">Recurring Services</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--warning);">${formatCurrency(oneTimeTotal + yearlyTotal)}</div>
+                        <div class="label">One-time/Yearly</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--purple);">${formatCurrency(payrollToDate)}</div>
+                        <div class="label">Payroll (${monthsActive}mo)</div>
+                    </div>
+                </div>
+                
+                <div class="expense-modal-section">
+                    <h4>📂 Breakdown by Category</h4>
+                    <table class="expense-modal-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Monthly</th>
+                                <th>One-time/Yearly</th>
+                                <th>Total to Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${Object.entries(servicesByCategory).map(([cat, data]) => {
+                                const catTotal = (data.monthly * monthsActive) + data.oneTime + data.yearly;
+                                return `
+                                    <tr>
+                                        <td>${getCategoryIcon(cat)} ${cat.charAt(0).toUpperCase() + cat.slice(1)}</td>
+                                        <td class="amount">${formatCurrency(data.monthly)}/mo</td>
+                                        <td class="amount">${formatCurrency(data.oneTime + data.yearly)}</td>
+                                        <td class="amount" style="color: var(--danger);">${formatCurrency(catTotal)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                            <tr style="background: rgba(139, 92, 246, 0.1);">
+                                <td>👥 Payroll</td>
+                                <td class="amount">${formatCurrency(monthlyPayroll)}/mo</td>
+                                <td class="amount">--</td>
+                                <td class="amount" style="color: var(--purple);">${formatCurrency(payrollToDate)}</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight: 700; background: var(--bg-secondary);">
+                                <td>TOTAL</td>
+                                <td></td>
+                                <td></td>
+                                <td class="amount" style="color: var(--danger); font-size: 1.1rem;">${formatCurrency(grandTotal)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; font-size: 0.8rem; color: var(--text-muted);">
+                    📅 Tracking period: ${monthsActive} month(s) since Nov 28, 2025
+                </div>
+            `;
+        }
+        
+        function generateBurnRateDetail(monthsActive) {
+            let monthlyRecurring = 0;
+            const recurringItems = [];
+            
+            expenseData.forEach(exp => {
+                if ((exp.status === 'active' || exp.status === 'pending') && exp.billing === 'monthly') {
+                    const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                    monthlyRecurring += cost;
+                    recurringItems.push({ ...exp, actualCost: cost });
+                }
+            });
+            
+            // Get payroll data
+            const activeEmployees = orgData.employees ? orgData.employees.filter(e => e.status === 'active') : [];
+            const totalAnnualPayroll = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
+            const monthlyPayroll = totalAnnualPayroll / 12;
+            
+            const totalBurn = monthlyRecurring + monthlyPayroll;
+            const yearlyProjection = totalBurn * 12;
+            
+            // Sort by cost descending
+            recurringItems.sort((a, b) => b.actualCost - a.actualCost);
+            
+            return `
+                <div class="expense-modal-summary">
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--warning);">${formatCurrency(totalBurn)}</div>
+                        <div class="label">Total Monthly Burn</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--info);">${formatCurrency(monthlyRecurring)}</div>
+                        <div class="label">Services</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--purple);">${formatCurrency(monthlyPayroll)}</div>
+                        <div class="label">Payroll</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--danger);">${formatCurrency(yearlyProjection)}</div>
+                        <div class="label">Yearly Projection</div>
+                    </div>
+                </div>
+                
+                <div class="expense-modal-section">
+                    <h4>📋 Monthly Recurring Services (sorted by cost)</h4>
+                    <table class="expense-modal-table">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Category</th>
+                                <th>Cost/Month</th>
+                                <th>% of Burn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${recurringItems.map(item => {
+                                const pct = ((item.actualCost / totalBurn) * 100).toFixed(1);
+                                return `
+                                    <tr>
+                                        <td>${item.name}</td>
+                                        <td>${getCategoryIcon(item.category)} ${item.category}</td>
+                                        <td class="amount">${formatCurrency(item.actualCost)}</td>
+                                        <td>
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <div style="flex: 1; height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden;">
+                                                    <div style="width: ${pct}%; height: 100%; background: var(--accent);"></div>
+                                                </div>
+                                                <span style="font-size: 0.75rem; min-width: 40px;">${pct}%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                            ${monthlyPayroll > 0 ? `
+                                <tr style="background: rgba(139, 92, 246, 0.1);">
+                                    <td>Employee Salaries</td>
+                                    <td>👥 Payroll</td>
+                                    <td class="amount">${formatCurrency(monthlyPayroll)}</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="flex: 1; height: 6px; background: var(--bg-secondary); border-radius: 3px; overflow: hidden;">
+                                                <div style="width: ${((monthlyPayroll / totalBurn) * 100).toFixed(1)}%; height: 100%; background: var(--purple);"></div>
+                                            </div>
+                                            <span style="font-size: 0.75rem; min-width: 40px;">${((monthlyPayroll / totalBurn) * 100).toFixed(1)}%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        function generateSavingsDetail() {
+            const savings = [];
+            let totalSavings = 0;
+            
+            expenseData.forEach(exp => {
+                if (exp.status === 'active' && exp.freeTier) {
+                    const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                    savings.push({
+                        name: exp.name,
+                        category: exp.category,
+                        currentCost: cost,
+                        suggestion: exp.optimization || 'Downgrade to free tier',
+                        potentialSaving: cost
+                    });
+                    totalSavings += cost;
+                }
+            });
+            
+            // Add general optimization suggestions
+            const generalSuggestions = [
+                { name: 'Annual Billing', desc: 'Switch to yearly plans for 10-20% savings', impact: 'Medium' },
+                { name: 'Consolidate Tools', desc: 'Use fewer multi-purpose tools', impact: 'High' },
+                { name: 'Free Alternatives', desc: 'Evaluate open-source options', impact: 'Medium' },
+                { name: 'Usage Audit', desc: 'Remove unused services/seats', impact: 'Low-Medium' }
+            ];
+            
+            return `
+                <div class="expense-modal-summary">
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--success);">${formatCurrency(totalSavings)}/mo</div>
+                        <div class="label">Potential Savings</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--info);">${savings.length}</div>
+                        <div class="label">Optimization Opportunities</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--warning);">${formatCurrency(totalSavings * 12)}</div>
+                        <div class="label">Yearly Impact</div>
+                    </div>
+                </div>
+                
+                ${savings.length > 0 ? `
+                    <div class="expense-modal-section">
+                        <h4>💰 Services with Free Tier Available</h4>
+                        <table class="expense-modal-table">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Current Cost</th>
+                                    <th>Suggestion</th>
+                                    <th>Potential Saving</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${savings.map(s => `
+                                    <tr>
+                                        <td>${s.name}</td>
+                                        <td class="amount">${formatCurrency(s.currentCost)}/mo</td>
+                                        <td style="font-size: 0.8rem;">${s.suggestion}</td>
+                                        <td class="amount" style="color: var(--success);">-${formatCurrency(s.potentialSaving)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                ` : ''}
+                
+                <div class="expense-modal-section">
+                    <h4>💡 General Optimization Strategies</h4>
+                    <div style="display: grid; gap: 12px;">
+                        ${generalSuggestions.map(s => `
+                            <div style="padding: 14px; background: var(--bg-tertiary); border-radius: 10px; border-left: 3px solid var(--success);">
+                                <div style="font-weight: 600; margin-bottom: 4px;">${s.name}</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">${s.desc}</div>
+                                <div style="margin-top: 8px;">
+                                    <span style="font-size: 0.7rem; padding: 2px 8px; background: rgba(16, 185, 129, 0.2); color: var(--success); border-radius: 4px;">Impact: ${s.impact}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateServicesDetail() {
+            const services = expenseData.filter(e => e.status === 'active' || e.status === 'pending');
+            
+            // Group by category
+            const byCategory = {};
+            services.forEach(s => {
+                if (!byCategory[s.category]) byCategory[s.category] = [];
+                byCategory[s.category].push(s);
+            });
+            
+            const activeCount = services.filter(s => s.status === 'active').length;
+            const pendingCount = services.filter(s => s.status === 'pending').length;
+            
+            return `
+                <div class="expense-modal-summary">
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--info);">${services.length}</div>
+                        <div class="label">Total Services</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--success);">${activeCount}</div>
+                        <div class="label">Active</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--warning);">${pendingCount}</div>
+                        <div class="label">Pending</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--purple);">${Object.keys(byCategory).length}</div>
+                        <div class="label">Categories</div>
+                    </div>
+                </div>
+                
+                ${Object.entries(byCategory).map(([category, items]) => `
+                    <div class="expense-modal-section">
+                        <h4>${getCategoryIcon(category)} ${category.charAt(0).toUpperCase() + category.slice(1)} (${items.length})</h4>
+                        <table class="expense-modal-table">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th>Vendor</th>
+                                    <th>Billing</th>
+                                    <th>Cost</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${items.map(item => {
+                                    const cost = item.perUser ? item.cost * (item.users || 1) : item.cost;
+                                    const statusColor = item.status === 'active' ? 'var(--success)' : 'var(--warning)';
+                                    return `
+                                        <tr>
+                                            <td>${item.name}</td>
+                                            <td style="font-size: 0.8rem; color: var(--text-muted);">${item.vendor || '--'}</td>
+                                            <td>${item.billing}</td>
+                                            <td class="amount">${formatCurrency(cost)}</td>
+                                            <td><span style="color: ${statusColor};">● ${item.status}</span></td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        function generatePayrollDetail(monthsActive) {
+            const activeEmployees = orgData.employees ? orgData.employees.filter(e => e.status === 'active') : [];
+            const totalAnnualPayroll = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
+            const monthlyPayroll = totalAnnualPayroll / 12;
+            const payrollToDate = monthlyPayroll * monthsActive;
+            
+            // Group by department
+            const byDepartment = {};
+            activeEmployees.forEach(emp => {
+                const dept = orgData.departments ? orgData.departments.find(d => d.id === emp.department) : null;
+                const deptName = dept ? dept.name : 'Unassigned';
+                if (!byDepartment[deptName]) byDepartment[deptName] = { employees: [], total: 0 };
+                byDepartment[deptName].employees.push(emp);
+                byDepartment[deptName].total += emp.salary || 0;
+            });
+            
+            return `
+                <div class="expense-modal-summary">
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--purple);">${formatCurrency(monthlyPayroll)}</div>
+                        <div class="label">Monthly Payroll</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--info);">${formatCurrency(totalAnnualPayroll)}</div>
+                        <div class="label">Annual Payroll</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--warning);">${formatCurrency(payrollToDate)}</div>
+                        <div class="label">Spent to Date</div>
+                    </div>
+                    <div class="expense-modal-stat">
+                        <div class="value" style="color: var(--success);">${activeEmployees.length}</div>
+                        <div class="label">Active Employees</div>
+                    </div>
+                </div>
+                
+                ${Object.entries(byDepartment).length > 0 ? Object.entries(byDepartment).map(([deptName, data]) => `
+                    <div class="expense-modal-section">
+                        <h4>🏢 ${deptName} Department (${data.employees.length})</h4>
+                        <table class="expense-modal-table">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Role</th>
+                                    <th>Annual Salary</th>
+                                    <th>Monthly</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.employees.map(emp => `
+                                    <tr>
+                                        <td>${emp.name}</td>
+                                        <td style="font-size: 0.8rem; color: var(--text-muted);">${emp.role}</td>
+                                        <td class="amount">${formatCurrency(emp.salary || 0)}</td>
+                                        <td class="amount">${formatCurrency((emp.salary || 0) / 12)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                            <tfoot>
+                                <tr style="font-weight: 600; background: var(--bg-secondary);">
+                                    <td colspan="2">Department Total</td>
+                                    <td class="amount">${formatCurrency(data.total)}</td>
+                                    <td class="amount">${formatCurrency(data.total / 12)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                `).join('') : `
+                    <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+                        <div style="font-size: 2rem; margin-bottom: 12px;">👥</div>
+                        <div>No employees found in the org hierarchy.</div>
+                        <div style="font-size: 0.8rem; margin-top: 8px;">Add employees in the Hierarchy section to track payroll.</div>
+                    </div>
+                `}
+                
+                <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; font-size: 0.8rem; color: var(--text-muted); margin-top: 16px;">
+                    💡 Payroll data is integrated from the Organization Hierarchy. Update employee salaries there to reflect changes here.
+                </div>
+            `;
+        }
+        
+        function getCategoryIcon(category) {
+            const icons = {
+                'development': '🛠️',
+                'cloud': '☁️',
+                'communication': '📧',
+                'legal': '⚖️',
+                'marketing': '📢',
+                'analytics': '📊',
+                'security': '🔒',
+                'payroll': '👥'
+            };
+            return icons[category] || '📦';
         }
         
         async function renderExpenses() {

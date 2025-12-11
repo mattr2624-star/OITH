@@ -84,6 +84,111 @@ export const handler = async (event) => {
             };
         }
         
+        // ============ SUBSCRIPTION STATS (Admin Dashboard) ============
+        if (method === 'GET' && path.includes('/subscription-stats')) {
+            const stripeClient = await getStripe();
+            
+            try {
+                // Get all subscriptions (active and canceled for churn calculation)
+                const [activeSubscriptions, canceledSubscriptions, pastDueSubscriptions] = await Promise.all([
+                    stripeClient.subscriptions.list({ status: 'active', limit: 100 }),
+                    stripeClient.subscriptions.list({ status: 'canceled', limit: 100 }),
+                    stripeClient.subscriptions.list({ status: 'past_due', limit: 100 })
+                ]);
+                
+                const activeCount = activeSubscriptions.data.length;
+                const canceledCount = canceledSubscriptions.data.length;
+                const pastDueCount = pastDueSubscriptions.data.length;
+                
+                // Calculate MRR from active subscriptions
+                let mrr = 0;
+                for (const sub of activeSubscriptions.data) {
+                    for (const item of sub.items.data) {
+                        // Get the recurring amount per month
+                        const amount = item.price.unit_amount / 100; // Convert cents to dollars
+                        const interval = item.price.recurring?.interval;
+                        const intervalCount = item.price.recurring?.interval_count || 1;
+                        
+                        if (interval === 'month') {
+                            mrr += amount / intervalCount;
+                        } else if (interval === 'year') {
+                            mrr += amount / (12 * intervalCount);
+                        } else if (interval === 'week') {
+                            mrr += (amount * 52) / (12 * intervalCount);
+                        }
+                    }
+                }
+                
+                // Calculate churn rate (last 30 days)
+                const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+                const recentCancellations = canceledSubscriptions.data.filter(
+                    sub => sub.canceled_at && sub.canceled_at >= thirtyDaysAgo
+                ).length;
+                
+                // Churn = cancellations / (active + cancellations) over period
+                const totalSubscribersInPeriod = activeCount + recentCancellations;
+                const monthlyChurnRate = totalSubscribersInPeriod > 0 
+                    ? (recentCancellations / totalSubscribersInPeriod) * 100 
+                    : 0;
+                
+                // Get customer count for conversion rate
+                const customers = await stripeClient.customers.list({ limit: 100 });
+                const totalCustomers = customers.data.length;
+                const conversionRate = totalCustomers > 0 
+                    ? (activeCount / totalCustomers) * 100 
+                    : 0;
+                
+                // Get revenue history for chart (last 6 months)
+                const revenueByMonth = {};
+                const now = new Date();
+                for (let i = 5; i >= 0; i--) {
+                    const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const monthKey = monthDate.toISOString().slice(0, 7); // YYYY-MM format
+                    revenueByMonth[monthKey] = 0;
+                }
+                
+                // Get charges for revenue history
+                const charges = await stripeClient.charges.list({ 
+                    limit: 100,
+                    created: { gte: Math.floor(new Date(now.getFullYear(), now.getMonth() - 5, 1).getTime() / 1000) }
+                });
+                
+                for (const charge of charges.data) {
+                    if (charge.status === 'succeeded' && !charge.refunded) {
+                        const chargeDate = new Date(charge.created * 1000);
+                        const monthKey = chargeDate.toISOString().slice(0, 7);
+                        if (revenueByMonth.hasOwnProperty(monthKey)) {
+                            revenueByMonth[monthKey] += charge.amount / 100;
+                        }
+                    }
+                }
+                
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        mrr: Math.round(mrr * 100) / 100,
+                        activeSubscriptions: activeCount,
+                        canceledSubscriptions: canceledCount,
+                        pastDueSubscriptions: pastDueCount,
+                        monthlyChurnRate: Math.round(monthlyChurnRate * 10) / 10,
+                        conversionRate: Math.round(conversionRate * 10) / 10,
+                        totalCustomers: totalCustomers,
+                        revenueByMonth: revenueByMonth,
+                        lastUpdated: new Date().toISOString()
+                    })
+                };
+                
+            } catch (error) {
+                console.error('Error fetching subscription stats:', error);
+                return {
+                    statusCode: 500,
+                    headers,
+                    body: JSON.stringify({ error: error.message })
+                };
+            }
+        }
+        
         // ============ CREATE PAYMENT INTENT (Embedded Checkout) ============
         if (method === 'POST' && path.includes('/create-payment-intent')) {
             const stripeClient = await getStripe();
