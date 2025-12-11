@@ -116,6 +116,43 @@
             animation: pulse 2s infinite;
         }
 
+        .aws-sync-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-left: 12px;
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+        }
+
+        .aws-sync-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .aws-sync-label {
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .aws-status {
+            color: var(--text-secondary);
+        }
+
+        .aws-status.success {
+            color: var(--success);
+        }
+
+        .aws-status.error {
+            color: var(--danger);
+        }
+
+        .aws-status.muted {
+            color: var(--text-muted);
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -1461,9 +1498,19 @@
             <span class="logo-badge">Admin</span>
         </div>
         <div class="header-center">
-            <div class="live-indicator">
-                <span class="live-dot"></span>
-                <span>Live Data</span>
+            <div class="live-indicator" id="awsSyncIndicator">
+                <span class="live-dot" id="awsSyncDot"></span>
+                <span>AWS Sync</span>
+            </div>
+            <div class="aws-sync-meta">
+                <div class="aws-sync-line">
+                    <span class="aws-sync-label">Last receive:</span>
+                    <span id="awsLastReceive" class="aws-status muted">--</span>
+                </div>
+                <div class="aws-sync-line">
+                    <span class="aws-sync-label">Last send:</span>
+                    <span id="awsLastSend" class="aws-status muted">--</span>
+                </div>
             </div>
             <div class="sync-traffic-indicator" id="syncTrafficIndicator" style="display: flex; align-items: center; gap: 12px; margin-left: 20px; padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 0.75rem;">
                 <div style="display: flex; align-items: center; gap: 4px;">
@@ -6231,6 +6278,71 @@
             document.getElementById('hierRedCount').textContent = redLights;
         }
         
+        // Track last known connection state for the hierarchy so we only surface new issues
+        let lastHierarchyConnectionState = { aws: true, index: true };
+
+        // Collect unique component ids from the hierarchy diagram
+        function getHierarchyComponentIds() {
+            return Array.from(document.querySelectorAll('#systemHierarchy [data-component]'))
+                .map(el => el.getAttribute('data-component'))
+                .filter(Boolean)
+                .filter((id, idx, arr) => arr.indexOf(id) === idx);
+        }
+
+        // Lightweight availability check for the index app
+        async function checkIndexAppAvailability() {
+            try {
+                const [indexCheck, appJsCheck] = await Promise.all([
+                    checkFileWithTimestamp('index.html'),
+                    checkFileWithTimestamp('app.js')
+                ]);
+                return indexCheck.exists && appJsCheck.exists;
+            } catch (e) {
+                console.log('Index availability check failed:', e.message);
+                return false;
+            }
+        }
+
+        // Lightweight availability check for the AWS backend
+        async function checkAWSConnectivity() {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+            try {
+                // no-cors keeps the check simple and avoids CORS errors surfacing to the user
+                await fetch(AWS_API_URL, { method: 'GET', mode: 'no-cors', signal: controller.signal });
+                return true;
+            } catch (e) {
+                console.log('AWS connectivity check failed:', e.message);
+                return false;
+            } finally {
+                clearTimeout(timeout);
+            }
+        }
+
+        // Only raise an error notification when a connection issue is detected for AWS or the index app
+        async function checkHierarchyConnections() {
+            const [indexOk, awsOk] = await Promise.all([
+                checkIndexAppAvailability(),
+                checkAWSConnectivity()
+            ]);
+
+            const hasIssue = !indexOk || !awsOk;
+            const statusChanged = lastHierarchyConnectionState.aws !== awsOk || lastHierarchyConnectionState.index !== indexOk;
+
+            if (hasIssue && statusChanged) {
+                const issueTargets = [];
+                if (!awsOk) issueTargets.push('AWS backend');
+                if (!indexOk) issueTargets.push('index app');
+
+                const affected = getHierarchyComponentIds();
+                const affectedText = affected.length ? `Affected: ${affected.join(', ')}` : 'Affected: hierarchy components';
+
+                showToast(`❌ Connection issue with ${issueTargets.join(' and ')}. ${affectedText}`, 'error');
+            }
+
+            lastHierarchyConnectionState = { aws: awsOk, index: indexOk };
+        }
+        
         function setComponentStatus(componentId, status) {
             // status: 'green', 'yellow', 'red', 'gray'
             const item = document.querySelector(`[data-component="${componentId}"]`);
@@ -6973,6 +7085,15 @@
             downloads: 0,
             bytesUp: 0,
             bytesDown: 0
+        };
+
+        let awsSyncStatus = {
+            lastSend: null,
+            lastSendOk: null,
+            lastSendMessage: '',
+            lastReceive: null,
+            lastReceiveOk: null,
+            lastReceiveMessage: ''
         };
         
         function trackSyncUpload(bytes) {
@@ -11268,6 +11389,7 @@
             runUserAppDiagnostics().then(() => {
                 // Update hierarchy status counts after diagnostics
                 updateHierarchyStatusCounts();
+                checkHierarchyConnections();
             });
             
             // Expand hierarchy by default on overview page
