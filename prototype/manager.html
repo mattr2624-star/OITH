@@ -2064,6 +2064,95 @@
             content: ']';
         }
 
+        /* Health indicator dots for nav items */
+        .nav-item .health-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: auto;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+        
+        .nav-item .health-indicator.visible {
+            opacity: 1;
+        }
+        
+        .nav-item .health-indicator.green {
+            background: var(--success);
+            box-shadow: 0 0 6px var(--success);
+        }
+        
+        .nav-item .health-indicator.yellow {
+            background: var(--warning);
+            box-shadow: 0 0 6px var(--warning);
+            animation: healthPulse 1.5s ease-in-out infinite;
+        }
+        
+        .nav-item .health-indicator.red {
+            background: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+            animation: healthPulse 1s ease-in-out infinite;
+        }
+        
+        .nav-item .health-indicator.gray {
+            background: var(--text-muted);
+            opacity: 0.5;
+        }
+        
+        @keyframes healthPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.85); }
+        }
+        
+        /* Health tooltip */
+        .nav-item {
+            position: relative;
+        }
+        
+        .nav-item .health-tooltip {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-left: 10px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 8px 12px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            min-width: 180px;
+        }
+        
+        .nav-item:hover .health-tooltip {
+            display: block;
+        }
+        
+        .health-tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+            gap: 12px;
+        }
+        
+        .health-tooltip-label {
+            color: var(--text-muted);
+        }
+        
+        .health-tooltip-value {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .health-tooltip-value.good { color: var(--success); }
+        .health-tooltip-value.warn { color: var(--warning); }
+        .health-tooltip-value.bad { color: var(--danger); }
+
         /* Content - Outlook Reading Pane Style */
         .content {
             flex: 1;
@@ -3385,14 +3474,15 @@
             <!-- COMPANY/ADMIN SECTION -->
             <div class="nav-section" id="nav-section-admin" data-section="admin" style="border-left: 3px solid var(--accent); margin-left: -1px; padding-left: 13px;">
                 <div class="nav-section-title" style="color: var(--accent);">🏢 Company / Admin</div>
-                <div class="nav-item active" onclick="showSection('overview')">
+                <div class="nav-item active" onclick="showSection('overview')" data-health-section="overview">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 6v6l4 2"/>
                     </svg>
                     Overview
+                    <span class="health-indicator" id="health-overview"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('dashboard')">
+                <div class="nav-item" onclick="showSection('dashboard')" data-health-section="dashboard">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="7" height="7"/>
                         <rect x="14" y="3" width="7" height="7"/>
@@ -3400,16 +3490,18 @@
                         <rect x="3" y="14" width="7" height="7"/>
                     </svg>
                     Dashboard
+                    <span class="health-indicator" id="health-dashboard"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('analytics')">
+                <div class="nav-item" onclick="showSection('analytics')" data-health-section="analytics">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 21H4.6c-.56 0-.84 0-1.054-.109a1 1 0 01-.437-.437C3 20.24 3 19.96 3 19.4V3"/>
                         <path d="M7 14l4-4 4 4 6-6"/>
                         <circle cx="21" cy="8" r="2"/>
                     </svg>
                     Analytics & AI
+                    <span class="health-indicator" id="health-analytics"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('mlmodels')">
+                <div class="nav-item" onclick="showSection('mlmodels')" data-health-section="mlmodels">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M12 1v6m0 6v10"/>
@@ -3418,23 +3510,26 @@
                         <path d="M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24"/>
                     </svg>
                     ML Models
+                    <span class="health-indicator" id="health-mlmodels"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('revenue')">
+                <div class="nav-item" onclick="showSection('revenue')" data-health-section="revenue">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="12" y1="1" x2="12" y2="23"/>
                         <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
                     </svg>
                     Revenue
+                    <span class="health-indicator" id="health-revenue"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('geographic')">
+                <div class="nav-item" onclick="showSection('geographic')" data-health-section="geographic">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="2" y1="12" x2="22" y2="12"/>
                         <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
                     </svg>
                     Geographic
+                    <span class="health-indicator" id="health-geographic"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('legal')">
+                <div class="nav-item" onclick="showSection('legal')" data-health-section="legal">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
@@ -3442,29 +3537,33 @@
                         <path d="M9 15l3 3 3-3"/>
                     </svg>
                     Patents & IP
+                    <span class="health-indicator" id="health-legal"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('compliance')">
+                <div class="nav-item" onclick="showSection('compliance')" data-health-section="compliance">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                         <path d="M9 12l2 2 4-4"/>
                     </svg>
                     Compliance
+                    <span class="health-indicator" id="health-compliance"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('database')">
+                <div class="nav-item" onclick="showSection('database')" data-health-section="database">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <ellipse cx="12" cy="5" rx="9" ry="3"/>
                         <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
                         <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
                     </svg>
                     Database Schema
+                    <span class="health-indicator" id="health-database"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('experiments')">
+                <div class="nav-item" onclick="showSection('experiments')" data-health-section="experiments">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
                     </svg>
                     Experiments
+                    <span class="health-indicator" id="health-experiments"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('org-hierarchy')">
+                <div class="nav-item" onclick="showSection('org-hierarchy')" data-health-section="org-hierarchy">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="9" y="2" width="6" height="4" rx="1"/>
                         <rect x="3" y="10" width="6" height="4" rx="1"/>
@@ -3475,16 +3574,18 @@
                         <path d="M12 6v4M6 14v4M12 14v4M18 14v4M6 10h12"/>
                     </svg>
                     Hierarchy
+                    <span class="health-indicator" id="health-org-hierarchy"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('payroll')">
+                <div class="nav-item" onclick="showSection('payroll')" data-health-section="payroll">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="4" width="20" height="16" rx="2"/>
                         <path d="M12 8v8M8 12h8"/>
                         <circle cx="12" cy="12" r="3"/>
                     </svg>
                     Payroll
+                    <span class="health-indicator" id="health-payroll"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('tax')">
+                <div class="nav-item" onclick="showSection('tax')" data-health-section="tax">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
@@ -3492,8 +3593,9 @@
                         <line x1="9" y1="15" x2="15" y2="15"/>
                     </svg>
                     Tax
+                    <span class="health-indicator" id="health-tax"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('expenses')">
+                <div class="nav-item" onclick="showSection('expenses')" data-health-section="expenses">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="2" y="5" width="20" height="14" rx="2"/>
                         <line x1="2" y1="10" x2="22" y2="10"/>
@@ -3502,8 +3604,9 @@
                         <path d="M16 15v-2"/>
                     </svg>
                     Expenses
+                    <span class="health-indicator" id="health-expenses"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('calendar')">
+                <div class="nav-item" onclick="showSection('calendar')" data-health-section="calendar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                         <line x1="16" y1="2" x2="16" y2="6"/>
@@ -3512,66 +3615,75 @@
                         <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
                     </svg>
                     Calendar
+                    <span class="health-indicator" id="health-calendar"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('simulation')">
+                <div class="nav-item" onclick="showSection('simulation')" data-health-section="simulation">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                     </svg>
                     Stress Test
+                    <span class="health-indicator" id="health-simulation"></span>
                 </div>
             </div>
 
             <!-- USER APP / INDEX SECTION -->
             <div class="nav-section" id="nav-section-app" data-section="app" style="border-left: 3px solid var(--info); margin-left: -1px; padding-left: 13px; margin-top: 16px;">
                 <div class="nav-section-title" style="color: var(--info);">📱 User App (index.html)</div>
-                <div class="nav-item" onclick="showSection('users')">
+                <div class="nav-item" onclick="showSection('users')" data-health-section="users">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
                     </svg>
                     Users
+                    <span class="health-indicator" id="health-users"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('matches')">
+                <div class="nav-item" onclick="showSection('matches')" data-health-section="matches">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
                     </svg>
                     Matches
+                    <span class="health-indicator" id="health-matches"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('funnel')">
+                <div class="nav-item" onclick="showSection('funnel')" data-health-section="funnel">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
                     </svg>
                     Conversion Funnel
+                    <span class="health-indicator" id="health-funnel"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('realtime')">
+                <div class="nav-item" onclick="showSection('realtime')" data-health-section="realtime">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                     </svg>
                     Real-time Activity
+                    <span class="health-indicator" id="health-realtime"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('safety')">
+                <div class="nav-item" onclick="showSection('safety')" data-health-section="safety">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
                     Safety & Reports
+                    <span class="health-indicator" id="health-safety"></span>
                     <span class="nav-badge" id="reportsBadge">3</span>
                 </div>
-                <div class="nav-item" onclick="showSection('compliance')">
+                <div class="nav-item" onclick="showSection('compliance')" data-health-section="compliance-app">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
                         <rect x="9" y="3" width="6" height="4" rx="1"/>
                         <path d="M9 12l2 2 4-4"/>
                     </svg>
                     Compliance
+                    <span class="health-indicator" id="health-compliance-app"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('feedback')">
+                <div class="nav-item" onclick="showSection('feedback')" data-health-section="feedback">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
                     </svg>
                     User Feedback
+                    <span class="health-indicator" id="health-feedback"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('testbots')">
+                <div class="nav-item" onclick="showSection('testbots')" data-health-section="testbots">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="11" width="18" height="10" rx="2"/>
                         <circle cx="12" cy="5" r="2"/>
@@ -3580,22 +3692,25 @@
                         <line x1="16" y1="16" x2="16" y2="16"/>
                     </svg>
                     Test Bots
+                    <span class="health-indicator" id="health-testbots"></span>
                     <span class="nav-badge" style="background: var(--purple)" id="botsActiveBadge">0</span>
                 </div>
-                <div class="nav-item" onclick="showSection('diagnostics')">
+                <div class="nav-item" onclick="showSection('diagnostics')" data-health-section="diagnostics">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M12 6v6l3 3"/>
                     </svg>
                     App Diagnostics
+                    <span class="health-indicator" id="health-diagnostics"></span>
                 </div>
-                <div class="nav-item" onclick="showSection('site-diagnostics')">
+                <div class="nav-item" onclick="showSection('site-diagnostics')" data-health-section="site-diagnostics">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                         <path d="M2 17l10 5 10-5"/>
                         <path d="M2 12l10 5 10-5"/>
                     </svg>
                     Site Diagnostics
+                    <span class="health-indicator" id="health-site-diagnostics"></span>
                 </div>
             </div>
 
@@ -6834,6 +6949,13 @@
                         <div class="stat-value" id="activeServices">0</div>
                         <div class="stat-label">Active Services</div>
                     </div>
+                    <div class="stat-card" style="border-color: var(--purple);">
+                        <div class="stat-card-header">
+                            <div class="stat-icon" style="background: rgba(139, 92, 246, 0.2); color: var(--purple);">👥</div>
+                        </div>
+                        <div class="stat-value" style="color: var(--purple);" id="monthlyPayrollExpense">$0.00</div>
+                        <div class="stat-label">Monthly Payroll</div>
+                    </div>
                 </div>
 
                 <!-- Expense Categories Grid -->
@@ -6885,6 +7007,19 @@
                     </div>
                 </div>
 
+                <!-- Payroll Category -->
+                <div class="cards-grid" style="margin-bottom: 20px;">
+                    <div class="card" style="grid-column: span 2;">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));">
+                            <h3 class="card-title">👥 Payroll & Salaries</h3>
+                            <span class="status-badge" style="background: var(--purple); color: white;" id="payrollTotal">$0/mo</span>
+                        </div>
+                        <div class="card-body" id="payrollExpenses">
+                            <!-- Populated by JS from org data -->
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Detailed Expense Table -->
                 <div class="card" style="margin-bottom: 20px;">
                     <div class="card-header">
@@ -6896,6 +7031,7 @@
                                 <option value="cloud">Cloud/Infrastructure</option>
                                 <option value="communication">Communication</option>
                                 <option value="legal">Legal</option>
+                                <option value="payroll">Payroll</option>
                                 <option value="marketing">Marketing</option>
                                 <option value="other">Other</option>
                             </select>
@@ -8059,6 +8195,60 @@
                     </div>
                 </div>
 
+                <!-- Section Health Monitor -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--success);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));">
+                        <h3 class="card-title">🏥 Section Health Monitor</h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span id="healthOverallStatus" class="status-badge" style="font-size: 0.75rem;">Checking...</span>
+                            <button class="btn btn-secondary" onclick="runAllHealthChecks()" style="font-size: 0.75rem; padding: 4px 10px;">
+                                🔄 Refresh All
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px;">
+                            Real-time health monitoring for all admin sections. Tracks API response times, data freshness, and errors.
+                        </p>
+                        
+                        <!-- Health Summary Stats -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                            <div style="padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 10px; text-align: center; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="healthGreenCount">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Healthy</div>
+                            </div>
+                            <div style="padding: 12px; background: rgba(245, 158, 11, 0.1); border-radius: 10px; text-align: center; border: 1px solid rgba(245, 158, 11, 0.3);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="healthYellowCount">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Warning</div>
+                            </div>
+                            <div style="padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: 10px; text-align: center; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--danger);" id="healthRedCount">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Issues</div>
+                            </div>
+                            <div style="padding: 12px; background: rgba(107, 114, 128, 0.1); border-radius: 10px; text-align: center; border: 1px solid rgba(107, 114, 128, 0.3);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-muted);" id="healthGrayCount">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Not Loaded</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section Health Grid -->
+                        <div style="margin-bottom: 16px;">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">SECTION STATUS</div>
+                            <div id="healthSectionGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                                <!-- Will be populated by JS -->
+                            </div>
+                        </div>
+                        
+                        <!-- Health Issues List -->
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">DETECTED ISSUES</div>
+                            <div id="healthIssuesList" style="max-height: 200px; overflow-y: auto; background: var(--bg-tertiary); border-radius: 8px; padding: 12px;">
+                                <div style="color: var(--text-muted); font-size: 0.8rem;">No issues detected</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- BroadcastChannel Connection Monitor -->
                 <div class="card" style="margin-bottom: 20px; border: 2px solid var(--info);">
                     <div class="card-header" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));">
@@ -9124,6 +9314,287 @@
                 }
                 
                 updateHierarchyStatusCounts();
+            }
+        }
+        
+        // ==========================================
+        // SECTION HEALTH MONITORING SYSTEM
+        // ==========================================
+        
+        // Track health metrics for each section
+        const sectionHealthMetrics = {};
+        let healthMonitorInterval = null;
+        
+        // Define sections and their data sources
+        const sectionConfig = {
+            'overview': { requiresAPI: false, hasRealtime: false, dataKey: 'platformData' },
+            'dashboard': { requiresAPI: true, hasRealtime: true, dataKey: 'dashboardData' },
+            'analytics': { requiresAPI: true, hasRealtime: true, dataKey: 'analyticsData' },
+            'mlmodels': { requiresAPI: true, hasRealtime: false, dataKey: 'mlModels' },
+            'revenue': { requiresAPI: true, hasRealtime: true, dataKey: 'revenueData' },
+            'geographic': { requiresAPI: true, hasRealtime: false, dataKey: 'geographicData' },
+            'legal': { requiresAPI: false, hasRealtime: false, dataKey: 'legalData' },
+            'compliance': { requiresAPI: false, hasRealtime: false, dataKey: 'complianceData' },
+            'database': { requiresAPI: true, hasRealtime: false, dataKey: 'dynamoDBStats' },
+            'experiments': { requiresAPI: false, hasRealtime: false, dataKey: 'experiments' },
+            'org-hierarchy': { requiresAPI: false, hasRealtime: false, dataKey: null },
+            'payroll': { requiresAPI: false, hasRealtime: false, dataKey: 'payrollData' },
+            'tax': { requiresAPI: false, hasRealtime: false, dataKey: 'taxData' },
+            'expenses': { requiresAPI: false, hasRealtime: false, dataKey: 'expensesData' },
+            'calendar': { requiresAPI: true, hasRealtime: false, dataKey: 'calendarEvents' },
+            'simulation': { requiresAPI: false, hasRealtime: false, dataKey: null },
+            'users': { requiresAPI: true, hasRealtime: true, dataKey: 'allUserData' },
+            'matches': { requiresAPI: true, hasRealtime: true, dataKey: 'matchesData' },
+            'funnel': { requiresAPI: true, hasRealtime: false, dataKey: 'funnelData' },
+            'realtime': { requiresAPI: true, hasRealtime: true, dataKey: 'realtimeData' },
+            'safety': { requiresAPI: true, hasRealtime: true, dataKey: 'safetyReports' },
+            'feedback': { requiresAPI: true, hasRealtime: false, dataKey: 'feedbackData' },
+            'testbots': { requiresAPI: false, hasRealtime: true, dataKey: 'testBots' },
+            'diagnostics': { requiresAPI: false, hasRealtime: false, dataKey: null },
+            'site-diagnostics': { requiresAPI: false, hasRealtime: false, dataKey: null },
+            'compliance-app': { requiresAPI: false, hasRealtime: false, dataKey: null }
+        };
+        
+        // Initialize health metrics for all sections
+        function initSectionHealthMetrics() {
+            Object.keys(sectionConfig).forEach(section => {
+                sectionHealthMetrics[section] = {
+                    lastUpdated: null,
+                    lastApiCall: null,
+                    apiResponseTime: null,
+                    apiErrors: 0,
+                    consecutiveErrors: 0,
+                    dataCount: 0,
+                    status: 'gray', // gray = unknown, green = healthy, yellow = warning, red = error
+                    message: 'Not checked yet'
+                };
+            });
+        }
+        
+        // Track API call with timing
+        function trackApiCall(section, startTime, success = true, error = null) {
+            if (!sectionHealthMetrics[section]) return;
+            
+            const metrics = sectionHealthMetrics[section];
+            const endTime = Date.now();
+            metrics.lastApiCall = endTime;
+            metrics.apiResponseTime = endTime - startTime;
+            
+            if (success) {
+                metrics.consecutiveErrors = 0;
+                metrics.lastUpdated = endTime;
+            } else {
+                metrics.apiErrors++;
+                metrics.consecutiveErrors++;
+                if (error) {
+                    metrics.message = error.message || 'API Error';
+                }
+            }
+            
+            updateSectionHealthStatus(section);
+        }
+        
+        // Track section data update
+        function trackSectionUpdate(section, dataCount = 0) {
+            if (!sectionHealthMetrics[section]) return;
+            
+            const metrics = sectionHealthMetrics[section];
+            metrics.lastUpdated = Date.now();
+            metrics.dataCount = dataCount;
+            
+            updateSectionHealthStatus(section);
+        }
+        
+        // Calculate and update health status for a section
+        function updateSectionHealthStatus(section) {
+            if (!sectionHealthMetrics[section]) return;
+            
+            const metrics = sectionHealthMetrics[section];
+            const config = sectionConfig[section] || {};
+            const now = Date.now();
+            
+            let status = 'green';
+            let message = 'Healthy';
+            
+            // Check consecutive API errors
+            if (metrics.consecutiveErrors >= 3) {
+                status = 'red';
+                message = `${metrics.consecutiveErrors} consecutive errors`;
+            } else if (metrics.consecutiveErrors >= 1) {
+                status = 'yellow';
+                message = 'Recent API error';
+            }
+            
+            // Check data staleness (for real-time sections)
+            if (config.hasRealtime && metrics.lastUpdated) {
+                const staleness = now - metrics.lastUpdated;
+                if (staleness > 120000) { // 2+ minutes stale
+                    status = 'red';
+                    message = 'Data stale (>2min)';
+                } else if (staleness > 60000) { // 1+ minute stale
+                    status = status === 'green' ? 'yellow' : status;
+                    message = 'Data aging (>1min)';
+                }
+            }
+            
+            // Check API response time (lag detection)
+            if (metrics.apiResponseTime !== null) {
+                if (metrics.apiResponseTime > 5000) { // >5s response
+                    status = 'red';
+                    message = `Severe lag (${(metrics.apiResponseTime/1000).toFixed(1)}s)`;
+                } else if (metrics.apiResponseTime > 2000) { // >2s response
+                    status = status === 'green' ? 'yellow' : status;
+                    message = `Lag detected (${(metrics.apiResponseTime/1000).toFixed(1)}s)`;
+                }
+            }
+            
+            // Sections without API don't need real-time tracking
+            if (!config.requiresAPI && !config.hasRealtime && metrics.lastUpdated) {
+                status = 'green';
+                message = 'Healthy';
+            }
+            
+            // Never visited = gray
+            if (!metrics.lastUpdated && !metrics.lastApiCall) {
+                status = 'gray';
+                message = 'Not loaded';
+            }
+            
+            metrics.status = status;
+            metrics.message = message;
+            
+            // Update the UI indicator
+            updateHealthIndicatorUI(section);
+        }
+        
+        // Update the visual health indicator in the sidebar
+        function updateHealthIndicatorUI(section) {
+            const indicator = document.getElementById(`health-${section}`);
+            if (!indicator) return;
+            
+            const metrics = sectionHealthMetrics[section];
+            if (!metrics) return;
+            
+            // Remove all status classes
+            indicator.classList.remove('green', 'yellow', 'red', 'gray', 'visible');
+            
+            // Add the current status class and make visible
+            indicator.classList.add(metrics.status, 'visible');
+            
+            // Update tooltip
+            updateHealthTooltip(section);
+        }
+        
+        // Create/update tooltip for health indicator
+        function updateHealthTooltip(section) {
+            const navItem = document.querySelector(`[data-health-section="${section}"]`);
+            if (!navItem) return;
+            
+            const metrics = sectionHealthMetrics[section];
+            if (!metrics) return;
+            
+            // Remove existing tooltip
+            let tooltip = navItem.querySelector('.health-tooltip');
+            if (!tooltip) {
+                tooltip = document.createElement('div');
+                tooltip.className = 'health-tooltip';
+                navItem.appendChild(tooltip);
+            }
+            
+            const statusClass = metrics.status === 'green' ? 'good' : 
+                                metrics.status === 'yellow' ? 'warn' : 
+                                metrics.status === 'red' ? 'bad' : '';
+            
+            const lastUpdatedText = metrics.lastUpdated 
+                ? getTimeAgo(metrics.lastUpdated)
+                : 'Never';
+                
+            const responseTimeText = metrics.apiResponseTime !== null
+                ? `${metrics.apiResponseTime}ms`
+                : 'N/A';
+            
+            tooltip.innerHTML = `
+                <div class="health-tooltip-row">
+                    <span class="health-tooltip-label">Status:</span>
+                    <span class="health-tooltip-value ${statusClass}">${metrics.message}</span>
+                </div>
+                <div class="health-tooltip-row">
+                    <span class="health-tooltip-label">Last Update:</span>
+                    <span class="health-tooltip-value">${lastUpdatedText}</span>
+                </div>
+                <div class="health-tooltip-row">
+                    <span class="health-tooltip-label">Response:</span>
+                    <span class="health-tooltip-value">${responseTimeText}</span>
+                </div>
+                ${metrics.dataCount > 0 ? `
+                <div class="health-tooltip-row">
+                    <span class="health-tooltip-label">Records:</span>
+                    <span class="health-tooltip-value">${metrics.dataCount.toLocaleString()}</span>
+                </div>
+                ` : ''}
+                ${metrics.apiErrors > 0 ? `
+                <div class="health-tooltip-row">
+                    <span class="health-tooltip-label">Total Errors:</span>
+                    <span class="health-tooltip-value bad">${metrics.apiErrors}</span>
+                </div>
+                ` : ''}
+            `;
+        }
+        
+        // Helper: get time ago string
+        function getTimeAgo(timestamp) {
+            const seconds = Math.floor((Date.now() - timestamp) / 1000);
+            if (seconds < 5) return 'Just now';
+            if (seconds < 60) return `${seconds}s ago`;
+            if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
+            if (seconds < 86400) return `${Math.floor(seconds/3600)}h ago`;
+            return `${Math.floor(seconds/86400)}d ago`;
+        }
+        
+        // Run health checks for all sections
+        async function runHealthChecks() {
+            // Check AWS connectivity
+            const awsOk = await checkAWSConnectivity();
+            
+            // Update all API-dependent sections based on AWS status
+            Object.keys(sectionConfig).forEach(section => {
+                const config = sectionConfig[section];
+                if (config.requiresAPI && !awsOk) {
+                    const metrics = sectionHealthMetrics[section];
+                    if (metrics && metrics.status !== 'gray') {
+                        metrics.status = 'red';
+                        metrics.message = 'AWS unreachable';
+                        updateHealthIndicatorUI(section);
+                    }
+                }
+            });
+            
+            // Check data freshness for sections that have been loaded
+            Object.keys(sectionHealthMetrics).forEach(section => {
+                if (sectionHealthMetrics[section].lastUpdated) {
+                    updateSectionHealthStatus(section);
+                }
+            });
+        }
+        
+        // Start health monitoring
+        function startHealthMonitoring() {
+            initSectionHealthMetrics();
+            
+            // Run initial checks
+            runHealthChecks();
+            
+            // Run checks every 30 seconds
+            healthMonitorInterval = setInterval(runHealthChecks, 30000);
+            
+            console.log('🏥 Section health monitoring started');
+        }
+        
+        // Stop health monitoring
+        function stopHealthMonitoring() {
+            if (healthMonitorInterval) {
+                clearInterval(healthMonitorInterval);
+                healthMonitorInterval = null;
             }
         }
         
@@ -10285,6 +10756,11 @@
             
             initHierarchy(); // Initialize system hierarchy
             
+            // Start section health monitoring
+            if (typeof startHealthMonitoring === 'function') {
+                startHealthMonitoring();
+            }
+            
             // ALWAYS fetch from AWS on page load (AWS is source of truth)
             console.log('☁️ Fetching data from DynamoDB...');
             await fetchFromAWSSilent();
@@ -10962,18 +11438,32 @@
         // Silently fetch from AWS (used by auto-refresh, no confirmation)
         async function fetchFromAWSSilent() {
             const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+            const apiStartTime = Date.now();
             
             try {
                 const response = await fetch(`${awsApiUrl}/users`);
                 if (!response.ok) {
                     recordAwsReceive(false, `HTTP ${response.status}`);
                     setAwsConnectionError(true, `HTTP ${response.status}`);
+                    // Track API failure for relevant sections
+                    if (typeof trackApiCall === 'function') {
+                        ['users', 'matches', 'dashboard', 'analytics', 'realtime', 'safety'].forEach(section => {
+                            trackApiCall(section, apiStartTime, false, new Error(`HTTP ${response.status}`));
+                        });
+                    }
                     return;
                 }
                 
                 const responseText = await response.text();
                 const responseBytes = new Blob([responseText]).size;
                 trackSyncDownload(responseBytes);
+                
+                // Track API success for relevant sections
+                if (typeof trackApiCall === 'function') {
+                    ['users', 'matches', 'dashboard', 'analytics', 'realtime', 'safety'].forEach(section => {
+                        trackApiCall(section, apiStartTime, true);
+                    });
+                }
                 
                 const awsUsers = JSON.parse(responseText);
                 console.log(`☁️ Fetched ${Object.keys(awsUsers).length} users from DynamoDB (${(responseBytes/1024).toFixed(1)}KB)`);
@@ -11037,6 +11527,13 @@
                 console.log('⚠️ AWS fetch failed (offline?):', error.message);
                 recordAwsReceive(false, error.message);
                 setAwsConnectionError(true, error.message);
+                
+                // Track API failure for relevant sections
+                if (typeof trackApiCall === 'function') {
+                    ['users', 'matches', 'dashboard', 'analytics', 'realtime', 'safety'].forEach(section => {
+                        trackApiCall(section, apiStartTime, false, error);
+                    });
+                }
             }
         }
         
@@ -11463,6 +11960,9 @@
             // Track current section for refresh
             currentSection = section;
             
+            // Track API call timing for health monitoring
+            const apiStartTime = Date.now();
+            
             // Stop launch readiness monitoring when leaving calendar
             if (section !== 'calendar' && typeof stopLaunchReadinessMonitor === 'function') {
                 stopLaunchReadinessMonitor();
@@ -11497,32 +11997,55 @@
             platformData = calculatePlatformStats();
             
             // Render section content
-            switch(section) {
-                case 'overview': renderOverview(); break;
-                case 'dashboard': renderDashboard(); break;
-                case 'realtime': renderRealtime(); break;
-                case 'analytics': renderAnalytics(); break;
-                case 'mlmodels': renderMLModels(); break;
-                case 'users': renderUsers(); break;
-                case 'matches': renderMatches(); break;
-                case 'funnel': renderFunnel(); break;
-                case 'revenue': renderRevenue(); break;
-                case 'geographic': renderGeographic(); break;
-                case 'safety': renderSafety(); break;
-                case 'feedback': renderFeedback(); break;
-                case 'testbots': renderTestBots(); break;
-                case 'legal': renderLegal(); break;
-                case 'compliance': renderCompliance(); break;
-                case 'database': renderDatabase(); break;
-                case 'experiments': renderExperiments(); break;
-                case 'org-hierarchy': renderOrgHierarchy(); break;
-                case 'payroll': renderPayroll(); break;
-                case 'tax': renderTax(); break;
-                case 'calendar': initCalendarSection(); break;
-                case 'expenses': renderExpenses(); break;
-                case 'simulation': renderSimulation(); break;
-                case 'diagnostics': renderDiagnostics(); break;
-                case 'site-diagnostics': renderSiteDiagnostics(); break;
+            try {
+                switch(section) {
+                    case 'overview': renderOverview(); break;
+                    case 'dashboard': renderDashboard(); break;
+                    case 'realtime': renderRealtime(); break;
+                    case 'analytics': renderAnalytics(); break;
+                    case 'mlmodels': renderMLModels(); break;
+                    case 'users': renderUsers(); break;
+                    case 'matches': renderMatches(); break;
+                    case 'funnel': renderFunnel(); break;
+                    case 'revenue': renderRevenue(); break;
+                    case 'geographic': renderGeographic(); break;
+                    case 'safety': renderSafety(); break;
+                    case 'feedback': renderFeedback(); break;
+                    case 'testbots': renderTestBots(); break;
+                    case 'legal': renderLegal(); break;
+                    case 'compliance': renderCompliance(); break;
+                    case 'database': renderDatabase(); break;
+                    case 'experiments': renderExperiments(); break;
+                    case 'org-hierarchy': renderOrgHierarchy(); break;
+                    case 'payroll': renderPayroll(); break;
+                    case 'tax': renderTax(); break;
+                    case 'calendar': initCalendarSection(); break;
+                    case 'expenses': renderExpenses(); break;
+                    case 'simulation': renderSimulation(); break;
+                    case 'diagnostics': renderDiagnostics(); break;
+                    case 'site-diagnostics': renderSiteDiagnostics(); break;
+                }
+                
+                // Track successful section load
+                if (typeof trackApiCall === 'function') {
+                    trackApiCall(section, apiStartTime, true);
+                    
+                    // Count data records for the section
+                    const config = sectionConfig[section];
+                    if (config && config.dataKey && window[config.dataKey]) {
+                        const data = window[config.dataKey];
+                        const count = Array.isArray(data) ? data.length : 
+                                      typeof data === 'object' ? Object.keys(data).length : 0;
+                        trackSectionUpdate(section, count);
+                    } else {
+                        trackSectionUpdate(section, 0);
+                    }
+                }
+            } catch (error) {
+                console.error(`Error rendering section ${section}:`, error);
+                if (typeof trackApiCall === 'function') {
+                    trackApiCall(section, apiStartTime, false, error);
+                }
             }
         }
 
@@ -27505,10 +28028,13 @@
             localStorage.setItem('oithExpenses', JSON.stringify(expenseData));
         }
         
-        function renderExpenses() {
+        async function renderExpenses() {
             initExpenses();
             
-            // Calculate totals
+            // Load org data to get employee salaries
+            await loadOrgData();
+            
+            // Calculate totals from regular expenses
             let totalToDate = 0;
             let monthlyRecurring = 0;
             let yearlyEquivalent = 0;
@@ -27535,21 +28061,37 @@
                 }
             });
             
+            // Calculate payroll from employee salaries (integrated from org data)
+            const activeEmployees = orgData.employees.filter(e => e.status === 'active');
+            const totalAnnualPayroll = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
+            const monthlyPayroll = totalAnnualPayroll / 12;
+            
+            // Add payroll to monthly burn rate and totals
+            const totalMonthlyBurn = monthlyRecurring + monthlyPayroll;
+            totalToDate += monthlyPayroll * monthsActive;
+            
             // Update summary stats
-            document.getElementById('totalExpensesToDate').textContent = '$' + totalToDate.toFixed(2);
-            document.getElementById('monthlyBurn').textContent = '$' + monthlyRecurring.toFixed(2);
+            document.getElementById('totalExpensesToDate').textContent = formatCurrency(totalToDate);
+            document.getElementById('monthlyBurn').textContent = formatCurrency(totalMonthlyBurn);
             document.getElementById('activeServices').textContent = activeServices;
+            document.getElementById('monthlyPayrollExpense').textContent = formatCurrency(monthlyPayroll);
             
             // Calculate potential savings
             const potentialSavings = calculatePotentialSavings();
-            document.getElementById('potentialSavings').textContent = '$' + potentialSavings.toFixed(2) + '/mo';
-            document.getElementById('expensesTrend').textContent = monthlyRecurring > 50 ? '+' + Math.round((monthlyRecurring / 50 - 1) * 100) + '%' : 'LOW';
+            document.getElementById('potentialSavings').textContent = formatCurrency(potentialSavings) + '/mo';
+            
+            // Calculate expense trend (comparing total burn to baseline)
+            const baselineBurn = 50; // Base monthly services without payroll
+            document.getElementById('expensesTrend').textContent = totalMonthlyBurn > baselineBurn ? '+' + Math.round((totalMonthlyBurn / baselineBurn - 1) * 100) + '%' : 'LOW';
             
             // Render category cards
             renderCategoryExpenses('development', 'devToolsExpenses', 'devToolsTotal');
             renderCategoryExpenses('cloud', 'cloudExpenses', 'cloudTotal');
             renderCategoryExpenses('communication', 'emailExpenses', 'emailTotal');
             renderCategoryExpenses('legal', 'legalExpenses', 'legalTotal');
+            
+            // Render payroll category (from employee salaries)
+            renderPayrollExpenses();
             
             // Render expense table
             renderExpenseTable();
@@ -27607,42 +28149,136 @@
             }
         }
         
+        function renderPayrollExpenses() {
+            const container = document.getElementById('payrollExpenses');
+            const totalEl = document.getElementById('payrollTotal');
+            
+            const activeEmployees = orgData.employees.filter(e => e.status === 'active');
+            const totalAnnualPayroll = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
+            const monthlyPayroll = totalAnnualPayroll / 12;
+            
+            if (activeEmployees.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted); font-size: 12px;">No active employees</p>';
+                totalEl.textContent = '$0/mo';
+                return;
+            }
+            
+            let html = '';
+            
+            // Sort employees by salary (highest first)
+            const sortedEmployees = [...activeEmployees].sort((a, b) => (b.salary || 0) - (a.salary || 0));
+            
+            sortedEmployees.forEach(emp => {
+                const dept = orgData.departments.find(d => d.id === emp.department);
+                const monthlySalary = (emp.salary || 0) / 12;
+                const percentOfTotal = totalAnnualPayroll > 0 ? ((emp.salary || 0) / totalAnnualPayroll * 100).toFixed(1) : 0;
+                
+                html += `
+                    <div class="metric-row" style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+                            <div style="width: 36px; height: 36px; border-radius: 50%; background: ${dept?.color || 'var(--accent)'}30; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: ${dept?.color || 'var(--accent)'};">
+                                ${emp.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                                <div style="font-weight: 500; font-size: 0.9rem;">${emp.name}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${emp.role} • ${dept?.name || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="metric-value" style="color: var(--purple); font-weight: 600;">
+                                ${formatCurrency(monthlySalary)}/mo
+                            </span>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">${percentOfTotal}% of payroll</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Add summary row
+            html += `
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">${activeEmployees.length} active employee${activeEmployees.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Annual Total</div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--purple);">${formatCurrency(totalAnnualPayroll)}</div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            totalEl.textContent = formatCurrency(monthlyPayroll) + '/mo';
+        }
+        
         function renderExpenseTable() {
             const tbody = document.getElementById('expenseTableBody');
             const filterCategory = document.getElementById('expenseFilterCategory')?.value || 'all';
             
-            let filtered = expenseData;
-            if (filterCategory !== 'all') {
-                filtered = expenseData.filter(e => e.category === filterCategory);
+            let html = '';
+            
+            // Handle regular expenses
+            if (filterCategory !== 'payroll') {
+                let filtered = expenseData;
+                if (filterCategory !== 'all') {
+                    filtered = expenseData.filter(e => e.category === filterCategory);
+                }
+                
+                filtered.forEach(exp => {
+                    const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                    const statusClass = exp.status === 'active' ? 'active' : 
+                                       exp.status === 'pending' ? 'warning' : 'inactive';
+                    
+                    html += `
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600;">${exp.name}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">${exp.vendor} • ${exp.notes}</div>
+                            </td>
+                            <td><span class="status-badge" style="text-transform: capitalize;">${exp.category}</span></td>
+                            <td style="font-weight: 600; color: ${cost > 0 ? 'var(--text-primary)' : 'var(--success)'}">
+                                ${cost > 0 ? '$' + cost.toFixed(2) : 'FREE'}
+                            </td>
+                            <td style="text-transform: capitalize;">${exp.billing}</td>
+                            <td><span class="status-badge ${statusClass}">${exp.status}</span></td>
+                            <td>
+                                <button onclick="editExpense('${exp.id}')" style="background: none; border: none; cursor: pointer; color: var(--accent);">✏️</button>
+                                <button onclick="deleteExpense('${exp.id}')" style="background: none; border: none; cursor: pointer; color: var(--danger);">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
             }
             
-            let html = '';
-            filtered.forEach(exp => {
-                const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
-                const statusClass = exp.status === 'active' ? 'active' : 
-                                   exp.status === 'pending' ? 'warning' : 'inactive';
+            // Handle payroll entries (show when 'all' or 'payroll' selected)
+            if (filterCategory === 'all' || filterCategory === 'payroll') {
+                const activeEmployees = orgData.employees.filter(e => e.status === 'active');
                 
-                html += `
-                    <tr>
-                        <td>
-                            <div style="font-weight: 600;">${exp.name}</div>
-                            <div style="font-size: 11px; color: var(--text-muted);">${exp.vendor} • ${exp.notes}</div>
-                        </td>
-                        <td><span class="status-badge" style="text-transform: capitalize;">${exp.category}</span></td>
-                        <td style="font-weight: 600; color: ${cost > 0 ? 'var(--text-primary)' : 'var(--success)'}">
-                            ${cost > 0 ? '$' + cost.toFixed(2) : 'FREE'}
-                        </td>
-                        <td style="text-transform: capitalize;">${exp.billing}</td>
-                        <td><span class="status-badge ${statusClass}">${exp.status}</span></td>
-                        <td>
-                            <button onclick="editExpense('${exp.id}')" style="background: none; border: none; cursor: pointer; color: var(--accent);">✏️</button>
-                            <button onclick="deleteExpense('${exp.id}')" style="background: none; border: none; cursor: pointer; color: var(--danger);">🗑️</button>
-                        </td>
-                    </tr>
-                `;
-            });
+                activeEmployees.forEach(emp => {
+                    const dept = orgData.departments.find(d => d.id === emp.department);
+                    const monthlySalary = (emp.salary || 0) / 12;
+                    
+                    html += `
+                        <tr style="background: rgba(139, 92, 246, 0.05);">
+                            <td>
+                                <div style="font-weight: 600;">💰 ${emp.name}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">${emp.role} • ${dept?.name || 'N/A'}</div>
+                            </td>
+                            <td><span class="status-badge" style="background: var(--purple); color: white;">Payroll</span></td>
+                            <td style="font-weight: 600; color: var(--purple);">
+                                ${formatCurrency(monthlySalary)}
+                            </td>
+                            <td>Monthly</td>
+                            <td><span class="status-badge active">Active</span></td>
+                            <td>
+                                <button onclick="showSection('organization'); setTimeout(() => editEmployee(${emp.id}), 100);" style="background: none; border: none; cursor: pointer; color: var(--accent);">✏️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
             
-            tbody.innerHTML = html;
+            tbody.innerHTML = html || '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No expenses found</td></tr>';
             
             // Add filter listeners
             document.getElementById('expenseFilterCategory')?.addEventListener('change', renderExpenseTable);
@@ -27833,19 +28469,27 @@
         function renderExpenseChart() {
             const container = document.getElementById('expenseChartContainer');
             
-            // Simple bar chart showing category breakdown
-            const categories = ['Development', 'Cloud', 'Communication', 'Legal', 'Other'];
-            const colors = ['var(--purple)', 'var(--warning)', 'var(--info)', 'var(--success)', 'var(--text-muted)'];
+            // Simple bar chart showing category breakdown (including payroll from employees)
+            const categories = ['Payroll', 'Development', 'Cloud', 'Communication', 'Legal', 'Other'];
+            const colors = ['var(--purple)', 'var(--accent)', 'var(--warning)', 'var(--info)', 'var(--success)', 'var(--text-muted)'];
             
             const categoryTotals = categories.map((cat, idx) => {
                 const catKey = cat.toLowerCase();
-                const catExpenses = expenseData.filter(e => e.category === catKey || (catKey === 'other' && !['development', 'cloud', 'communication', 'legal'].includes(e.category)));
                 let total = 0;
-                catExpenses.forEach(e => {
-                    if (e.billing === 'monthly') total += (e.perUser ? e.cost * (e.users || 1) : e.cost) * 12;
-                    else if (e.billing === 'yearly') total += e.cost;
-                    else total += e.cost;
-                });
+                
+                if (catKey === 'payroll') {
+                    // Calculate payroll from employee salaries
+                    const activeEmployees = orgData.employees.filter(e => e.status === 'active');
+                    total = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
+                } else {
+                    const catExpenses = expenseData.filter(e => e.category === catKey || (catKey === 'other' && !['development', 'cloud', 'communication', 'legal'].includes(e.category)));
+                    catExpenses.forEach(e => {
+                        if (e.billing === 'monthly') total += (e.perUser ? e.cost * (e.users || 1) : e.cost) * 12;
+                        else if (e.billing === 'yearly') total += e.cost;
+                        else total += e.cost;
+                    });
+                }
+                
                 return { name: cat, total, color: colors[idx] };
             });
             
@@ -27858,7 +28502,7 @@
                     <div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">
                             <span>${cat.name}</span>
-                            <span style="font-weight: 600;">$${cat.total.toFixed(0)}/yr</span>
+                            <span style="font-weight: 600;">$${cat.total.toLocaleString()}/yr</span>
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: ${width}%; background: ${cat.color};"></div>
@@ -27873,7 +28517,7 @@
             html += `
                 <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
                     <span style="font-weight: 600;">Estimated Annual Total</span>
-                    <span style="font-size: 1.25rem; font-weight: 700; color: var(--danger);">$${grandTotal.toFixed(0)}</span>
+                    <span style="font-size: 1.25rem; font-weight: 700; color: var(--danger);">$${grandTotal.toLocaleString()}</span>
                 </div>
             `;
             
@@ -28052,9 +28696,18 @@
         function exportExpenseReport() {
             let csv = 'Service,Category,Cost,Billing,Status,Vendor,Notes,Start Date\n';
             
+            // Export regular expenses
             expenseData.forEach(exp => {
                 const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
                 csv += `"${exp.name}","${exp.category}","${cost}","${exp.billing}","${exp.status}","${exp.vendor}","${exp.notes}","${exp.startDate}"\n`;
+            });
+            
+            // Export payroll (employee salaries)
+            const activeEmployees = orgData.employees.filter(e => e.status === 'active');
+            activeEmployees.forEach(emp => {
+                const dept = orgData.departments.find(d => d.id === emp.department);
+                const monthlySalary = (emp.salary || 0) / 12;
+                csv += `"${emp.name} (${emp.role})","payroll","${monthlySalary.toFixed(2)}","monthly","active","Internal","${dept?.name || ''} Department","${emp.startDate}"\n`;
             });
             
             const blob = new Blob([csv], { type: 'text/csv' });
