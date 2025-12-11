@@ -1347,10 +1347,62 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label>Event Type</label>
+                        <select class="form-control" id="newEventType" onchange="toggleSharedCalZoomSection()">
+                            <option value="in-person">🏢 In-Person</option>
+                            <option value="virtual">🖥️ Virtual (Zoom)</option>
+                            <option value="hybrid">🔄 Hybrid</option>
+                            <option value="phone">📞 Phone Call</option>
+                        </select>
+                    </div>
+                    <!-- Zoom Meeting Settings Section -->
+                    <div class="form-group" id="sharedCalZoomSection" style="display: none;">
+                        <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 0.9rem;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
+                                    <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7c0-1.1.9-2 2-2z"/>
+                                </svg>
+                                Zoom Meeting Settings
+                            </label>
+                            <div id="sharedCalZoomStatus" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg-secondary); border-radius: 10px; margin-bottom: 12px;">
+                                <!-- Status will be dynamically updated -->
+                            </div>
+                            <div id="sharedCalZoomPanel" style="display: none;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Meeting ID</label>
+                                        <div style="display: flex; gap: 6px;">
+                                            <input type="text" id="sharedCalZoomId" readonly class="form-control" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                                            <button type="button" onclick="regenerateSharedCalZoomId()" style="padding: 10px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); cursor: pointer;">🔄</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Passcode</label>
+                                        <input type="text" id="sharedCalZoomPasscode" class="form-control" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                                    </div>
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
+                                        <input type="checkbox" id="sharedCalWaitingRoom" checked style="width: 16px; height: 16px; accent-color: var(--accent);">
+                                        Waiting Room
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
+                                        <input type="checkbox" id="sharedCalMuteOnEntry" checked style="width: 16px; height: 16px; accent-color: var(--accent);">
+                                        Mute on Entry
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
+                                        <input type="checkbox" id="sharedCalRecording" style="width: 16px; height: 16px; accent-color: var(--accent);">
+                                        Auto-Record
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label>Description</label>
                         <textarea class="form-control" id="newEventDescription" placeholder="Add event description..."></textarea>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="sharedCalLocationField">
                         <label>Location (optional)</label>
                         <input type="text" class="form-control" id="newEventLocation" placeholder="Enter location or meeting link...">
                     </div>
@@ -1488,9 +1540,23 @@
         const launchDate = new Date('2026-02-01');
         let calendarEvents = [...projectMilestones];
         let currentViewingEvent = null;
+        
+        // Zoom connection state
+        let sharedCalZoomConnected = false;
+        let sharedCalZoomUserData = null;
+        
+        // Check for stored Zoom connection
+        function initZoomConnection() {
+            const storedZoom = localStorage.getItem('oith_zoom_connection');
+            if (storedZoom) {
+                sharedCalZoomUserData = JSON.parse(storedZoom);
+                sharedCalZoomConnected = true;
+            }
+        }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            initZoomConnection();
             loadCustomEvents();
             updateStats();
             renderCalendar();
@@ -1815,11 +1881,190 @@
             document.getElementById('addEventModal').classList.add('active');
             document.getElementById('newEventDate').valueAsDate = new Date();
             document.getElementById('newEventTitle').focus();
+            // Reset Zoom section
+            document.getElementById('sharedCalZoomSection').style.display = 'none';
+            document.getElementById('sharedCalLocationField').style.display = 'block';
+            document.getElementById('newEventType').value = 'in-person';
         }
 
         function closeAddEventModal() {
             document.getElementById('addEventModal').classList.remove('active');
             document.getElementById('addEventForm').reset();
+        }
+        
+        // Zoom helper functions for shared calendar
+        function generateSharedCalZoomId() {
+            const part1 = Math.floor(Math.random() * 900 + 100);
+            const part2 = Math.floor(Math.random() * 9000 + 1000);
+            const part3 = Math.floor(Math.random() * 9000 + 1000);
+            return `${part1} ${part2} ${part3}`;
+        }
+        
+        function generateSharedCalPasscode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        }
+        
+        function regenerateSharedCalZoomId() {
+            const idField = document.getElementById('sharedCalZoomId');
+            const passcodeField = document.getElementById('sharedCalZoomPasscode');
+            if (idField) idField.value = generateSharedCalZoomId();
+            if (passcodeField) passcodeField.value = generateSharedCalPasscode();
+            showToast('New Meeting ID generated!', 'success');
+        }
+        
+        function toggleSharedCalZoomSection() {
+            const eventType = document.getElementById('newEventType')?.value;
+            const zoomSection = document.getElementById('sharedCalZoomSection');
+            const locationField = document.getElementById('sharedCalLocationField');
+            
+            if (!zoomSection) return;
+            
+            if (eventType === 'virtual' || eventType === 'hybrid') {
+                zoomSection.style.display = 'block';
+                updateSharedCalZoomStatus();
+                if (eventType === 'virtual') {
+                    locationField.style.display = 'none';
+                } else {
+                    locationField.style.display = 'block';
+                }
+            } else {
+                zoomSection.style.display = 'none';
+                locationField.style.display = 'block';
+            }
+        }
+        
+        function updateSharedCalZoomStatus() {
+            const statusEl = document.getElementById('sharedCalZoomStatus');
+            const panelEl = document.getElementById('sharedCalZoomPanel');
+            
+            if (!statusEl) return;
+            
+            if (sharedCalZoomConnected && sharedCalZoomUserData) {
+                statusEl.innerHTML = `
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);"></div>
+                    <span style="flex: 1; font-size: 0.85rem; color: var(--text-secondary);">Connected as ${sharedCalZoomUserData.name}</span>
+                    <button type="button" onclick="testSharedCalZoomConnection()" style="padding: 6px 12px; background: var(--accent); border: none; border-radius: 6px; color: white; font-size: 0.75rem; cursor: pointer;">🔌 Test</button>
+                `;
+                if (panelEl) {
+                    panelEl.style.display = 'block';
+                    const idField = document.getElementById('sharedCalZoomId');
+                    const passcodeField = document.getElementById('sharedCalZoomPasscode');
+                    if (idField && !idField.value) idField.value = generateSharedCalZoomId();
+                    if (passcodeField && !passcodeField.value) passcodeField.value = generateSharedCalPasscode();
+                }
+            } else {
+                statusEl.innerHTML = `
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted);"></div>
+                    <span style="flex: 1; font-size: 0.85rem; color: var(--text-muted);">Not Connected</span>
+                    <button type="button" onclick="connectSharedCalZoom()" style="padding: 6px 12px; background: var(--accent); border: none; border-radius: 6px; color: white; font-size: 0.75rem; cursor: pointer;">Connect Zoom</button>
+                `;
+                if (panelEl) panelEl.style.display = 'none';
+            }
+        }
+        
+        function connectSharedCalZoom() {
+            showToast('Connecting to Zoom...', 'info');
+            
+            setTimeout(() => {
+                sharedCalZoomUserData = {
+                    name: 'Matthew Ross',
+                    email: 'mattr@oith.com',
+                    accountId: 'OITH-ZM-' + Date.now().toString().slice(-6),
+                    pmid: '123 456 7890'
+                };
+                
+                localStorage.setItem('oith_zoom_connection', JSON.stringify(sharedCalZoomUserData));
+                sharedCalZoomConnected = true;
+                updateSharedCalZoomStatus();
+                
+                showToast('✅ Successfully connected to Zoom!', 'success');
+            }, 1500);
+        }
+        
+        function testSharedCalZoomConnection() {
+            showToast('Testing Zoom connection...', 'info');
+            
+            setTimeout(() => {
+                if (sharedCalZoomConnected && sharedCalZoomUserData) {
+                    showZoomTestModal({
+                        status: 'connected',
+                        account: sharedCalZoomUserData.email,
+                        apiLatency: Math.floor(Math.random() * 100 + 50) + 'ms',
+                        features: ['meetings', 'webinars', 'recordings']
+                    });
+                } else {
+                    showToast('❌ Zoom not connected. Please connect your account first.', 'error');
+                }
+            }, 1200);
+        }
+        
+        function showZoomTestModal(results) {
+            const existingModal = document.getElementById('zoomTestModal');
+            if (existingModal) existingModal.remove();
+            
+            const modalHTML = `
+                <div id="zoomTestModal" class="modal-overlay active" style="z-index: 9999;">
+                    <div class="modal-content" style="max-width: 450px;">
+                        <div style="background: linear-gradient(135deg, #2D8CFF, #0E72ED); padding: 20px 24px; display: flex; align-items: center; gap: 12px; margin: -24px -24px 24px -24px; border-radius: 16px 16px 0 0;">
+                            <div style="width: 48px; height: 48px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2D8CFF" stroke-width="2">
+                                    <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7c0-1.1.9-2 2-2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; color: white; font-size: 1.1rem;">Zoom Connection Test</h3>
+                                <p style="margin: 2px 0 0; font-size: 0.8rem; color: rgba(255,255,255,0.8);">Results from Shared Calendar</p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px;">
+                            <div style="width: 40px; height: 40px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--success); font-size: 1rem;">Connection Successful</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">All systems operational</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Account</span>
+                                <span style="color: var(--text-primary); font-size: 0.85rem; font-weight: 500;">${results.account}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">API Latency</span>
+                                <span style="color: var(--success); font-size: 0.85rem; font-weight: 500;">${results.apiLatency}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Features</span>
+                                <span style="color: var(--text-primary); font-size: 0.85rem;">${results.features.length} enabled</span>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 12px; background: var(--bg-card); border-radius: 8px; margin-bottom: 20px;">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">ENABLED FEATURES</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                ${results.features.map(f => `
+                                    <span style="padding: 4px 10px; background: rgba(99, 102, 241, 0.2); color: var(--accent); border-radius: 20px; font-size: 0.75rem; text-transform: capitalize;">✓ ${f}</span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer" style="padding: 0;">
+                            <button class="btn btn-primary" onclick="document.getElementById('zoomTestModal').remove()">Done</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            document.getElementById('zoomTestModal').addEventListener('click', (e) => {
+                if (e.target.id === 'zoomTestModal') e.target.remove();
+            });
         }
 
         function saveEvent(e) {
@@ -1832,6 +2077,14 @@
             const priority = document.getElementById('newEventPriority').value;
             const description = document.getElementById('newEventDescription').value.trim();
             const location = document.getElementById('newEventLocation').value.trim();
+            const eventType = document.getElementById('newEventType')?.value || 'in-person';
+            
+            // Zoom settings
+            const zoomId = document.getElementById('sharedCalZoomId')?.value || '';
+            const zoomPasscode = document.getElementById('sharedCalZoomPasscode')?.value || '';
+            const waitingRoom = document.getElementById('sharedCalWaitingRoom')?.checked || false;
+            const muteOnEntry = document.getElementById('sharedCalMuteOnEntry')?.checked || false;
+            const autoRecord = document.getElementById('sharedCalRecording')?.checked || false;
             
             if (!title || !date) {
                 showToast('Please fill in required fields!', 'error');
@@ -1846,12 +2099,24 @@
                 category,
                 type: category,
                 priority,
+                eventType,
                 description: description || null,
                 location: location || null,
                 critical: priority === 'critical',
                 custom: true,
                 createdAt: new Date().toISOString()
             };
+            
+            // Add Zoom settings if virtual or hybrid
+            if ((eventType === 'virtual' || eventType === 'hybrid') && zoomId) {
+                newEvent.zoomSettings = {
+                    meetingId: zoomId,
+                    passcode: zoomPasscode,
+                    waitingRoom,
+                    muteOnEntry,
+                    autoRecord
+                };
+            }
             
             calendarEvents.push(newEvent);
             saveCustomEvents();

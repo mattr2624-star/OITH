@@ -29528,8 +29528,58 @@
                     </div>
                 </div>
                 <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Event Type</label>
+                    <select id="addEventType" onchange="toggleAddEventZoomSection()" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                        <option value="in-person">🏢 In-Person</option>
+                        <option value="virtual">🖥️ Virtual (Zoom)</option>
+                        <option value="hybrid">🔄 Hybrid</option>
+                        <option value="phone">📞 Phone Call</option>
+                    </select>
+                </div>
+                <div id="addEventLocationField" style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Location</label>
                     <input type="text" id="eventLocation" placeholder="Add location..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.95rem;">
+                </div>
+                <!-- Zoom Meeting Settings for Add Event Modal -->
+                <div id="addEventZoomSection" style="display: none; margin-bottom: 16px; padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid rgba(45, 140, 255, 0.2);">
+                    <label style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2D8CFF" stroke-width="2">
+                            <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7c0-1.1.9-2 2-2z"/>
+                        </svg>
+                        Zoom Meeting Settings
+                    </label>
+                    <div id="addEventZoomStatus" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg-secondary); border-radius: 10px; margin-bottom: 12px;">
+                        <!-- Status will be dynamically updated -->
+                    </div>
+                    <div id="addEventZoomPanel" style="display: none;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                            <div>
+                                <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Meeting ID</label>
+                                <div style="display: flex; gap: 6px;">
+                                    <input type="text" id="addEventZoomId" readonly style="flex: 1; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 0.85rem;">
+                                    <button type="button" onclick="regenerateAddEventZoomId()" style="padding: 10px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); cursor: pointer;">🔄</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Passcode</label>
+                                <input type="text" id="addEventZoomPasscode" style="width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 0.85rem;">
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
+                                <input type="checkbox" id="addEventWaitingRoom" checked style="width: 16px; height: 16px; accent-color: #2D8CFF;">
+                                Waiting Room
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
+                                <input type="checkbox" id="addEventMuteOnEntry" checked style="width: 16px; height: 16px; accent-color: #2D8CFF;">
+                                Mute on Entry
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer;">
+                                <input type="checkbox" id="addEventRecording" style="width: 16px; height: 16px; accent-color: #2D8CFF;">
+                                Auto-Record
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Description</label>
@@ -31264,6 +31314,25 @@
                 const titleField = document.getElementById('eventTitle');
                 if (titleField) titleField.focus();
             }, 100);
+            
+            // Reset Zoom section and event type
+            const eventTypeField = document.getElementById('addEventType');
+            if (eventTypeField) {
+                eventTypeField.value = 'in-person';
+            }
+            const zoomSection = document.getElementById('addEventZoomSection');
+            if (zoomSection) {
+                zoomSection.style.display = 'none';
+            }
+            const locationField = document.getElementById('addEventLocationField');
+            if (locationField) {
+                locationField.style.display = 'block';
+            }
+            // Clear Zoom fields
+            const zoomIdField = document.getElementById('addEventZoomId');
+            const zoomPasscodeField = document.getElementById('addEventZoomPasscode');
+            if (zoomIdField) zoomIdField.value = '';
+            if (zoomPasscodeField) zoomPasscodeField.value = '';
         }
         
         function closeAddEventModal() {
@@ -31287,6 +31356,14 @@
             const section = document.getElementById('eventSection')?.value || 'overview';
             const location = document.getElementById('eventLocation')?.value || '';
             const description = document.getElementById('eventDescription').value;
+            const eventType = document.getElementById('addEventType')?.value || 'in-person';
+            
+            // Get Zoom settings
+            const zoomId = document.getElementById('addEventZoomId')?.value || '';
+            const zoomPasscode = document.getElementById('addEventZoomPasscode')?.value || '';
+            const waitingRoom = document.getElementById('addEventWaitingRoom')?.checked || false;
+            const muteOnEntry = document.getElementById('addEventMuteOnEntry')?.checked || false;
+            const autoRecord = document.getElementById('addEventRecording')?.checked || false;
             
             if (!title || !dateVal) {
                 showToast('Please fill in required fields', 'error');
@@ -31304,12 +31381,24 @@
                 category,
                 section,
                 description,
+                eventType,
                 custom: true,
                 meetingDetails: {
                     location: location
                 },
                 createdAt: new Date().toISOString()
             };
+            
+            // Add Zoom settings if virtual or hybrid
+            if ((eventType === 'virtual' || eventType === 'hybrid') && zoomConnected && zoomId) {
+                newEvent.zoomSettings = {
+                    meetingId: zoomId,
+                    passcode: zoomPasscode,
+                    waitingRoom: waitingRoom,
+                    muteOnEntry: muteOnEntry,
+                    autoRecord: autoRecord
+                };
+            }
             
             // Save to localStorage
             let savedEvents = JSON.parse(localStorage.getItem('oith_calendar_events') || '[]');
@@ -31795,6 +31884,72 @@
                 }
             };
             document.addEventListener('keydown', closeOnEscape);
+        }
+        
+        // Toggle Zoom section in Add Event modal
+        function toggleAddEventZoomSection() {
+            const eventType = document.getElementById('addEventType')?.value;
+            const zoomSection = document.getElementById('addEventZoomSection');
+            const locationField = document.getElementById('addEventLocationField');
+            
+            if (!zoomSection) return;
+            
+            if (eventType === 'virtual' || eventType === 'hybrid') {
+                zoomSection.style.display = 'block';
+                updateAddEventZoomStatus();
+                if (eventType === 'virtual') {
+                    locationField.style.display = 'none';
+                } else {
+                    locationField.style.display = 'block';
+                }
+            } else {
+                zoomSection.style.display = 'none';
+                locationField.style.display = 'block';
+            }
+        }
+        
+        // Update Zoom status in Add Event modal
+        function updateAddEventZoomStatus() {
+            const statusEl = document.getElementById('addEventZoomStatus');
+            const panelEl = document.getElementById('addEventZoomPanel');
+            
+            if (!statusEl) return;
+            
+            if (zoomConnected && zoomUserData) {
+                statusEl.innerHTML = `
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success, #10b981); box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);"></div>
+                    <span style="flex: 1; font-size: 0.85rem; color: var(--text-secondary);">Connected as ${zoomUserData.name}</span>
+                    <button type="button" onclick="testZoomConnection('addEvent')" style="padding: 6px 12px; background: #2D8CFF; border: none; border-radius: 6px; color: white; font-size: 0.75rem; cursor: pointer;">🔌 Test</button>
+                `;
+                if (panelEl) {
+                    panelEl.style.display = 'block';
+                    // Generate meeting ID if not already set
+                    const idField = document.getElementById('addEventZoomId');
+                    const passcodeField = document.getElementById('addEventZoomPasscode');
+                    if (idField && !idField.value) {
+                        idField.value = generateZoomIdValue();
+                    }
+                    if (passcodeField && !passcodeField.value) {
+                        passcodeField.value = generatePasscodeValue();
+                    }
+                }
+            } else {
+                statusEl.innerHTML = `
+                    <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted, #8a8a8a);"></div>
+                    <span style="flex: 1; font-size: 0.85rem; color: var(--text-muted);">Not Connected</span>
+                    <button type="button" onclick="connectZoomAccount(); setTimeout(updateAddEventZoomStatus, 1600);" style="padding: 6px 12px; background: #2D8CFF; border: none; border-radius: 6px; color: white; font-size: 0.75rem; cursor: pointer;">Connect Zoom</button>
+                `;
+                if (panelEl) panelEl.style.display = 'none';
+            }
+        }
+        
+        // Regenerate Zoom ID for Add Event modal
+        function regenerateAddEventZoomId() {
+            const idField = document.getElementById('addEventZoomId');
+            const passcodeField = document.getElementById('addEventZoomPasscode');
+            if (idField) idField.value = generateZoomIdValue();
+            if (passcodeField) passcodeField.value = generatePasscodeValue();
+            showToast('New Meeting ID generated!', 'success');
         }
         
         // Invite Functions
@@ -33060,15 +33215,15 @@
                                 </label>
                                 
                                 <div id="nextStepZoomStatus" style="display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg-primary, #1f1f1f); border-radius: 10px; margin-bottom: 12px;">
-                                    ${zoomConnected ? \`
-                                        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success, #107c10); box-shadow: 0 0 8px rgba(16, 124, 16, 0.5);"></div>
-                                        <span style="flex: 1; font-size: 0.85rem; color: var(--text-secondary, #aaa);">Connected as \${zoomUserData?.name || 'User'}</span>
-                                        <button type="button" onclick="testZoomConnection('nextStep')" style="padding: 6px 12px; background: var(--accent, #0078d4); border: none; border-radius: 6px; color: white; font-size: 0.75rem; cursor: pointer;">🔌 Test</button>
-                                    \` : \`
-                                        <div style="width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted, #8a8a8a);"></div>
-                                        <span style="flex: 1; font-size: 0.85rem; color: var(--text-muted, #8a8a8a);">Not Connected</span>
-                                        <button type="button" onclick="connectZoomAccount()" style="padding: 6px 12px; background: var(--accent, #0078d4); border: none; border-radius: 6px; color: white; font-size: 0.75rem; cursor: pointer;">Connect Zoom</button>
-                                    \`}
+                                    ${zoomConnected ? 
+                                        '<div style="width: 10px; height: 10px; border-radius: 50%; background: var(--success, #107c10); box-shadow: 0 0 8px rgba(16, 124, 16, 0.5);"></div>' +
+                                        '<span style="flex: 1; font-size: 0.85rem; color: var(--text-secondary, #aaa);">Connected as ' + (zoomUserData?.name || 'User') + '</span>' +
+                                        '<button type="button" onclick="testZoomConnection(\'nextStep\')" style="padding: 6px 12px; background: var(--accent, #0078d4); border: none; border-radius: 6px; color: white; font-size: 0.75rem; cursor: pointer;">🔌 Test</button>'
+                                    : 
+                                        '<div style="width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted, #8a8a8a);"></div>' +
+                                        '<span style="flex: 1; font-size: 0.85rem; color: var(--text-muted, #8a8a8a);">Not Connected</span>' +
+                                        '<button type="button" onclick="connectZoomAccount()" style="padding: 6px 12px; background: var(--accent, #0078d4); border: none; border-radius: 6px; color: white; font-size: 0.75rem; cursor: pointer;">Connect Zoom</button>'
+                                    }
                                 </div>
                                 
                                 <div id="nextStepZoomPanel" style="display: ${zoomConnected ? 'block' : 'none'};">
@@ -33184,6 +33339,13 @@
             const category = document.getElementById('nextStepCategory')?.value || 'meeting';
             const notes = document.getElementById('nextStepNotes')?.value || '';
             
+            // Get Zoom settings
+            const zoomId = document.getElementById('nextStepZoomId')?.value || '';
+            const zoomPasscode = document.getElementById('nextStepZoomPasscode')?.value || '';
+            const waitingRoom = document.getElementById('nextStepWaitingRoom')?.checked || false;
+            const muteOnEntry = document.getElementById('nextStepMuteOnEntry')?.checked || false;
+            const autoRecord = document.getElementById('nextStepRecording')?.checked || false;
+            
             // Validate required fields
             if (!dateValue) {
                 showToast('Please select a date', 'error');
@@ -33210,6 +33372,17 @@
                     eventType: 'virtual'
                 }
             };
+            
+            // Add Zoom settings if connected
+            if (zoomConnected && zoomId) {
+                newEvent.zoomSettings = {
+                    meetingId: zoomId,
+                    passcode: zoomPasscode,
+                    waitingRoom: waitingRoom,
+                    muteOnEntry: muteOnEntry,
+                    autoRecord: autoRecord
+                };
+            }
             
             // Add to calendar events array
             if (typeof calendarEvents !== 'undefined' && Array.isArray(calendarEvents)) {
