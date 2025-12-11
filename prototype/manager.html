@@ -3493,6 +3493,16 @@
                     </svg>
                     Tax
                 </div>
+                <div class="nav-item" onclick="showSection('expenses')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="2"/>
+                        <line x1="2" y1="10" x2="22" y2="10"/>
+                        <path d="M12 15v-2"/>
+                        <path d="M8 15v-2"/>
+                        <path d="M16 15v-2"/>
+                    </svg>
+                    Expenses
+                </div>
                 <div class="nav-item" onclick="showSection('calendar')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -10985,6 +10995,7 @@
                 case 'payroll': renderPayroll(); break;
                 case 'tax': renderTax(); break;
                 case 'calendar': initCalendarSection(); break;
+                case 'expenses': renderExpenses(); break;
                 case 'simulation': renderSimulation(); break;
                 case 'diagnostics': renderDiagnostics(); break;
                 case 'site-diagnostics': renderSiteDiagnostics(); break;
@@ -26078,6 +26089,620 @@
             { date: '2026-01-31', title: '💵 January Payroll (End of Month)', phase: 0, type: 'payroll', category: 'payroll' }
         ];
 
+        // ==========================================
+        // EXPENSES & COST OPTIMIZATION
+        // ==========================================
+        
+        // Expense data storage
+        let expenseData = JSON.parse(localStorage.getItem('oithExpenses') || '[]');
+        
+        // Default expense entries with real pricing data
+        const defaultExpenses = [
+            // Development Tools
+            { id: 'cursor', name: 'Cursor Pro', category: 'development', cost: 20, billing: 'monthly', status: 'active', vendor: 'Cursor', notes: 'AI-powered IDE - 2 seats', startDate: '2025-11-28' },
+            { id: 'github', name: 'GitHub Team', category: 'development', cost: 0, billing: 'monthly', status: 'active', vendor: 'GitHub', notes: 'Free tier sufficient for now', startDate: '2025-11-28' },
+            { id: 'figma', name: 'Figma', category: 'development', cost: 0, billing: 'monthly', status: 'active', vendor: 'Figma', notes: 'Free tier for up to 3 projects', startDate: '2025-11-28' },
+            { id: 'vscode', name: 'VS Code', category: 'development', cost: 0, billing: 'one-time', status: 'active', vendor: 'Microsoft', notes: 'Free & open source', startDate: '2025-11-28' },
+            
+            // Cloud Infrastructure
+            { id: 'aws-dynamodb', name: 'AWS DynamoDB', category: 'cloud', cost: 0, billing: 'monthly', status: 'active', vendor: 'AWS', notes: 'Free tier: 25GB storage, 25 WCU, 25 RCU', startDate: '2025-11-28', estimatedGrowth: 25 },
+            { id: 'aws-lambda', name: 'AWS Lambda', category: 'cloud', cost: 0, billing: 'monthly', status: 'active', vendor: 'AWS', notes: 'Free tier: 1M requests/month', startDate: '2025-11-28' },
+            { id: 'aws-s3', name: 'AWS S3', category: 'cloud', cost: 0, billing: 'monthly', status: 'active', vendor: 'AWS', notes: 'Free tier: 5GB storage', startDate: '2025-11-28' },
+            { id: 'aws-cognito', name: 'AWS Cognito', category: 'cloud', cost: 0, billing: 'monthly', status: 'active', vendor: 'AWS', notes: 'Free: 50K MAU', startDate: '2025-11-28' },
+            { id: 'aws-ses', name: 'AWS SES', category: 'cloud', cost: 0, billing: 'monthly', status: 'active', vendor: 'AWS', notes: 'Free: 62K emails/month from EC2', startDate: '2025-11-28' },
+            { id: 'cloudflare', name: 'Cloudflare', category: 'cloud', cost: 0, billing: 'monthly', status: 'active', vendor: 'Cloudflare', notes: 'Free tier: CDN, DNS, DDoS protection', startDate: '2025-11-28' },
+            
+            // Communication & Email
+            { id: 'google-workspace', name: 'Google Workspace Business Starter', category: 'communication', cost: 7.20, billing: 'monthly', status: 'active', vendor: 'Google', notes: 'Custom email @oneinthehand.com - 2 users', startDate: '2025-11-28', perUser: true, users: 2 },
+            { id: 'slack', name: 'Slack', category: 'communication', cost: 0, billing: 'monthly', status: 'active', vendor: 'Slack', notes: 'Free tier sufficient for small team', startDate: '2025-11-28' },
+            { id: 'zoom', name: 'Zoom', category: 'communication', cost: 0, billing: 'monthly', status: 'active', vendor: 'Zoom', notes: 'Free tier: 40min meetings', startDate: '2025-11-28' },
+            
+            // Legal & Compliance
+            { id: 'llc-filing', name: 'Delaware LLC Filing', category: 'legal', cost: 90, billing: 'one-time', status: 'pending', vendor: 'Delaware DOS', notes: 'State filing fee', startDate: '2025-12-01' },
+            { id: 'registered-agent', name: 'Registered Agent Service', category: 'legal', cost: 49, billing: 'yearly', status: 'pending', vendor: 'Northwest', notes: 'Annual registered agent fee', startDate: '2025-12-01' },
+            { id: 'trademark', name: 'USPTO Trademark (OITH)', category: 'legal', cost: 250, billing: 'one-time', status: 'planned', vendor: 'USPTO', notes: 'TEAS Plus filing - 1 class', startDate: '2026-01-15' },
+            
+            // App Store
+            { id: 'apple-dev', name: 'Apple Developer Program', category: 'development', cost: 99, billing: 'yearly', status: 'planned', vendor: 'Apple', notes: 'Required for iOS App Store', startDate: '2026-01-15' },
+            { id: 'google-play', name: 'Google Play Developer', category: 'development', cost: 25, billing: 'one-time', status: 'planned', vendor: 'Google', notes: 'One-time registration fee', startDate: '2026-01-15' },
+            
+            // Domain
+            { id: 'domain', name: 'Domain: oneinthehand.com', category: 'other', cost: 12, billing: 'yearly', status: 'active', vendor: 'Namecheap', notes: 'Primary domain', startDate: '2025-11-28' }
+        ];
+        
+        // Initialize expenses if empty
+        function initExpenses() {
+            if (expenseData.length === 0) {
+                expenseData = [...defaultExpenses];
+                saveExpenses();
+            }
+        }
+        
+        function saveExpenses() {
+            localStorage.setItem('oithExpenses', JSON.stringify(expenseData));
+        }
+        
+        function renderExpenses() {
+            initExpenses();
+            
+            // Calculate totals
+            let totalToDate = 0;
+            let monthlyRecurring = 0;
+            let yearlyEquivalent = 0;
+            let activeServices = 0;
+            
+            const now = new Date();
+            const startDate = new Date('2025-11-28');
+            const monthsActive = Math.max(1, Math.ceil((now - startDate) / (1000 * 60 * 60 * 24 * 30)));
+            
+            expenseData.forEach(exp => {
+                if (exp.status === 'active' || exp.status === 'pending') {
+                    activeServices++;
+                    
+                    if (exp.billing === 'monthly') {
+                        const monthlyCost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                        monthlyRecurring += monthlyCost;
+                        totalToDate += monthlyCost * monthsActive;
+                    } else if (exp.billing === 'yearly') {
+                        yearlyEquivalent += exp.cost;
+                        totalToDate += exp.cost; // Count yearly as paid once
+                    } else if (exp.billing === 'one-time') {
+                        totalToDate += exp.cost;
+                    }
+                }
+            });
+            
+            // Update summary stats
+            document.getElementById('totalExpensesToDate').textContent = '$' + totalToDate.toFixed(2);
+            document.getElementById('monthlyBurn').textContent = '$' + monthlyRecurring.toFixed(2);
+            document.getElementById('activeServices').textContent = activeServices;
+            
+            // Calculate potential savings
+            const potentialSavings = calculatePotentialSavings();
+            document.getElementById('potentialSavings').textContent = '$' + potentialSavings.toFixed(2) + '/mo';
+            document.getElementById('expensesTrend').textContent = monthlyRecurring > 50 ? '+' + Math.round((monthlyRecurring / 50 - 1) * 100) + '%' : 'LOW';
+            
+            // Render category cards
+            renderCategoryExpenses('development', 'devToolsExpenses', 'devToolsTotal');
+            renderCategoryExpenses('cloud', 'cloudExpenses', 'cloudTotal');
+            renderCategoryExpenses('communication', 'emailExpenses', 'emailTotal');
+            renderCategoryExpenses('legal', 'legalExpenses', 'legalTotal');
+            
+            // Render expense table
+            renderExpenseTable();
+            
+            // Render optimization recommendations
+            renderOptimizationRecommendations();
+            
+            // Render service-specific optimization
+            renderDynamoOptimization();
+            renderGoogleOptimization();
+            renderCursorOptimization();
+            
+            // Render expense chart
+            renderExpenseChart();
+        }
+        
+        function renderCategoryExpenses(category, containerId, totalId) {
+            const container = document.getElementById(containerId);
+            const categoryExpenses = expenseData.filter(e => e.category === category);
+            
+            let categoryTotal = 0;
+            let html = '';
+            
+            categoryExpenses.forEach(exp => {
+                const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                const billingLabel = exp.billing === 'monthly' ? '/mo' : exp.billing === 'yearly' ? '/yr' : '';
+                
+                if (exp.billing === 'monthly') categoryTotal += cost;
+                else if (exp.billing === 'yearly') categoryTotal += cost / 12;
+                
+                const statusColor = exp.status === 'active' ? 'var(--success)' : 
+                                   exp.status === 'pending' ? 'var(--warning)' : 'var(--text-muted)';
+                
+                html += `
+                    <div class="metric-row">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 8px; height: 8px; border-radius: 50%; background: ${statusColor};"></span>
+                            <span class="metric-label">${exp.name}</span>
+                        </div>
+                        <span class="metric-value" style="color: ${cost > 0 ? 'var(--danger)' : 'var(--success)'}">
+                            ${cost > 0 ? '$' + cost.toFixed(2) + billingLabel : 'FREE'}
+                        </span>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html || '<p style="color: var(--text-muted); font-size: 12px;">No expenses in this category</p>';
+            
+            const totalEl = document.getElementById(totalId);
+            if (category === 'legal') {
+                const oneTimeCosts = categoryExpenses.filter(e => e.billing === 'one-time').reduce((sum, e) => sum + e.cost, 0);
+                totalEl.textContent = '$' + oneTimeCosts.toFixed(0);
+            } else {
+                totalEl.textContent = '$' + categoryTotal.toFixed(2) + '/mo';
+            }
+        }
+        
+        function renderExpenseTable() {
+            const tbody = document.getElementById('expenseTableBody');
+            const filterCategory = document.getElementById('expenseFilterCategory')?.value || 'all';
+            
+            let filtered = expenseData;
+            if (filterCategory !== 'all') {
+                filtered = expenseData.filter(e => e.category === filterCategory);
+            }
+            
+            let html = '';
+            filtered.forEach(exp => {
+                const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                const statusClass = exp.status === 'active' ? 'active' : 
+                                   exp.status === 'pending' ? 'warning' : 'inactive';
+                
+                html += `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">${exp.name}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${exp.vendor} • ${exp.notes}</div>
+                        </td>
+                        <td><span class="status-badge" style="text-transform: capitalize;">${exp.category}</span></td>
+                        <td style="font-weight: 600; color: ${cost > 0 ? 'var(--text-primary)' : 'var(--success)'}">
+                            ${cost > 0 ? '$' + cost.toFixed(2) : 'FREE'}
+                        </td>
+                        <td style="text-transform: capitalize;">${exp.billing}</td>
+                        <td><span class="status-badge ${statusClass}">${exp.status}</span></td>
+                        <td>
+                            <button onclick="editExpense('${exp.id}')" style="background: none; border: none; cursor: pointer; color: var(--accent);">✏️</button>
+                            <button onclick="deleteExpense('${exp.id}')" style="background: none; border: none; cursor: pointer; color: var(--danger);">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            
+            // Add filter listeners
+            document.getElementById('expenseFilterCategory')?.addEventListener('change', renderExpenseTable);
+        }
+        
+        function calculatePotentialSavings() {
+            let savings = 0;
+            
+            // Check for optimization opportunities
+            const cursor = expenseData.find(e => e.id === 'cursor');
+            if (cursor && cursor.cost > 0) {
+                // Could use free VSCode + Copilot trial
+                savings += 5;
+            }
+            
+            const googleWS = expenseData.find(e => e.id === 'google-workspace');
+            if (googleWS && googleWS.users > 1) {
+                // Annual billing saves 10%
+                savings += googleWS.cost * 0.1 * googleWS.users;
+            }
+            
+            return savings;
+        }
+        
+        function renderOptimizationRecommendations() {
+            const container = document.getElementById('optimizationRecommendations');
+            
+            const recommendations = [
+                {
+                    icon: '☁️',
+                    title: 'AWS Free Tier Optimization',
+                    description: 'You\'re currently within AWS free tier limits. Monitor usage as you scale.',
+                    savings: 'Avoiding ~$50-200/mo',
+                    urgency: 'info',
+                    actions: ['Set up billing alerts at $5, $20, $50', 'Enable AWS Cost Explorer', 'Use reserved capacity when predictable']
+                },
+                {
+                    icon: '📧',
+                    title: 'Google Workspace Annual Billing',
+                    description: 'Switch from monthly to annual billing to save 10% on Google Workspace.',
+                    savings: 'Save $1.44/user/yr',
+                    urgency: 'low',
+                    actions: ['Upgrade to annual plan when cash flow allows', 'Consider Business Standard ($12/mo) only when needed']
+                },
+                {
+                    icon: '🗄️',
+                    title: 'DynamoDB On-Demand vs Provisioned',
+                    description: 'On-demand pricing is best during development. Switch to provisioned capacity when traffic patterns are predictable.',
+                    savings: 'Up to 70% at scale',
+                    urgency: 'future',
+                    actions: ['Monitor read/write patterns in CloudWatch', 'Consider provisioned when >25% capacity utilization', 'Use auto-scaling for production']
+                },
+                {
+                    icon: '🤖',
+                    title: 'Cursor Pro Alternatives',
+                    description: 'Evaluate if Cursor Pro features are essential vs. VS Code + GitHub Copilot.',
+                    savings: '$10-20/mo',
+                    urgency: 'low',
+                    actions: ['Compare Cursor Pro vs Copilot features', 'Consider team plan for 2+ devs', 'Watch for annual discount offers']
+                },
+                {
+                    icon: '📦',
+                    title: 'Lambda Cold Starts Optimization',
+                    description: 'Use provisioned concurrency only for critical paths; keep development functions on-demand.',
+                    savings: 'Avoid $15-30/mo',
+                    urgency: 'info',
+                    actions: ['Profile function cold start times', 'Use provisioned concurrency only for auth/payments', 'Consider Lambda SnapStart for Java']
+                },
+                {
+                    icon: '🌐',
+                    title: 'Domain Consolidation',
+                    description: 'Keep all domains with one registrar for easier management and potential bulk discounts.',
+                    savings: 'Minimal but organized',
+                    urgency: 'low',
+                    actions: ['Consolidate to Cloudflare Registrar (at-cost pricing)', 'Enable auto-renewal', 'Consider .app domain for PWA']
+                }
+            ];
+            
+            let html = '';
+            recommendations.forEach(rec => {
+                const urgencyColor = rec.urgency === 'info' ? 'var(--info)' : 
+                                    rec.urgency === 'low' ? 'var(--success)' : 'var(--text-muted)';
+                
+                html += `
+                    <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 12px; border-left: 3px solid ${urgencyColor};">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <div style="font-size: 1.5rem;">${rec.icon}</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">${rec.title}</div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">${rec.description}</div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                                    <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 2px 8px; border-radius: 4px; font-size: 11px;">💰 ${rec.savings}</span>
+                                </div>
+                                <div style="font-size: 11px; color: var(--text-muted);">
+                                    ${rec.actions.map(a => `<div style="margin-bottom: 2px;">• ${a}</div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('optimizationCount').textContent = recommendations.length + ' tips';
+        }
+        
+        function renderDynamoOptimization() {
+            const container = document.getElementById('dynamoOptimization');
+            container.innerHTML = `
+                <div class="metric-row">
+                    <span class="metric-label">Current Tier</span>
+                    <span class="metric-value" style="color: var(--success);">Free Tier</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Storage Used</span>
+                    <span class="metric-value">~50MB / 25GB</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Read Capacity</span>
+                    <span class="metric-value">On-Demand</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Write Capacity</span>
+                    <span class="metric-value">On-Demand</span>
+                </div>
+                <div style="margin-top: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: 6px; font-size: 11px;">
+                    <strong style="color: var(--success);">💡 Tip:</strong> At current scale, on-demand is optimal. Switch to provisioned when you hit 25%+ consistent utilization.
+                </div>
+            `;
+        }
+        
+        function renderGoogleOptimization() {
+            const container = document.getElementById('googleOptimization');
+            const gws = expenseData.find(e => e.id === 'google-workspace');
+            const users = gws?.users || 2;
+            const monthlyCost = (gws?.cost || 7.20) * users;
+            
+            container.innerHTML = `
+                <div class="metric-row">
+                    <span class="metric-label">Plan</span>
+                    <span class="metric-value">Business Starter</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Users</span>
+                    <span class="metric-value">${users}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Monthly Cost</span>
+                    <span class="metric-value">$${monthlyCost.toFixed(2)}</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Storage/User</span>
+                    <span class="metric-value">30GB</span>
+                </div>
+                <div style="margin-top: 12px; padding: 10px; background: rgba(59, 130, 246, 0.1); border-radius: 6px; font-size: 11px;">
+                    <strong style="color: var(--info);">💡 Tip:</strong> Business Starter is sufficient until you need 2TB storage or Google Meet recordings (Business Standard at $12/user/mo).
+                </div>
+            `;
+        }
+        
+        function renderCursorOptimization() {
+            const container = document.getElementById('cursorOptimization');
+            const cursor = expenseData.find(e => e.id === 'cursor');
+            
+            container.innerHTML = `
+                <div class="metric-row">
+                    <span class="metric-label">Cursor Pro</span>
+                    <span class="metric-value">$${cursor?.cost || 20}/mo</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">GitHub Copilot</span>
+                    <span class="metric-value">$10/mo (alt)</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Claude API (direct)</span>
+                    <span class="metric-value">Usage-based</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">VSCode</span>
+                    <span class="metric-value" style="color: var(--success);">FREE</span>
+                </div>
+                <div style="margin-top: 12px; padding: 10px; background: rgba(139, 92, 246, 0.1); border-radius: 6px; font-size: 11px;">
+                    <strong style="color: var(--purple);">💡 Tip:</strong> Cursor Pro's multi-file context and agent features may justify premium over Copilot for complex projects.
+                </div>
+            `;
+        }
+        
+        function renderExpenseChart() {
+            const container = document.getElementById('expenseChartContainer');
+            
+            // Simple bar chart showing category breakdown
+            const categories = ['Development', 'Cloud', 'Communication', 'Legal', 'Other'];
+            const colors = ['var(--purple)', 'var(--warning)', 'var(--info)', 'var(--success)', 'var(--text-muted)'];
+            
+            const categoryTotals = categories.map((cat, idx) => {
+                const catKey = cat.toLowerCase();
+                const catExpenses = expenseData.filter(e => e.category === catKey || (catKey === 'other' && !['development', 'cloud', 'communication', 'legal'].includes(e.category)));
+                let total = 0;
+                catExpenses.forEach(e => {
+                    if (e.billing === 'monthly') total += (e.perUser ? e.cost * (e.users || 1) : e.cost) * 12;
+                    else if (e.billing === 'yearly') total += e.cost;
+                    else total += e.cost;
+                });
+                return { name: cat, total, color: colors[idx] };
+            });
+            
+            const maxTotal = Math.max(...categoryTotals.map(c => c.total), 1);
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+            categoryTotals.forEach(cat => {
+                const width = (cat.total / maxTotal * 100).toFixed(1);
+                html += `
+                    <div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 12px;">
+                            <span>${cat.name}</span>
+                            <span style="font-weight: 600;">$${cat.total.toFixed(0)}/yr</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${width}%; background: ${cat.color};"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            // Add total
+            const grandTotal = categoryTotals.reduce((sum, c) => sum + c.total, 0);
+            html += `
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+                    <span style="font-weight: 600;">Estimated Annual Total</span>
+                    <span style="font-size: 1.25rem; font-weight: 700; color: var(--danger);">$${grandTotal.toFixed(0)}</span>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function addExpenseEntry() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg-secondary); border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border);">
+                    <h3 style="margin-bottom: 20px;">➕ Add New Expense</h3>
+                    <div style="display: grid; gap: 16px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Service/Item Name</label>
+                            <input type="text" id="newExpenseName" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);" placeholder="e.g., AWS S3">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Category</label>
+                                <select id="newExpenseCategory" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
+                                    <option value="development">Development</option>
+                                    <option value="cloud">Cloud/Infrastructure</option>
+                                    <option value="communication">Communication</option>
+                                    <option value="legal">Legal</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Cost ($)</label>
+                                <input type="number" id="newExpenseCost" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);" placeholder="0.00" step="0.01">
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Billing Cycle</label>
+                                <select id="newExpenseBilling" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="yearly">Yearly</option>
+                                    <option value="one-time">One-time</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Status</label>
+                                <select id="newExpenseStatus" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
+                                    <option value="active">Active</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="planned">Planned</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Vendor</label>
+                            <input type="text" id="newExpenseVendor" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);" placeholder="e.g., Amazon Web Services">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Notes</label>
+                            <textarea id="newExpenseNotes" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); resize: none;" rows="2" placeholder="Additional details..."></textarea>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+                        <button onclick="this.closest('.modal').remove()" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</button>
+                        <button onclick="saveNewExpense()" class="btn btn-primary" style="padding: 10px 20px;">Add Expense</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function saveNewExpense() {
+            const name = document.getElementById('newExpenseName').value.trim();
+            const category = document.getElementById('newExpenseCategory').value;
+            const cost = parseFloat(document.getElementById('newExpenseCost').value) || 0;
+            const billing = document.getElementById('newExpenseBilling').value;
+            const status = document.getElementById('newExpenseStatus').value;
+            const vendor = document.getElementById('newExpenseVendor').value.trim();
+            const notes = document.getElementById('newExpenseNotes').value.trim();
+            
+            if (!name) {
+                alert('Please enter a name for the expense');
+                return;
+            }
+            
+            const newExpense = {
+                id: 'custom_' + Date.now(),
+                name,
+                category,
+                cost,
+                billing,
+                status,
+                vendor: vendor || 'Unknown',
+                notes: notes || '',
+                startDate: new Date().toISOString().split('T')[0]
+            };
+            
+            expenseData.push(newExpense);
+            saveExpenses();
+            
+            document.querySelector('.modal').remove();
+            renderExpenses();
+        }
+        
+        function editExpense(id) {
+            const expense = expenseData.find(e => e.id === id);
+            if (!expense) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+            
+            modal.innerHTML = `
+                <div style="background: var(--bg-secondary); border-radius: 12px; padding: 24px; width: 90%; max-width: 500px; border: 1px solid var(--border);">
+                    <h3 style="margin-bottom: 20px;">✏️ Edit Expense</h3>
+                    <div style="display: grid; gap: 16px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Service/Item Name</label>
+                            <input type="text" id="editExpenseName" value="${expense.name}" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Cost ($)</label>
+                                <input type="number" id="editExpenseCost" value="${expense.cost}" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);" step="0.01">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Status</label>
+                                <select id="editExpenseStatus" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);">
+                                    <option value="active" ${expense.status === 'active' ? 'selected' : ''}>Active</option>
+                                    <option value="pending" ${expense.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                    <option value="planned" ${expense.status === 'planned' ? 'selected' : ''}>Planned</option>
+                                    <option value="cancelled" ${expense.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 4px; font-size: 12px; color: var(--text-muted);">Notes</label>
+                            <textarea id="editExpenseNotes" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); resize: none;" rows="2">${expense.notes}</textarea>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 24px; justify-content: flex-end;">
+                        <button onclick="this.closest('.modal').remove()" class="btn btn-secondary" style="padding: 10px 20px;">Cancel</button>
+                        <button onclick="updateExpense('${id}')" class="btn btn-primary" style="padding: 10px 20px;">Save Changes</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function updateExpense(id) {
+            const expense = expenseData.find(e => e.id === id);
+            if (!expense) return;
+            
+            expense.name = document.getElementById('editExpenseName').value.trim();
+            expense.cost = parseFloat(document.getElementById('editExpenseCost').value) || 0;
+            expense.status = document.getElementById('editExpenseStatus').value;
+            expense.notes = document.getElementById('editExpenseNotes').value.trim();
+            
+            saveExpenses();
+            document.querySelector('.modal').remove();
+            renderExpenses();
+        }
+        
+        function deleteExpense(id) {
+            if (!confirm('Are you sure you want to delete this expense?')) return;
+            
+            expenseData = expenseData.filter(e => e.id !== id);
+            saveExpenses();
+            renderExpenses();
+        }
+        
+        function exportExpenseReport() {
+            let csv = 'Service,Category,Cost,Billing,Status,Vendor,Notes,Start Date\n';
+            
+            expenseData.forEach(exp => {
+                const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                csv += `"${exp.name}","${exp.category}","${cost}","${exp.billing}","${exp.status}","${exp.vendor}","${exp.notes}","${exp.startDate}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'oith_expenses_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
         let calendarCurrentMonth = new Date('2025-12-01');
 
         function initCalendarSection() {
@@ -28022,36 +28647,71 @@
                 eventsContainer.appendChild(moreEl);
             }
             
-            dayEl.onclick = () => selectCalendarDay(date, dayEvents);
+            dayEl.onclick = (e) => selectCalendarDay(e, date, dayEvents);
             
             return dayEl;
         }
         
-        function selectCalendarDay(date, events) {
+        function selectCalendarDay(e, date, events) {
+            // Remove selected class from all days
             document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
-            event.currentTarget.classList.add('selected');
+            
+            // Add selected class to clicked day
+            if (e && e.currentTarget) {
+                e.currentTarget.classList.add('selected');
+            }
+            
             calendarSelectedDate = date;
             
-            // Update sidebar with selected day's events
-            if (events.length > 0) {
-                renderDayEvents(date, events);
-            }
+            // Update sidebar with selected day's events (show even if no events)
+            renderDayEvents(date, events);
         }
         
         function renderDayEvents(date, events) {
             const list = document.getElementById('upcomingEventsList');
+            if (!list) return;
+            
             list.innerHTML = `<div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 12px; font-weight: 600;">
                 ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </div>`;
             
+            if (!events || events.length === 0) {
+                const noEventsEl = document.createElement('div');
+                noEventsEl.style.cssText = 'color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 20px;';
+                noEventsEl.textContent = 'No events on this day';
+                list.appendChild(noEventsEl);
+                
+                // Add a button to create an event on this day
+                const addBtn = document.createElement('button');
+                addBtn.className = 'btn btn-secondary';
+                addBtn.style.cssText = 'width: 100%; margin-top: 12px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;';
+                addBtn.innerHTML = '<span>+</span> Add Event on This Day';
+                addBtn.onclick = () => {
+                    openAddEventModal();
+                    // Pre-fill the date
+                    setTimeout(() => {
+                        const dateInput = document.getElementById('eventDate');
+                        if (dateInput) {
+                            const year = date.getFullYear();
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
+                            const day = String(date.getDate()).padStart(2, '0');
+                            dateInput.value = `${year}-${month}-${day}`;
+                        }
+                    }, 100);
+                };
+                list.appendChild(addBtn);
+                return;
+            }
+            
             events.forEach(event => {
                 const eventEl = document.createElement('div');
                 eventEl.className = `upcoming-event ${event.category}`;
+                eventEl.style.cssText = 'cursor: pointer;';
                 eventEl.innerHTML = `
                     <div class="event-title">${event.title}</div>
                     <div class="event-meta">
-                        <span class="event-category" style="background: rgba(var(--${getCategoryColor(event.category)}), 0.2); color: var(--${getCategoryColorVar(event.category)});">${event.category}</span>
-                        <span>→ ${event.section}</span>
+                        <span class="event-category" style="background: rgba(var(--${getCategoryColor(event.category)}), 0.2); color: var(--${getCategoryColorVar(event.category)});">${event.category || 'custom'}</span>
+                        <span>→ ${event.section || 'calendar'}</span>
                     </div>
                 `;
                 eventEl.onclick = () => openEventDetails(event);
