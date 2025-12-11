@@ -12297,12 +12297,17 @@
                 renderSimScalingChart(simScalingResults);
             }
             
-            // Auto-save to history
+            // Auto-save to history (local + AWS)
             if (autoSave) {
                 simHistory.unshift(resultData);
                 if (simHistory.length > 50) simHistory = simHistory.slice(0, 50);
                 localStorage.setItem('oithSimHistory', JSON.stringify(simHistory));
                 document.getElementById('simHistoryCount').textContent = `${simHistory.length} saved`;
+                
+                // Also save to AWS (async, don't block)
+                saveStressTestToAWS(resultData).catch(err => {
+                    console.log('AWS sync skipped:', err.message);
+                });
             }
             
             updateSimProgress(100, userCount, matchAttempts, avgTime);
@@ -12793,19 +12798,35 @@
                 const date = new Date(result.timestamp);
                 const timeStr = date.toLocaleTimeString();
                 const dateStr = date.toLocaleDateString();
+                const runId = result.runId || result.timestamp;
+                const awsSynced = result.awsSynced;
+                const realLife = result.realLifeEnabled;
+                
                 html += `
                     <div style="display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--border);">
                         <div style="min-width: 120px;">
                             <div style="font-size: 0.85rem; font-weight: 600;">${dateStr}</div>
                             <div style="font-size: 0.75rem; color: var(--text-muted);">${timeStr}</div>
+                            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                                ${awsSynced ? '<span title="Synced to AWS" style="font-size: 0.65rem; background: rgba(34, 197, 94, 0.2); color: var(--success); padding: 2px 6px; border-radius: 4px;">☁️ AWS</span>' : ''}
+                                ${realLife ? '<span title="Real-life scenarios enabled" style="font-size: 0.65rem; background: rgba(139, 92, 246, 0.2); color: var(--purple); padding: 2px 6px; border-radius: 4px;">🎭 Real</span>' : ''}
+                            </div>
                         </div>
-                        <div style="flex: 1; display: flex; gap: 24px; flex-wrap: wrap;">
-                            <div><span style="color: var(--text-muted);">Users:</span> <strong>${result.userCount.toLocaleString()}</strong></div>
-                            <div><span style="color: var(--text-muted);">Avg Time:</span> <strong style="color: ${result.avgTime < 50 ? 'var(--success)' : result.avgTime < 200 ? 'var(--warning)' : 'var(--danger)'};">${result.avgTime.toFixed(1)}ms</strong></div>
-                            <div><span style="color: var(--text-muted);">P95:</span> <strong>${result.p95.toFixed(1)}ms</strong></div>
-                            <div><span style="color: var(--text-muted);">Success:</span> <strong>${result.successRate}%</strong></div>
+                        <div style="flex: 1; display: flex; gap: 24px; flex-wrap: wrap; align-items: center;">
+                            <div><span style="color: var(--text-muted);">Users:</span> <strong>${result.userCount?.toLocaleString() || '?'}</strong></div>
+                            <div><span style="color: var(--text-muted);">Avg Time:</span> <strong style="color: ${(result.avgTime || 0) < 50 ? 'var(--success)' : (result.avgTime || 0) < 200 ? 'var(--warning)' : 'var(--danger)'};">${(result.avgTime || 0).toFixed(1)}ms</strong></div>
+                            <div><span style="color: var(--text-muted);">P95:</span> <strong>${(result.p95 || 0).toFixed(1)}ms</strong></div>
+                            <div><span style="color: var(--text-muted);">Success:</span> <strong>${result.successRate || '?'}%</strong></div>
                             <div><span style="color: var(--text-muted);">Geohash:</span> <strong>${result.useGeohash ? '✅' : '❌'}</strong></div>
-                            <div><span style="color: var(--text-muted);">Issues:</span> <strong style="color: ${result.issues === 0 ? 'var(--success)' : 'var(--warning)'};">${result.issues}</strong></div>
+                            <div><span style="color: var(--text-muted);">Issues:</span> <strong style="color: ${(result.issues || 0) === 0 ? 'var(--success)' : 'var(--warning)'};">${result.issues || 0}</strong></div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            ${awsSynced ? `
+                                <button onclick="viewStressTestLog('${runId}')" style="padding: 4px 8px; font-size: 0.7rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--text-secondary);" title="View full log">📂</button>
+                                <button onclick="deleteStressTestLog('${runId}')" style="padding: 4px 8px; font-size: 0.7rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--danger);" title="Delete from AWS">🗑️</button>
+                            ` : `
+                                <button onclick="saveStressTestToAWS(simHistory.find(h => h.timestamp === '${result.timestamp}'))" style="padding: 4px 8px; font-size: 0.7rem; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; color: var(--text-secondary);" title="Sync to AWS">☁️</button>
+                            `}
                         </div>
                     </div>
                 `;
@@ -12842,9 +12863,165 @@
             simLog('Results exported to JSON file.', 'success');
         }
         
+        // ==========================================
+        // STRESS TEST AWS SYNC
+        // ==========================================
+        
+        // Save stress test result to AWS
+        async function saveStressTestToAWS(resultData) {
+            try {
+                const runId = resultData.timestamp || new Date().toISOString();
+                
+                const response = await fetch(`${AWS_API_URL}/stress-test/logs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        runId: runId,
+                        result: resultData,
+                        logOutput: getSimLogOutput(),
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                
+                if (response.ok) {
+                    simLog('☁️ Results saved to AWS', 'success');
+                    return true;
+                } else {
+                    const error = await response.text();
+                    simLog(`⚠️ AWS save failed: ${error}`, 'warning');
+                    return false;
+                }
+            } catch (error) {
+                simLog(`⚠️ AWS sync error: ${error.message}`, 'warning');
+                console.error('AWS stress test sync error:', error);
+                return false;
+            }
+        }
+        
+        // Get current simulation log output as array
+        function getSimLogOutput() {
+            const output = document.getElementById('simLogOutput');
+            if (!output) return [];
+            
+            const lines = [];
+            for (const child of output.children) {
+                const timestamp = child.querySelector('span:first-child')?.textContent || '';
+                const message = child.querySelector('span:last-child')?.textContent || '';
+                lines.push({ timestamp, message });
+            }
+            return lines;
+        }
+        
+        // Load stress test history from AWS
+        async function loadStressTestHistoryFromAWS() {
+            try {
+                const response = await fetch(`${AWS_API_URL}/stress-test/logs`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.logs && data.logs.length > 0) {
+                        // Merge with local history, avoiding duplicates
+                        const awsLogs = data.logs.map(log => ({
+                            ...log.result,
+                            awsSynced: true,
+                            runId: log.runId
+                        }));
+                        
+                        const localTimestamps = new Set(simHistory.map(h => h.timestamp));
+                        const newLogs = awsLogs.filter(l => !localTimestamps.has(l.timestamp));
+                        
+                        if (newLogs.length > 0) {
+                            simHistory = [...newLogs, ...simHistory].slice(0, 50);
+                            localStorage.setItem('oithSimHistory', JSON.stringify(simHistory));
+                            document.getElementById('simHistoryCount').textContent = `${simHistory.length} saved`;
+                            console.log(`☁️ Loaded ${newLogs.length} stress test logs from AWS`);
+                        }
+                        return data.logs;
+                    }
+                }
+                return [];
+            } catch (error) {
+                console.log('⚠️ Could not load stress test history from AWS:', error.message);
+                return [];
+            }
+        }
+        
+        // View a specific stress test log from AWS
+        async function viewStressTestLog(runId) {
+            try {
+                const response = await fetch(`${AWS_API_URL}/stress-test/logs/${encodeURIComponent(runId)}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Clear and populate the debug console with the saved log
+                    clearSimLog();
+                    simLog('📂 Loading saved log...', 'info');
+                    
+                    if (data.logOutput && Array.isArray(data.logOutput)) {
+                        const output = document.getElementById('simLogOutput');
+                        output.innerHTML = '';
+                        
+                        for (const line of data.logOutput) {
+                            const colors = {
+                                success: '#3fb950',
+                                warning: '#d29922',
+                                error: '#f85149'
+                            };
+                            const color = line.message.includes('⚠️') || line.message.includes('warning') ? colors.warning :
+                                          line.message.includes('❌') || line.message.includes('error') ? colors.error :
+                                          line.message.includes('✅') || line.message.includes('success') ? colors.success : '#58a6ff';
+                            
+                            const lineEl = document.createElement('div');
+                            lineEl.style.cssText = 'display: flex; gap: 12px;';
+                            lineEl.innerHTML = `<span style="color: #7d8590;">${line.timestamp}</span><span style="color: ${color}">${line.message}</span>`;
+                            output.appendChild(lineEl);
+                        }
+                    }
+                    
+                    // Update metrics display if result data exists
+                    if (data.result) {
+                        document.getElementById('simMetricUsers').textContent = data.result.userCount?.toLocaleString() || '—';
+                        document.getElementById('simMetricSuccess').textContent = data.result.successRate + '%' || '—';
+                        document.getElementById('simMetricAvgTime').textContent = data.result.avgTime?.toFixed(1) + 'ms' || '—';
+                        document.getElementById('simMetricP95').textContent = data.result.p95?.toFixed(1) + 'ms' || '—';
+                        document.getElementById('simMetricScans').textContent = data.result.avgScans?.toLocaleString() || '—';
+                        document.getElementById('simMetricDuration').textContent = data.result.totalDuration?.toFixed(0) + 'ms' || '—';
+                    }
+                    
+                    showToast('📂 Stress test log loaded', 'success');
+                }
+            } catch (error) {
+                showToast('Failed to load log', 'error');
+                console.error('Load stress test log error:', error);
+            }
+        }
+        
+        // Delete a stress test log from AWS
+        async function deleteStressTestLog(runId) {
+            if (!confirm('Delete this stress test log from AWS?')) return;
+            
+            try {
+                const response = await fetch(`${AWS_API_URL}/stress-test/logs/${encodeURIComponent(runId)}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showToast('🗑️ Log deleted from AWS', 'info');
+                    // Refresh history
+                    await loadStressTestHistoryFromAWS();
+                    renderSimHistory();
+                }
+            } catch (error) {
+                showToast('Failed to delete log', 'error');
+                console.error('Delete stress test log error:', error);
+            }
+        }
+        
         function renderSimulation() {
             // Update history count on load
             document.getElementById('simHistoryCount').textContent = `${simHistory.length} saved`;
+            
+            // Load stress test history from AWS in background
+            loadStressTestHistoryFromAWS();
         }
 
         // ==========================================
@@ -27698,8 +27875,20 @@
                 (m.critical && ['tax', 'legal', 'compliance', 'payroll'].includes(m.type || m.category))
             ).sort((a, b) => new Date(a.date) - new Date(b.date));
             
+            // Helper function for timezone-safe date parsing
+            function parseEventDate(date) {
+                if (date instanceof Date) return date;
+                if (typeof date === 'string') {
+                    if (date.includes('T')) return new Date(date);
+                    // "2025-12-11" format - parse as local date
+                    const [y, mo, d] = date.split('-').map(Number);
+                    return new Date(y, mo - 1, d);
+                }
+                return new Date(date);
+            }
+            
             container.innerHTML = milestones.map(m => {
-                const mDate = new Date(m.date);
+                const mDate = parseEventDate(m.date);
                 const isPast = mDate < today;
                 const isToday = mDate.toDateString() === today.toDateString();
                 const isCritical = m.critical;
@@ -27756,10 +27945,22 @@
             // Use calendarEvents (combined projectMilestones + custom events) for real-time updates
             const eventsSource = (typeof calendarEvents !== 'undefined' && calendarEvents.length > 0) ? calendarEvents : projectMilestones;
             
+            // Helper function for timezone-safe date parsing
+            function parseEventDateLocal(date) {
+                if (date instanceof Date) return date;
+                if (typeof date === 'string') {
+                    if (date.includes('T')) return new Date(date);
+                    // "2025-12-11" format - parse as local date
+                    const [y, mo, d] = date.split('-').map(Number);
+                    return new Date(y, mo - 1, d);
+                }
+                return new Date(date);
+            }
+            
             const upcoming = eventsSource.filter(m => {
-                const mDate = m.date instanceof Date ? m.date : new Date(m.date);
+                const mDate = parseEventDateLocal(m.date);
                 return mDate >= today && mDate <= weekFromNow;
-            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+            }).sort((a, b) => parseEventDateLocal(a.date) - parseEventDateLocal(b.date));
             
             if (upcoming.length === 0) {
                 container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px;">No tasks in the next 7 days</div>`;
@@ -27767,7 +27968,7 @@
             }
             
             container.innerHTML = upcoming.map(m => {
-                const mDate = new Date(m.date);
+                const mDate = parseEventDateLocal(m.date);
                 const daysUntil = Math.ceil((mDate - today) / (1000 * 60 * 60 * 24));
                 const urgencyColor = daysUntil <= 1 ? 'var(--danger)' : daysUntil <= 3 ? 'var(--warning)' : 'var(--text-muted)';
                 
@@ -27827,7 +28028,22 @@
                 const currentDate = new Date(year, month, day);
                 // Use calendarEvents (combined projectMilestones + custom events) for real-time updates
                 const dayEvents = (typeof calendarEvents !== 'undefined' && calendarEvents.length > 0 ? calendarEvents : projectMilestones).filter(m => {
-                    const eventDate = m.date instanceof Date ? m.date : new Date(m.date);
+                    // Handle both Date objects and date strings (with timezone-safe parsing)
+                    let eventDate;
+                    if (m.date instanceof Date) {
+                        eventDate = m.date;
+                    } else if (typeof m.date === 'string') {
+                        // Parse date string as LOCAL time, not UTC
+                        if (m.date.includes('T')) {
+                            eventDate = new Date(m.date);
+                        } else {
+                            // "2025-12-11" format - parse as local date
+                            const [y, mo, d] = m.date.split('-').map(Number);
+                            eventDate = new Date(y, mo - 1, d);
+                        }
+                    } else {
+                        eventDate = new Date(m.date);
+                    }
                     return eventDate.getDate() === currentDate.getDate() && 
                            eventDate.getMonth() === currentDate.getMonth() && 
                            eventDate.getFullYear() === currentDate.getFullYear();
