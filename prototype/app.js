@@ -15,6 +15,344 @@
 const STORAGE_VERSION = '1.0';
 
 // ==========================================
+// WebSocket Real-Time Connection
+// Fixes: #1 (push notifications), #3 (real-time unmatch), 
+//        #5 (message delivery), #17 (replace polling)
+// ==========================================
+
+let websocket = null;
+let wsReconnectAttempts = 0;
+const WS_MAX_RECONNECT_ATTEMPTS = 5;
+const WS_RECONNECT_DELAY = 3000;
+const WS_URL = 'wss://your-websocket-api.execute-api.us-east-1.amazonaws.com/prod';
+
+/**
+ * Initialize WebSocket connection for real-time features
+ */
+function initWebSocket() {
+    if (!appState.user?.email) return;
+    if (websocket?.readyState === WebSocket.OPEN) return;
+    
+    try {
+        const wsUrl = `${WS_URL}?email=${encodeURIComponent(appState.user.email)}`;
+        websocket = new WebSocket(wsUrl);
+        
+        websocket.onopen = () => {
+            console.log('🔌 WebSocket connected');
+            wsReconnectAttempts = 0;
+            
+            // Stop polling now that we have real-time
+            stopChatPolling();
+        };
+        
+        websocket.onmessage = (event) => {
+            handleWebSocketMessage(JSON.parse(event.data));
+        };
+        
+        websocket.onclose = (event) => {
+            console.log('🔌 WebSocket disconnected:', event.code);
+            
+            // Attempt reconnection
+            if (wsReconnectAttempts < WS_MAX_RECONNECT_ATTEMPTS && appState.isLoggedIn) {
+                wsReconnectAttempts++;
+                console.log(`🔌 Reconnecting... (attempt ${wsReconnectAttempts})`);
+                setTimeout(initWebSocket, WS_RECONNECT_DELAY * wsReconnectAttempts);
+            } else {
+                // Fall back to polling
+                console.log('🔌 Falling back to polling');
+                if (appState.activeConnection?.matchId) {
+                    startChatPolling(appState.activeConnection.matchId);
+                }
+            }
+        };
+        
+        websocket.onerror = (error) => {
+            console.error('🔌 WebSocket error:', error);
+        };
+    } catch (error) {
+        console.error('WebSocket init error:', error);
+    }
+}
+
+/**
+ * Handle incoming WebSocket messages
+ */
+function handleWebSocketMessage(data) {
+    console.log('📨 WebSocket message:', data.type);
+    
+    switch (data.type) {
+        case 'new_message':
+            handleIncomingMessage(data);
+            break;
+            
+        case 'message_delivered':
+            handleMessageDelivered(data);
+            break;
+            
+        case 'message_read':
+            handleMessageRead(data);
+            break;
+            
+        case 'typing':
+            handleTypingIndicator(data);
+            break;
+            
+        case 'mutual_match':
+            handleRealtimeMutualMatch(data);
+            break;
+            
+        case 'unmatched':
+            handleRealtimeUnmatch(data);
+            break;
+            
+        case 'match_profile_updated':
+            handleMatchProfileUpdate(data);
+            break;
+            
+        case 'connection_expired':
+        case 'decision_expired':
+            handleTimerExpiredNotification(data);
+            break;
+            
+        case 'connection_warning':
+        case 'decision_warning':
+            handleTimerWarning(data);
+            break;
+            
+        case 'new_user_nearby':
+            handleNewUserNotification(data);
+            break;
+    }
+}
+
+/**
+ * Handle incoming chat message in real-time
+ */
+function handleIncomingMessage(data) {
+    // Add to conversation
+    if (!appState.conversation) {
+        appState.conversation = { messages: [] };
+    }
+    
+    appState.conversation.messages.push({
+        id: data.messageId,
+        text: data.message,
+        type: 'received',
+        timestamp: new Date(data.timestamp),
+        fromEmail: data.fromEmail,
+        status: 'delivered'
+    });
+    
+    // Update UI if on chat screen
+    if (appState.currentScreen === 'chat') {
+        addMessageToChat(data.message, 'received', data.messageId);
+        
+        // Send read receipt
+        sendReadReceipt([data.messageId]);
+    } else {
+        // Show notification
+        showToast(`💬 New message from your match!`, 'info');
+    }
+    
+    // Update message count
+    appState.connectionMetrics.messageCount++;
+    saveUserData();
+}
+
+/**
+ * Handle message delivery confirmation
+ * Fixes issue #4 - Message delivery confirmation
+ */
+function handleMessageDelivered(data) {
+    const msg = appState.conversation?.messages?.find(m => m.id === data.messageId);
+    if (msg) {
+        msg.status = 'delivered';
+        msg.deliveredAt = data.deliveredAt;
+        updateMessageStatus(data.messageId, 'delivered');
+    }
+}
+
+/**
+ * Handle message read receipt
+ * Fixes issue #4 - Read receipts
+ */
+function handleMessageRead(data) {
+    const msg = appState.conversation?.messages?.find(m => m.id === data.messageId);
+    if (msg) {
+        msg.status = 'read';
+        msg.readAt = data.readAt;
+        updateMessageStatus(data.messageId, 'read');
+    }
+}
+
+/**
+ * Update message status indicator in UI
+ */
+function updateMessageStatus(messageId, status) {
+    const msgEl = document.querySelector(`[data-message-id="${messageId}"] .message-status`);
+    if (msgEl) {
+        const icons = {
+            sent: '✓',
+            delivered: '✓✓',
+            read: '<span style="color: var(--accent);">✓✓</span>'
+        };
+        msgEl.innerHTML = icons[status] || '';
+    }
+}
+
+/**
+ * Handle typing indicator
+ */
+function handleTypingIndicator(data) {
+    const typingEl = document.getElementById('typingIndicator');
+    if (typingEl) {
+        typingEl.style.display = data.isTyping ? 'flex' : 'none';
+    }
+}
+
+/**
+ * Send typing indicator
+ */
+function sendTypingIndicator(isTyping) {
+    if (websocket?.readyState === WebSocket.OPEN && appState.activeConnection) {
+        websocket.send(JSON.stringify({
+            action: 'typing',
+            matchId: appState.activeConnection.matchId,
+            fromEmail: appState.user.email,
+            toEmail: appState.activeConnection.email,
+            isTyping
+        }));
+    }
+}
+
+/**
+ * Send read receipt for messages
+ */
+function sendReadReceipt(messageIds) {
+    if (websocket?.readyState === WebSocket.OPEN && appState.activeConnection) {
+        websocket.send(JSON.stringify({
+            action: 'readReceipt',
+            matchId: appState.activeConnection.matchId,
+            readerEmail: appState.user.email,
+            messageIds
+        }));
+    }
+}
+
+/**
+ * Handle real-time mutual match notification
+ * Fixes issue #17 - Mutual match client-side handling
+ */
+function handleRealtimeMutualMatch(data) {
+    console.log('🎉 Real-time mutual match!', data);
+    
+    // Update state
+    appState.oneMatch.isMutual = true;
+    appState.oneMatch.status = 'connected';
+    appState.activeConnection = {
+        email: data.matchEmail,
+        name: data.matchName,
+        photo: data.matchPhoto,
+        matchId: data.matchId
+    };
+    
+    // Show celebration
+    showToast(`🎉 It's a match with ${data.matchName}!`, 'success');
+    
+    // Navigate to chat after brief celebration
+    setTimeout(() => {
+        showScreen('chat');
+    }, 2000);
+    
+    saveUserData();
+}
+
+/**
+ * Handle real-time unmatch notification
+ * Fixes issue #3 - Real-time unmatch notification
+ */
+function handleRealtimeUnmatch(data) {
+    console.log('💔 Real-time unmatch received');
+    
+    // Clear active connection
+    appState.activeConnection = null;
+    appState.oneMatch.status = 'searching';
+    appState.oneMatch.isMutual = false;
+    
+    // Clear conversation
+    appState.conversation = { messages: [], dateReadiness: 0 };
+    
+    // Show notification
+    showToast('Your match has ended. Finding someone new...', 'info');
+    
+    // Navigate to match screen
+    showScreen('match');
+    
+    // Find new match
+    setTimeout(() => findNextMatch(), 1500);
+    
+    saveUserData();
+}
+
+/**
+ * Handle profile update from active match
+ * Fixes issue #6 - Profile update sync during active match
+ */
+function handleMatchProfileUpdate(data) {
+    if (appState.activeConnection?.email === data.matchEmail) {
+        // Update cached profile data
+        if (data.profile) {
+            appState.activeConnection = {
+                ...appState.activeConnection,
+                ...data.profile
+            };
+        }
+        
+        // Refresh match card if visible
+        if (appState.currentScreen === 'chat' || appState.currentScreen === 'match') {
+            updateMatchProfileUI(data.profile);
+        }
+        
+        showToast('Your match updated their profile', 'info');
+    }
+}
+
+/**
+ * Handle timer expired notification from server
+ */
+function handleTimerExpiredNotification(data) {
+    if (data.type === 'connection_expired') {
+        handleConnectionExpired();
+    } else if (data.type === 'decision_expired') {
+        handleDecisionExpired();
+    }
+}
+
+/**
+ * Handle timer warning from server
+ */
+function handleTimerWarning(data) {
+    showToast(`⏰ Only ${data.hoursRemaining} hour${data.hoursRemaining > 1 ? 's' : ''} left with your match!`, 'warning');
+}
+
+/**
+ * Handle new user nearby notification
+ */
+function handleNewUserNotification(data) {
+    showToast('🆕 A new user joined near you! Check your matches.', 'success');
+}
+
+/**
+ * Close WebSocket connection
+ */
+function closeWebSocket() {
+    if (websocket) {
+        websocket.close();
+        websocket = null;
+    }
+}
+
+// ==========================================
 // Geolocation & Distance System
 // ==========================================
 

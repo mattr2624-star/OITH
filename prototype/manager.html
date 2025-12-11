@@ -1036,20 +1036,144 @@
 
         /* Event Details Modal Styles */
         .event-details-modal {
-            max-width: 750px !important;
+            max-width: 900px !important;
             width: 95% !important;
+            max-height: 85vh;
             padding: 0;
             overflow: hidden;
             border-radius: 16px;
-            font-size: 0.9rem;
+            font-size: 0.82rem;
         }
 
         .event-details-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 20px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--border);
+        }
+        
+        .event-details-header h2 {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+        
+        .event-details-header p {
+            font-size: 0.75rem;
+            margin: 2px 0 0 0;
+        }
+        
+        .event-details-body {
+            padding: 16px 18px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .event-detail-row {
+            display: flex;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.05));
+        }
+        
+        .event-detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .event-detail-icon {
+            font-size: 1rem;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .event-detail-content {
+            flex: 1;
+        }
+        
+        .event-detail-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        
+        .event-detail-value {
+            font-size: 0.82rem;
+            color: var(--text-primary);
+        }
+        
+        .event-notes-section {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+        
+        .event-notes-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        .event-notes-content {
+            font-size: 0.78rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+        
+        .event-notes-content ul {
+            margin: 8px 0;
+            padding-left: 18px;
+        }
+        
+        .event-notes-content li {
+            margin-bottom: 6px;
+        }
+        
+        .event-notes-content .sub-requirement {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px dashed var(--border-light, rgba(255,255,255,0.08));
+        }
+        
+        .event-notes-content .sub-requirement:last-child {
+            border-bottom: none;
+        }
+        
+        .event-notes-content .sub-req-status {
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        
+        .event-notes-content .sub-req-text {
+            flex: 1;
+        }
+        
+        .event-notes-content .sub-req-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        
+        .event-details-footer {
+            padding: 12px 18px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .event-details-footer .btn {
+            font-size: 0.78rem;
+            padding: 8px 14px;
         }
 
         .event-details-header-left {
@@ -27357,7 +27481,9 @@
                             </div>
                             
                             <div class="event-notes-section" id="eventNotesSection">
-                                <h4>📋 Notes & Requirements</h4>
+                                <div class="event-notes-header">
+                                    📋 Notes & Requirements
+                                </div>
                                 <div class="event-notes-content" id="eventNotesContent">
                                     <p>No notes available for this event.</p>
                                 </div>
@@ -27430,6 +27556,495 @@
             document.body.appendChild(modal);
             console.log('📅 Event details modal created dynamically');
             return modal;
+        }
+        
+        // Generate detailed notes for each event type
+        function generateEventNotes(event) {
+            const eventNotes = {
+                // Business Formation
+                'Register LLC': {
+                    description: 'Complete LLC registration with state authorities',
+                    subRequirements: [
+                        { text: 'Choose LLC name and verify availability', time: '1 day', status: '✅' },
+                        { text: 'File Articles of Organization', time: '2-3 days', status: '✅' },
+                        { text: 'Create Operating Agreement', time: '1-2 days', status: '✅' },
+                        { text: 'Obtain Registered Agent', time: '1 day', status: '✅' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'Critical'
+                },
+                'Obtain EIN': {
+                    description: 'Apply for Employer Identification Number from IRS',
+                    subRequirements: [
+                        { text: 'Complete IRS Form SS-4', time: '30 min', status: '✅' },
+                        { text: 'Submit application online or by fax', time: '1 hour', status: '✅' },
+                        { text: 'Receive confirmation letter', time: '1-2 weeks', status: '⏳' }
+                    ],
+                    estimatedCompletion: '2 weeks',
+                    priority: 'Critical'
+                },
+                'Business Formation Complete': {
+                    description: 'All foundational business registration complete',
+                    subRequirements: [
+                        { text: 'LLC fully registered', time: 'Complete', status: '✅' },
+                        { text: 'EIN obtained', time: 'Complete', status: '✅' },
+                        { text: 'Business licenses acquired', time: 'Complete', status: '✅' },
+                        { text: 'State tax registration', time: 'Complete', status: '✅' }
+                    ],
+                    estimatedCompletion: 'Milestone achieved',
+                    priority: 'Milestone'
+                },
+                'Open Business Bank Account': {
+                    description: 'Establish business banking relationship',
+                    subRequirements: [
+                        { text: 'Research bank options and fees', time: '2 days', status: '✅' },
+                        { text: 'Gather required documents (EIN, Articles)', time: '1 day', status: '✅' },
+                        { text: 'Schedule appointment with bank', time: '1 day', status: '⏳' },
+                        { text: 'Set up online banking access', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'High'
+                },
+                // Development Milestones
+                'Development Kickoff': {
+                    description: 'Official start of development phase',
+                    subRequirements: [
+                        { text: 'Set up development environment', time: '1 day', status: '✅' },
+                        { text: 'Configure CI/CD pipeline', time: '2 days', status: '✅' },
+                        { text: 'Create repository structure', time: '1 day', status: '✅' },
+                        { text: 'Define coding standards', time: '1 day', status: '✅' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'High'
+                },
+                'User Registration & Auth': {
+                    description: 'Implement user authentication system',
+                    subRequirements: [
+                        { text: 'Design auth flow (signup/login/forgot)', time: '1 day', status: '✅' },
+                        { text: 'Implement JWT token system', time: '2 days', status: '✅' },
+                        { text: 'Add OAuth providers (Google, Apple)', time: '3 days', status: '⏳' },
+                        { text: 'Email verification system', time: '2 days', status: '⏳' },
+                        { text: 'Password security & hashing', time: '1 day', status: '✅' }
+                    ],
+                    estimatedCompletion: '2 weeks',
+                    priority: 'Critical'
+                },
+                'Profile Creation Complete': {
+                    description: 'User profile management functionality',
+                    subRequirements: [
+                        { text: 'Profile data model design', time: '1 day', status: '✅' },
+                        { text: 'Photo upload & processing', time: '3 days', status: '⏳' },
+                        { text: 'Profile editing UI', time: '2 days', status: '⏳' },
+                        { text: 'Privacy settings', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '1.5 weeks',
+                    priority: 'High'
+                },
+                'Location Services': {
+                    description: 'Implement geolocation features',
+                    subRequirements: [
+                        { text: 'Integrate geolocation API', time: '1 day', status: '⏳' },
+                        { text: 'Location permission handling', time: '1 day', status: '⏳' },
+                        { text: 'Distance calculation logic', time: '2 days', status: '⏳' },
+                        { text: 'Location privacy controls', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'High'
+                },
+                'Core Matching Algorithm Complete': {
+                    description: 'ML-powered matching system implementation',
+                    subRequirements: [
+                        { text: 'Define matching criteria weights', time: '2 days', status: '⏳' },
+                        { text: 'Implement compatibility scoring', time: '3 days', status: '⏳' },
+                        { text: 'Build recommendation engine', time: '4 days', status: '⏳' },
+                        { text: 'A/B testing framework', time: '2 days', status: '⏳' },
+                        { text: 'Performance optimization', time: '2 days', status: '⏳' }
+                    ],
+                    estimatedCompletion: '2.5 weeks',
+                    priority: 'Critical'
+                },
+                'In-App Messaging/Chat': {
+                    description: 'Real-time messaging system',
+                    subRequirements: [
+                        { text: 'WebSocket infrastructure', time: '2 days', status: '⏳' },
+                        { text: 'Message storage & encryption', time: '2 days', status: '⏳' },
+                        { text: 'Chat UI components', time: '3 days', status: '⏳' },
+                        { text: 'Read receipts & typing indicators', time: '1 day', status: '⏳' },
+                        { text: 'Media sharing', time: '2 days', status: '⏳' }
+                    ],
+                    estimatedCompletion: '2 weeks',
+                    priority: 'High'
+                },
+                'Push Notifications': {
+                    description: 'Mobile push notification system',
+                    subRequirements: [
+                        { text: 'Configure FCM/APNs', time: '1 day', status: '⏳' },
+                        { text: 'Notification service backend', time: '2 days', status: '⏳' },
+                        { text: 'User preference management', time: '1 day', status: '⏳' },
+                        { text: 'Deep linking support', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'Medium'
+                },
+                'Payment Service': {
+                    description: 'Premium subscription payment processing',
+                    subRequirements: [
+                        { text: 'Stripe integration', time: '2 days', status: '⏳' },
+                        { text: 'Subscription management', time: '2 days', status: '⏳' },
+                        { text: 'Apple/Google IAP', time: '3 days', status: '⏳' },
+                        { text: 'Receipt validation', time: '1 day', status: '⏳' },
+                        { text: 'Refund handling', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '2 weeks',
+                    priority: 'High'
+                },
+                'MVP Feature-Complete': {
+                    description: 'All MVP features implemented and functional',
+                    subRequirements: [
+                        { text: 'Core features working', time: 'Complete', status: '✅' },
+                        { text: 'Basic UI/UX polished', time: 'Complete', status: '✅' },
+                        { text: 'Critical bugs fixed', time: 'Complete', status: '✅' },
+                        { text: 'Performance baseline met', time: 'Complete', status: '✅' }
+                    ],
+                    estimatedCompletion: 'Milestone',
+                    priority: 'Milestone'
+                },
+                // Testing
+                'Alpha Testing Begins': {
+                    description: 'Internal testing phase start',
+                    subRequirements: [
+                        { text: 'Test plan documentation', time: '2 days', status: '⏳' },
+                        { text: 'Internal tester recruitment', time: '1 day', status: '⏳' },
+                        { text: 'Bug tracking setup', time: '1 day', status: '⏳' },
+                        { text: 'Feedback collection system', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '2 weeks',
+                    priority: 'High'
+                },
+                'Unit Test Coverage >80%': {
+                    description: 'Achieve comprehensive test coverage',
+                    subRequirements: [
+                        { text: 'Write unit tests for core modules', time: '5 days', status: '⏳' },
+                        { text: 'Integration test suite', time: '3 days', status: '⏳' },
+                        { text: 'Code coverage reporting', time: '1 day', status: '⏳' },
+                        { text: 'CI test automation', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '2 weeks',
+                    priority: 'High'
+                },
+                // Compliance
+                '✅ GDPR Compliance Review': {
+                    description: 'European data protection regulation compliance',
+                    subRequirements: [
+                        { text: 'Data processing audit', time: '2 days', status: '✅' },
+                        { text: 'Privacy policy update', time: '1 day', status: '✅' },
+                        { text: 'Consent mechanisms', time: '2 days', status: '✅' },
+                        { text: 'Data deletion workflow', time: '2 days', status: '✅' },
+                        { text: 'DPO appointment', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '1.5 weeks',
+                    priority: 'Critical'
+                },
+                '✅ CCPA Compliance Review': {
+                    description: 'California Consumer Privacy Act compliance',
+                    subRequirements: [
+                        { text: 'Data inventory complete', time: '1 day', status: '✅' },
+                        { text: 'Opt-out mechanism', time: '1 day', status: '✅' },
+                        { text: 'Privacy notice updates', time: '1 day', status: '✅' },
+                        { text: 'Request handling process', time: '2 days', status: '✅' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'Critical'
+                },
+                '✅ App Store Guidelines Compliance': {
+                    description: 'Apple App Store requirements met',
+                    subRequirements: [
+                        { text: 'Content guidelines review', time: '1 day', status: '✅' },
+                        { text: 'Privacy labels completed', time: '1 day', status: '✅' },
+                        { text: 'IAP implementation', time: '2 days', status: '✅' },
+                        { text: 'Safety features documented', time: '1 day', status: '✅' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'Critical'
+                },
+                '✅ PCI DSS Compliance (Payments)': {
+                    description: 'Payment card industry security standards',
+                    subRequirements: [
+                        { text: 'No card data storage (Stripe tokens)', time: 'N/A', status: '✅' },
+                        { text: 'SSL/TLS encryption', time: 'Complete', status: '✅' },
+                        { text: 'Vendor compliance verification', time: '1 day', status: '✅' },
+                        { text: 'Security policy documentation', time: '1 day', status: '✅' }
+                    ],
+                    estimatedCompletion: 'Complete',
+                    priority: 'Critical'
+                },
+                // Meetings
+                'All Hands Meeting': {
+                    description: 'Company-wide team sync and updates',
+                    subRequirements: [
+                        { text: 'Prepare agenda and slides', time: '2 hours', status: '⏳' },
+                        { text: 'Review key metrics', time: '30 min', status: '⏳' },
+                        { text: 'Collect team updates', time: '1 hour', status: '⏳' },
+                        { text: 'Q&A preparation', time: '30 min', status: '⏳' }
+                    ],
+                    estimatedCompletion: 'Recurring',
+                    priority: 'Medium'
+                },
+                'Leadership Standup': {
+                    description: 'Weekly leadership alignment meeting',
+                    subRequirements: [
+                        { text: 'Review blockers and risks', time: '15 min', status: '⏳' },
+                        { text: 'Resource allocation check', time: '15 min', status: '⏳' },
+                        { text: 'Priority alignment', time: '15 min', status: '⏳' },
+                        { text: 'Action items follow-up', time: '15 min', status: '⏳' }
+                    ],
+                    estimatedCompletion: 'Recurring (bi-weekly)',
+                    priority: 'High'
+                },
+                'Sprint Planning': {
+                    description: 'Plan upcoming sprint work items',
+                    subRequirements: [
+                        { text: 'Review backlog priorities', time: '30 min', status: '⏳' },
+                        { text: 'Estimate story points', time: '1 hour', status: '⏳' },
+                        { text: 'Assign ownership', time: '30 min', status: '⏳' },
+                        { text: 'Identify dependencies', time: '30 min', status: '⏳' }
+                    ],
+                    estimatedCompletion: 'Recurring (bi-weekly)',
+                    priority: 'High'
+                },
+                'Monthly KPI Review': {
+                    description: 'Review key performance indicators',
+                    subRequirements: [
+                        { text: 'Gather metrics data', time: '1 hour', status: '⏳' },
+                        { text: 'Prepare dashboard', time: '2 hours', status: '⏳' },
+                        { text: 'Trend analysis', time: '1 hour', status: '⏳' },
+                        { text: 'Recommendations', time: '1 hour', status: '⏳' }
+                    ],
+                    estimatedCompletion: 'Recurring (monthly)',
+                    priority: 'High'
+                },
+                'Weekly Safety Report': {
+                    description: 'Review safety metrics and incidents',
+                    subRequirements: [
+                        { text: 'Review flagged content', time: '30 min', status: '⏳' },
+                        { text: 'User reports analysis', time: '30 min', status: '⏳' },
+                        { text: 'Bot detection review', time: '30 min', status: '⏳' },
+                        { text: 'Action items from incidents', time: '30 min', status: '⏳' }
+                    ],
+                    estimatedCompletion: 'Recurring (weekly)',
+                    priority: 'High'
+                },
+                // Other milestones
+                'API Architecture Ready': {
+                    description: 'Backend API design and documentation complete',
+                    subRequirements: [
+                        { text: 'OpenAPI/Swagger spec', time: '2 days', status: '✅' },
+                        { text: 'Authentication endpoints', time: '1 day', status: '✅' },
+                        { text: 'Rate limiting design', time: '1 day', status: '✅' },
+                        { text: 'Error handling standards', time: '1 day', status: '✅' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'High'
+                },
+                'Legal Documents Ready': {
+                    description: 'Legal documentation prepared and reviewed',
+                    subRequirements: [
+                        { text: 'Terms of Service', time: '3 days', status: '✅' },
+                        { text: 'Privacy Policy', time: '2 days', status: '✅' },
+                        { text: 'EULA', time: '2 days', status: '✅' },
+                        { text: 'Legal review', time: '1 week', status: '✅' }
+                    ],
+                    estimatedCompletion: '2 weeks',
+                    priority: 'Critical'
+                },
+                'Infrastructure Setup Complete': {
+                    description: 'Cloud infrastructure and DevOps ready',
+                    subRequirements: [
+                        { text: 'AWS account setup', time: '1 day', status: '✅' },
+                        { text: 'Kubernetes cluster', time: '2 days', status: '✅' },
+                        { text: 'CI/CD pipeline', time: '2 days', status: '✅' },
+                        { text: 'Monitoring & alerting', time: '2 days', status: '✅' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'Critical'
+                },
+                'D-U-N-S Number Received': {
+                    description: 'D&B business identifier for Apple Developer',
+                    subRequirements: [
+                        { text: 'Submit D&B application', time: '1 day', status: '✅' },
+                        { text: 'Business verification', time: '2 weeks', status: '✅' },
+                        { text: 'Number received', time: 'Complete', status: '✅' }
+                    ],
+                    estimatedCompletion: '2-3 weeks',
+                    priority: 'High'
+                },
+                'Developer Accounts (Apple & Google)': {
+                    description: 'Set up app store developer accounts',
+                    subRequirements: [
+                        { text: 'Apple Developer Program enrollment', time: '2 days', status: '✅' },
+                        { text: 'Google Play Console setup', time: '1 day', status: '✅' },
+                        { text: 'Team member invites', time: '1 day', status: '✅' },
+                        { text: 'Payment setup', time: '1 day', status: '✅' }
+                    ],
+                    estimatedCompletion: '1 week',
+                    priority: 'High'
+                },
+                '💵 December Payroll': {
+                    description: 'Process monthly payroll',
+                    subRequirements: [
+                        { text: 'Timesheet review', time: '2 hours', status: '⏳' },
+                        { text: 'Calculate deductions', time: '1 hour', status: '⏳' },
+                        { text: 'Process payments', time: '1 hour', status: '⏳' },
+                        { text: 'File tax deposits', time: '1 hour', status: '⏳' }
+                    ],
+                    estimatedCompletion: 'By month end',
+                    priority: 'Critical'
+                },
+                '📜 PCT International Application Q4 2025': {
+                    description: 'File international patent application',
+                    subRequirements: [
+                        { text: 'Draft PCT application', time: '2 weeks', status: '⏳' },
+                        { text: 'Prior art search', time: '1 week', status: '⏳' },
+                        { text: 'Attorney review', time: '1 week', status: '⏳' },
+                        { text: 'Filing fees payment', time: '1 day', status: '⏳' }
+                    ],
+                    estimatedCompletion: '1 month',
+                    priority: 'High'
+                }
+            };
+            
+            // Check if we have specific notes for this event
+            let notes = eventNotes[event.title];
+            
+            // If not found, generate generic notes based on category
+            if (!notes) {
+                const genericNotes = {
+                    'meeting': {
+                        description: 'Team meeting or sync',
+                        subRequirements: [
+                            { text: 'Review previous action items', time: '10 min', status: '⏳' },
+                            { text: 'Discuss current priorities', time: '20 min', status: '⏳' },
+                            { text: 'Identify blockers', time: '10 min', status: '⏳' },
+                            { text: 'Assign new action items', time: '10 min', status: '⏳' }
+                        ],
+                        estimatedCompletion: '1 hour',
+                        priority: 'Medium'
+                    },
+                    'milestone': {
+                        description: 'Project milestone checkpoint',
+                        subRequirements: [
+                            { text: 'Verify deliverables complete', time: 'Varies', status: '⏳' },
+                            { text: 'Quality review', time: 'Varies', status: '⏳' },
+                            { text: 'Stakeholder sign-off', time: '1 day', status: '⏳' }
+                        ],
+                        estimatedCompletion: 'Target date',
+                        priority: 'High'
+                    },
+                    'compliance': {
+                        description: 'Regulatory compliance task',
+                        subRequirements: [
+                            { text: 'Review requirements', time: '2 hours', status: '⏳' },
+                            { text: 'Gap analysis', time: '1 day', status: '⏳' },
+                            { text: 'Implementation', time: 'Varies', status: '⏳' },
+                            { text: 'Verification', time: '1 day', status: '⏳' }
+                        ],
+                        estimatedCompletion: 'By deadline',
+                        priority: 'Critical'
+                    },
+                    'payroll': {
+                        description: 'Payroll processing task',
+                        subRequirements: [
+                            { text: 'Verify hours/salaries', time: '1 hour', status: '⏳' },
+                            { text: 'Process payments', time: '2 hours', status: '⏳' },
+                            { text: 'Tax filing', time: '1 hour', status: '⏳' }
+                        ],
+                        estimatedCompletion: 'By pay date',
+                        priority: 'Critical'
+                    },
+                    'safety': {
+                        description: 'Safety and trust review',
+                        subRequirements: [
+                            { text: 'Review flagged items', time: '30 min', status: '⏳' },
+                            { text: 'Take necessary actions', time: 'Varies', status: '⏳' },
+                            { text: 'Document outcomes', time: '15 min', status: '⏳' }
+                        ],
+                        estimatedCompletion: 'Recurring',
+                        priority: 'High'
+                    },
+                    'patent': {
+                        description: 'Intellectual property task',
+                        subRequirements: [
+                            { text: 'Documentation preparation', time: 'Varies', status: '⏳' },
+                            { text: 'Legal review', time: '1 week', status: '⏳' },
+                            { text: 'Filing', time: '1 day', status: '⏳' }
+                        ],
+                        estimatedCompletion: 'Per deadline',
+                        priority: 'High'
+                    },
+                    'tax': {
+                        description: 'Tax-related task',
+                        subRequirements: [
+                            { text: 'Gather documentation', time: '2 hours', status: '⏳' },
+                            { text: 'Calculate amounts', time: '1 hour', status: '⏳' },
+                            { text: 'File/Submit', time: '1 hour', status: '⏳' }
+                        ],
+                        estimatedCompletion: 'By deadline',
+                        priority: 'Critical'
+                    }
+                };
+                
+                notes = genericNotes[event.category] || {
+                    description: event.description || 'Calendar event',
+                    subRequirements: [
+                        { text: 'Review event details', time: 'Varies', status: '⏳' },
+                        { text: 'Complete required tasks', time: 'Varies', status: '⏳' },
+                        { text: 'Follow up as needed', time: 'Varies', status: '⏳' }
+                    ],
+                    estimatedCompletion: 'As scheduled',
+                    priority: 'Medium'
+                };
+            }
+            
+            return notes;
+        }
+        
+        function renderEventNotes(notes) {
+            if (!notes) return '<p style="color: var(--text-muted);">No notes available.</p>';
+            
+            let html = '';
+            
+            if (notes.description) {
+                html += `<p style="margin-bottom: 10px; color: var(--text-secondary);">${notes.description}</p>`;
+            }
+            
+            if (notes.subRequirements && notes.subRequirements.length > 0) {
+                html += '<div style="margin-top: 8px;">';
+                notes.subRequirements.forEach(req => {
+                    html += `
+                        <div class="sub-requirement">
+                            <span class="sub-req-status">${req.status}</span>
+                            <span class="sub-req-text">${req.text}</span>
+                            <span class="sub-req-time">${req.time}</span>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+            
+            html += `
+                <div style="display: flex; gap: 16px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-light, rgba(255,255,255,0.08));">
+                    <div>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Est. Completion</span>
+                        <div style="font-size: 0.78rem; font-weight: 500; color: var(--text-primary);">${notes.estimatedCompletion}</div>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase;">Priority</span>
+                        <div style="font-size: 0.78rem; font-weight: 500; color: ${notes.priority === 'Critical' ? 'var(--danger)' : notes.priority === 'High' ? 'var(--warning)' : notes.priority === 'Milestone' ? 'var(--success)' : 'var(--text-primary)'};">${notes.priority}</div>
+                    </div>
+                </div>
+            `;
+            
+            return html;
         }
         
         function openEventDetails(event) {
@@ -27560,41 +28175,10 @@
             if (sectionValueEl) sectionValueEl.textContent = event.section || 'General';
             
             // Generate and display notes
-            const notesSection = document.getElementById('eventNotesSection');
             const notesContent = document.getElementById('eventNotesContent');
             if (notesContent) {
                 const notes = generateEventNotes(event);
-                let notesHTML = '';
-                
-                // Time estimate badge
-                if (notes.timeEstimate) {
-                    notesHTML += `<div style="margin-bottom: 12px;">
-                        <span class="event-time-estimate">⏱️ Est. ${notes.timeEstimate}</span>
-                    </div>`;
-                }
-                
-                // Sub-requirements
-                if (notes.subRequirements && notes.subRequirements.length > 0) {
-                    notesHTML += '<div style="margin-bottom: 12px;"><strong style="font-size: 0.75rem; color: var(--text-muted);">SUB-REQUIREMENTS:</strong></div>';
-                    notes.subRequirements.forEach(req => {
-                        const icon = req.done ? '✅' : '⬜';
-                        const style = req.done ? 'text-decoration: line-through; color: var(--text-muted);' : '';
-                        notesHTML += `<div class="sub-requirement">
-                            <span>${icon}</span>
-                            <span style="${style}">${req.text}</span>
-                        </div>`;
-                    });
-                }
-                
-                // Additional notes
-                if (notes.notes) {
-                    notesHTML += `<div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border);">
-                        <strong style="font-size: 0.75rem; color: var(--text-muted);">NOTES:</strong>
-                        <p style="margin: 6px 0 0; color: var(--text-secondary);">${notes.notes}</p>
-                    </div>`;
-                }
-                
-                notesContent.innerHTML = notesHTML;
+                notesContent.innerHTML = renderEventNotes(notes);
             }
             
             // Show view mode, hide edit mode

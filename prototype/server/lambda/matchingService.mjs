@@ -47,6 +47,12 @@ const CONFIG = {
     // Match expiration - auto-pass if no response in 24 hours
     MATCH_EXPIRATION_HOURS: 24,
     
+    // Connection timer - how long users have to chat and plan a date
+    CONNECTION_TIMER_HOURS: 24,
+    
+    // Decision timer - how long users have to accept/pass on a match
+    DECISION_TIMER_HOURS: 24,
+    
     // Only show users active within this many days
     ACTIVE_USER_DAYS: 14,
     
@@ -58,7 +64,10 @@ const CONFIG = {
     
     // Rate limiting: max requests per minute per user
     RATE_LIMIT_REQUESTS: 20,
-    RATE_LIMIT_WINDOW_SECONDS: 60
+    RATE_LIMIT_WINDOW_SECONDS: 60,
+    
+    // Location refresh - prompt users to update location every N days
+    LOCATION_REFRESH_DAYS: 7
 };
 
 // GSI name for geohash-based queries (create this GSI on oith-profiles)
@@ -66,6 +75,320 @@ const GEOHASH_GSI_NAME = 'geohash-lastSeen-index';
 
 // In-memory rate limit cache (resets on Lambda cold start, but still helps)
 const rateLimitCache = new Map();
+
+// ==========================================
+// SERVER-SIDE TIMER ENFORCEMENT
+// Fixes issues #2, #10, #11 - Timers enforced server-side
+// ==========================================
+
+/**
+ * Set server-side connection timer when match is created
+ */
+async function setConnectionTimer(userEmail, matchEmail, matchId) {
+    const expiresAt = new Date(Date.now() + CONFIG.CONNECTION_TIMER_HOURS * 60 * 60 * 1000).toISOString();
+    
+    // Store timer for both users
+    await Promise.all([
+        docClient.send(new PutCommand({
+            TableName: TABLES.MATCHES,
+            Item: {
+                pk: `TIMER#${userEmail.toLowerCase()}`,
+                sk: `CONNECTION#${matchId}`,
+                matchId,
+                matchEmail: matchEmail.toLowerCase(),
+                type: 'connection',
+                expiresAt,
+                createdAt: new Date().toISOString(),
+                warningsSent: []
+            }
+        })),
+        docClient.send(new PutCommand({
+            TableName: TABLES.MATCHES,
+            Item: {
+                pk: `TIMER#${matchEmail.toLowerCase()}`,
+                sk: `CONNECTION#${matchId}`,
+                matchId,
+                matchEmail: userEmail.toLowerCase(),
+                type: 'connection',
+                expiresAt,
+                createdAt: new Date().toISOString(),
+                warningsSent: []
+            }
+        }))
+    ]);
+    
+    console.log(`⏰ Connection timer set for ${matchId}, expires at ${expiresAt}`);
+    return expiresAt;
+}
+
+/**
+ * Set server-side decision timer when match is presented
+ */
+async function setDecisionTimer(userEmail, matchEmail) {
+    const expiresAt = new Date(Date.now() + CONFIG.DECISION_TIMER_HOURS * 60 * 60 * 1000).toISOString();
+    
+    await docClient.send(new PutCommand({
+        TableName: TABLES.MATCHES,
+        Item: {
+            pk: `TIMER#${userEmail.toLowerCase()}`,
+            sk: `DECISION#${matchEmail.toLowerCase()}`,
+            matchEmail: matchEmail.toLowerCase(),
+            type: 'decision',
+            expiresAt,
+            createdAt: new Date().toISOString()
+        }
+    }));
+    
+    console.log(`⏰ Decision timer set for ${userEmail} -> ${matchEmail}, expires at ${expiresAt}`);
+    return expiresAt;
+}
+
+/**
+ * Get remaining time on a timer
+ */
+async function getTimerStatus(userEmail, type, matchId) {
+    const sk = type === 'connection' ? `CONNECTION#${matchId}` : `DECISION#${matchId}`;
+    
+    try {
+        const result = await docClient.send(new GetCommand({
+            TableName: TABLES.MATCHES,
+            Key: { pk: `TIMER#${userEmail.toLowerCase()}`, sk }
+        }));
+        
+        if (!result.Item) return null;
+        
+        const expiresAt = new Date(result.Item.expiresAt);
+        const now = new Date();
+        const remainingMs = expiresAt - now;
+        
+        return {
+            expiresAt: result.Item.expiresAt,
+            remainingMs: Math.max(0, remainingMs),
+            remainingHours: Math.max(0, remainingMs / (1000 * 60 * 60)),
+            isExpired: remainingMs <= 0,
+            warningsSent: result.Item.warningsSent || []
+        };
+    } catch (error) {
+        console.error('Get timer status error:', error);
+        return null;
+    }
+}
+
+/**
+ * Check and enforce timer expiration
+ * Called periodically and on user actions
+ */
+async function enforceTimerExpiration(userEmail) {
+    const now = new Date().toISOString();
+    
+    try {
+        // Get all timers for this user
+        const timers = await docClient.send(new QueryCommand({
+            TableName: TABLES.MATCHES,
+            KeyConditionExpression: 'pk = :pk',
+            ExpressionAttributeValues: { ':pk': `TIMER#${userEmail.toLowerCase()}` }
+        }));
+        
+        const expiredTimers = [];
+        
+        for (const timer of timers.Items || []) {
+            if (timer.expiresAt < now) {
+                expiredTimers.push(timer);
+            }
+        }
+        
+        // Handle expired timers
+        for (const timer of expiredTimers) {
+            if (timer.type === 'decision') {
+                await handleExpiredDecisionTimer(userEmail, timer);
+            } else if (timer.type === 'connection') {
+                await handleExpiredConnectionTimer(userEmail, timer);
+            }
+        }
+        
+        return expiredTimers;
+    } catch (error) {
+        console.error('Enforce timer error:', error);
+        return [];
+    }
+}
+
+/**
+ * Handle expired decision timer - auto-pass the match
+ * Fixes issue #10 - Decision timer race condition
+ */
+async function handleExpiredDecisionTimer(userEmail, timer) {
+    console.log(`⏰ Decision timer expired: ${userEmail} -> ${timer.matchEmail}`);
+    
+    // Use conditional update to prevent race condition
+    try {
+        await docClient.send(new UpdateCommand({
+            TableName: TABLES.MATCHES,
+            Key: { pk: timer.pk, sk: timer.sk },
+            UpdateExpression: 'SET #status = :expired, processedAt = :time',
+            ConditionExpression: 'attribute_not_exists(#status)',
+            ExpressionAttributeNames: { '#status': 'status' },
+            ExpressionAttributeValues: {
+                ':expired': 'expired',
+                ':time': new Date().toISOString()
+            }
+        }));
+        
+        // We won the race - process the expiration
+        // Record as auto-pass
+        await docClient.send(new PutCommand({
+            TableName: TABLES.MATCH_HISTORY,
+            Item: {
+                userEmail: userEmail.toLowerCase(),
+                matchEmail: timer.matchEmail,
+                action: 'auto_pass',
+                reason: 'decision_timer_expired',
+                timestamp: new Date().toISOString()
+            }
+        }));
+        
+        // Make user visible again
+        await docClient.send(new UpdateCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email: userEmail.toLowerCase() },
+            UpdateExpression: 'SET isVisible = :true REMOVE presentedMatchEmail, presentedAt',
+            ExpressionAttributeValues: { ':true': true }
+        }));
+        
+        // Create notification
+        await createNotification(userEmail, 'decision_expired', {
+            matchEmail: timer.matchEmail,
+            message: 'Time expired on your match. Finding someone new!'
+        });
+        
+        console.log(`✅ Auto-passed ${timer.matchEmail} for ${userEmail} due to timer expiry`);
+    } catch (error) {
+        if (error.name === 'ConditionalCheckFailedException') {
+            console.log(`⏭️ Timer already processed for ${userEmail} -> ${timer.matchEmail}`);
+        } else {
+            console.error('Handle expired decision timer error:', error);
+        }
+    }
+}
+
+/**
+ * Handle expired connection timer - end the match
+ * Fixes issue #2 - Server-side timer enforcement
+ */
+async function handleExpiredConnectionTimer(userEmail, timer) {
+    console.log(`⏰ Connection timer expired: ${userEmail} <-> ${timer.matchEmail}`);
+    
+    // Use conditional update to prevent race condition
+    try {
+        await docClient.send(new UpdateCommand({
+            TableName: TABLES.MATCHES,
+            Key: { pk: timer.pk, sk: timer.sk },
+            UpdateExpression: 'SET #status = :expired, processedAt = :time',
+            ConditionExpression: 'attribute_not_exists(#status)',
+            ExpressionAttributeNames: { '#status': 'status' },
+            ExpressionAttributeValues: {
+                ':expired': 'expired',
+                ':time': new Date().toISOString()
+            }
+        }));
+        
+        // We won the race - archive conversation before ending
+        const { archiveConversation } = await import('./realtimeService.mjs');
+        await archiveConversation(timer.matchId, userEmail, timer.matchEmail);
+        
+        // Record in history
+        await Promise.all([
+            docClient.send(new PutCommand({
+                TableName: TABLES.MATCH_HISTORY,
+                Item: {
+                    userEmail: userEmail.toLowerCase(),
+                    matchEmail: timer.matchEmail,
+                    action: 'connection_expired',
+                    reason: 'timer_expired',
+                    timestamp: new Date().toISOString()
+                }
+            })),
+            docClient.send(new PutCommand({
+                TableName: TABLES.MATCH_HISTORY,
+                Item: {
+                    userEmail: timer.matchEmail,
+                    matchEmail: userEmail.toLowerCase(),
+                    action: 'connection_expired',
+                    reason: 'timer_expired',
+                    timestamp: new Date().toISOString()
+                }
+            }))
+        ]);
+        
+        // Make BOTH users visible again
+        await Promise.all([
+            docClient.send(new UpdateCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: userEmail.toLowerCase() },
+                UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt',
+                ExpressionAttributeValues: { ':true': true }
+            })),
+            docClient.send(new UpdateCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: timer.matchEmail },
+                UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt',
+                ExpressionAttributeValues: { ':true': true }
+            }))
+        ]);
+        
+        // Notify BOTH users
+        await Promise.all([
+            createNotification(userEmail, 'connection_expired', {
+                matchEmail: timer.matchEmail,
+                message: 'Your 24-hour connection has ended. Time to find someone new!'
+            }),
+            createNotification(timer.matchEmail, 'connection_expired', {
+                matchEmail: userEmail,
+                message: 'Your 24-hour connection has ended. Time to find someone new!'
+            })
+        ]);
+        
+        console.log(`✅ Connection ended between ${userEmail} and ${timer.matchEmail}`);
+    } catch (error) {
+        if (error.name === 'ConditionalCheckFailedException') {
+            console.log(`⏭️ Connection timer already processed`);
+        } else {
+            console.error('Handle expired connection timer error:', error);
+        }
+    }
+}
+
+/**
+ * Send timer warning notifications (1 hour remaining)
+ */
+async function sendTimerWarning(userEmail, timer, hoursRemaining) {
+    const warningKey = `${hoursRemaining}h`;
+    
+    if (timer.warningsSent?.includes(warningKey)) {
+        return; // Already sent this warning
+    }
+    
+    const messageType = timer.type === 'connection' ? 'connection_warning' : 'decision_warning';
+    
+    await createNotification(userEmail, messageType, {
+        matchEmail: timer.matchEmail,
+        hoursRemaining,
+        message: `Only ${hoursRemaining} hour${hoursRemaining > 1 ? 's' : ''} left with your match!`
+    });
+    
+    // Mark warning as sent
+    await docClient.send(new UpdateCommand({
+        TableName: TABLES.MATCHES,
+        Key: { pk: timer.pk, sk: timer.sk },
+        UpdateExpression: 'SET warningsSent = list_append(if_not_exists(warningsSent, :empty), :warning)',
+        ExpressionAttributeValues: {
+            ':empty': [],
+            ':warning': [warningKey]
+        }
+    }));
+    
+    console.log(`⚠️ Timer warning sent to ${userEmail}: ${hoursRemaining}h remaining`);
+}
 
 // CORS headers
 const headers = {
@@ -132,6 +455,195 @@ async function getUnreadNotifications(userEmail) {
 // ==========================================
 // MATCH EXPIRATION UTILITIES
 // ==========================================
+
+// ==========================================
+// MATCH POOL EXHAUSTION HANDLING
+// Fixes issue #8 - Match pool exhaustion
+// ==========================================
+
+/**
+ * Analyze why no matches were found and provide helpful suggestions
+ */
+async function getMatchPoolExhaustionInfo(userEmail, poolSize, excludedCount) {
+    const suggestions = [];
+    let status = 'no_matches';
+    let message = 'No matches found at the moment.';
+    
+    // Get user's preferences to analyze
+    const userResult = await docClient.send(new GetCommand({
+        TableName: TABLES.PROFILES,
+        Key: { email: userEmail.toLowerCase() }
+    }));
+    const user = userResult.Item || {};
+    const prefs = user.matchPreferences || user.preferences || {};
+    
+    // Check various reasons for no matches
+    
+    // 1. Too restrictive preferences
+    if (poolSize > 0 && excludedCount > poolSize * 0.8) {
+        status = 'too_restrictive';
+        message = 'You\'ve seen most available matches in your area.';
+        suggestions.push({
+            type: 'expand_preferences',
+            title: 'Expand Your Preferences',
+            description: 'Try widening your age range or distance to see more people.',
+            action: 'open_preferences'
+        });
+    }
+    
+    // 2. Very small pool overall
+    if (poolSize < 10) {
+        status = 'small_pool';
+        message = 'Not many users in your area yet.';
+        suggestions.push({
+            type: 'increase_distance',
+            title: 'Increase Search Distance',
+            description: `Try increasing from ${prefs.maxDistance || 25} miles to see more matches.`,
+            action: 'open_preferences'
+        });
+        suggestions.push({
+            type: 'check_back',
+            title: 'Check Back Later',
+            description: 'New users join every day! Check back soon.',
+            action: 'set_reminder'
+        });
+    }
+    
+    // 3. Exhausted all matches
+    if (excludedCount > 50) {
+        status = 'exhausted';
+        message = 'You\'ve been through everyone! New matches will appear as users join.';
+        suggestions.push({
+            type: 'new_users_notification',
+            title: 'Get Notified',
+            description: 'We\'ll notify you when new compatible users join in your area.',
+            action: 'enable_new_user_alerts'
+        });
+    }
+    
+    // 4. Location might be stale
+    const lastLocationUpdate = user.locationUpdatedAt ? new Date(user.locationUpdatedAt) : null;
+    const daysSinceUpdate = lastLocationUpdate 
+        ? (Date.now() - lastLocationUpdate) / (1000 * 60 * 60 * 24)
+        : 999;
+    
+    if (daysSinceUpdate > CONFIG.LOCATION_REFRESH_DAYS) {
+        suggestions.push({
+            type: 'update_location',
+            title: 'Update Your Location',
+            description: 'Your location may be outdated. Update it to find nearby matches.',
+            action: 'update_location'
+        });
+    }
+    
+    // Register for new user notifications if pool is exhausted
+    if (status === 'exhausted' || status === 'small_pool') {
+        await registerForNewUserAlert(userEmail, user.coordinates, prefs);
+    }
+    
+    return {
+        status,
+        message,
+        suggestions,
+        stats: {
+            poolSize,
+            excludedCount,
+            daysSinceLocationUpdate: Math.floor(daysSinceUpdate)
+        }
+    };
+}
+
+/**
+ * Register user to be notified when new compatible users join
+ */
+async function registerForNewUserAlert(userEmail, coordinates, preferences) {
+    try {
+        await docClient.send(new PutCommand({
+            TableName: TABLES.COMPANY,
+            Item: {
+                pk: 'ALERT#NEW_USERS',
+                sk: userEmail.toLowerCase(),
+                email: userEmail.toLowerCase(),
+                coordinates,
+                preferences,
+                registeredAt: new Date().toISOString()
+            }
+        }));
+        console.log(`📬 Registered ${userEmail} for new user alerts`);
+    } catch (error) {
+        console.log('Could not register for new user alert:', error.message);
+    }
+}
+
+/**
+ * Notify users who were waiting for new matches in an area
+ * Called when a new user signs up
+ */
+async function notifyWaitingUsersOfNewMatch(newUserEmail, newUserCoords, newUserProfile) {
+    try {
+        const waitingUsers = await docClient.send(new QueryCommand({
+            TableName: TABLES.COMPANY,
+            KeyConditionExpression: 'pk = :pk',
+            ExpressionAttributeValues: { ':pk': 'ALERT#NEW_USERS' }
+        }));
+        
+        for (const waitingUser of waitingUsers.Items || []) {
+            // Check if new user is within their distance preference
+            const distance = calculateDistance(
+                waitingUser.coordinates?.lat, waitingUser.coordinates?.lng,
+                newUserCoords?.lat, newUserCoords?.lng
+            );
+            
+            const maxDistance = waitingUser.preferences?.maxDistance || 50;
+            
+            if (distance <= maxDistance) {
+                await createNotification(waitingUser.email, 'new_user_nearby', {
+                    message: 'A new user just joined near you! Check your matches.',
+                    distance: Math.round(distance)
+                });
+                
+                console.log(`📬 Notified ${waitingUser.email} of new user ${newUserEmail}`);
+            }
+        }
+    } catch (error) {
+        console.log('Error notifying waiting users:', error.message);
+    }
+}
+
+// ==========================================
+// LOCATION REFRESH
+// Fixes issue #12 - Location accuracy
+// ==========================================
+
+/**
+ * Check if user should update their location
+ */
+function shouldPromptLocationUpdate(user) {
+    if (!user.locationUpdatedAt) return true;
+    
+    const daysSinceUpdate = (Date.now() - new Date(user.locationUpdatedAt)) / (1000 * 60 * 60 * 24);
+    return daysSinceUpdate > CONFIG.LOCATION_REFRESH_DAYS;
+}
+
+/**
+ * Update user location
+ */
+async function updateUserLocation(userEmail, coordinates) {
+    const geohash = encodeGeohash(coordinates.lat, coordinates.lng, CONFIG.GEOHASH_PRECISION);
+    
+    await docClient.send(new UpdateCommand({
+        TableName: TABLES.PROFILES,
+        Key: { email: userEmail.toLowerCase() },
+        UpdateExpression: 'SET coordinates = :coords, geohash = :geohash, locationUpdatedAt = :time',
+        ExpressionAttributeValues: {
+            ':coords': coordinates,
+            ':geohash': geohash,
+            ':time': new Date().toISOString()
+        }
+    }));
+    
+    console.log(`📍 Location updated for ${userEmail}: ${coordinates.lat}, ${coordinates.lng}`);
+}
 
 // ==========================================
 // RATE LIMITING
@@ -833,16 +1345,22 @@ async function getNextMatch(event) {
     mutualMatches.sort((a, b) => b.compatibility - a.compatibility);
     
     if (mutualMatches.length === 0) {
+        // Fixes issue #8 - Match pool exhaustion handling
+        const exhaustionInfo = await getMatchPoolExhaustionInfo(userEmail, potentialMatches.length, excludeEmails.length);
+        
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({ 
                 match: null, 
-                message: 'No matches found. Try expanding your preferences.',
+                message: exhaustionInfo.message,
+                exhaustionStatus: exhaustionInfo.status,
                 stats: {
                     poolSize: potentialMatches.length,
-                    excludedCount: excludeEmails.length - 1
-                }
+                    excludedCount: excludeEmails.length - 1,
+                    ...exhaustionInfo.stats
+                },
+                suggestions: exhaustionInfo.suggestions
             })
         };
     }
