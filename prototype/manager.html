@@ -9575,6 +9575,11 @@
                     updateSectionHealthStatus(section);
                 }
             });
+            
+            // Update the site diagnostics panel if it's visible
+            if (currentSection === 'site-diagnostics') {
+                updateHealthMonitorPanel();
+            }
         }
         
         // Start health monitoring
@@ -9595,6 +9600,187 @@
             if (healthMonitorInterval) {
                 clearInterval(healthMonitorInterval);
                 healthMonitorInterval = null;
+            }
+        }
+        
+        // Run all health checks and update the Site Diagnostics panel
+        async function runAllHealthChecks() {
+            console.log('🏥 Running comprehensive health checks...');
+            
+            // Update status
+            const statusBadge = document.getElementById('healthOverallStatus');
+            if (statusBadge) {
+                statusBadge.textContent = 'Checking...';
+                statusBadge.style.background = 'var(--info)';
+            }
+            
+            // Run AWS check
+            const awsOk = await checkAWSConnectivity();
+            
+            // Track all sections that require API
+            const apiStartTime = Date.now();
+            Object.keys(sectionConfig).forEach(section => {
+                const config = sectionConfig[section];
+                if (config.requiresAPI) {
+                    if (awsOk) {
+                        trackApiCall(section, apiStartTime, true);
+                    } else {
+                        trackApiCall(section, apiStartTime, false, new Error('AWS unreachable'));
+                    }
+                }
+            });
+            
+            // Update all section statuses
+            Object.keys(sectionHealthMetrics).forEach(section => {
+                updateSectionHealthStatus(section);
+            });
+            
+            // Update the site diagnostics panel
+            updateHealthMonitorPanel();
+            
+            console.log('✅ Health checks complete');
+        }
+        
+        // Update the health monitor panel in site diagnostics
+        function updateHealthMonitorPanel() {
+            // Count statuses
+            let greenCount = 0, yellowCount = 0, redCount = 0, grayCount = 0;
+            const issues = [];
+            
+            Object.entries(sectionHealthMetrics).forEach(([section, metrics]) => {
+                switch (metrics.status) {
+                    case 'green': greenCount++; break;
+                    case 'yellow': 
+                        yellowCount++; 
+                        issues.push({ section, severity: 'warning', message: metrics.message });
+                        break;
+                    case 'red': 
+                        redCount++; 
+                        issues.push({ section, severity: 'error', message: metrics.message });
+                        break;
+                    case 'gray': grayCount++; break;
+                }
+            });
+            
+            // Update counts
+            const greenEl = document.getElementById('healthGreenCount');
+            const yellowEl = document.getElementById('healthYellowCount');
+            const redEl = document.getElementById('healthRedCount');
+            const grayEl = document.getElementById('healthGrayCount');
+            
+            if (greenEl) greenEl.textContent = greenCount;
+            if (yellowEl) yellowEl.textContent = yellowCount;
+            if (redEl) redEl.textContent = redCount;
+            if (grayEl) grayEl.textContent = grayCount;
+            
+            // Update overall status
+            const statusBadge = document.getElementById('healthOverallStatus');
+            if (statusBadge) {
+                if (redCount > 0) {
+                    statusBadge.textContent = `${redCount} Issues`;
+                    statusBadge.style.background = 'var(--danger)';
+                } else if (yellowCount > 0) {
+                    statusBadge.textContent = `${yellowCount} Warnings`;
+                    statusBadge.style.background = 'var(--warning)';
+                } else if (greenCount > 0) {
+                    statusBadge.textContent = 'All Healthy';
+                    statusBadge.style.background = 'var(--success)';
+                } else {
+                    statusBadge.textContent = 'No Data';
+                    statusBadge.style.background = 'var(--text-muted)';
+                }
+            }
+            
+            // Render section grid
+            const gridContainer = document.getElementById('healthSectionGrid');
+            if (gridContainer) {
+                const sectionLabels = {
+                    'overview': '🏠 Overview',
+                    'dashboard': '📊 Dashboard',
+                    'analytics': '📈 Analytics & AI',
+                    'mlmodels': '🤖 ML Models',
+                    'revenue': '💰 Revenue',
+                    'geographic': '🌍 Geographic',
+                    'legal': '📄 Patents & IP',
+                    'compliance': '🛡️ Compliance',
+                    'database': '🗄️ Database',
+                    'experiments': '🧪 Experiments',
+                    'org-hierarchy': '👥 Hierarchy',
+                    'payroll': '💵 Payroll',
+                    'tax': '📋 Tax',
+                    'expenses': '💳 Expenses',
+                    'calendar': '📅 Calendar',
+                    'simulation': '⚡ Stress Test',
+                    'users': '👤 Users',
+                    'matches': '💕 Matches',
+                    'funnel': '📊 Funnel',
+                    'realtime': '📡 Real-time',
+                    'safety': '🛡️ Safety',
+                    'feedback': '💬 Feedback',
+                    'testbots': '🤖 Test Bots',
+                    'diagnostics': '🔧 Diagnostics',
+                    'site-diagnostics': '🔧 Site Diag',
+                    'compliance-app': '✅ App Compliance'
+                };
+                
+                gridContainer.innerHTML = Object.entries(sectionHealthMetrics).map(([section, metrics]) => {
+                    const label = sectionLabels[section] || section;
+                    const statusColor = metrics.status === 'green' ? 'var(--success)' :
+                                       metrics.status === 'yellow' ? 'var(--warning)' :
+                                       metrics.status === 'red' ? 'var(--danger)' : 'var(--text-muted)';
+                    const statusIcon = metrics.status === 'green' ? '✅' :
+                                      metrics.status === 'yellow' ? '⚠️' :
+                                      metrics.status === 'red' ? '❌' : '⏸️';
+                    
+                    const lastUpdate = metrics.lastUpdated ? getTimeAgo(metrics.lastUpdated) : 'Never';
+                    const responseTime = metrics.apiResponseTime !== null ? `${metrics.apiResponseTime}ms` : '--';
+                    
+                    return `
+                        <div style="padding: 10px; background: var(--bg-tertiary); border-radius: 8px; border-left: 3px solid ${statusColor}; cursor: pointer;" 
+                             onclick="showSection('${section}')" title="Click to navigate">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-weight: 500; font-size: 0.8rem;">${label}</span>
+                                <span style="font-size: 0.9rem;">${statusIcon}</span>
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Updated:</span>
+                                    <span>${lastUpdate}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Response:</span>
+                                    <span>${responseTime}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Status:</span>
+                                    <span style="color: ${statusColor};">${metrics.message}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Render issues list
+            const issuesList = document.getElementById('healthIssuesList');
+            if (issuesList) {
+                if (issues.length === 0) {
+                    issuesList.innerHTML = '<div style="color: var(--success); font-size: 0.8rem;">✅ No issues detected - all sections healthy!</div>';
+                } else {
+                    issuesList.innerHTML = issues.map(issue => {
+                        const icon = issue.severity === 'error' ? '❌' : '⚠️';
+                        const color = issue.severity === 'error' ? 'var(--danger)' : 'var(--warning)';
+                        return `
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                                <span style="font-size: 0.9rem;">${icon}</span>
+                                <span style="font-weight: 500; min-width: 100px; color: ${color};">${issue.section}</span>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">${issue.message}</span>
+                                <button class="btn btn-secondary" onclick="showSection('${issue.section}')" 
+                                        style="margin-left: auto; font-size: 0.7rem; padding: 2px 8px;">View</button>
+                            </div>
+                        `;
+                    }).join('');
+                }
             }
         }
         
@@ -15192,6 +15378,9 @@
             
             // Initialize BroadcastChannel stats display
             updateBroadcastStats();
+            
+            // Update health monitor panel
+            updateHealthMonitorPanel();
             
             // Test BroadcastChannel connection
             setTimeout(() => {
