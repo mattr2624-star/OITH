@@ -2595,6 +2595,472 @@
                 }
             });
         });
+
+        // ==========================================
+        // EXPORT FUNCTIONALITY
+        // ==========================================
+        
+        let currentExportOption = 'download';
+        let currentExportRange = 'all';
+        
+        function openExportModal() {
+            document.getElementById('exportModal').classList.add('active');
+            selectExportOption('download');
+            selectExportRange('all');
+            updateExportCount();
+            
+            // Set default dates for custom range
+            const today = new Date();
+            const threeMonthsLater = new Date(today);
+            threeMonthsLater.setMonth(threeMonthsLater.getMonth() + 3);
+            document.getElementById('exportFromDate').valueAsDate = today;
+            document.getElementById('exportToDate').valueAsDate = threeMonthsLater;
+            
+            // Load saved phone numbers
+            loadSavedPhoneNumbers();
+        }
+        
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+        
+        function selectExportOption(option) {
+            currentExportOption = option;
+            
+            // Update UI
+            document.querySelectorAll('.export-option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            const optionMap = {
+                'download': 'exportOptDownload',
+                'sms': 'exportOptSMS',
+                'email': 'exportOptEmail'
+            };
+            
+            document.getElementById(optionMap[option]).classList.add('selected');
+            
+            // Show/hide sections
+            document.getElementById('smsExportSection').style.display = option === 'sms' ? 'block' : 'none';
+            document.getElementById('emailExportSection').style.display = option === 'email' ? 'block' : 'none';
+            
+            // Update button text
+            const btnText = document.getElementById('exportBtnText');
+            if (option === 'download') {
+                btnText.textContent = 'Download Calendar';
+            } else if (option === 'sms') {
+                btnText.textContent = 'Send to Phone';
+            } else if (option === 'email') {
+                btnText.textContent = 'Send via Email';
+            }
+        }
+        
+        function selectExportRange(range) {
+            currentExportRange = range;
+            
+            // Update UI
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.range-btn[data-range="${range}"]`).classList.add('active');
+            
+            // Show/hide custom range section
+            document.getElementById('customRangeSection').style.display = range === 'custom' ? 'block' : 'none';
+            
+            updateExportCount();
+        }
+        
+        function updateExportCount() {
+            const events = getEventsForExport();
+            document.getElementById('exportEventCount').textContent = events.length;
+        }
+        
+        function getEventsForExport() {
+            let events = [...calendarEvents];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (currentExportRange === 'upcoming') {
+                events = events.filter(e => new Date(e.date) >= today);
+            } else if (currentExportRange === 'custom') {
+                const fromDate = new Date(document.getElementById('exportFromDate').value);
+                const toDate = new Date(document.getElementById('exportToDate').value);
+                fromDate.setHours(0, 0, 0, 0);
+                toDate.setHours(23, 59, 59, 999);
+                
+                events = events.filter(e => {
+                    const eventDate = new Date(e.date);
+                    return eventDate >= fromDate && eventDate <= toDate;
+                });
+            }
+            
+            return events.sort((a, b) => new Date(a.date) - new Date(b.date));
+        }
+        
+        function generateICSFile(events) {
+            const formatDate = (dateStr) => {
+                const d = new Date(dateStr);
+                return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            };
+            
+            const formatDateLocal = (dateStr) => {
+                const d = new Date(dateStr);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}${month}${day}`;
+            };
+            
+            let ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//OITH LLC//OITH Calendar//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'X-WR-CALNAME:OITH Launch Calendar',
+                'X-WR-TIMEZONE:America/New_York'
+            ];
+            
+            events.forEach(event => {
+                const uid = `${event.id || Date.now()}-${Math.random().toString(36).substring(7)}@oith.com`;
+                const dtStart = formatDateLocal(event.date);
+                const dtEnd = formatDateLocal(event.date);
+                
+                let description = event.description || '';
+                if (event.critical) description = '[CRITICAL] ' + description;
+                if (event.phase) description += `\\nPhase ${event.phase}`;
+                if (event.category) description += `\\nCategory: ${event.category}`;
+                
+                const eventLines = [
+                    'BEGIN:VEVENT',
+                    `UID:${uid}`,
+                    `DTSTAMP:${formatDate(new Date().toISOString())}`,
+                    `DTSTART;VALUE=DATE:${dtStart}`,
+                    `DTEND;VALUE=DATE:${dtEnd}`,
+                    `SUMMARY:${event.title.replace(/,/g, '\\,')}`,
+                    `DESCRIPTION:${description.replace(/\n/g, '\\n')}`,
+                ];
+                
+                if (event.location) {
+                    eventLines.push(`LOCATION:${event.location.replace(/,/g, '\\,')}`);
+                }
+                
+                if (event.critical) {
+                    eventLines.push('PRIORITY:1');
+                    eventLines.push('X-MICROSOFT-CDO-IMPORTANCE:High');
+                }
+                
+                // Add reminder for important events
+                if (event.critical || event.type === 'milestone') {
+                    eventLines.push('BEGIN:VALARM');
+                    eventLines.push('TRIGGER:-P1D');
+                    eventLines.push('ACTION:DISPLAY');
+                    eventLines.push(`DESCRIPTION:Reminder: ${event.title}`);
+                    eventLines.push('END:VALARM');
+                }
+                
+                eventLines.push('END:VEVENT');
+                ics = ics.concat(eventLines);
+            });
+            
+            ics.push('END:VCALENDAR');
+            return ics.join('\r\n');
+        }
+        
+        function downloadICSFile(events) {
+            const icsContent = generateICSFile(events);
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OITH_Calendar_${new Date().toISOString().split('T')[0]}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        async function executeExport() {
+            const events = getEventsForExport();
+            
+            if (events.length === 0) {
+                showToast('No events to export for the selected range', 'error');
+                return;
+            }
+            
+            if (currentExportOption === 'download') {
+                downloadICSFile(events);
+                showToast(`✅ Downloaded ${events.length} events!`, 'success');
+                closeExportModal();
+            } else if (currentExportOption === 'sms') {
+                await sendCalendarViaSMS(events);
+            } else if (currentExportOption === 'email') {
+                await sendCalendarViaEmail(events);
+            }
+        }
+        
+        async function sendCalendarViaSMS(events) {
+            const countryCode = document.getElementById('countryCode').value;
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            
+            if (!phoneNumber) {
+                showToast('Please enter a phone number', 'error');
+                document.getElementById('phoneNumber').focus();
+                return;
+            }
+            
+            // Format phone number
+            const cleanPhone = phoneNumber.replace(/[^0-9]/g, '');
+            const fullPhone = countryCode + cleanPhone;
+            
+            showToast('📤 Sending calendar to ' + fullPhone + '...', 'info');
+            
+            try {
+                // Generate ICS file as base64 for sending
+                const icsContent = generateICSFile(events);
+                const icsBase64 = btoa(unescape(encodeURIComponent(icsContent)));
+                
+                // Try to send via server
+                const response = await fetch('/api/calendar/send-sms', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phoneNumber: fullPhone,
+                        eventCount: events.length,
+                        icsData: icsBase64
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        savePhoneNumber(fullPhone);
+                        showToast(`✅ Calendar sent to ${fullPhone}!`, 'success');
+                        closeExportModal();
+                        return;
+                    }
+                }
+                
+                // Fallback: Create a download and show instructions
+                downloadICSFile(events);
+                showToast('📱 Calendar downloaded! Transfer it to your Android device manually.', 'success');
+                
+                // Show Android instructions modal
+                showAndroidInstructions(fullPhone, events.length);
+                
+            } catch (error) {
+                console.error('SMS send error:', error);
+                
+                // Fallback to download
+                downloadICSFile(events);
+                showToast('📥 Downloaded! SMS service unavailable - transfer file manually.', 'warning');
+            }
+        }
+        
+        function showAndroidInstructions(phoneNumber, eventCount) {
+            const instructionsHTML = `
+                <div id="androidInstructionsModal" class="modal-overlay active" style="z-index: 10000;">
+                    <div class="modal-content" style="max-width: 500px;">
+                        <div style="background: linear-gradient(135deg, #3DDC84, #0F9D58); padding: 20px 24px; margin: -24px -24px 24px -24px; border-radius: 16px 16px 0 0;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="width: 56px; height: 56px; background: white; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 32px;">
+                                    🤖
+                                </div>
+                                <div>
+                                    <h2 style="margin: 0; color: white; font-size: 1.2rem;">Add to Android Calendar</h2>
+                                    <p style="margin: 4px 0 0; color: rgba(255,255,255,0.9); font-size: 0.85rem;">${eventCount} events ready to import</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 0 0 20px;">
+                            <h4 style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 16px;">📋 Quick Import Steps:</h4>
+                            
+                            <div class="android-step">
+                                <span class="step-number">1</span>
+                                <div class="step-content">
+                                    <strong>Open the downloaded file</strong>
+                                    <p>Find "OITH_Calendar_*.ics" in your Downloads</p>
+                                </div>
+                            </div>
+                            
+                            <div class="android-step">
+                                <span class="step-number">2</span>
+                                <div class="step-content">
+                                    <strong>Choose Google Calendar</strong>
+                                    <p>When prompted, select "Google Calendar" or your preferred calendar app</p>
+                                </div>
+                            </div>
+                            
+                            <div class="android-step">
+                                <span class="step-number">3</span>
+                                <div class="step-content">
+                                    <strong>Import all events</strong>
+                                    <p>Confirm to add all ${eventCount} events to your calendar</p>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 20px; padding: 16px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; border-left: 4px solid var(--accent);">
+                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
+                                    <strong style="color: var(--accent);">💡 Pro Tip:</strong> 
+                                    You can also transfer the .ics file via Bluetooth, Google Drive, or email it to yourself!
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-footer" style="padding: 0;">
+                            <button class="btn btn-secondary" onclick="document.getElementById('androidInstructionsModal').remove()">Got it!</button>
+                            <button class="btn btn-primary" onclick="document.getElementById('androidInstructionsModal').remove(); closeExportModal();">
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add step styles
+            const styleEl = document.createElement('style');
+            styleEl.textContent = `
+                .android-step {
+                    display: flex;
+                    gap: 16px;
+                    padding: 12px 0;
+                    border-bottom: 1px solid var(--border);
+                }
+                .android-step:last-of-type { border-bottom: none; }
+                .step-number {
+                    width: 32px;
+                    height: 32px;
+                    background: linear-gradient(135deg, #3DDC84, #0F9D58);
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    flex-shrink: 0;
+                }
+                .step-content strong {
+                    display: block;
+                    color: var(--text-primary);
+                    font-size: 0.9rem;
+                    margin-bottom: 4px;
+                }
+                .step-content p {
+                    margin: 0;
+                    font-size: 0.8rem;
+                    color: var(--text-muted);
+                }
+            `;
+            document.head.appendChild(styleEl);
+            
+            document.body.insertAdjacentHTML('beforeend', instructionsHTML);
+            
+            document.getElementById('androidInstructionsModal').addEventListener('click', (e) => {
+                if (e.target.id === 'androidInstructionsModal') {
+                    e.target.remove();
+                }
+            });
+        }
+        
+        async function sendCalendarViaEmail(events) {
+            const email = document.getElementById('exportEmail').value.trim();
+            
+            if (!email || !email.includes('@')) {
+                showToast('Please enter a valid email address', 'error');
+                document.getElementById('exportEmail').focus();
+                return;
+            }
+            
+            showToast('📤 Sending calendar to ' + email + '...', 'info');
+            
+            try {
+                const icsContent = generateICSFile(events);
+                const icsBase64 = btoa(unescape(encodeURIComponent(icsContent)));
+                
+                const response = await fetch('/api/calendar/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        eventCount: events.length,
+                        icsData: icsBase64
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast(`✅ Calendar sent to ${email}!`, 'success');
+                        closeExportModal();
+                        return;
+                    }
+                }
+                
+                // Fallback: Use mailto with download
+                downloadICSFile(events);
+                
+                // Open email client with pre-filled message
+                const subject = encodeURIComponent('OITH Calendar Events');
+                const body = encodeURIComponent(`Here are your ${events.length} OITH calendar events.\n\nPlease find the attached .ics file which you can import into Google Calendar, Outlook, or any calendar application.\n\nNote: The calendar file has been downloaded to your device. Please attach it to this email manually.`);
+                window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+                
+                showToast('📥 Downloaded! Email client opened - please attach the file.', 'success');
+                
+            } catch (error) {
+                console.error('Email send error:', error);
+                downloadICSFile(events);
+                showToast('📥 Downloaded! Email service unavailable.', 'warning');
+            }
+        }
+        
+        // Phone number management
+        function loadSavedPhoneNumbers() {
+            const saved = localStorage.getItem('oith_saved_phones');
+            const container = document.querySelector('#smsExportSection .saved-phone-btn')?.parentElement;
+            
+            if (!container) return;
+            
+            if (saved) {
+                const phones = JSON.parse(saved);
+                container.innerHTML = phones.map(phone => 
+                    `<button type="button" class="saved-phone-btn" onclick="useSavedPhone('${phone}')"">
+                        📞 ${phone}
+                    </button>`
+                ).join('');
+            } else {
+                container.innerHTML = '<span style="font-size: 0.8rem; color: var(--text-muted);">No saved numbers</span>';
+            }
+        }
+        
+        function savePhoneNumber(phone) {
+            let phones = JSON.parse(localStorage.getItem('oith_saved_phones') || '[]');
+            if (!phones.includes(phone)) {
+                phones.unshift(phone);
+                phones = phones.slice(0, 5); // Keep only last 5
+                localStorage.setItem('oith_saved_phones', JSON.stringify(phones));
+            }
+        }
+        
+        function useSavedPhone(phone) {
+            // Parse country code and number
+            const countryCodeMatch = phone.match(/^\+\d+/);
+            if (countryCodeMatch) {
+                const code = countryCodeMatch[0];
+                const number = phone.replace(code, '').trim();
+                
+                document.getElementById('countryCode').value = code;
+                document.getElementById('phoneNumber').value = number;
+            } else {
+                document.getElementById('phoneNumber').value = phone;
+            }
+        }
+        
+        // Update count when date range changes
+        document.getElementById('exportFromDate')?.addEventListener('change', updateExportCount);
+        document.getElementById('exportToDate')?.addEventListener('change', updateExportCount);
     </script>
 </body>
 </html>
