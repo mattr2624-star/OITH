@@ -9977,7 +9977,6 @@
                 default: renderDashboard();
             }
             
-            showToast('✅ Data refreshed!');
             console.log('✅ Refresh complete');
         }
         
@@ -25484,6 +25483,9 @@
             savedEvents.push(newEvent);
             localStorage.setItem('oith_calendar_events', JSON.stringify(savedEvents));
             
+            // Sync to AWS
+            syncCalendarToAWS();
+            
             // Add to current events
             newEvent.date = date;
             calendarEvents.push(newEvent);
@@ -26445,17 +26447,84 @@ GMAIL_EMAIL=admin@oith.com</pre>
             initCalendarEvents();
             loadAdminInbox();
             updateMailBadge();
+            updateCalendarBadge();
+            
+            // Sync calendar from AWS on load
+            syncCalendarFromAWS();
         });
         
-        // Poll for new emails every 30 seconds
-        setInterval(function() {
-            const previousCount = adminInbox.length;
-            loadAdminInbox();
+        // Poll for new emails and calendar updates every 15 seconds
+        setInterval(async function() {
+            // Update mail
+            const previousMailCount = adminInbox.length;
+            await loadAdminInbox();
             updateMailBadge();
-            if (adminInbox.length > previousCount) {
+            if (adminInbox.length > previousMailCount) {
                 showToast('📧 New support message received!', 'info');
             }
-        }, 30000);
+            
+            // Update calendar badge
+            updateCalendarBadge();
+        }, 15000);
+        
+        // ==========================================
+        // CALENDAR AWS SYNC
+        // ==========================================
+        
+        const CALENDAR_API_URL = 'http://localhost:3001/api';
+        
+        async function syncCalendarToAWS() {
+            try {
+                const savedEvents = JSON.parse(localStorage.getItem('oith_calendar_events') || '[]');
+                
+                const response = await fetch(`${CALENDAR_API_URL}/calendar/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ events: savedEvents })
+                });
+                
+                if (response.ok) {
+                    console.log('📅 Calendar synced to AWS');
+                }
+            } catch (e) {
+                console.log('📅 Calendar AWS sync not available (using local storage)');
+            }
+        }
+        
+        async function syncCalendarFromAWS() {
+            try {
+                const response = await fetch(`${CALENDAR_API_URL}/calendar/events`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.events && data.events.length > 0) {
+                        // Merge AWS events with local
+                        const localEvents = JSON.parse(localStorage.getItem('oith_calendar_events') || '[]');
+                        const merged = mergeCalendarEvents(localEvents, data.events);
+                        localStorage.setItem('oith_calendar_events', JSON.stringify(merged));
+                        
+                        // Reload calendar events
+                        initCalendarEvents();
+                        updateCalendarBadge();
+                        console.log('📅 Calendar synced from AWS');
+                    }
+                }
+            } catch (e) {
+                console.log('📅 Calendar AWS sync not available (using local storage)');
+            }
+        }
+        
+        function mergeCalendarEvents(local, remote) {
+            const merged = [...local];
+            const localIds = new Set(local.map(e => e.id));
+            
+            for (const event of remote) {
+                if (!localIds.has(event.id)) {
+                    merged.push(event);
+                }
+            }
+            
+            return merged;
+        }
     </script>
 </body>
 </html>

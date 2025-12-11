@@ -16,6 +16,7 @@ const orgRoutes = require('./routes/org');
 const payrollRoutes = require('./routes/payroll');
 const syncRoutes = require('./routes/sync');
 const emailRoutes = require('./routes/email');
+const calendarRoutes = require('./routes/calendar');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -59,6 +60,7 @@ app.use('/api/org', orgRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/sync', syncRoutes);
 app.use('/api/email', emailRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
