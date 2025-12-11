@@ -5553,27 +5553,37 @@
                         <h2 class="page-title">Revenue</h2>
                         <p class="page-subtitle">Subscription and revenue metrics</p>
                     </div>
+                    <div class="header-actions">
+                        <span id="revenueDataSource" class="status-badge" style="background: var(--info);">Loading...</span>
+                        <button class="btn btn-secondary" onclick="renderRevenue()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
                 </div>
 
                 <div class="stats-grid">
                     <div class="stat-card revenue">
                         <div class="stat-icon revenue">💰</div>
-                        <div class="stat-value" id="mrrValue">$149</div>
+                        <div class="stat-value" id="revMrrValue">--</div>
                         <div class="stat-label">Monthly Recurring Revenue</div>
                     </div>
                     <div class="stat-card users">
                         <div class="stat-icon users">⭐</div>
-                        <div class="stat-value" id="premiumUsers">10</div>
+                        <div class="stat-value" id="revPremiumUsers">--</div>
                         <div class="stat-label">Premium Subscribers</div>
                     </div>
                     <div class="stat-card matches">
                         <div class="stat-icon matches">📊</div>
-                        <div class="stat-value" id="conversionRate">12%</div>
+                        <div class="stat-value" id="revConversionRate">--</div>
                         <div class="stat-label">Free → Premium Rate</div>
                     </div>
                     <div class="stat-card danger">
                         <div class="stat-icon safety">📉</div>
-                        <div class="stat-value" id="churnRate">5%</div>
+                        <div class="stat-value" id="revChurnRate">--</div>
                         <div class="stat-label">Monthly Churn</div>
                     </div>
                 </div>
