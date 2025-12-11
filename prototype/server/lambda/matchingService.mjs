@@ -2052,14 +2052,43 @@ async function blockUser(event) {
             Key: { email: blockerEmail.toLowerCase() }
         }));
         
+        let matchId = null;
+        
         if (blockerProfile.Item?.activeMatchEmail === blockedEmail.toLowerCase()) {
+            matchId = blockerProfile.Item.matchId;
+            
             await docClient.send(new UpdateCommand({
                 TableName: TABLES.PROFILES,
                 Key: { email: blockerEmail.toLowerCase() },
-                UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt',
+                UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt, matchId',
+                ExpressionAttributeValues: { ':true': true }
+            }));
+            
+            // Also update the blocked user's profile
+            await docClient.send(new UpdateCommand({
+                TableName: TABLES.PROFILES,
+                Key: { email: blockedEmail.toLowerCase() },
+                UpdateExpression: 'SET isVisible = :true REMOVE activeMatchEmail, matchedAt, matchId',
                 ExpressionAttributeValues: { ':true': true }
             }));
         }
+        
+        // Fixes issue #7 - Delete chat history when blocking user
+        // This prevents the blocked user from seeing old messages
+        if (matchId) {
+            try {
+                const { deleteChatOnBlock } = await import('./realtimeService.mjs');
+                await deleteChatOnBlock(blockerEmail, blockedEmail, matchId);
+            } catch (err) {
+                console.log('Could not delete chat (realtimeService may not be deployed):', err.message);
+            }
+        }
+        
+        // Notify the blocked user that the match ended (without saying they were blocked)
+        await createNotification(blockedEmail, 'unmatched', {
+            message: 'Your match has ended.',
+            timestamp: new Date().toISOString()
+        });
         
         return {
             statusCode: 200,

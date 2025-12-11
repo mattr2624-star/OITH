@@ -146,6 +146,52 @@ router.post('/event', async (req, res) => {
 });
 
 // ==========================================
+// PUT update single event
+// ==========================================
+router.put('/event/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, date, category, description, section, location } = req.body;
+
+        if (!title || !date) {
+            return res.status(400).json({ error: 'Title and date required' });
+        }
+
+        if (!isAWSConfigured()) {
+            return res.json({
+                success: true,
+                local: true,
+                event: { id, title, date, category, description, section, location }
+            });
+        }
+
+        await docClient.send(new PutCommand({
+            TableName: TABLES.USERS,
+            Item: {
+                pk: 'CALENDAR#EVENTS',
+                sk: String(id),
+                title,
+                date,
+                category: category || 'meeting',
+                description: description || '',
+                section: section || 'calendar',
+                location: location || '',
+                custom: true,
+                updatedAt: new Date().toISOString()
+            }
+        }));
+
+        res.json({
+            success: true,
+            event: { id, title, date, category, description, section, location }
+        });
+    } catch (error) {
+        console.error('Error updating calendar event:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// ==========================================
 // DELETE event
 // ==========================================
 router.delete('/event/:id', async (req, res) => {

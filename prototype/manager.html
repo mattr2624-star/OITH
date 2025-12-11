@@ -26082,7 +26082,10 @@
                 { date: new Date(currentYear, currentMonth, 24), title: 'Sprint Planning', category: 'meeting', section: 'org-hierarchy' },
                 
                 // Monthly KPI review
-                { date: new Date(currentYear, currentMonth, 1), title: 'Monthly KPI Review', category: 'milestone', section: 'dashboard' }
+                { date: new Date(currentYear, currentMonth, 1), title: 'Monthly KPI Review', category: 'milestone', section: 'dashboard' },
+                
+                // Email setup task - tomorrow
+                { date: new Date(today.getTime() + 86400000), title: 'Set Up Email Service (Google Workspace)', category: 'task', section: 'overview', custom: true }
             ];
             
             calendarEvents.push(...recurringEvents);
@@ -27492,27 +27495,42 @@
                         
                         <div id="eventEditMode" style="display: none;">
                             <div class="form-group" style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Event Title</label>
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Event Title *</label>
                                 <input type="text" id="editEventTitle" class="form-control" placeholder="Enter event title..." style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
                             </div>
                             
-                            <div class="form-group" style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Date</label>
-                                <input type="date" id="editEventDate" class="form-control" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                                <div class="form-group">
+                                    <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Date *</label>
+                                    <input type="date" id="editEventDate" class="form-control" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                </div>
+                                <div class="form-group">
+                                    <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Time</label>
+                                    <input type="time" id="editEventTime" class="form-control" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                </div>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Time</label>
-                                <input type="time" id="editEventTime" class="form-control" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Category</label>
+                                <select id="editEventCategory" class="form-control" style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                    <option value="meeting">🤝 Meeting</option>
+                                    <option value="standup">📊 Standup</option>
+                                    <option value="milestone">🎯 Milestone</option>
+                                    <option value="payroll">💵 Payroll</option>
+                                    <option value="tax">💰 Tax</option>
+                                    <option value="compliance">✅ Compliance</option>
+                                    <option value="patent">📜 Patent</option>
+                                    <option value="experiment">🧪 Experiment</option>
+                                </select>
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Location (optional)</label>
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Location</label>
                                 <input type="text" id="editEventLocation" class="form-control" placeholder="Enter location..." style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
                             </div>
                             
                             <div class="form-group" style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Description (optional)</label>
+                                <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Description</label>
                                 <textarea id="editEventDesc" class="form-control" rows="3" placeholder="Enter description..." style="width: 100%; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); resize: vertical;"></textarea>
                             </div>
                         </div>
@@ -27638,7 +27656,14 @@
                         { text: 'Privacy settings', time: '1 day', status: '⏳' }
                     ],
                     estimatedCompletion: '1.5 weeks',
-                    priority: 'High'
+                    priority: 'High',
+                    nextSteps: [
+                        { text: 'Begin Location Services integration', link: 'Location Services', priority: 'high' },
+                        { text: 'Start Core Matching Algorithm development', link: 'Core Matching Algorithm Complete', priority: 'high' },
+                        { text: 'Schedule QA review of profile features', priority: 'medium' },
+                        { text: 'Document API endpoints for mobile team', priority: 'medium' },
+                        { text: 'Set up analytics for profile completion rate', priority: 'low' }
+                    ]
                 },
                 'Location Services': {
                     description: 'Implement geolocation features',
@@ -27789,6 +27814,27 @@
                     ],
                     estimatedCompletion: 'Recurring',
                     priority: 'Medium'
+                },
+                'Set Up Email Service (Google Workspace)': {
+                    description: 'Configure Google Workspace for admin@oith.com email functionality',
+                    subRequirements: [
+                        { text: 'Sign up for Google Workspace ($6/user/month)', time: '15 min', status: '⏳' },
+                        { text: 'Verify domain ownership (DNS TXT record)', time: '30 min', status: '⏳' },
+                        { text: 'Create admin@oith.com mailbox', time: '10 min', status: '⏳' },
+                        { text: 'Enable Gmail API in Google Cloud Console', time: '20 min', status: '⏳' },
+                        { text: 'Create OAuth 2.0 credentials', time: '15 min', status: '⏳' },
+                        { text: 'Set up OAuth consent screen', time: '10 min', status: '⏳' },
+                        { text: 'Add credentials to server .env file', time: '5 min', status: '⏳' },
+                        { text: 'Test email send/receive in admin panel', time: '15 min', status: '⏳' }
+                    ],
+                    estimatedCompletion: '2-3 hours',
+                    priority: 'High',
+                    nextSteps: [
+                        { text: 'Configure email templates for user notifications', priority: 'high' },
+                        { text: 'Set up support ticket auto-responses', priority: 'medium' },
+                        { text: 'Create email signature template', priority: 'low' },
+                        { text: 'Document email API integration for team', priority: 'medium' }
+                    ]
                 },
                 'Leadership Standup': {
                     description: 'Weekly leadership alignment meeting',
@@ -28044,7 +28090,48 @@
                 </div>
             `;
             
+            // Next Steps section
+            if (notes.nextSteps && notes.nextSteps.length > 0) {
+                html += `
+                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-light, rgba(255,255,255,0.08));">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                            <span style="font-size: 1rem;">🚀</span>
+                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Next Steps</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                `;
+                
+                notes.nextSteps.forEach((step, index) => {
+                    const priorityColor = step.priority === 'high' ? 'var(--warning)' : 
+                                         step.priority === 'low' ? 'var(--text-muted)' : 'var(--info)';
+                    const priorityBadge = step.priority === 'high' ? '🔴' : 
+                                         step.priority === 'low' ? '🟢' : '🟡';
+                    html += `
+                        <div class="next-step-item" style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-secondary); border-radius: 6px; cursor: ${step.link ? 'pointer' : 'default'};" ${step.link ? `onclick="navigateToEvent('${step.link}')"` : ''}>
+                            <span style="font-size: 0.7rem;">${priorityBadge}</span>
+                            <span style="flex: 1; font-size: 0.78rem; color: var(--text-primary);">${step.text}</span>
+                            ${step.link ? '<span style="font-size: 0.7rem; color: var(--text-muted);">→</span>' : ''}
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
             return html;
+        }
+        
+        // Navigate to another event from Next Steps
+        function navigateToEvent(eventTitle) {
+            const event = calendarEvents.find(e => e.title === eventTitle);
+            if (event) {
+                openEventDetails(event);
+            } else {
+                showToast(`Event "${eventTitle}" not found`, 'info');
+            }
         }
         
         function openEventDetails(event) {
@@ -28257,15 +28344,70 @@
             document.getElementById('editModeButtons').style.display = 'none';
         }
         
+        // Toggle between view and edit mode (for dynamically created modal)
+        function toggleEventEditMode(enterEdit) {
+            if (!currentViewingEvent) return;
+            
+            isEditMode = enterEdit;
+            
+            const viewMode = document.getElementById('eventViewMode');
+            const editMode = document.getElementById('eventEditMode');
+            const viewActions = document.getElementById('eventViewActions');
+            const editActions = document.getElementById('eventEditActions');
+            
+            if (enterEdit) {
+                // Populate edit fields
+                const titleField = document.getElementById('editEventTitle');
+                const dateField = document.getElementById('editEventDate');
+                const timeField = document.getElementById('editEventTime');
+                const categoryField = document.getElementById('editEventCategory');
+                const locationField = document.getElementById('editEventLocation');
+                const descField = document.getElementById('editEventDesc') || document.getElementById('editEventDescription');
+                
+                if (titleField) titleField.value = currentViewingEvent.title || '';
+                
+                const eventDate = new Date(currentViewingEvent.date);
+                if (dateField) dateField.value = eventDate.toISOString().split('T')[0];
+                
+                if (timeField) {
+                    if (eventDate.getHours() !== 0 || eventDate.getMinutes() !== 0) {
+                        timeField.value = eventDate.getHours().toString().padStart(2, '0') + ':' + 
+                            eventDate.getMinutes().toString().padStart(2, '0');
+                    } else {
+                        timeField.value = '';
+                    }
+                }
+                
+                if (categoryField) categoryField.value = currentViewingEvent.category || 'meeting';
+                if (locationField) locationField.value = currentViewingEvent.meetingDetails?.location || '';
+                if (descField) descField.value = currentViewingEvent.description || '';
+                
+                // Toggle visibility
+                if (viewMode) viewMode.style.display = 'none';
+                if (editMode) editMode.style.display = 'block';
+                if (viewActions) viewActions.style.display = 'none';
+                if (editActions) editActions.style.display = 'flex';
+            } else {
+                // Cancel edit - toggle back
+                if (viewMode) viewMode.style.display = 'block';
+                if (editMode) editMode.style.display = 'none';
+                if (viewActions) viewActions.style.display = 'flex';
+                if (editActions) editActions.style.display = 'none';
+            }
+        }
+        
         function saveEventChanges() {
             if (!currentViewingEvent) return;
             
             const title = document.getElementById('editEventTitle').value;
             const dateVal = document.getElementById('editEventDate').value;
             const timeVal = document.getElementById('editEventTime').value;
-            const category = document.getElementById('editEventCategory').value;
+            // Handle both static and dynamic modal field IDs
+            const categoryField = document.getElementById('editEventCategory');
+            const category = categoryField ? categoryField.value : currentViewingEvent.category;
             const location = document.getElementById('editEventLocation').value;
-            const description = document.getElementById('editEventDescription').value;
+            const descField = document.getElementById('editEventDescription') || document.getElementById('editEventDesc');
+            const description = descField ? descField.value : '';
             
             if (!title || !dateVal) {
                 showToast('Please fill in required fields', 'error');
@@ -28357,15 +28499,74 @@
             closeEventDetails();
         }
         
+        // Alias for delete from dynamically created modal
+        function deleteEventFromDetails() {
+            deleteEvent();
+        }
+        
         // Share Event Functions
         function shareEvent() {
             if (!currentViewingEvent) return;
-            document.getElementById('shareEventModal').style.display = 'flex';
+            
+            // Try the static modal first, otherwise create dynamic one
+            let shareModal = document.getElementById('shareEventModal');
+            if (!shareModal) {
+                shareModal = createShareEventModal();
+                document.body.appendChild(shareModal);
+            }
+            
+            // Update event title in share modal
+            const eventTitleEl = shareModal.querySelector('.share-event-title');
+            if (eventTitleEl) {
+                eventTitleEl.textContent = currentViewingEvent.title;
+            }
+            
+            shareModal.style.display = 'flex';
+        }
+        
+        function createShareEventModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'shareEventModal';
+            modal.style.cssText = 'z-index: 2300; display: none;';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border);">
+                        <h3 style="margin: 0;">📤 Share Event</h3>
+                        <button class="close-btn" onclick="closeShareEventModal()">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 20px;">
+                        <p class="share-event-title" style="font-weight: 600; margin-bottom: 16px;">${currentViewingEvent ? currentViewingEvent.title : 'Event'}</p>
+                        <p style="margin-bottom: 16px; color: var(--text-secondary);">Send this event to others via email, SMS, or copy the details.</p>
+                        
+                        <div class="form-group" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Send to Email</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="email" id="shareEventEmail" placeholder="Enter email address..." class="form-control" style="flex: 1; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="sendEventEmail()">Send</button>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px;">
+                            <button class="btn btn-secondary btn-sm" onclick="copyEventDetails()" style="flex: 1; min-width: 120px;">📋 Copy Details</button>
+                            <button class="btn btn-secondary btn-sm" onclick="downloadEventICS()" style="flex: 1; min-width: 120px;">📅 Download .ics</button>
+                            <button class="btn btn-secondary btn-sm" onclick="addToGoogleCalendar()" style="flex: 1; min-width: 120px;">🔗 Google Cal</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return modal;
         }
         
         function closeShareEventModal() {
-            document.getElementById('shareEventModal').style.display = 'none';
-            document.getElementById('shareEventEmail').value = '';
+            const shareModal = document.getElementById('shareEventModal');
+            if (shareModal) {
+                shareModal.style.display = 'none';
+            }
+            const emailField = document.getElementById('shareEventEmail');
+            if (emailField) {
+                emailField.value = '';
+            }
         }
         
         async function sendEventEmail() {

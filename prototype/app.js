@@ -353,6 +353,161 @@ function closeWebSocket() {
 }
 
 // ==========================================
+// Photo Loading with Fallbacks
+// Fixes issue #11 - Photo loading fallbacks & progressive loading
+// ==========================================
+
+const FALLBACK_PHOTO = 'data:image/svg+xml,' + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="#C4584A">
+  <circle cx="50" cy="35" r="20" fill="#ddd"/>
+  <ellipse cx="50" cy="85" rx="30" ry="25" fill="#ddd"/>
+</svg>`);
+
+const FALLBACK_PHOTO_MALE = 'data:image/svg+xml,' + encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#e8e8e8"/>
+  <circle cx="50" cy="35" r="18" fill="#bbb"/>
+  <path d="M25 85 Q50 60 75 85 L75 100 L25 100 Z" fill="#bbb"/>
+</svg>`);
+
+/**
+ * Load image with fallback and progressive loading
+ */
+function loadImageWithFallback(imgElement, src, fallback = FALLBACK_PHOTO) {
+    if (!imgElement || !src) {
+        if (imgElement) imgElement.src = fallback;
+        return;
+    }
+    
+    // Add loading state
+    imgElement.classList.add('loading');
+    imgElement.style.opacity = '0.5';
+    
+    // Create new image to preload
+    const img = new Image();
+    
+    img.onload = () => {
+        imgElement.src = src;
+        imgElement.classList.remove('loading');
+        imgElement.style.opacity = '1';
+        imgElement.classList.add('loaded');
+    };
+    
+    img.onerror = () => {
+        console.warn('Photo failed to load:', src);
+        imgElement.src = fallback;
+        imgElement.classList.remove('loading');
+        imgElement.classList.add('fallback');
+        imgElement.style.opacity = '1';
+    };
+    
+    // Set a timeout for slow loads
+    const timeout = setTimeout(() => {
+        if (!imgElement.classList.contains('loaded')) {
+            imgElement.src = src; // Try direct load
+            imgElement.style.opacity = '1';
+        }
+    }, 5000);
+    
+    img.src = src;
+    
+    // Clean up timeout on load
+    img.onload = () => {
+        clearTimeout(timeout);
+        imgElement.src = src;
+        imgElement.classList.remove('loading');
+        imgElement.style.opacity = '1';
+        imgElement.classList.add('loaded');
+    };
+}
+
+/**
+ * Preload multiple photos for smoother carousel experience
+ */
+function preloadPhotos(photos) {
+    if (!photos || !Array.isArray(photos)) return [];
+    
+    const preloaded = [];
+    
+    photos.forEach((src, index) => {
+        if (src) {
+            const img = new Image();
+            img.onload = () => {
+                preloaded[index] = { src, loaded: true };
+            };
+            img.onerror = () => {
+                preloaded[index] = { src: FALLBACK_PHOTO, loaded: false, error: true };
+            };
+            img.src = src;
+        }
+    });
+    
+    return preloaded;
+}
+
+/**
+ * Set photo with retry and fallback
+ */
+function setPhotoWithRetry(element, src, maxRetries = 2) {
+    if (!element) return;
+    
+    let retries = 0;
+    
+    const attemptLoad = () => {
+        const img = new Image();
+        
+        img.onload = () => {
+            element.src = src;
+            element.style.opacity = '1';
+        };
+        
+        img.onerror = () => {
+            retries++;
+            if (retries < maxRetries) {
+                // Add cache-busting parameter and retry
+                const newSrc = src.includes('?') ? `${src}&retry=${retries}` : `${src}?retry=${retries}`;
+                setTimeout(() => {
+                    img.src = newSrc;
+                }, 1000 * retries);
+            } else {
+                // Give up, use fallback
+                element.src = FALLBACK_PHOTO;
+                element.style.opacity = '1';
+            }
+        };
+        
+        img.src = src;
+    };
+    
+    element.style.opacity = '0.5';
+    attemptLoad();
+}
+
+/**
+ * Initialize lazy loading for photo grids
+ */
+function initLazyPhotoLoading() {
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.dataset.src;
+                    if (src) {
+                        loadImageWithFallback(img, src);
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        }, { rootMargin: '100px' });
+        
+        document.querySelectorAll('img[data-src]').forEach(img => {
+            observer.observe(img);
+        });
+    }
+}
+
+// ==========================================
 // Geolocation & Distance System
 // ==========================================
 
@@ -7802,6 +7957,15 @@ function handleLogin(event) {
         }
     }).catch(err => console.log('Device registration:', err.message));
     
+    // Initialize WebSocket for real-time features
+    initWebSocket();
+    
+    // Check if location needs refresh
+    checkLocationRefresh();
+    
+    // Initialize push notifications
+    initPushNotifications();
+    
     // Check for and apply any active experiment treatments
     checkAndApplyExperiments();
     
@@ -8924,6 +9088,9 @@ function logout() {
     // Stop device verification loop
     stopDeviceVerificationLoop();
     
+    // Close WebSocket connection
+    closeWebSocket();
+    
     // Only mark as logged out - don't clear the data
     appState.isLoggedIn = false;
     
@@ -8934,6 +9101,357 @@ function logout() {
     
     // Return to splash
     showScreen('splash');
+}
+
+// ==========================================
+// Location Refresh
+// Fixes issue #12 - Location accuracy
+// ==========================================
+
+const LOCATION_REFRESH_DAYS = 7;
+
+/**
+ * Check if user should update their location
+ */
+function checkLocationRefresh() {
+    const lastUpdate = appState.user?.locationUpdatedAt;
+    
+    if (!lastUpdate) {
+        promptLocationUpdate('We need your location to find nearby matches.');
+        return;
+    }
+    
+    const daysSinceUpdate = (Date.now() - new Date(lastUpdate)) / (1000 * 60 * 60 * 24);
+    
+    if (daysSinceUpdate > LOCATION_REFRESH_DAYS) {
+        promptLocationUpdate('Your location may be outdated. Update it for better matches.');
+    }
+}
+
+/**
+ * Prompt user to update location
+ */
+function promptLocationUpdate(message) {
+    // Don't prompt if we just did
+    const lastPrompt = localStorage.getItem('oith_location_prompt');
+    if (lastPrompt && Date.now() - parseInt(lastPrompt) < 24 * 60 * 60 * 1000) {
+        return;
+    }
+    
+    localStorage.setItem('oith_location_prompt', Date.now().toString());
+    
+    // Show prompt
+    showLocationRefreshModal(message);
+}
+
+/**
+ * Show location refresh modal
+ */
+function showLocationRefreshModal(message) {
+    const existing = document.getElementById('locationRefreshModal');
+    if (existing) existing.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'locationRefreshModal';
+    modal.className = 'modal active';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 360px; text-align: center; padding: 32px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📍</div>
+            <h2 style="margin-bottom: 12px; font-size: 1.2rem;">Update Your Location</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px; line-height: 1.5;">${message}</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="btn btn-secondary" onclick="document.getElementById('locationRefreshModal').remove();">
+                    Later
+                </button>
+                <button class="btn btn-primary" onclick="refreshLocation();">
+                    Update Location
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+/**
+ * Refresh user's location
+ */
+async function refreshLocation() {
+    const modal = document.getElementById('locationRefreshModal');
+    
+    if (!navigator.geolocation) {
+        showToast('Geolocation is not supported by your browser', 'error');
+        if (modal) modal.remove();
+        return;
+    }
+    
+    // Show loading
+    if (modal) {
+        modal.querySelector('.modal-content').innerHTML = `
+            <div style="font-size: 48px; margin-bottom: 16px;">📍</div>
+            <h2 style="margin-bottom: 12px; font-size: 1.2rem;">Getting Location...</h2>
+            <div class="loading-spinner" style="margin: 20px auto;"></div>
+        `;
+    }
+    
+    try {
+        const position = await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+        });
+        
+        const coords = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+        };
+        
+        // Update local state
+        appState.user.coordinates = coords;
+        appState.user.locationUpdatedAt = new Date().toISOString();
+        saveUserData();
+        
+        // Sync to server
+        await syncLocationToAWS(coords);
+        
+        showToast('📍 Location updated!', 'success');
+        if (modal) modal.remove();
+        
+    } catch (error) {
+        console.error('Location error:', error);
+        showToast('Could not get your location. Check your settings.', 'error');
+        if (modal) modal.remove();
+    }
+}
+
+/**
+ * Sync location to AWS
+ */
+async function syncLocationToAWS(coordinates) {
+    const email = appState.user?.email;
+    if (!email) return;
+    
+    try {
+        await fetch(`${AWS_API_URL}/update-location`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email,
+                coordinates
+            })
+        });
+        console.log('📍 Location synced to AWS');
+    } catch (error) {
+        console.warn('Location sync failed:', error.message);
+    }
+}
+
+// ==========================================
+// Push Notifications (FCM)
+// Fixes issue #16 - Push notification integration
+// ==========================================
+
+let pushToken = null;
+
+/**
+ * Initialize push notifications
+ */
+async function initPushNotifications() {
+    // Check if notifications are supported
+    if (!('Notification' in window)) {
+        console.log('Push notifications not supported');
+        return;
+    }
+    
+    // Check if service worker is supported
+    if (!('serviceWorker' in navigator)) {
+        console.log('Service workers not supported');
+        return;
+    }
+    
+    // Check permission status
+    if (Notification.permission === 'denied') {
+        console.log('Push notifications denied');
+        return;
+    }
+    
+    // If not granted, we'll ask later when appropriate
+    if (Notification.permission === 'default') {
+        // Don't prompt immediately - wait for user action
+        console.log('Push notifications not yet requested');
+        return;
+    }
+    
+    // Permission already granted - register
+    await registerForPushNotifications();
+}
+
+/**
+ * Request push notification permission
+ */
+async function requestPushPermission() {
+    if (!('Notification' in window)) {
+        showToast('Push notifications are not supported in this browser', 'info');
+        return false;
+    }
+    
+    try {
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+            console.log('🔔 Push permission granted');
+            await registerForPushNotifications();
+            return true;
+        } else {
+            console.log('🔔 Push permission denied');
+            return false;
+        }
+    } catch (error) {
+        console.error('Push permission error:', error);
+        return false;
+    }
+}
+
+/**
+ * Register for push notifications
+ */
+async function registerForPushNotifications() {
+    try {
+        // Register service worker
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        console.log('Service worker registered');
+        
+        // Get push subscription
+        let subscription = await registration.pushManager.getSubscription();
+        
+        if (!subscription) {
+            // Subscribe to push
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            });
+        }
+        
+        // Get the token
+        const token = JSON.stringify(subscription);
+        pushToken = token;
+        
+        // Register with our server
+        await fetch(`${AWS_API_URL}/register-push-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: appState.user?.email,
+                token: token,
+                platform: 'web',
+                deviceInfo: {
+                    userAgent: navigator.userAgent,
+                    language: navigator.language
+                }
+            })
+        });
+        
+        console.log('🔔 Push notifications registered');
+        localStorage.setItem('oith_push_registered', 'true');
+        
+    } catch (error) {
+        console.error('Push registration error:', error);
+    }
+}
+
+/**
+ * Unregister push notifications (on logout)
+ */
+async function unregisterPushNotifications() {
+    if (!pushToken) return;
+    
+    try {
+        await fetch(`${AWS_API_URL}/unregister-push-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: appState.user?.email,
+                token: pushToken
+            })
+        });
+        
+        pushToken = null;
+        localStorage.removeItem('oith_push_registered');
+        console.log('🔔 Push notifications unregistered');
+    } catch (error) {
+        console.error('Push unregister error:', error);
+    }
+}
+
+// VAPID public key for web push
+const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE';
+
+/**
+ * Convert VAPID key to Uint8Array
+ */
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+    
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    
+    return outputArray;
+}
+
+/**
+ * Show push notification opt-in modal
+ */
+function showPushOptInModal() {
+    // Don't show if already registered or denied
+    if (Notification.permission !== 'default') return;
+    if (localStorage.getItem('oith_push_dismissed')) return;
+    
+    const modal = document.createElement('div');
+    modal.id = 'pushOptInModal';
+    modal.className = 'modal active';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 360px; text-align: center; padding: 32px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🔔</div>
+            <h2 style="margin-bottom: 12px; font-size: 1.2rem;">Stay Connected</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px; line-height: 1.5;">
+                Get notified when you match with someone or receive a message!
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button class="btn btn-secondary" onclick="dismissPushOptIn()">
+                    Not Now
+                </button>
+                <button class="btn btn-primary" onclick="acceptPushOptIn()">
+                    Enable Notifications
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function dismissPushOptIn() {
+    document.getElementById('pushOptInModal')?.remove();
+    localStorage.setItem('oith_push_dismissed', Date.now().toString());
+}
+
+async function acceptPushOptIn() {
+    document.getElementById('pushOptInModal')?.remove();
+    const granted = await requestPushPermission();
+    if (granted) {
+        showToast('🔔 Notifications enabled!', 'success');
+    }
 }
 
 /**
@@ -12282,31 +12800,65 @@ function sendMessage() {
         const welcomeDiv = document.querySelector('.chat-welcome');
         if (welcomeDiv) welcomeDiv.remove();
         
-        addMessageToChat(message, 'sent');
+        // Generate unique message ID for deduplication
+        // Fixes issue #5 - Chat history merge conflicts with message IDs
+        const messageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Add to UI with ID for status updates
+        addMessageToChat(message, 'sent', messageId);
         input.value = '';
         
-        // Track message for AI analysis
+        // Stop typing indicator
+        sendTypingIndicator(false);
+        
+        // Track message for AI analysis with unique ID
+        if (!appState.conversation) {
+            appState.conversation = { messages: [] };
+        }
         appState.conversation.messages.push({
+            id: messageId,
             text: message,
             type: 'sent',
-            timestamp: new Date()
+            timestamp: new Date(),
+            status: 'sending'
         });
         
         // ========================================
-        // SAVE MESSAGE TO AWS (for real chat persistence)
+        // SEND MESSAGE VIA WEBSOCKET OR REST API
         // ========================================
         const matchId = appState.activeConnection?.matchId;
         const fromEmail = appState.user?.email;
+        const toEmail = appState.activeConnection?.email;
         
         if (matchId && fromEmail) {
-            // Send to AWS DynamoDB
-            sendMessageToAWS(matchId, fromEmail, message).then(result => {
-                if (result.success) {
-                    console.log('💬 Message saved to AWS');
-                } else {
-                    console.log('⚠️ Message not saved to AWS (local only)');
-                }
-            }).catch(err => console.log('Chat sync:', err.message));
+            // Try WebSocket first for real-time delivery
+            if (websocket?.readyState === WebSocket.OPEN) {
+                websocket.send(JSON.stringify({
+                    action: 'sendMessage',
+                    matchId,
+                    fromEmail,
+                    toEmail,
+                    message,
+                    messageId
+                }));
+                
+                // Update status to sent
+                updateMessageStatus(messageId, 'sent');
+            } else {
+                // Fallback to REST API
+                sendMessageToAWS(matchId, fromEmail, message, messageId).then(result => {
+                    if (result.success) {
+                        console.log('💬 Message saved to AWS');
+                        updateMessageStatus(messageId, 'sent');
+                    } else {
+                        console.log('⚠️ Message not saved to AWS (local only)');
+                        updateMessageStatus(messageId, 'failed');
+                    }
+                }).catch(err => {
+                    console.log('Chat sync:', err.message);
+                    updateMessageStatus(messageId, 'failed');
+                });
+            }
         }
         // ========================================
         
@@ -12331,6 +12883,25 @@ function sendMessage() {
             }, 1500);
         }
     }
+}
+
+// Debounce for typing indicator
+let typingTimeout = null;
+
+/**
+ * Handle input in message field - show typing indicator
+ */
+function handleMessageInput() {
+    // Clear previous timeout
+    if (typingTimeout) clearTimeout(typingTimeout);
+    
+    // Send typing indicator
+    sendTypingIndicator(true);
+    
+    // Clear typing after 2 seconds of no input
+    typingTimeout = setTimeout(() => {
+        sendTypingIndicator(false);
+    }, 2000);
 }
 
 /**
@@ -12424,21 +12995,38 @@ function sendIcebreaker(button) {
     }, 1500);
 }
 
-function addMessageToChat(text, type) {
+function addMessageToChat(text, type, messageId = null) {
     const chatMessages = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
     
+    // Add message ID for status tracking
+    if (messageId) {
+        messageDiv.dataset.messageId = messageId;
+    }
+    
     const now = new Date();
     const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     
+    // Add status indicator for sent messages
+    const statusIndicator = type === 'sent' 
+        ? '<span class="message-status" style="font-size: 0.7rem; margin-left: 4px;">✓</span>' 
+        : '';
+    
     messageDiv.innerHTML = `
         <p>${text}</p>
-        <span class="message-time">${time}</span>
+        <span class="message-time">${time}${statusIndicator}</span>
     `;
     
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // If this is a received message, mark it as read after a short delay
+    if (type === 'received' && messageId) {
+        setTimeout(() => {
+            sendReadReceipt([messageId]);
+        }, 1000);
+    }
 }
 
 // ==========================================
