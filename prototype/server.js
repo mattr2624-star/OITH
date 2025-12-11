@@ -34,7 +34,7 @@ const DOMAIN = process.env.DOMAIN || 'http://localhost:3000';
 const SUBSCRIPTION_PLANS = {
     monthly: {
         name: 'OITH Premium Monthly',
-        price: 999, // $9.99 in cents
+        price: 1000, // $10.00 in cents
         interval: 'month',
         features: [
             'Unlimited matches',
@@ -42,24 +42,12 @@ const SUBSCRIPTION_PLANS = {
             'Advanced filters',
             'Priority support'
         ]
-    },
-    yearly: {
-        name: 'OITH Premium Yearly',
-        price: 7999, // $79.99 in cents (saves ~33%)
-        interval: 'year',
-        features: [
-            'All monthly features',
-            'Save 33%',
-            'Exclusive yearly badge',
-            'Early access to features'
-        ]
     }
 };
 
 // Store price IDs after creating products (set these after running /setup-products)
 let priceIds = {
-    monthly: process.env.STRIPE_PRICE_MONTHLY || null,
-    yearly: process.env.STRIPE_PRICE_YEARLY || null
+    monthly: process.env.STRIPE_PRICE_MONTHLY || null
 };
 
 // ==========================================
@@ -430,14 +418,10 @@ app.post('/api/test/simulate-payment', (req, res) => {
     const { userId, plan } = req.body;
     const planDetails = SUBSCRIPTION_PLANS[plan] || SUBSCRIPTION_PLANS.monthly;
     
-    // Calculate expiry based on plan
+    // Calculate expiry based on plan (monthly only)
     const now = new Date();
     const expiryDate = new Date(now);
-    if (plan === 'yearly') {
-        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-    } else {
-        expiryDate.setMonth(expiryDate.getMonth() + 1);
-    }
+    expiryDate.setMonth(expiryDate.getMonth() + 1);
 
     res.json({
         success: true,

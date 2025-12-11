@@ -23,19 +23,13 @@ const DOMAIN = process.env.DOMAIN || 'https://main.d3cpep2ztx08x2.amplifyapp.com
 // Stripe will be initialized dynamically
 let stripe = null;
 
-// Subscription plans
+// Subscription plans (monthly only - $10/month)
 const SUBSCRIPTION_PLANS = {
     monthly: {
         name: 'OITH Premium Monthly',
         price: 1000, // $10.00 in cents
         interval: 'month',
         features: ['Unlimited matches', 'See who likes you', 'Advanced filters', 'Priority support']
-    },
-    yearly: {
-        name: 'OITH Premium Yearly',
-        price: 7999, // $79.99 in cents
-        interval: 'year',
-        features: ['All monthly features', 'Save 33%', 'Exclusive yearly badge', 'Early access to features']
     }
 };
 

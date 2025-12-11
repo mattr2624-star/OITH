@@ -71,7 +71,7 @@ const PaymentService = {
         monthly: {
             id: 'monthly',
             name: 'Premium Monthly',
-            price: 9.99,
+            price: 10.00,
             interval: 'month',
             features: [
                 '💕 Unlimited matches per day',
@@ -81,22 +81,6 @@ const PaymentService = {
                 '💬 Read receipts in chat',
                 '🔥 Boost profile visibility'
             ]
-        },
-        yearly: {
-            id: 'yearly',
-            name: 'Premium Yearly',
-            price: 79.99,
-            pricePerMonth: 6.67,
-            savings: '33%',
-            interval: 'year',
-            features: [
-                '✨ All Monthly features',
-                '💰 Save 33% ($40/year)',
-                '🏆 Exclusive yearly badge',
-                '🚀 Early access to new features',
-                '🎁 Special anniversary rewards'
-            ],
-            popular: true
         }
     },
 
@@ -244,15 +228,10 @@ const PaymentService = {
         // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const plan = this.plans[planId] || this.plans.monthly;
+        const plan = this.plans.monthly;
         const now = new Date();
         const expiryDate = new Date(now);
-        
-        if (planId === 'yearly') {
-            expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-        } else {
-            expiryDate.setMonth(expiryDate.getMonth() + 1);
-        }
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
 
         const subscription = {
             id: 'test_sub_' + Date.now(),

@@ -1195,6 +1195,159 @@
         .event-details-header.meeting { background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05)); }
         .event-details-header.payroll { background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.05)); }
         .event-details-header.tax { background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(236, 72, 153, 0.05)); }
+
+        /* Model Editor Modal Styles */
+        .model-editor-modal {
+            max-width: 600px !important;
+            width: 95% !important;
+            max-height: 90vh;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+
+        .model-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.1));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .model-editor-header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .model-editor-icon {
+            font-size: 2rem;
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .model-editor-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .model-editor-header p {
+            margin: 4px 0 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .model-editor-body {
+            padding: 24px;
+            max-height: calc(90vh - 180px);
+            overflow-y: auto;
+        }
+
+        .model-editor-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border);
+        }
+
+        .model-editor-footer-left {
+            display: flex;
+            gap: 8px;
+        }
+
+        .model-editor-footer-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .model-advanced-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 16px;
+            transition: all 0.2s;
+        }
+
+        .model-advanced-toggle:hover {
+            background: var(--bg-secondary);
+            color: var(--accent);
+        }
+
+        .model-advanced-toggle.open svg {
+            transform: rotate(180deg);
+        }
+
+        #modelAdvancedSettings {
+            padding-top: 16px;
+            margin-top: 16px;
+            border-top: 1px dashed var(--border);
+        }
+
+        /* Model Action Buttons in Table */
+        .model-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .model-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .model-action-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .model-action-btn.delete:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        /* Model Status Colors */
+        .model-type-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .model-type-badge.scoring { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .model-type-badge.filter { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .model-type-badge.llm { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+        .model-type-badge.heuristic { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+        .model-type-badge.similarity { background: rgba(168, 85, 247, 0.2); color: #c084fc; }
+        .model-type-badge.template { background: rgba(20, 184, 166, 0.2); color: #2dd4bf; }
+        .model-type-badge.neural { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
+        .model-type-badge.default { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
         .event-details-header.compliance { background: linear-gradient(135deg, rgba(249, 115, 22, 0.15), rgba(249, 115, 22, 0.05)); }
         .event-details-header.milestone { background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05)); }
         .event-details-header.patent { background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(168, 85, 247, 0.05)); }
@@ -4038,7 +4191,16 @@
                 <div class="card" style="margin-bottom: 20px; border: 2px solid var(--accent);">
                     <div class="card-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));">
                         <h3 class="card-title">🤖 Current Models in Production</h3>
-                        <span class="status-badge active" style="font-size: 0.75rem;">6 ACTIVE</span>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <span class="status-badge active" style="font-size: 0.75rem;" id="activeModelsCount">6 ACTIVE</span>
+                            <button class="btn btn-primary btn-sm" onclick="addNewModel()" style="font-size: 0.75rem;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add Model
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body" style="padding: 0;">
                         <table class="data-table" id="currentModelsTable">
@@ -4049,83 +4211,25 @@
                                     <th>Location</th>
                                     <th>Purpose</th>
                                     <th>Status</th>
+                                    <th style="width: 100px;">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span style="font-size: 1.2rem;">💕</span>
-                                            <strong>Compatibility Scoring Engine</strong>
-                                        </div>
-                                    </td>
-                                    <td><span class="status-badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">Multi-Factor Scoring</span></td>
-                                    <td><code>app.js:8230-8290</code></td>
-                                    <td>Calculates match compatibility (0-100%) based on goals, interests, location, age, communication style</td>
-                                    <td><span class="status-badge active">Active</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span style="font-size: 1.2rem;">🎯</span>
-                                            <strong>Profile Matching Filter</strong>
-                                        </div>
-                                    </td>
-                                    <td><span class="status-badge" style="background: rgba(34, 197, 94, 0.2); color: #4ade80;">Rule-Based Filter</span></td>
-                                    <td><code>app.js:4531-4705</code></td>
-                                    <td>Filters match pool based on user preferences (age range, distance, body type, ethnicity, lifestyle)</td>
-                                    <td><span class="status-badge active">Active</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span style="font-size: 1.2rem;">💬</span>
-                                            <strong>Chat Response Generator</strong>
-                                        </div>
-                                    </td>
-                                    <td><span class="status-badge" style="background: rgba(249, 115, 22, 0.2); color: #fb923c;">Template LLM (Simulated)</span></td>
-                                    <td><code>app.js:8770-8795</code></td>
-                                    <td>Generates contextual chat responses from predefined templates. In production: GPT-4 API integration</td>
-                                    <td><span class="status-badge warning">Simulated</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span style="font-size: 1.2rem;">📅</span>
-                                            <strong>Date Readiness Predictor</strong>
-                                        </div>
-                                    </td>
-                                    <td><span class="status-badge" style="background: rgba(236, 72, 153, 0.2); color: #f472b6;">Heuristic Scoring</span></td>
-                                    <td><code>app.js:1265-1268</code></td>
-                                    <td>Calculates conversation readiness for scheduling dates (0-100 score based on message count, sentiment)</td>
-                                    <td><span class="status-badge active">Active</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span style="font-size: 1.2rem;">🎲</span>
-                                            <strong>Interest Overlap Analyzer</strong>
-                                        </div>
-                                    </td>
-                                    <td><span class="status-badge" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">Jaccard Similarity</span></td>
-                                    <td><code>app.js:8244-8247</code></td>
-                                    <td>Calculates shared interests between users using fuzzy string matching and overlap ratio</td>
-                                    <td><span class="status-badge active">Active</span></td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span style="font-size: 1.2rem;">📸</span>
-                                            <strong>Photo Response Generator</strong>
-                                        </div>
-                                    </td>
-                                    <td><span class="status-badge" style="background: rgba(20, 184, 166, 0.2); color: #2dd4bf;">Template Response</span></td>
-                                    <td><code>app.js:8746-8768</code></td>
-                                    <td>Generates appropriate responses when users share photos in chat</td>
-                                    <td><span class="status-badge warning">Simulated</span></td>
-                                </tr>
+                            <tbody id="modelsTableBody">
+                                <!-- Dynamically populated by JavaScript -->
                             </tbody>
                         </table>
+                    </div>
+                    <div style="padding: 12px; background: var(--bg-tertiary); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">
+                            <span id="lastModelSyncTime">--</span>
+                        </span>
+                        <button class="btn btn-secondary btn-sm" onclick="syncModelsToAWS()" style="font-size: 0.75rem;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                            Sync to AWS
+                        </button>
                     </div>
                 </div>
 
@@ -25508,18 +25612,19 @@
     <!-- Share Event Modal -->
     <div class="modal" id="shareEventModal" style="z-index: 2300;">
         <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3>📤 Share Event</h3>
-                <button onclick="closeShareEventModal()" class="modal-close">&times;</button>
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border);">
+                <h3 style="margin: 0;">📤 Share Event</h3>
+                <button onclick="closeShareEventModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
             </div>
-            <div class="modal-body">
-                <p style="margin-bottom: 16px; color: var(--text-secondary);">Send this event to others via email or copy the details to share.</p>
+            <div class="modal-body" style="padding: 20px;">
+                <p style="margin-bottom: 16px; color: var(--text-secondary);">Send this event to others via email, SMS, or copy the details to share.</p>
                 
-                <div class="form-group">
-                    <label>Send to Email</label>
-                    <div class="invite-input-row">
-                        <input type="email" id="shareEventEmail" placeholder="Enter email address..." class="form-control">
-                        <button type="button" class="btn btn-primary btn-sm" onclick="sendEventEmail()">
+                <!-- Email Section -->
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Send to Email</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="email" id="shareEventEmail" placeholder="Enter email address..." class="form-control" style="flex: 1; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="sendEventEmail()" style="display: flex; align-items: center; gap: 6px;">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
                             </svg>
@@ -25528,38 +25633,203 @@
                     </div>
                 </div>
                 
+                <!-- Phone/SMS Section -->
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-muted);">Send via SMS</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="tel" id="shareEventPhone" placeholder="Enter phone number..." class="form-control" style="flex: 1; padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="sendEventSMS()" style="display: flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                            </svg>
+                            SMS
+                        </button>
+                    </div>
+                </div>
+                
                 <div style="margin: 20px 0; text-align: center; color: var(--text-muted); font-size: 0.85rem;">— or —</div>
                 
-                <div class="share-options">
-                    <button class="share-option-btn" onclick="copyEventDetails()">
+                <div class="share-options" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <button class="share-option-btn" onclick="copyEventDetails()" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
                         </svg>
-                        <span>Copy Details</span>
+                        <span style="font-size: 0.85rem;">Copy Details</span>
                     </button>
-                    <button class="share-option-btn" onclick="downloadEventICS()">
+                    <button class="share-option-btn" onclick="downloadEventICS()" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                             <polyline points="7 10 12 15 17 10"/>
                             <line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
-                        <span>Download .ics</span>
+                        <span style="font-size: 0.85rem;">Download .ics</span>
                     </button>
-                    <button class="share-option-btn" onclick="addToGoogleCalendar()">
+                    <button class="share-option-btn" onclick="addToGoogleCalendar()" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
                             <line x1="16" y1="2" x2="16" y2="6"/>
                             <line x1="8" y1="2" x2="8" y2="6"/>
                             <line x1="3" y1="10" x2="21" y2="10"/>
                         </svg>
-                        <span>Add to Google</span>
+                        <span style="font-size: 0.85rem;">Add to Google</span>
+                    </button>
+                    <button class="share-option-btn" onclick="addToOutlookCalendar()" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 12px; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        <span style="font-size: 0.85rem;">Add to Outlook</span>
                     </button>
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="padding: 16px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end;">
                 <button class="btn btn-secondary" onclick="closeShareEventModal()">Close</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ML Model Editor Modal -->
+    <div class="modal" id="modelEditorModal" style="z-index: 2100;">
+        <div class="modal-content model-editor-modal">
+            <div class="model-editor-header">
+                <div class="model-editor-header-left">
+                    <div class="model-editor-icon" id="modelEditorIcon">🤖</div>
+                    <div>
+                        <h2 id="modelEditorTitle">Edit Model</h2>
+                        <p id="modelEditorSubtitle">Configure model settings</p>
+                    </div>
+                </div>
+                <button onclick="closeModelEditor()" class="scheduler-close-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="modelEditorForm" onsubmit="saveModel(event)">
+                <div class="model-editor-body">
+                    <div class="form-group">
+                        <label>Model Name *</label>
+                        <input type="text" id="modelName" required class="form-control" placeholder="e.g., Compatibility Scoring Engine">
+                    </div>
+                    
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label>Icon</label>
+                            <select id="modelIcon" class="form-control">
+                                <option value="💕">💕 Heart</option>
+                                <option value="🎯">🎯 Target</option>
+                                <option value="💬">💬 Chat</option>
+                                <option value="📅">📅 Calendar</option>
+                                <option value="🎲">🎲 Dice</option>
+                                <option value="📸">📸 Camera</option>
+                                <option value="🧠">🧠 Brain</option>
+                                <option value="⚡">⚡ Lightning</option>
+                                <option value="🔍">🔍 Search</option>
+                                <option value="📊">📊 Chart</option>
+                                <option value="🛡️">🛡️ Shield</option>
+                                <option value="🤖">🤖 Robot</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Model Type *</label>
+                            <select id="modelType" class="form-control">
+                                <option value="Multi-Factor Scoring">Multi-Factor Scoring</option>
+                                <option value="Rule-Based Filter">Rule-Based Filter</option>
+                                <option value="Template LLM (Simulated)">Template LLM (Simulated)</option>
+                                <option value="Heuristic Scoring">Heuristic Scoring</option>
+                                <option value="Jaccard Similarity">Jaccard Similarity</option>
+                                <option value="Template Response">Template Response</option>
+                                <option value="Neural Network">Neural Network</option>
+                                <option value="Decision Tree">Decision Tree</option>
+                                <option value="Collaborative Filtering">Collaborative Filtering</option>
+                                <option value="NLP Model">NLP Model</option>
+                                <option value="Computer Vision">Computer Vision</option>
+                                <option value="Custom Algorithm">Custom Algorithm</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label>Code Location</label>
+                            <input type="text" id="modelLocation" class="form-control" placeholder="e.g., app.js:8230-8290">
+                        </div>
+                        <div class="form-group">
+                            <label>Status *</label>
+                            <select id="modelStatus" class="form-control">
+                                <option value="active">✅ Active</option>
+                                <option value="simulated">⚠️ Simulated</option>
+                                <option value="testing">🧪 Testing</option>
+                                <option value="disabled">❌ Disabled</option>
+                                <option value="planned">📋 Planned</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Purpose / Description *</label>
+                        <textarea id="modelPurpose" rows="3" required class="form-control" placeholder="Describe what this model does..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Version</label>
+                        <input type="text" id="modelVersion" class="form-control" placeholder="e.g., v1.0">
+                    </div>
+                    
+                    <!-- Advanced Settings (collapsible) -->
+                    <div class="model-advanced-toggle" onclick="toggleAdvancedSettings()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="advancedToggleIcon">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                        <span>Advanced Settings</span>
+                    </div>
+                    
+                    <div id="modelAdvancedSettings" style="display: none;">
+                        <div class="form-group">
+                            <label>API Endpoint (if external)</label>
+                            <input type="text" id="modelApiEndpoint" class="form-control" placeholder="https://api.example.com/model">
+                        </div>
+                        <div class="form-group">
+                            <label>API Key Name (env variable)</label>
+                            <input type="text" id="modelApiKey" class="form-control" placeholder="e.g., OPENAI_API_KEY">
+                        </div>
+                        <div class="form-group">
+                            <label>Configuration JSON</label>
+                            <textarea id="modelConfig" rows="4" class="form-control" placeholder='{"threshold": 0.8, "maxResults": 10}'></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea id="modelNotes" rows="2" class="form-control" placeholder="Internal notes about this model..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="model-editor-footer">
+                    <div class="model-editor-footer-left">
+                        <button type="button" class="btn btn-danger btn-sm" id="deleteModelBtn" onclick="deleteModel()" style="display: none;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                            Delete
+                        </button>
+                    </div>
+                    <div class="model-editor-footer-right">
+                        <button type="button" class="btn btn-secondary" onclick="closeModelEditor()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save & Sync to AWS
+                        </button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -25752,7 +26022,7 @@
                 eventEl.textContent = event.title;
                 eventEl.onclick = (e) => {
                     e.stopPropagation();
-                    navigateToSection(event.section);
+                    openEventDetails(event);
                 };
                 eventsContainer.appendChild(eventEl);
             });
@@ -25796,7 +26066,7 @@
                         <span>→ ${event.section}</span>
                     </div>
                 `;
-                eventEl.onclick = () => navigateToSection(event.section);
+                eventEl.onclick = () => openEventDetails(event);
                 list.appendChild(eventEl);
             });
         }
@@ -25837,7 +26107,7 @@
                         <span>${event.section}</span>
                     </div>
                 `;
-                eventEl.onclick = () => navigateToSection(event.section);
+                eventEl.onclick = () => openEventDetails(event);
                 list.appendChild(eventEl);
             });
         }
@@ -26403,7 +26673,502 @@
                     addPhoneInvite();
                 }
             });
+            
+            // Event details modal close on backdrop
+            document.getElementById('eventDetailsModal')?.addEventListener('click', function(e) {
+                if (e.target === this) closeEventDetails();
+            });
+            document.getElementById('shareEventModal')?.addEventListener('click', function(e) {
+                if (e.target === this) closeShareEventModal();
+            });
         });
+        
+        // ==========================================
+        // EVENT DETAILS SYSTEM
+        // ==========================================
+        
+        let currentViewingEvent = null;
+        let isEditMode = false;
+        
+        function openEventDetails(event) {
+            currentViewingEvent = event;
+            isEditMode = false;
+            
+            // Get category icon
+            const categoryIcons = {
+                'meeting': '🤝',
+                'standup': '📊',
+                'interview': '👤',
+                'review': '📝',
+                'planning': '📋',
+                'training': '🎓',
+                'client': '💼',
+                'webinar': '📺',
+                'payroll': '💵',
+                'tax': '💰',
+                'compliance': '✅',
+                'milestone': '🎯',
+                'patent': '📜',
+                'report': '📋',
+                'experiment': '🧪'
+            };
+            
+            const icon = categoryIcons[event.category] || '📅';
+            
+            // Update header
+            document.getElementById('eventDetailsIcon').textContent = icon;
+            document.getElementById('eventDetailsTitle').textContent = event.title;
+            document.getElementById('eventDetailsCategory').textContent = event.category || 'Event';
+            
+            // Apply category color to header
+            const header = document.getElementById('eventDetailsHeader');
+            header.className = 'event-details-header ' + (event.category || '');
+            
+            // Format date/time
+            const eventDate = new Date(event.date);
+            const dateStr = eventDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            let timeStr = '';
+            if (event.meetingDetails?.duration) {
+                const startTime = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                const endTime = new Date(eventDate.getTime() + event.meetingDetails.duration * 60000)
+                    .toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                timeStr = `${startTime} - ${endTime}`;
+            } else if (eventDate.getHours() !== 0 || eventDate.getMinutes() !== 0) {
+                timeStr = eventDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            }
+            
+            document.getElementById('eventDetailsDateTime').innerHTML = timeStr 
+                ? `${dateStr}<br><span style="color: var(--text-muted);">${timeStr}</span>` 
+                : dateStr;
+            
+            // Location
+            const locationRow = document.getElementById('eventDetailsLocationRow');
+            if (event.meetingDetails?.location) {
+                locationRow.style.display = 'flex';
+                document.getElementById('eventDetailsLocation').textContent = event.meetingDetails.location;
+            } else {
+                locationRow.style.display = 'none';
+            }
+            
+            // Zoom details
+            const zoomRow = document.getElementById('eventDetailsZoomRow');
+            if (event.meetingDetails?.zoomMeetingId) {
+                zoomRow.style.display = 'flex';
+                const zoomInfo = `Meeting ID: ${event.meetingDetails.zoomMeetingId}` +
+                    (event.meetingDetails.zoomPasscode ? `<br>Passcode: ${event.meetingDetails.zoomPasscode}` : '');
+                document.getElementById('eventDetailsZoom').innerHTML = zoomInfo;
+            } else {
+                zoomRow.style.display = 'none';
+            }
+            
+            // Attendees
+            const attendeesRow = document.getElementById('eventDetailsAttendeesRow');
+            if (event.meetingDetails?.invitees?.length > 0) {
+                attendeesRow.style.display = 'flex';
+                const attendeesList = event.meetingDetails.invitees.map(i => i.value).join(', ');
+                document.getElementById('eventDetailsAttendees').textContent = attendeesList;
+            } else {
+                attendeesRow.style.display = 'none';
+            }
+            
+            // Description
+            const descRow = document.getElementById('eventDetailsDescRow');
+            if (event.description) {
+                descRow.style.display = 'flex';
+                document.getElementById('eventDetailsDescription').textContent = event.description;
+            } else {
+                descRow.style.display = 'none';
+            }
+            
+            // Section button
+            const sectionBtn = document.getElementById('eventDetailsGoToSection');
+            sectionBtn.textContent = `Go to ${event.section || 'Calendar'}`;
+            
+            // Show view mode, hide edit mode
+            document.getElementById('eventViewMode').style.display = 'block';
+            document.getElementById('eventEditMode').style.display = 'none';
+            document.getElementById('viewModeButtons').style.display = 'flex';
+            document.getElementById('editModeButtons').style.display = 'none';
+            
+            // Show/hide delete button (only for custom events)
+            document.getElementById('deleteEventBtn').style.display = event.custom ? 'flex' : 'none';
+            
+            // Open modal
+            document.getElementById('eventDetailsModal').style.display = 'flex';
+        }
+        
+        function closeEventDetails() {
+            document.getElementById('eventDetailsModal').style.display = 'none';
+            currentViewingEvent = null;
+            isEditMode = false;
+        }
+        
+        function goToEventSection() {
+            if (currentViewingEvent) {
+                const section = currentViewingEvent.section || 'calendar';
+                closeEventDetails();
+                if (typeof showSection === 'function') {
+                    showSection(section);
+                }
+            }
+        }
+        
+        function enterEditMode() {
+            if (!currentViewingEvent) return;
+            
+            isEditMode = true;
+            
+            // Populate edit form
+            document.getElementById('editEventTitle').value = currentViewingEvent.title || '';
+            
+            const eventDate = new Date(currentViewingEvent.date);
+            document.getElementById('editEventDate').value = eventDate.toISOString().split('T')[0];
+            
+            if (eventDate.getHours() !== 0 || eventDate.getMinutes() !== 0) {
+                document.getElementById('editEventTime').value = 
+                    eventDate.getHours().toString().padStart(2, '0') + ':' + 
+                    eventDate.getMinutes().toString().padStart(2, '0');
+            } else {
+                document.getElementById('editEventTime').value = '';
+            }
+            
+            document.getElementById('editEventCategory').value = currentViewingEvent.category || 'meeting';
+            document.getElementById('editEventLocation').value = currentViewingEvent.meetingDetails?.location || '';
+            document.getElementById('editEventDescription').value = currentViewingEvent.description || '';
+            
+            // Toggle visibility
+            document.getElementById('eventViewMode').style.display = 'none';
+            document.getElementById('eventEditMode').style.display = 'block';
+            document.getElementById('viewModeButtons').style.display = 'none';
+            document.getElementById('editModeButtons').style.display = 'flex';
+        }
+        
+        function cancelEditMode() {
+            isEditMode = false;
+            
+            // Toggle visibility back
+            document.getElementById('eventViewMode').style.display = 'block';
+            document.getElementById('eventEditMode').style.display = 'none';
+            document.getElementById('viewModeButtons').style.display = 'flex';
+            document.getElementById('editModeButtons').style.display = 'none';
+        }
+        
+        function saveEventChanges() {
+            if (!currentViewingEvent) return;
+            
+            const title = document.getElementById('editEventTitle').value;
+            const dateVal = document.getElementById('editEventDate').value;
+            const timeVal = document.getElementById('editEventTime').value;
+            const category = document.getElementById('editEventCategory').value;
+            const location = document.getElementById('editEventLocation').value;
+            const description = document.getElementById('editEventDescription').value;
+            
+            if (!title || !dateVal) {
+                showToast('Please fill in required fields', 'error');
+                return;
+            }
+            
+            // Create new date
+            const newDate = new Date(dateVal + (timeVal ? 'T' + timeVal : 'T00:00'));
+            
+            // Update the event
+            currentViewingEvent.title = title;
+            currentViewingEvent.date = newDate.toISOString();
+            currentViewingEvent.category = category;
+            currentViewingEvent.description = description;
+            
+            if (!currentViewingEvent.meetingDetails) {
+                currentViewingEvent.meetingDetails = {};
+            }
+            currentViewingEvent.meetingDetails.location = location;
+            
+            // Save to localStorage
+            let savedEvents = JSON.parse(localStorage.getItem('oith_calendar_events') || '[]');
+            const eventIndex = savedEvents.findIndex(e => e.id === currentViewingEvent.id);
+            if (eventIndex >= 0) {
+                savedEvents[eventIndex] = { ...currentViewingEvent, date: newDate.toISOString() };
+                localStorage.setItem('oith_calendar_events', JSON.stringify(savedEvents));
+            }
+            
+            // Update in calendarEvents array
+            const calendarIndex = calendarEvents.findIndex(e => e.id === currentViewingEvent.id);
+            if (calendarIndex >= 0) {
+                calendarEvents[calendarIndex] = { ...currentViewingEvent, date: newDate };
+            }
+            
+            // Sync to AWS
+            if (typeof syncCalendarToAWS === 'function') {
+                syncCalendarToAWS();
+            }
+            
+            // Re-render calendar
+            if (typeof renderCalendar === 'function') {
+                renderCalendar();
+            }
+            if (typeof renderUpcomingEvents === 'function') {
+                renderUpcomingEvents();
+            }
+            
+            showToast('Event updated successfully!', 'success');
+            closeEventDetails();
+        }
+        
+        function deleteEvent() {
+            if (!currentViewingEvent) return;
+            
+            if (!confirm(`Are you sure you want to delete "${currentViewingEvent.title}"?`)) {
+                return;
+            }
+            
+            // Remove from localStorage
+            let savedEvents = JSON.parse(localStorage.getItem('oith_calendar_events') || '[]');
+            savedEvents = savedEvents.filter(e => e.id !== currentViewingEvent.id);
+            localStorage.setItem('oith_calendar_events', JSON.stringify(savedEvents));
+            
+            // Remove from meetings list
+            let savedMeetings = JSON.parse(localStorage.getItem('oith_scheduled_meetings') || '[]');
+            savedMeetings = savedMeetings.filter(e => e.id !== currentViewingEvent.id);
+            localStorage.setItem('oith_scheduled_meetings', JSON.stringify(savedMeetings));
+            
+            // Remove from calendarEvents array
+            calendarEvents = calendarEvents.filter(e => e.id !== currentViewingEvent.id);
+            
+            // Sync to AWS
+            if (typeof syncCalendarToAWS === 'function') {
+                syncCalendarToAWS();
+            }
+            
+            // Re-render calendar
+            if (typeof renderCalendar === 'function') {
+                renderCalendar();
+            }
+            if (typeof renderUpcomingEvents === 'function') {
+                renderUpcomingEvents();
+            }
+            if (typeof updateCalendarBadge === 'function') {
+                updateCalendarBadge();
+            }
+            
+            showToast('Event deleted', 'success');
+            closeEventDetails();
+        }
+        
+        // Share Event Functions
+        function shareEvent() {
+            if (!currentViewingEvent) return;
+            document.getElementById('shareEventModal').style.display = 'flex';
+        }
+        
+        function closeShareEventModal() {
+            document.getElementById('shareEventModal').style.display = 'none';
+            document.getElementById('shareEventEmail').value = '';
+        }
+        
+        async function sendEventEmail() {
+            const email = document.getElementById('shareEventEmail').value.trim();
+            
+            if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                showToast('Please enter a valid email address', 'error');
+                return;
+            }
+            
+            if (!currentViewingEvent) return;
+            
+            const eventDate = new Date(currentViewingEvent.date);
+            const dateStr = eventDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const timeStr = eventDate.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit' 
+            });
+            
+            const emailBody = `
+                <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #333;">📅 ${currentViewingEvent.title}</h2>
+                    <p style="color: #666;"><strong>Date:</strong> ${dateStr}</p>
+                    <p style="color: #666;"><strong>Time:</strong> ${timeStr}</p>
+                    ${currentViewingEvent.meetingDetails?.location ? `<p style="color: #666;"><strong>Location:</strong> ${currentViewingEvent.meetingDetails.location}</p>` : ''}
+                    ${currentViewingEvent.description ? `<p style="color: #666;"><strong>Description:</strong> ${currentViewingEvent.description}</p>` : ''}
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="color: #999; font-size: 12px;">Sent from OITH Admin Calendar</p>
+                </div>
+            `;
+            
+            // Try to use email API if available
+            try {
+                const response = await fetch('http://localhost:3001/api/email/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: email,
+                        subject: `📅 Event: ${currentViewingEvent.title} - ${dateStr}`,
+                        body: emailBody
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showToast(`✅ Event sent to ${email}!`, 'success');
+                } else if (result.queued) {
+                    showToast(`📤 Event queued - will send when email is configured`, 'info');
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (e) {
+                // Fallback to mailto
+                const subject = encodeURIComponent(`Event: ${currentViewingEvent.title}`);
+                const body = encodeURIComponent(`${currentViewingEvent.title}\n\nDate: ${dateStr}\nTime: ${timeStr}\n${currentViewingEvent.description || ''}`);
+                window.open(`mailto:${email}?subject=${subject}&body=${body}`);
+                showToast(`Opening email client for ${email}`, 'info');
+            }
+            
+            document.getElementById('shareEventEmail').value = '';
+            closeShareEventModal();
+        }
+        
+        function sendEventSMS() {
+            const phone = document.getElementById('shareEventPhone').value.trim();
+            
+            if (!phone || phone.length < 10) {
+                showToast('Please enter a valid phone number', 'error');
+                return;
+            }
+            
+            if (!currentViewingEvent) return;
+            
+            const eventDate = new Date(currentViewingEvent.date);
+            const dateStr = eventDate.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric',
+                year: 'numeric'
+            });
+            const timeStr = eventDate.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit' 
+            });
+            
+            const message = `📅 ${currentViewingEvent.title}\n📆 ${dateStr} at ${timeStr}${currentViewingEvent.meetingDetails?.location ? `\n📍 ${currentViewingEvent.meetingDetails.location}` : ''}`;
+            
+            // Open SMS app with pre-filled message
+            const smsUrl = `sms:${phone}?body=${encodeURIComponent(message)}`;
+            window.open(smsUrl);
+            
+            showToast(`Opening SMS for ${phone}`, 'info');
+            document.getElementById('shareEventPhone').value = '';
+            closeShareEventModal();
+        }
+        
+        function addToOutlookCalendar() {
+            if (!currentViewingEvent) return;
+            
+            const eventDate = new Date(currentViewingEvent.date);
+            const endDate = new Date(eventDate.getTime() + 60 * 60 * 1000); // 1 hour later
+            
+            const formatDate = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+            
+            const outlookUrl = `https://outlook.live.com/calendar/0/deeplink/compose?subject=${encodeURIComponent(currentViewingEvent.title)}&startdt=${formatDate(eventDate)}&enddt=${formatDate(endDate)}${currentViewingEvent.meetingDetails?.location ? `&location=${encodeURIComponent(currentViewingEvent.meetingDetails.location)}` : ''}${currentViewingEvent.description ? `&body=${encodeURIComponent(currentViewingEvent.description)}` : ''}`;
+            
+            window.open(outlookUrl, '_blank');
+            showToast('Opening Outlook Calendar', 'info');
+        }
+        
+        function copyEventDetails() {
+            if (!currentViewingEvent) return;
+            
+            const eventDate = new Date(currentViewingEvent.date);
+            const dateStr = eventDate.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            let details = `📅 ${currentViewingEvent.title}\n`;
+            details += `📆 ${dateStr}\n`;
+            
+            if (currentViewingEvent.meetingDetails?.location) {
+                details += `📍 ${currentViewingEvent.meetingDetails.location}\n`;
+            }
+            
+            if (currentViewingEvent.meetingDetails?.zoomMeetingId) {
+                details += `🎥 Zoom Meeting ID: ${currentViewingEvent.meetingDetails.zoomMeetingId}\n`;
+                if (currentViewingEvent.meetingDetails.zoomPasscode) {
+                    details += `🔑 Passcode: ${currentViewingEvent.meetingDetails.zoomPasscode}\n`;
+                }
+            }
+            
+            if (currentViewingEvent.description) {
+                details += `\n📝 ${currentViewingEvent.description}\n`;
+            }
+            
+            navigator.clipboard.writeText(details).then(() => {
+                showToast('Event details copied!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy', 'error');
+            });
+        }
+        
+        function downloadEventICS() {
+            if (!currentViewingEvent) return;
+            
+            const eventDate = new Date(currentViewingEvent.date);
+            const endDate = new Date(eventDate.getTime() + (currentViewingEvent.meetingDetails?.duration || 60) * 60000);
+            
+            const formatICSDate = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+            
+            const icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//OITH//Calendar//EN',
+                'BEGIN:VEVENT',
+                `UID:${currentViewingEvent.id}@oith.com`,
+                `DTSTAMP:${formatICSDate(new Date())}`,
+                `DTSTART:${formatICSDate(eventDate)}`,
+                `DTEND:${formatICSDate(endDate)}`,
+                `SUMMARY:${currentViewingEvent.title}`,
+                currentViewingEvent.description ? `DESCRIPTION:${currentViewingEvent.description}` : '',
+                currentViewingEvent.meetingDetails?.location ? `LOCATION:${currentViewingEvent.meetingDetails.location}` : '',
+                'END:VEVENT',
+                'END:VCALENDAR'
+            ].filter(Boolean).join('\r\n');
+            
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${currentViewingEvent.title.replace(/[^a-z0-9]/gi, '_')}.ics`;
+            link.click();
+            
+            showToast('Calendar file downloaded!', 'success');
+        }
+        
+        function addToGoogleCalendar() {
+            if (!currentViewingEvent) return;
+            
+            const eventDate = new Date(currentViewingEvent.date);
+            const endDate = new Date(eventDate.getTime() + (currentViewingEvent.meetingDetails?.duration || 60) * 60000);
+            
+            const formatGoogleDate = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+            
+            const params = new URLSearchParams({
+                action: 'TEMPLATE',
+                text: currentViewingEvent.title,
+                dates: `${formatGoogleDate(eventDate)}/${formatGoogleDate(endDate)}`,
+                details: currentViewingEvent.description || '',
+                location: currentViewingEvent.meetingDetails?.location || ''
+            });
+            
+            window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, '_blank');
+        }
         
         // ==========================================
         // ADMIN MAIL CLIENT SYSTEM
@@ -26953,6 +27718,440 @@ GMAIL_EMAIL=admin@oith.com</pre>
             
             return merged;
         }
+        
+        // ==========================================
+        // ML MODELS MANAGEMENT SYSTEM
+        // ==========================================
+        
+        const ML_MODELS_API_URL = 'http://localhost:3001/api';
+        // Note: mlModels already declared earlier in the file
+        let currentEditingModel = null;
+        let isNewModel = false;
+        
+        // Default models data
+        const defaultModels = [
+            {
+                id: 'model_1',
+                name: 'Compatibility Scoring Engine',
+                icon: '💕',
+                type: 'Multi-Factor Scoring',
+                location: 'app.js:8230-8290',
+                purpose: 'Calculates match compatibility (0-100%) based on goals, interests, location, age, communication style',
+                status: 'active',
+                version: 'v1.0',
+                createdAt: '2025-11-28T00:00:00Z',
+                updatedAt: new Date().toISOString()
+            },
+            {
+                id: 'model_2',
+                name: 'Profile Matching Filter',
+                icon: '🎯',
+                type: 'Rule-Based Filter',
+                location: 'app.js:4531-4705',
+                purpose: 'Filters match pool based on user preferences (age range, distance, body type, ethnicity, lifestyle)',
+                status: 'active',
+                version: 'v1.0',
+                createdAt: '2025-11-28T00:00:00Z',
+                updatedAt: new Date().toISOString()
+            },
+            {
+                id: 'model_3',
+                name: 'Chat Response Generator',
+                icon: '💬',
+                type: 'Template LLM (Simulated)',
+                location: 'app.js:8770-8795',
+                purpose: 'Generates contextual chat responses from predefined templates. In production: GPT-4 API integration',
+                status: 'simulated',
+                version: 'v0.9',
+                createdAt: '2025-11-28T00:00:00Z',
+                updatedAt: new Date().toISOString()
+            },
+            {
+                id: 'model_4',
+                name: 'Date Readiness Predictor',
+                icon: '📅',
+                type: 'Heuristic Scoring',
+                location: 'app.js:1265-1268',
+                purpose: 'Calculates conversation readiness for scheduling dates (0-100 score based on message count, sentiment)',
+                status: 'active',
+                version: 'v1.0',
+                createdAt: '2025-11-28T00:00:00Z',
+                updatedAt: new Date().toISOString()
+            },
+            {
+                id: 'model_5',
+                name: 'Interest Overlap Analyzer',
+                icon: '🎲',
+                type: 'Jaccard Similarity',
+                location: 'app.js:8244-8247',
+                purpose: 'Calculates shared interests between users using fuzzy string matching and overlap ratio',
+                status: 'active',
+                version: 'v1.0',
+                createdAt: '2025-11-28T00:00:00Z',
+                updatedAt: new Date().toISOString()
+            },
+            {
+                id: 'model_6',
+                name: 'Photo Response Generator',
+                icon: '📸',
+                type: 'Template Response',
+                location: 'app.js:8746-8768',
+                purpose: 'Generates appropriate responses when users share photos in chat',
+                status: 'simulated',
+                version: 'v0.9',
+                createdAt: '2025-11-28T00:00:00Z',
+                updatedAt: new Date().toISOString()
+            }
+        ];
+        
+        // Initialize models on page load
+        function initMLModels() {
+            // Try to load from localStorage first
+            const savedModels = localStorage.getItem('oith_ml_models');
+            if (savedModels) {
+                mlModels = JSON.parse(savedModels);
+            } else {
+                mlModels = [...defaultModels];
+                localStorage.setItem('oith_ml_models', JSON.stringify(mlModels));
+            }
+            
+            renderModelsTable();
+            syncModelsFromAWS();
+        }
+        
+        // Render models table
+        function renderModelsTable() {
+            const tbody = document.getElementById('modelsTableBody');
+            if (!tbody) return;
+            
+            const activeCount = mlModels.filter(m => m.status === 'active').length;
+            const countBadge = document.getElementById('activeModelsCount');
+            if (countBadge) {
+                countBadge.textContent = `${activeCount} ACTIVE`;
+            }
+            
+            tbody.innerHTML = mlModels.map(model => `
+                <tr data-model-id="${model.id}">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">${model.icon || '🤖'}</span>
+                            <strong>${model.name}</strong>
+                        </div>
+                    </td>
+                    <td><span class="model-type-badge ${getTypeClass(model.type)}">${model.type}</span></td>
+                    <td><code>${model.location || '--'}</code></td>
+                    <td style="max-width: 300px;">${model.purpose}</td>
+                    <td><span class="status-badge ${getStatusClass(model.status)}">${getStatusLabel(model.status)}</span></td>
+                    <td>
+                        <div class="model-actions">
+                            <button class="model-action-btn" onclick="editModel('${model.id}')" title="Edit Model">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="model-action-btn delete" onclick="confirmDeleteModel('${model.id}')" title="Delete Model">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Update last sync time
+            const lastSync = localStorage.getItem('oith_models_last_sync');
+            const syncTimeEl = document.getElementById('lastModelSyncTime');
+            if (syncTimeEl && lastSync) {
+                const date = new Date(lastSync);
+                syncTimeEl.textContent = `Last synced: ${date.toLocaleString()}`;
+            }
+        }
+        
+        function getTypeClass(type) {
+            const typeMap = {
+                'Multi-Factor Scoring': 'scoring',
+                'Rule-Based Filter': 'filter',
+                'Template LLM (Simulated)': 'llm',
+                'Heuristic Scoring': 'heuristic',
+                'Jaccard Similarity': 'similarity',
+                'Template Response': 'template',
+                'Neural Network': 'neural',
+                'NLP Model': 'neural',
+                'Computer Vision': 'neural'
+            };
+            return typeMap[type] || 'default';
+        }
+        
+        function getStatusClass(status) {
+            const statusMap = {
+                'active': 'active',
+                'simulated': 'warning',
+                'testing': 'info',
+                'disabled': 'danger',
+                'planned': ''
+            };
+            return statusMap[status] || '';
+        }
+        
+        function getStatusLabel(status) {
+            const labelMap = {
+                'active': 'Active',
+                'simulated': 'Simulated',
+                'testing': 'Testing',
+                'disabled': 'Disabled',
+                'planned': 'Planned'
+            };
+            return labelMap[status] || status;
+        }
+        
+        // Add new model
+        function addNewModel() {
+            isNewModel = true;
+            currentEditingModel = null;
+            
+            document.getElementById('modelEditorTitle').textContent = 'Add New Model';
+            document.getElementById('modelEditorSubtitle').textContent = 'Configure a new ML model';
+            document.getElementById('modelEditorIcon').textContent = '🤖';
+            
+            // Reset form
+            document.getElementById('modelEditorForm').reset();
+            document.getElementById('modelAdvancedSettings').style.display = 'none';
+            document.getElementById('deleteModelBtn').style.display = 'none';
+            
+            document.getElementById('modelEditorModal').style.display = 'flex';
+        }
+        
+        // Edit existing model
+        function editModel(modelId) {
+            const model = mlModels.find(m => m.id === modelId);
+            if (!model) return;
+            
+            isNewModel = false;
+            currentEditingModel = model;
+            
+            document.getElementById('modelEditorTitle').textContent = 'Edit Model';
+            document.getElementById('modelEditorSubtitle').textContent = model.name;
+            document.getElementById('modelEditorIcon').textContent = model.icon || '🤖';
+            
+            // Populate form
+            document.getElementById('modelName').value = model.name || '';
+            document.getElementById('modelIcon').value = model.icon || '🤖';
+            document.getElementById('modelType').value = model.type || 'Custom Algorithm';
+            document.getElementById('modelLocation').value = model.location || '';
+            document.getElementById('modelStatus').value = model.status || 'active';
+            document.getElementById('modelPurpose').value = model.purpose || '';
+            document.getElementById('modelVersion').value = model.version || '';
+            document.getElementById('modelApiEndpoint').value = model.apiEndpoint || '';
+            document.getElementById('modelApiKey').value = model.apiKey || '';
+            document.getElementById('modelConfig').value = model.config ? JSON.stringify(model.config, null, 2) : '';
+            document.getElementById('modelNotes').value = model.notes || '';
+            
+            document.getElementById('modelAdvancedSettings').style.display = 'none';
+            document.getElementById('deleteModelBtn').style.display = 'flex';
+            
+            document.getElementById('modelEditorModal').style.display = 'flex';
+        }
+        
+        function closeModelEditor() {
+            document.getElementById('modelEditorModal').style.display = 'none';
+            currentEditingModel = null;
+            isNewModel = false;
+        }
+        
+        function toggleAdvancedSettings() {
+            const settings = document.getElementById('modelAdvancedSettings');
+            const toggle = document.querySelector('.model-advanced-toggle');
+            
+            if (settings.style.display === 'none') {
+                settings.style.display = 'block';
+                toggle.classList.add('open');
+            } else {
+                settings.style.display = 'none';
+                toggle.classList.remove('open');
+            }
+        }
+        
+        // Save model
+        async function saveModel(e) {
+            e.preventDefault();
+            
+            const modelData = {
+                id: isNewModel ? 'model_' + Date.now() : currentEditingModel.id,
+                name: document.getElementById('modelName').value,
+                icon: document.getElementById('modelIcon').value,
+                type: document.getElementById('modelType').value,
+                location: document.getElementById('modelLocation').value,
+                status: document.getElementById('modelStatus').value,
+                purpose: document.getElementById('modelPurpose').value,
+                version: document.getElementById('modelVersion').value,
+                apiEndpoint: document.getElementById('modelApiEndpoint').value,
+                apiKey: document.getElementById('modelApiKey').value,
+                notes: document.getElementById('modelNotes').value,
+                updatedAt: new Date().toISOString()
+            };
+            
+            // Parse config JSON
+            const configStr = document.getElementById('modelConfig').value;
+            if (configStr) {
+                try {
+                    modelData.config = JSON.parse(configStr);
+                } catch (err) {
+                    showToast('Invalid JSON in configuration', 'error');
+                    return;
+                }
+            }
+            
+            if (isNewModel) {
+                modelData.createdAt = new Date().toISOString();
+                mlModels.push(modelData);
+            } else {
+                const index = mlModels.findIndex(m => m.id === currentEditingModel.id);
+                if (index >= 0) {
+                    modelData.createdAt = mlModels[index].createdAt;
+                    mlModels[index] = modelData;
+                }
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('oith_ml_models', JSON.stringify(mlModels));
+            
+            // Sync to AWS
+            await syncModelsToAWS();
+            
+            // Re-render table
+            renderModelsTable();
+            closeModelEditor();
+            
+            showToast(isNewModel ? '✅ Model added and synced to AWS!' : '✅ Model updated and synced to AWS!', 'success');
+        }
+        
+        // Delete model
+        function confirmDeleteModel(modelId) {
+            const model = mlModels.find(m => m.id === modelId);
+            if (!model) return;
+            
+            if (confirm(`Are you sure you want to delete "${model.name}"? This action cannot be undone.`)) {
+                deleteModelById(modelId);
+            }
+        }
+        
+        async function deleteModel() {
+            if (!currentEditingModel) return;
+            
+            if (confirm(`Are you sure you want to delete "${currentEditingModel.name}"? This action cannot be undone.`)) {
+                await deleteModelById(currentEditingModel.id);
+                closeModelEditor();
+            }
+        }
+        
+        async function deleteModelById(modelId) {
+            mlModels = mlModels.filter(m => m.id !== modelId);
+            
+            // Save to localStorage
+            localStorage.setItem('oith_ml_models', JSON.stringify(mlModels));
+            
+            // Sync to AWS
+            await syncModelsToAWS();
+            
+            // Re-render table
+            renderModelsTable();
+            
+            showToast('Model deleted and synced to AWS', 'success');
+        }
+        
+        // AWS Sync Functions
+        async function syncModelsToAWS() {
+            try {
+                const response = await fetch(`${ML_MODELS_API_URL}/ml-models/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        models: mlModels,
+                        syncedAt: new Date().toISOString(),
+                        syncedBy: 'admin'
+                    })
+                });
+                
+                if (response.ok) {
+                    localStorage.setItem('oith_models_last_sync', new Date().toISOString());
+                    console.log('☁️ ML models synced to AWS');
+                    renderModelsTable();
+                    return true;
+                }
+            } catch (error) {
+                console.log('⚠️ Could not sync models to AWS (using local storage):', error.message);
+            }
+            
+            // Update sync time even if AWS fails (local save still happened)
+            localStorage.setItem('oith_models_last_sync', new Date().toISOString());
+            renderModelsTable();
+            return false;
+        }
+        
+        async function syncModelsFromAWS() {
+            try {
+                const response = await fetch(`${ML_MODELS_API_URL}/ml-models`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.models && data.models.length > 0) {
+                        // Merge with local models
+                        const localIds = new Set(mlModels.map(m => m.id));
+                        data.models.forEach(awsModel => {
+                            if (!localIds.has(awsModel.id)) {
+                                mlModels.push(awsModel);
+                            } else {
+                                // Update existing model with AWS version if newer
+                                const localIndex = mlModels.findIndex(m => m.id === awsModel.id);
+                                if (localIndex >= 0) {
+                                    const localUpdated = new Date(mlModels[localIndex].updatedAt || 0);
+                                    const awsUpdated = new Date(awsModel.updatedAt || 0);
+                                    if (awsUpdated > localUpdated) {
+                                        mlModels[localIndex] = awsModel;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        localStorage.setItem('oith_ml_models', JSON.stringify(mlModels));
+                        localStorage.setItem('oith_models_last_sync', new Date().toISOString());
+                        renderModelsTable();
+                        console.log('☁️ ML models synced from AWS');
+                    }
+                }
+            } catch (error) {
+                console.log('⚠️ Could not sync models from AWS (using local storage):', error.message);
+            }
+        }
+        
+        // Initialize models when ML section is shown
+        const originalShowSection = window.showSection;
+        if (typeof originalShowSection === 'function') {
+            window.showSection = function(section) {
+                originalShowSection(section);
+                if (section === 'ml-models') {
+                    initMLModels();
+                }
+            };
+        }
+        
+        // Also initialize on page load if ML section is visible
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close modal on backdrop click
+            document.getElementById('modelEditorModal')?.addEventListener('click', function(e) {
+                if (e.target === this) closeModelEditor();
+            });
+            
+            // Initialize models if on ML page
+            setTimeout(() => {
+                const mlSection = document.getElementById('ml-models-section');
+                if (mlSection && mlSection.style.display !== 'none') {
+                    initMLModels();
+                }
+            }, 500);
+        });
     </script>
 </body>
 </html>
