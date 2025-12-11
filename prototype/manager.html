@@ -25303,42 +25303,71 @@
 
     <!-- Add Event Modal -->
     <div class="modal" id="addEventModal" style="z-index: 2100;">
-        <div class="modal-content" style="max-width: 500px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="margin: 0;">➕ Add Calendar Event</h3>
-                <button onclick="closeAddEventModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+        <div class="modal-content" style="max-width: 520px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📅</div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem;">Add New Event</h3>
+                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Create a calendar event</p>
+                    </div>
+                </div>
+                <button onclick="closeAddEventModal()" style="background: var(--bg-tertiary); border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='var(--bg-hover)'; this.style.color='var(--text-primary)'" onmouseout="this.style.background='var(--bg-tertiary)'; this.style.color='var(--text-muted)'">&times;</button>
             </div>
             <form id="addEventForm" onsubmit="saveCalendarEvent(event)">
                 <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Event Title</label>
-                    <input type="text" id="eventTitle" required placeholder="Enter event title..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Event Title *</label>
+                    <input type="text" id="eventTitle" required placeholder="Enter event title..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.95rem;">
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                     <div>
-                        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Date</label>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Date *</label>
                         <input type="date" id="eventDate" required style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
                     </div>
                     <div>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Time</label>
+                        <input type="time" id="eventTime" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div>
                         <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Category</label>
                         <select id="eventCategory" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
-                            <option value="meeting">Meeting</option>
-                            <option value="payroll">Payroll</option>
-                            <option value="report">Report</option>
-                            <option value="experiment">Experiment</option>
-                            <option value="compliance">Compliance</option>
-                            <option value="tax">Tax</option>
-                            <option value="milestone">Milestone</option>
-                            <option value="patent">Patent</option>
+                            <option value="meeting">🤝 Meeting</option>
+                            <option value="payroll">💵 Payroll</option>
+                            <option value="report">📋 Report</option>
+                            <option value="experiment">🧪 Experiment</option>
+                            <option value="compliance">✅ Compliance</option>
+                            <option value="tax">💰 Tax</option>
+                            <option value="milestone">🎯 Milestone</option>
+                            <option value="patent">📜 Patent</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Section</label>
+                        <select id="eventSection" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                            <option value="overview">📊 Overview</option>
+                            <option value="calendar">📅 Calendar</option>
+                            <option value="safety">🛡️ Safety</option>
+                            <option value="compliance">✅ Compliance</option>
+                            <option value="payroll">💵 Payroll</option>
+                            <option value="tax">💰 Tax</option>
+                            <option value="reports">📋 Reports</option>
+                            <option value="ml-models">🤖 ML Models</option>
                         </select>
                     </div>
                 </div>
                 <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Description (optional)</label>
-                    <textarea id="eventDescription" rows="3" placeholder="Add details..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); resize: vertical;"></textarea>
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Location</label>
+                    <input type="text" id="eventLocation" placeholder="Add location..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.95rem;">
                 </div>
-                <div style="display: flex; gap: 12px;">
-                    <button type="button" class="btn btn-secondary" onclick="closeAddEventModal()" style="flex: 1;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Description</label>
+                    <textarea id="eventDescription" rows="3" placeholder="Add details about this event..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); resize: vertical; font-size: 0.95rem;"></textarea>
+                </div>
+                <div style="display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddEventModal()" style="flex: 1; padding: 12px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
                             <polyline points="17 21 17 13 7 13 7 21"/>
@@ -26897,32 +26926,77 @@
         }
         
         function openAddEventModal() {
-            document.getElementById('addEventModal').style.display = 'flex';
+            const modal = document.getElementById('addEventModal');
+            if (!modal) {
+                console.error('Add event modal not found');
+                return;
+            }
+            modal.style.display = 'flex';
+            
             // Set default date to today
-            document.getElementById('eventDate').valueAsDate = new Date();
+            const dateField = document.getElementById('eventDate');
+            if (dateField) {
+                dateField.valueAsDate = new Date();
+            }
+            
+            // Set default time to next hour
+            const timeField = document.getElementById('eventTime');
+            if (timeField) {
+                const now = new Date();
+                const nextHour = new Date(now.setHours(now.getHours() + 1, 0, 0, 0));
+                timeField.value = nextHour.getHours().toString().padStart(2, '0') + ':00';
+            }
+            
+            // Focus on title field
+            setTimeout(() => {
+                const titleField = document.getElementById('eventTitle');
+                if (titleField) titleField.focus();
+            }, 100);
         }
         
         function closeAddEventModal() {
-            document.getElementById('addEventModal').style.display = 'none';
-            document.getElementById('addEventForm').reset();
+            const modal = document.getElementById('addEventModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            const form = document.getElementById('addEventForm');
+            if (form) {
+                form.reset();
+            }
         }
         
         function saveCalendarEvent(e) {
             e.preventDefault();
             
             const title = document.getElementById('eventTitle').value;
-            const date = new Date(document.getElementById('eventDate').value);
+            const dateVal = document.getElementById('eventDate').value;
+            const timeVal = document.getElementById('eventTime')?.value || '';
             const category = document.getElementById('eventCategory').value;
+            const section = document.getElementById('eventSection')?.value || 'overview';
+            const location = document.getElementById('eventLocation')?.value || '';
             const description = document.getElementById('eventDescription').value;
+            
+            if (!title || !dateVal) {
+                showToast('Please fill in required fields', 'error');
+                return;
+            }
+            
+            // Combine date and time
+            const dateTimeStr = timeVal ? `${dateVal}T${timeVal}` : dateVal;
+            const date = new Date(dateTimeStr);
             
             const newEvent = {
                 id: Date.now(),
                 title,
                 date: date.toISOString(),
                 category,
+                section,
                 description,
-                section: 'overview',
-                custom: true
+                custom: true,
+                meetingDetails: {
+                    location: location
+                },
+                createdAt: new Date().toISOString()
             };
             
             // Save to localStorage
@@ -26931,19 +27005,21 @@
             localStorage.setItem('oith_calendar_events', JSON.stringify(savedEvents));
             
             // Sync to AWS
-            syncCalendarToAWS();
+            if (typeof syncCalendarToAWS === 'function') {
+                syncCalendarToAWS();
+            }
             
-            // Add to current events
+            // Add to current events array
             newEvent.date = date;
             calendarEvents.push(newEvent);
             
-            // Re-render
+            // Re-render calendar
             renderCalendar();
             renderUpcomingEvents();
             updateCalendarBadge();
             closeAddEventModal();
             
-            showToast('Event added successfully!');
+            showToast('✅ Event added successfully!', 'success');
         }
         
         // ==========================================
@@ -28181,91 +28257,284 @@
             currentViewingEvent = null;
             isEditMode = false;
             
-            // Open the meeting scheduler modal
-            const schedulerModal = document.getElementById('meetingSchedulerModal');
-            if (!schedulerModal) {
-                console.error('Meeting scheduler modal not found!');
-                showToast('Unable to open scheduler - please refresh the page', 'error');
-                return;
-            }
-            schedulerModal.style.display = 'flex';
+            // Generate the meeting notes
+            const autoNotes = generateMeetingNotes(taskText, priority);
             
-            // Set default date to tomorrow for planning time
+            // Calculate suggested date and time
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            const meetingDateEl = document.getElementById('meetingDate');
-            if (meetingDateEl) meetingDateEl.valueAsDate = tomorrow;
+            const dateStr = tomorrow.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
             
-            // Set default time based on priority
-            const now = new Date();
+            let timeStr;
             if (priority === 'high') {
-                // High priority: schedule for 9 AM
-                now.setHours(9, 0, 0, 0);
+                timeStr = '9:00 AM';
             } else if (priority === 'low') {
-                // Low priority: schedule for 2 PM
-                now.setHours(14, 0, 0, 0);
+                timeStr = '2:00 PM';
             } else {
-                // Medium priority: schedule for 10 AM
-                now.setHours(10, 0, 0, 0);
-            }
-            const meetingStartEl = document.getElementById('meetingStartTime');
-            if (meetingStartEl) {
-                meetingStartEl.value = 
-                    now.getHours().toString().padStart(2, '0') + ':' + 
-                    now.getMinutes().toString().padStart(2, '0');
+                timeStr = '10:00 AM';
             }
             
-            // Pre-fill the meeting title
-            const meetingTitle = `📋 ${taskText}`;
-            const meetingTitleEl = document.getElementById('meetingTitle');
-            if (meetingTitleEl) meetingTitleEl.value = meetingTitle;
+            let duration;
+            if (taskText.toLowerCase().includes('quick') || taskText.toLowerCase().includes('brief')) {
+                duration = '15 minutes';
+            } else if (priority === 'high') {
+                duration = '1 hour';
+            } else if (priority === 'low') {
+                duration = '30 minutes';
+            } else {
+                duration = '45 minutes';
+            }
             
-            // Set category based on task type
-            const categorySelect = document.getElementById('meetingCategory');
-            if (categorySelect) {
-                if (taskText.toLowerCase().includes('review')) {
-                    categorySelect.value = 'review';
-                } else if (taskText.toLowerCase().includes('standup') || taskText.toLowerCase().includes('alignment')) {
-                    categorySelect.value = 'standup';
-                } else if (taskText.toLowerCase().includes('planning') || taskText.toLowerCase().includes('plan')) {
-                    categorySelect.value = 'planning';
-                } else if (taskText.toLowerCase().includes('training') || taskText.toLowerCase().includes('document')) {
-                    categorySelect.value = 'training';
-                } else {
-                    categorySelect.value = 'meeting';
+            // Create and show a custom modal for scheduling
+            showNextStepSchedulerModal(taskText, priority, dateStr, timeStr, duration, autoNotes);
+        }
+        
+        // Show custom scheduler modal for next steps
+        function showNextStepSchedulerModal(taskText, priority, dateStr, timeStr, duration, autoNotes) {
+            // Remove existing modal if present
+            const existingModal = document.getElementById('nextStepSchedulerModal');
+            if (existingModal) existingModal.remove();
+            
+            // Calculate default date for input
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const defaultDate = tomorrow.toISOString().split('T')[0];
+            
+            // Calculate default time
+            let defaultTime;
+            if (priority === 'high') {
+                defaultTime = '09:00';
+            } else if (priority === 'low') {
+                defaultTime = '14:00';
+            } else {
+                defaultTime = '10:00';
+            }
+            
+            // Calculate default duration
+            let defaultDuration;
+            if (taskText.toLowerCase().includes('quick') || taskText.toLowerCase().includes('brief')) {
+                defaultDuration = '15';
+            } else if (priority === 'high') {
+                defaultDuration = '60';
+            } else if (priority === 'low') {
+                defaultDuration = '30';
+            } else {
+                defaultDuration = '45';
+            }
+            
+            const modalHTML = `
+                <div id="nextStepSchedulerModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
+                    <div style="background: var(--bg-secondary, #2d2d2d); border-radius: 16px; max-width: 650px; width: 95%; max-height: 90vh; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.5);">
+                        <div id="nextStepModalHeader" style="background: linear-gradient(135deg, var(--accent, #0078d4), var(--warning, #ff8c00)); padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span style="font-size: 1.5rem;">📅</span>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 1.1rem; color: white;">Schedule Meeting</h3>
+                                    <p style="margin: 2px 0 0; font-size: 0.8rem; color: rgba(255,255,255,0.8);">For: ${taskText}</p>
+                                </div>
+                            </div>
+                            <button onclick="document.getElementById('nextStepSchedulerModal').remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-size: 1.2rem;">×</button>
+                        </div>
+                        
+                        <div style="padding: 20px 24px; overflow-y: auto; max-height: calc(90vh - 180px);">
+                            <!-- Meeting Title -->
+                            <div style="margin-bottom: 16px;">
+                                <label style="font-size: 0.75rem; color: var(--text-muted, #8a8a8a); text-transform: uppercase; display: block; margin-bottom: 6px;">Meeting Title</label>
+                                <input type="text" id="nextStepTitle" value="📋 ${taskText}" style="width: 100%; padding: 12px 14px; background: var(--bg-tertiary, #3d3d3d); border: 1px solid var(--border, #3d3d3d); border-radius: 10px; color: var(--text-primary, #fff); font-size: 0.95rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent, #0078d4)'" onblur="this.style.borderColor='var(--border, #3d3d3d)'">
+                            </div>
+                            
+                            <!-- Date, Time, Duration Row -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted, #8a8a8a); text-transform: uppercase; display: block; margin-bottom: 6px;">📆 Date</label>
+                                    <input type="date" id="nextStepDate" value="${defaultDate}" style="width: 100%; padding: 12px 14px; background: var(--bg-tertiary, #3d3d3d); border: 1px solid var(--border, #3d3d3d); border-radius: 10px; color: var(--text-primary, #fff); font-size: 0.9rem; outline: none; cursor: pointer;" onfocus="this.style.borderColor='var(--accent, #0078d4)'" onblur="this.style.borderColor='var(--border, #3d3d3d)'">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted, #8a8a8a); text-transform: uppercase; display: block; margin-bottom: 6px;">🕐 Time</label>
+                                    <input type="time" id="nextStepTime" value="${defaultTime}" style="width: 100%; padding: 12px 14px; background: var(--bg-tertiary, #3d3d3d); border: 1px solid var(--border, #3d3d3d); border-radius: 10px; color: var(--text-primary, #fff); font-size: 0.9rem; outline: none; cursor: pointer;" onfocus="this.style.borderColor='var(--accent, #0078d4)'" onblur="this.style.borderColor='var(--border, #3d3d3d)'">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted, #8a8a8a); text-transform: uppercase; display: block; margin-bottom: 6px;">⏱️ Duration</label>
+                                    <select id="nextStepDuration" style="width: 100%; padding: 12px 14px; background: var(--bg-tertiary, #3d3d3d); border: 1px solid var(--border, #3d3d3d); border-radius: 10px; color: var(--text-primary, #fff); font-size: 0.9rem; outline: none; cursor: pointer;" onfocus="this.style.borderColor='var(--accent, #0078d4)'" onblur="this.style.borderColor='var(--border, #3d3d3d)'">
+                                        <option value="15" ${defaultDuration === '15' ? 'selected' : ''}>15 minutes</option>
+                                        <option value="30" ${defaultDuration === '30' ? 'selected' : ''}>30 minutes</option>
+                                        <option value="45" ${defaultDuration === '45' ? 'selected' : ''}>45 minutes</option>
+                                        <option value="60" ${defaultDuration === '60' ? 'selected' : ''}>1 hour</option>
+                                        <option value="90">1.5 hours</option>
+                                        <option value="120">2 hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Priority and Category Row -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted, #8a8a8a); text-transform: uppercase; display: block; margin-bottom: 6px;">🎯 Priority</label>
+                                    <select id="nextStepPriority" onchange="updatePriorityColor()" style="width: 100%; padding: 12px 14px; background: var(--bg-tertiary, #3d3d3d); border: 1px solid var(--border, #3d3d3d); border-radius: 10px; color: var(--text-primary, #fff); font-size: 0.9rem; outline: none; cursor: pointer;" onfocus="this.style.borderColor='var(--accent, #0078d4)'" onblur="this.style.borderColor='var(--border, #3d3d3d)'">
+                                        <option value="high" ${priority === 'high' ? 'selected' : ''}>🔴 High Priority</option>
+                                        <option value="medium" ${priority === 'medium' ? 'selected' : ''}>🟡 Medium Priority</option>
+                                        <option value="low" ${priority === 'low' ? 'selected' : ''}>🟢 Low Priority</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; color: var(--text-muted, #8a8a8a); text-transform: uppercase; display: block; margin-bottom: 6px;">📂 Category</label>
+                                    <select id="nextStepCategory" style="width: 100%; padding: 12px 14px; background: var(--bg-tertiary, #3d3d3d); border: 1px solid var(--border, #3d3d3d); border-radius: 10px; color: var(--text-primary, #fff); font-size: 0.9rem; outline: none; cursor: pointer;" onfocus="this.style.borderColor='var(--accent, #0078d4)'" onblur="this.style.borderColor='var(--border, #3d3d3d)'">
+                                        <option value="meeting">🤝 Meeting</option>
+                                        <option value="planning">📋 Planning</option>
+                                        <option value="review">📝 Review</option>
+                                        <option value="training">🎓 Training</option>
+                                        <option value="standup">📊 Standup</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Meeting Notes -->
+                            <div style="margin-bottom: 8px;">
+                                <label style="font-size: 0.75rem; color: var(--text-muted, #8a8a8a); text-transform: uppercase; display: block; margin-bottom: 6px;">📝 Meeting Notes & Agenda</label>
+                                <textarea id="nextStepNotes" style="width: 100%; height: 220px; padding: 14px; background: var(--bg-primary, #1f1f1f); border: 1px solid var(--border, #3d3d3d); border-radius: 10px; color: var(--text-primary, #fff); font-family: 'Consolas', 'Monaco', monospace; font-size: 0.82rem; line-height: 1.5; resize: vertical; outline: none;" onfocus="this.style.borderColor='var(--accent, #0078d4)'" onblur="this.style.borderColor='var(--border, #3d3d3d)'">${autoNotes}</textarea>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 16px 24px; background: var(--bg-tertiary, #3d3d3d); display: flex; gap: 12px; justify-content: space-between; flex-wrap: wrap;">
+                            <button onclick="copyNextStepNotes()" style="background: var(--bg-secondary, #2d2d2d); border: 1px solid var(--border, #3d3d3d); color: var(--text-primary, #fff); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; transition: all 0.2s;" onmouseover="this.style.background='var(--bg-hover, #3a3a3a)'" onmouseout="this.style.background='var(--bg-secondary, #2d2d2d)'">
+                                📋 Copy Notes
+                            </button>
+                            <div style="display: flex; gap: 12px;">
+                                <button onclick="document.getElementById('nextStepSchedulerModal').remove()" style="background: transparent; border: 1px solid var(--border, #3d3d3d); color: var(--text-muted, #8a8a8a); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--text-muted, #8a8a8a)'" onmouseout="this.style.borderColor='var(--border, #3d3d3d)'">
+                                    Cancel
+                                </button>
+                                <button onclick="saveNextStepMeeting()" style="background: var(--success, #107c10); border: none; color: white; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='#0d6a0d'" onmouseout="this.style.background='var(--success, #107c10)'">
+                                    ✅ Add to Calendar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Close on escape key
+            const closeOnEscape = (e) => {
+                if (e.key === 'Escape') {
+                    document.getElementById('nextStepSchedulerModal')?.remove();
+                    document.removeEventListener('keydown', closeOnEscape);
                 }
-            }
+            };
+            document.addEventListener('keydown', closeOnEscape);
             
-            // Auto-generate meeting notes/agenda based on the task
-            const autoNotes = generateMeetingNotes(taskText, priority);
-            const meetingDescEl = document.getElementById('meetingDescription');
-            if (meetingDescEl) meetingDescEl.value = autoNotes;
-            
-            // Set appropriate duration based on task complexity
-            const durationSelect = document.getElementById('meetingDuration');
-            if (durationSelect) {
-                if (taskText.toLowerCase().includes('quick') || taskText.toLowerCase().includes('brief')) {
-                    durationSelect.value = '15';
-                } else if (priority === 'high') {
-                    durationSelect.value = '60';
-                } else if (priority === 'low') {
-                    durationSelect.value = '30';
-                } else {
-                    durationSelect.value = '45';
+            // Close on backdrop click
+            document.getElementById('nextStepSchedulerModal').addEventListener('click', (e) => {
+                if (e.target.id === 'nextStepSchedulerModal') {
+                    e.target.remove();
                 }
+            });
+            
+            showToast('Edit the fields and click Add to Calendar to save!', 'info');
+        }
+        
+        // Update header gradient based on priority selection
+        function updatePriorityColor() {
+            const priority = document.getElementById('nextStepPriority')?.value;
+            const header = document.getElementById('nextStepModalHeader');
+            if (header) {
+                const priorityColor = priority === 'high' ? 'var(--danger, #d13438)' : 
+                                     priority === 'low' ? 'var(--success, #107c10)' : 'var(--warning, #ff8c00)';
+                header.style.background = `linear-gradient(135deg, var(--accent, #0078d4), ${priorityColor})`;
+            }
+        }
+        
+        // Copy notes to clipboard
+        function copyNextStepNotes() {
+            const notesEl = document.getElementById('nextStepNotes');
+            if (notesEl) {
+                navigator.clipboard.writeText(notesEl.value).then(() => {
+                    showToast('Meeting notes copied to clipboard!', 'success');
+                }).catch(() => {
+                    notesEl.select();
+                    document.execCommand('copy');
+                    showToast('Meeting notes copied!', 'success');
+                });
+            }
+        }
+        
+        // Save next step meeting with all edited fields
+        function saveNextStepMeeting() {
+            // Get all form values
+            const title = document.getElementById('nextStepTitle')?.value || 'Meeting';
+            const dateValue = document.getElementById('nextStepDate')?.value;
+            const timeValue = document.getElementById('nextStepTime')?.value || '09:00';
+            const duration = parseInt(document.getElementById('nextStepDuration')?.value || '30');
+            const priority = document.getElementById('nextStepPriority')?.value || 'medium';
+            const category = document.getElementById('nextStepCategory')?.value || 'meeting';
+            const notes = document.getElementById('nextStepNotes')?.value || '';
+            
+            // Validate required fields
+            if (!dateValue) {
+                showToast('Please select a date', 'error');
+                return;
             }
             
-            // Check stored Zoom connection
-            const storedZoom = localStorage.getItem('oith_zoom_connection');
-            if (storedZoom) {
-                zoomUserData = JSON.parse(storedZoom);
-                zoomConnected = true;
-                if (typeof showZoomConnected === 'function') showZoomConnected();
+            // Create the meeting date/time
+            const [hours, minutes] = timeValue.split(':');
+            const meetingDate = new Date(dateValue);
+            meetingDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            
+            const newEvent = {
+                id: Date.now(),
+                title: title,
+                date: meetingDate.toISOString(),
+                category: category,
+                description: notes,
+                section: 'calendar',
+                custom: true,
+                isMeeting: true,
+                meetingDetails: {
+                    duration: duration,
+                    priority: priority,
+                    eventType: 'virtual'
+                }
+            };
+            
+            // Add to calendar events array
+            if (typeof calendarEvents !== 'undefined' && Array.isArray(calendarEvents)) {
+                calendarEvents.push(newEvent);
             }
             
-            if (typeof toggleLocationFields === 'function') toggleLocationFields();
+            // Save to localStorage
+            let savedEvents = JSON.parse(localStorage.getItem('oith_calendar_events') || '[]');
+            savedEvents.push({
+                ...newEvent,
+                date: dateValue // Store just the date string for localStorage
+            });
+            localStorage.setItem('oith_calendar_events', JSON.stringify(savedEvents));
             
-            showToast('Meeting scheduler opened with auto-generated notes!', 'success');
+            // Sync to AWS if configured
+            if (typeof syncCalendarToAWS === 'function') {
+                syncCalendarToAWS();
+            }
+            
+            // Refresh calendar views if functions exist
+            if (typeof renderCalendar === 'function') renderCalendar();
+            if (typeof renderUpcomingEvents === 'function') renderUpcomingEvents();
+            if (typeof updateCalendarBadge === 'function') updateCalendarBadge();
+            
+            // Close the modal
+            document.getElementById('nextStepSchedulerModal')?.remove();
+            
+            // Show success message with meeting details
+            const priorityEmoji = priority === 'high' ? '🔴' : priority === 'low' ? '🟢' : '🟡';
+            const formattedDate = meetingDate.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+            const formattedTime = meetingDate.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit' 
+            });
+            
+            showToast(`${priorityEmoji} Meeting scheduled for ${formattedDate} at ${formattedTime}!`, 'success');
         }
         
         // Generate meeting notes based on task text and priority
@@ -29422,6 +29691,10 @@ GMAIL_EMAIL=admin@oith.com</pre>
         
         document.getElementById('mailClientModal')?.addEventListener('click', function(e) {
             if (e.target === this) closeMailClient();
+        });
+        
+        document.getElementById('addEventModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeAddEventModal();
         });
         
         // Initialize calendar and mail badges on page load

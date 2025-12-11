@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OITH Launch Calendar - Shared View</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --bg-card: #16161f;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --purple: #a855f7;
+            --pink: #ec4899;
+            --cyan: #06b6d4;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(99, 102, 241, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Background Effects */
+        .bg-effects {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .bg-gradient-1 {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            top: -300px;
+            right: -200px;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .bg-gradient-2 {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
+            bottom: -200px;
+            left: -100px;
+            animation: float 20s ease-in-out infinite reverse;
+        }
+
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(30px, -30px) scale(1.05); }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+            padding: 24px 40px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 32px var(--accent-glow);
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text span {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .header-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .header-badge .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .stat-icon.launch { background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05)); }
+        .stat-icon.days { background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05)); }
+        .stat-icon.tasks { background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.05)); }
+        .stat-icon.critical { background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.05)); }
+
+        .stat-info h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px;
+        }
+
+        @media (max-width: 1100px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .section-title span {
+            font-size: 1.3rem;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .month-display {
+            font-size: 1rem;
+            font-weight: 600;
+            min-width: 160px;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .today-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .today-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            padding: 16px;
+        }
+
+        .weekday-header {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 12px 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-day {
+            min-height: 100px;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .calendar-day:hover {
+            border-color: var(--border-glow);
+            background: var(--bg-secondary);
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(99, 102, 241, 0.05));
+            border-color: var(--accent);
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .day-number {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .calendar-day.today .day-number {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .day-event {
+            font-size: 0.65rem;
+            padding: 3px 6px;
+            margin-bottom: 3px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+        .day-event.critical {
+            background: var(--danger);
+            color: white;
+        }
+
+        .day-event.milestone {
+            background: var(--accent);
+            color: white;
+        }
+
+        .day-event.task {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-secondary);
+        }
+
+        .day-event.tax {
+            background: rgba(236, 72, 153, 0.2);
+            color: var(--pink);
+        }
+
+        .day-event.legal, .day-event.patent {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--purple);
+        }
+
+        .day-event.compliance {
+            background: rgba(249, 115, 22, 0.2);
+            color: var(--warning);
+        }
+
+        .day-event.payroll {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .more-events {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sidebar-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .sidebar-card .section-header {
+            padding: 16px 20px;
+        }
+
+        .sidebar-card .section-title {
+            font-size: 0.95rem;
+        }
+
+        /* Upcoming Events */
+        .upcoming-list {
+            padding: 12px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .upcoming-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent);
+            transition: all 0.2s;
+        }
+
+        .upcoming-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .upcoming-item.critical {
+            border-left-color: var(--danger);
+        }
+
+        .upcoming-item.milestone {
+            border-left-color: var(--success);
+        }
+
+        .upcoming-date {
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .upcoming-date .day {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .upcoming-date .month {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .upcoming-info {
+            flex: 1;
+        }
+
+        .upcoming-info h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .upcoming-info .badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.phase-1 { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge.phase-2 { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+        .badge.phase-3 { background: rgba(168, 85, 247, 0.2); color: var(--purple); }
+        .badge.phase-4 { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .badge.phase-5 { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge.tax { background: rgba(236, 72, 153, 0.2); color: var(--pink); }
+        .badge.legal { background: rgba(168, 85, 247, 0.2); color: var(--purple); }
+        .badge.compliance { background: rgba(249, 115, 22, 0.2); color: var(--warning); }
+        .badge.payroll { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+
+        /* Phase Timeline */
+        .phase-list {
+            padding: 16px;
+        }
+
+        .phase-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--text-muted);
+        }
+
+        .phase-item.active {
+            border-left-color: var(--accent);
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), transparent);
+        }
+
+        .phase-item.complete {
+            border-left-color: var(--success);
+            opacity: 0.7;
+        }
+
+        .phase-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .phase-item.active .phase-number {
+            background: var(--accent);
+            color: white;
+        }
+
+        .phase-item.complete .phase-number {
+            background: var(--success);
+            color: white;
+        }
+
+        .phase-info h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .phase-info p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        .legend-dot.critical { background: var(--danger); }
+        .legend-dot.milestone { background: var(--accent); }
+        .legend-dot.task { background: var(--text-muted); }
+        .legend-dot.tax { background: var(--pink); }
+        .legend-dot.legal { background: var(--purple); }
+        .legend-dot.compliance { background: var(--warning); }
+        .legend-dot.payroll { background: var(--success); }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 16px 20px;
+            }
+
+            .main {
+                padding: 20px;
+            }
+
+            .stats-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .calendar-day {
+                min-height: 70px;
+                padding: 4px;
+            }
+
+            .day-number {
+                font-size: 0.75rem;
+            }
+
+            .day-event {
+                font-size: 0.5rem;
+                padding: 2px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-effects">
+        <div class="bg-gradient-1"></div>
+        <div class="bg-gradient-2"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">📅</div>
+                <div class="logo-text">
+                    <h1>OITH Launch Calendar</h1>
+                    <span>Project Timeline & Milestones</span>
+                </div>
+            </div>
+            <div class="header-badge">
+                <div class="live-dot"></div>
+                <span>Last updated: <span id="lastUpdated">Now</span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-icon launch">🚀</div>
+                <div class="stat-info">
+                    <h3 id="launchDate">Feb 1, 2026</h3>
+                    <p>Official Launch</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon days">⏱️</div>
+                <div class="stat-info">
+                    <h3 id="daysUntilLaunch">--</h3>
+                    <p>Days Until Launch</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon tasks">📋</div>
+                <div class="stat-info">
+                    <h3 id="totalTasks">--</h3>
+                    <p>Total Milestones</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon critical">⚠️</div>
+                <div class="stat-info">
+                    <h3 id="criticalTasks">--</h3>
+                    <p>Critical Deadlines</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Calendar Section -->
+            <div class="calendar-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <span>📆</span>
+                        Calendar View
+                    </div>
+                    <div class="calendar-nav">
+                        <button class="nav-btn" onclick="prevMonth()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M15 18l-6-6 6-6"/>
+                            </svg>
+                        </button>
+                        <div class="month-display" id="monthDisplay">December 2025</div>
+                        <button class="nav-btn" onclick="nextMonth()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </button>
+                        <button class="today-btn" onclick="goToToday()">Today</button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-dot critical"></div> Critical</div>
+                    <div class="legend-item"><div class="legend-dot milestone"></div> Milestone</div>
+                    <div class="legend-item"><div class="legend-dot task"></div> Task</div>
+                    <div class="legend-item"><div class="legend-dot tax"></div> Tax</div>
+                    <div class="legend-item"><div class="legend-dot legal"></div> Legal</div>
+                    <div class="legend-item"><div class="legend-dot compliance"></div> Compliance</div>
+                    <div class="legend-item"><div class="legend-dot payroll"></div> Payroll</div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Upcoming Events -->
+                <div class="sidebar-card">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span>⏳</span>
+                            Upcoming Events
+                        </div>
+                    </div>
+                    <div class="upcoming-list" id="upcomingList"></div>
+                </div>
+
+                <!-- Project Phases -->
+                <div class="sidebar-card">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <span>🎯</span>
+                            Project Phases
+                        </div>
+                    </div>
+                    <div class="phase-list" id="phaseList"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>OITH LLC &copy; 2025 • Shared Calendar View</p>
+        <p style="margin-top: 8px; font-size: 0.8rem;">This is a read-only view of the project timeline</p>
+    </footer>
+
+    <script>
+        // Project Milestones Data
+        const projectMilestones = [
+            // ============ PHASE 1: Foundation (Nov 28 - Dec 7) ============
+            { date: '2025-11-28', title: '🏁 Company Start Date', phase: 1, type: 'milestone', critical: true },
+            { date: '2025-12-02', title: 'Register LLC', phase: 1, type: 'task' },
+            { date: '2025-12-03', title: 'Obtain EIN', phase: 1, type: 'task' },
+            { date: '2025-12-04', title: 'Developer Accounts (Apple & Google)', phase: 1, type: 'task' },
+            { date: '2025-12-05', title: 'Business Formation Complete', phase: 1, type: 'milestone', critical: true },
+            { date: '2025-12-05', title: 'D-U-N-S Number Received', phase: 1, type: 'task' },
+            { date: '2025-12-05', title: 'Production AWS Environment', phase: 1, type: 'task' },
+            { date: '2025-12-06', title: 'Open Business Bank Account', phase: 1, type: 'task' },
+            { date: '2025-12-07', title: 'Legal Documents Ready', phase: 1, type: 'milestone', critical: true },
+            { date: '2025-12-07', title: 'Infrastructure Setup Complete', phase: 1, type: 'task' },
+            
+            // ============ PHASE 2: Development (Dec 8 - Dec 28) ============
+            { date: '2025-12-08', title: 'Development Kickoff', phase: 2, type: 'milestone' },
+            { date: '2025-12-10', title: 'User Registration & Auth', phase: 2, type: 'task' },
+            { date: '2025-12-10', title: 'API Architecture Ready', phase: 2, type: 'task' },
+            { date: '2025-12-12', title: 'Profile Creation Complete', phase: 2, type: 'task' },
+            { date: '2025-12-14', title: 'Location Services', phase: 2, type: 'task' },
+            { date: '2025-12-17', title: 'Core Matching Algorithm Complete', phase: 2, type: 'milestone', critical: true },
+            { date: '2025-12-19', title: 'Match Notifications', phase: 2, type: 'task' },
+            { date: '2025-12-19', title: 'User Reporting System', phase: 2, type: 'task' },
+            { date: '2025-12-21', title: 'In-App Messaging/Chat', phase: 2, type: 'task' },
+            { date: '2025-12-21', title: 'Push Notifications', phase: 2, type: 'task' },
+            { date: '2025-12-24', title: 'Payment Service', phase: 2, type: 'task' },
+            { date: '2025-12-28', title: 'MVP Feature-Complete', phase: 2, type: 'milestone', critical: true },
+            
+            // ============ PHASE 3: Testing (Dec 29 - Jan 11) ============
+            { date: '2025-12-29', title: 'Alpha Testing Begins', phase: 3, type: 'milestone' },
+            { date: '2026-01-02', title: 'Unit Test Coverage >80%', phase: 3, type: 'task' },
+            { date: '2026-01-02', title: 'Closed Beta (50 users)', phase: 3, type: 'milestone' },
+            { date: '2026-01-06', title: 'Beta Testing 500+ Users', phase: 3, type: 'milestone' },
+            { date: '2026-01-06', title: 'End-to-End Testing', phase: 3, type: 'task' },
+            { date: '2026-01-08', title: 'Security Penetration Testing', phase: 3, type: 'task' },
+            { date: '2026-01-08', title: 'Load Testing (10K users)', phase: 3, type: 'task' },
+            { date: '2026-01-09', title: 'Open Beta (2,000 users)', phase: 3, type: 'milestone' },
+            { date: '2026-01-11', title: 'All Critical Bugs Fixed', phase: 3, type: 'milestone', critical: true },
+            
+            // ============ PHASE 4: Pre-Launch (Jan 12 - Jan 31) ============
+            { date: '2026-01-14', title: 'App Store Screenshots Ready', phase: 4, type: 'task' },
+            { date: '2026-01-14', title: 'Social Media Accounts', phase: 4, type: 'task' },
+            { date: '2026-01-15', title: 'Website Launch (oith.com)', phase: 4, type: 'task' },
+            { date: '2026-01-17', title: 'App Store Assets Ready', phase: 4, type: 'milestone' },
+            { date: '2026-01-17', title: 'Compliance Certifications', phase: 4, type: 'task' },
+            { date: '2026-01-18', title: 'Apps Submitted for Review', phase: 4, type: 'milestone', critical: true },
+            { date: '2026-01-20', title: 'Press Kit Ready', phase: 4, type: 'task' },
+            { date: '2026-01-20', title: 'Customer Support System', phase: 4, type: 'task' },
+            { date: '2026-01-25', title: 'Moderation Team Trained', phase: 4, type: 'task' },
+            { date: '2026-01-25', title: 'Influencer Partnerships', phase: 4, type: 'task' },
+            { date: '2026-01-28', title: 'Both Apps Approved', phase: 4, type: 'milestone', critical: true },
+            { date: '2026-01-28', title: 'Launch PR Campaign', phase: 4, type: 'task' },
+            { date: '2026-01-30', title: 'Launch Team Briefed', phase: 4, type: 'milestone' },
+            { date: '2026-01-30', title: 'On-Call Schedule Set', phase: 4, type: 'task' },
+            { date: '2026-01-31', title: 'Final Infrastructure Check', phase: 5, type: 'task' },
+            
+            // ============ PHASE 5: Launch (Feb 1) ============
+            { date: '2026-02-01', title: '🚀 OFFICIAL LAUNCH', phase: 5, type: 'milestone', critical: true },
+            
+            // ============ TAX DEADLINES ============
+            { date: '2026-01-15', title: '💰 Q4 2025 Estimated Taxes Due', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-01-31', title: '📋 W-2s to Employees / 1099s to Contractors', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-01-31', title: '📋 Form 940 (FUTA) Annual Filing', phase: 0, type: 'tax', category: 'tax' },
+            { date: '2026-01-31', title: '📋 Q4 Form 941 & Ohio Unemployment', phase: 0, type: 'tax', category: 'tax' },
+            { date: '2026-03-15', title: '📋 Form 1065 Partnership Return (or Extension)', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-04-15', title: '💰 Q1 2026 Estimated Taxes (Federal & State)', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-04-30', title: '📋 Q1 Form 941 & Ohio Unemployment', phase: 0, type: 'tax', category: 'tax' },
+            { date: '2026-06-15', title: '💰 Q2 2026 Estimated Taxes', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-07-31', title: '📋 Q2 Form 941 & Ohio Unemployment', phase: 0, type: 'tax', category: 'tax' },
+            { date: '2026-09-15', title: '💰 Q3 2026 Estimated Taxes', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-10-31', title: '📋 Q3 Form 941 & Ohio Unemployment', phase: 0, type: 'tax', category: 'tax' },
+            
+            // ============ LEGAL / PATENT DEADLINES ============
+            { date: '2024-12-31', title: '📜 Provisional Patents Q4 2024 Filing', phase: 0, type: 'legal', critical: true, category: 'patent' },
+            { date: '2025-03-31', title: '📜 Additional Patents Q1 2025', phase: 0, type: 'legal', category: 'patent' },
+            { date: '2025-06-30', title: '📜 Business Method Patent Q2 2025', phase: 0, type: 'legal', category: 'patent' },
+            { date: '2025-12-31', title: '📜 PCT International Application Q4 2025', phase: 0, type: 'legal', category: 'patent' },
+            { date: '2025-12-05', title: '📝 Articles of Organization Filed', phase: 1, type: 'legal', category: 'legal' },
+            { date: '2025-12-07', title: '📝 Operating Agreement Executed', phase: 1, type: 'legal', category: 'legal' },
+            { date: '2025-12-07', title: '📝 NDA Templates Ready', phase: 1, type: 'legal', category: 'legal' },
+            { date: '2025-12-07', title: '📝 Contractor Agreements Ready', phase: 1, type: 'legal', category: 'legal' },
+            
+            // ============ COMPLIANCE DEADLINES ============
+            { date: '2025-12-15', title: '✅ GDPR Compliance Review', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2025-12-15', title: '✅ CCPA Compliance Review', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2025-12-20', title: '✅ App Store Guidelines Compliance', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2025-12-20', title: '✅ PCI DSS Compliance (Payments)', phase: 0, type: 'compliance', critical: true, category: 'compliance' },
+            { date: '2026-01-10', title: '✅ ADA Accessibility Audit', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-01-17', title: '✅ SOC 2 Type II Certification Started', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-01-17', title: '✅ COPPA Compliance (18+ Only)', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-01-20', title: '✅ Terms of Service Published', phase: 0, type: 'compliance', critical: true, category: 'compliance' },
+            { date: '2026-01-20', title: '✅ Privacy Policy Published', phase: 0, type: 'compliance', critical: true, category: 'compliance' },
+            { date: '2026-03-31', title: '✅ Q1 Compliance Audit', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-06-30', title: '✅ LGPD Brazil Compliance (if applicable)', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-06-30', title: '✅ Q2 Compliance Audit', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-09-30', title: '✅ Q3 Compliance Audit', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-12-31', title: '✅ Annual Security Audit', phase: 0, type: 'compliance', critical: true, category: 'compliance' },
+            
+            // ============ PAYROLL DEADLINES ============
+            { date: '2025-12-15', title: '💵 First Payroll Run', phase: 0, type: 'payroll', category: 'payroll' },
+            { date: '2025-12-31', title: '💵 December Payroll', phase: 0, type: 'payroll', category: 'payroll' },
+            { date: '2026-01-15', title: '💵 January Payroll (Mid-Month)', phase: 0, type: 'payroll', category: 'payroll' },
+            { date: '2026-01-31', title: '💵 January Payroll (End of Month)', phase: 0, type: 'payroll', category: 'payroll' }
+        ];
+
+        const phases = [
+            { num: 1, name: 'Foundation', dates: 'Nov 28 - Dec 7' },
+            { num: 2, name: 'Development', dates: 'Dec 8 - Dec 28' },
+            { num: 3, name: 'Testing', dates: 'Dec 29 - Jan 11' },
+            { num: 4, name: 'Pre-Launch', dates: 'Jan 12 - Jan 31' },
+            { num: 5, name: 'Launch', dates: 'Feb 1, 2026' }
+        ];
+
+        let currentMonth = new Date();
+        const launchDate = new Date('2026-02-01');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStats();
+            renderCalendar();
+            renderUpcoming();
+            renderPhases();
+            updateLastUpdated();
+        });
+
+        function updateStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const daysUntil = Math.ceil((launchDate - today) / (1000 * 60 * 60 * 24));
+            document.getElementById('daysUntilLaunch').textContent = daysUntil > 0 ? daysUntil : 'Launched!';
+            
+            const totalTasks = projectMilestones.length;
+            document.getElementById('totalTasks').textContent = totalTasks;
+            
+            const criticalTasks = projectMilestones.filter(m => m.critical).length;
+            document.getElementById('criticalTasks').textContent = criticalTasks;
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const monthDisplay = document.getElementById('monthDisplay');
+            
+            const year = currentMonth.getFullYear();
+            const month = currentMonth.getMonth();
+            
+            monthDisplay.textContent = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startOffset = firstDay.getDay();
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let html = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => 
+                `<div class="weekday-header">${d}</div>`
+            ).join('');
+            
+            // Empty cells
+            for (let i = 0; i < startOffset; i++) {
+                html += `<div class="calendar-day empty"></div>`;
+            }
+            
+            // Days
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayEvents = projectMilestones.filter(m => m.date === dateStr);
+                const isToday = new Date(dateStr).toDateString() === today.toDateString();
+                
+                html += `<div class="calendar-day${isToday ? ' today' : ''}" title="${dayEvents.map(e => e.title).join('\n')}">
+                    <div class="day-number">${day}</div>
+                    ${dayEvents.slice(0, 3).map(e => {
+                        const typeClass = e.critical ? 'critical' : 
+                            (e.category || e.type);
+                        return `<div class="day-event ${typeClass}">${e.title.substring(0, 20)}${e.title.length > 20 ? '...' : ''}</div>`;
+                    }).join('')}
+                    ${dayEvents.length > 3 ? `<div class="more-events">+${dayEvents.length - 3} more</div>` : ''}
+                </div>`;
+            }
+            
+            grid.innerHTML = html;
+        }
+
+        function renderUpcoming() {
+            const list = document.getElementById('upcomingList');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const upcoming = projectMilestones
+                .filter(m => new Date(m.date) >= today)
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .slice(0, 10);
+            
+            if (upcoming.length === 0) {
+                list.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">No upcoming events</div>';
+                return;
+            }
+            
+            list.innerHTML = upcoming.map(m => {
+                const mDate = new Date(m.date);
+                const category = m.category || (m.phase ? `phase-${m.phase}` : m.type);
+                const itemClass = m.critical ? 'critical' : (m.type === 'milestone' ? 'milestone' : '');
+                
+                return `
+                    <div class="upcoming-item ${itemClass}">
+                        <div class="upcoming-date">
+                            <div class="day">${mDate.getDate()}</div>
+                            <div class="month">${mDate.toLocaleDateString('en-US', { month: 'short' })}</div>
+                        </div>
+                        <div class="upcoming-info">
+                            <h4>${m.title}</h4>
+                            <span class="badge ${category}">${category}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPhases() {
+            const list = document.getElementById('phaseList');
+            const today = new Date();
+            
+            // Determine current phase
+            let currentPhase = 1;
+            if (today >= new Date('2025-12-08')) currentPhase = 2;
+            if (today >= new Date('2025-12-29')) currentPhase = 3;
+            if (today >= new Date('2026-01-12')) currentPhase = 4;
+            if (today >= new Date('2026-02-01')) currentPhase = 5;
+            
+            list.innerHTML = phases.map(p => {
+                const status = p.num < currentPhase ? 'complete' : 
+                    (p.num === currentPhase ? 'active' : '');
+                return `
+                    <div class="phase-item ${status}">
+                        <div class="phase-number">${status === 'complete' ? '✓' : p.num}</div>
+                        <div class="phase-info">
+                            <h4>${p.name}</h4>
+                            <p>${p.dates}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function prevMonth() {
+            currentMonth.setMonth(currentMonth.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth.setMonth(currentMonth.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function goToToday() {
+            currentMonth = new Date();
+            renderCalendar();
+        }
+
+        function updateLastUpdated() {
+            document.getElementById('lastUpdated').textContent = 
+                new Date().toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: 'numeric', 
+                    minute: '2-digit' 
+                });
+        }
+    </script>
+</body>
+</html>
+
