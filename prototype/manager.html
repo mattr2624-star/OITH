@@ -7083,6 +7083,14 @@
                             </svg>
                             Export Report
                         </button>
+                        <button class="btn btn-secondary" onclick="exportExpenseReportPDF()" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <path d="M9 15h6M9 11h6"/>
+                            </svg>
+                            Export as PDF
+                        </button>
                         <button class="btn btn-primary" onclick="addExpenseEntry()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -9711,6 +9719,136 @@
             updateSectionHealthStatus(section);
         }
         
+        // Define which panels/metrics each section should have and their expected AWS data sources
+        const sectionPanelConfig = {
+            'overview': {
+                panels: ['systemHierarchy'],
+                requiredAwsData: false
+            },
+            'dashboard': {
+                panels: ['totalUsers', 'activeUsers', 'premiumUsers', 'totalMatches'],
+                requiredAwsData: true,
+                panelIds: ['dashTotalUsers', 'dashActiveUsers', 'dashPremiumUsers', 'dashTotalMatches']
+            },
+            'revenue': {
+                panels: ['MRR', 'premiumSubscribers', 'conversionRate', 'churnRate'],
+                requiredAwsData: true,
+                panelIds: ['mrrValue', 'premiumUsers', 'conversionRate', 'churnRate'],
+                dataSourceIndicator: 'revenueDataSource'
+            },
+            'users': {
+                panels: ['totalUsers', 'activeToday', 'premiumUsers', 'userList'],
+                requiredAwsData: true,
+                panelIds: ['userTotalCount', 'userActiveToday', 'userPremiumCount']
+            },
+            'matches': {
+                panels: ['totalMatches', 'successRate', 'avgMatchTime'],
+                requiredAwsData: true,
+                panelIds: ['matchTotalCount', 'matchSuccessRate', 'matchAvgTime']
+            },
+            'analytics': {
+                panels: ['retentionRate', 'avgSessionDuration', 'peakHours'],
+                requiredAwsData: true
+            },
+            'realtime': {
+                panels: ['activeNow', 'matchingNow', 'messagesPerMinute'],
+                requiredAwsData: true,
+                hasRealtime: true
+            },
+            'safety': {
+                panels: ['pendingReports', 'blockedUsers', 'flaggedContent'],
+                requiredAwsData: true
+            },
+            'geographic': {
+                panels: ['topCities', 'userDistribution'],
+                requiredAwsData: true
+            },
+            'calendar': {
+                panels: ['upcomingEvents', 'launchReadiness'],
+                requiredAwsData: false
+            },
+            'expenses': {
+                panels: ['totalExpenses', 'monthlyBurn', 'potentialSavings', 'activeServices', 'monthlyPayroll'],
+                requiredAwsData: false,
+                panelIds: ['totalExpensesToDate', 'monthlyBurn', 'potentialSavings', 'activeServices', 'monthlyPayrollExpense']
+            },
+            'org-hierarchy': {
+                panels: ['employees', 'departments'],
+                requiredAwsData: true
+            },
+            'payroll': {
+                panels: ['totalPayroll', 'nextPayDate'],
+                requiredAwsData: true
+            }
+        };
+        
+        // Check if a panel value indicates valid AWS data vs placeholder
+        function isPanelDataValid(value) {
+            if (!value || value === '') return false;
+            const invalidValues = ['--', '...', 'Loading...', 'N/A', 'Error', 'undefined', 'null', '$--', '--', '0'];
+            const strValue = String(value).trim();
+            // Allow 0 for some metrics but flag if all are 0
+            if (invalidValues.includes(strValue)) return false;
+            if (strValue.startsWith('Loading')) return false;
+            return true;
+        }
+        
+        // Check panel health for a section
+        function checkSectionPanelHealth(section) {
+            const config = sectionPanelConfig[section];
+            if (!config) return { status: 'green', brokenPanels: 0, totalPanels: 0, issues: [] };
+            
+            const issues = [];
+            let brokenPanels = 0;
+            const totalPanels = config.panels?.length || 0;
+            
+            // Check data source indicator if exists
+            if (config.dataSourceIndicator) {
+                const sourceEl = document.getElementById(config.dataSourceIndicator);
+                if (sourceEl) {
+                    const sourceText = sourceEl.textContent?.toLowerCase() || '';
+                    if (!sourceText.includes('aws') && !sourceText.includes('stripe') && !sourceText.includes('dynamodb')) {
+                        issues.push(`Data not from AWS (source: ${sourceEl.textContent})`);
+                    }
+                }
+            }
+            
+            // Check individual panel values
+            if (config.panelIds) {
+                config.panelIds.forEach((panelId, index) => {
+                    const el = document.getElementById(panelId);
+                    if (el) {
+                        const value = el.textContent;
+                        if (!isPanelDataValid(value)) {
+                            brokenPanels++;
+                            const panelName = config.panels[index] || panelId;
+                            issues.push(`${panelName}: invalid value "${value}"`);
+                        }
+                    } else {
+                        // Element not found - might not be visible
+                    }
+                });
+            }
+            
+            // Determine status based on broken panels
+            let status = 'green';
+            if (brokenPanels > 0) {
+                const brokenPercentage = (brokenPanels / totalPanels) * 100;
+                if (brokenPercentage >= 50 || brokenPanels >= 3) {
+                    status = 'red';
+                } else if (brokenPercentage >= 25 || brokenPanels >= 1) {
+                    status = 'yellow';
+                }
+            }
+            
+            // Check if section requires AWS but isn't getting it
+            if (config.requiredAwsData && issues.some(i => i.includes('not from AWS'))) {
+                status = status === 'green' ? 'yellow' : status;
+            }
+            
+            return { status, brokenPanels, totalPanels, issues };
+        }
+        
         // Calculate and update health status for a section
         function updateSectionHealthStatus(section) {
             if (!sectionHealthMetrics[section]) return;
@@ -9721,6 +9859,7 @@
             
             let status = 'green';
             let message = 'Healthy';
+            let panelIssues = [];
             
             // Check consecutive API errors
             if (metrics.consecutiveErrors >= 3) {
@@ -9754,8 +9893,30 @@
                 }
             }
             
+            // NEW: Check individual panels for valid AWS data
+            if (currentSection === section && metrics.lastUpdated) {
+                const panelHealth = checkSectionPanelHealth(section);
+                panelIssues = panelHealth.issues;
+                
+                if (panelHealth.brokenPanels > 0) {
+                    // Escalate status based on panel issues
+                    if (panelHealth.status === 'red' && status !== 'red') {
+                        status = 'red';
+                        message = `${panelHealth.brokenPanels}/${panelHealth.totalPanels} panels broken`;
+                    } else if (panelHealth.status === 'yellow' && status === 'green') {
+                        status = 'yellow';
+                        message = `${panelHealth.brokenPanels} panel(s) not showing AWS data`;
+                    }
+                }
+                
+                // Store panel issues for detailed reporting
+                metrics.panelIssues = panelIssues;
+                metrics.brokenPanels = panelHealth.brokenPanels;
+                metrics.totalPanels = panelHealth.totalPanels;
+            }
+            
             // Sections without API don't need real-time tracking
-            if (!config.requiresAPI && !config.hasRealtime && metrics.lastUpdated) {
+            if (!config.requiresAPI && !config.hasRealtime && metrics.lastUpdated && panelIssues.length === 0) {
                 status = 'green';
                 message = 'Healthy';
             }
@@ -9936,8 +10097,18 @@
                 }
             });
             
-            // Update all section statuses
+            // Update all section statuses including panel checks
             Object.keys(sectionHealthMetrics).forEach(section => {
+                // Check panel health for current section
+                if (currentSection === section) {
+                    const panelHealth = checkSectionPanelHealth(section);
+                    const metrics = sectionHealthMetrics[section];
+                    if (metrics) {
+                        metrics.panelIssues = panelHealth.issues;
+                        metrics.brokenPanels = panelHealth.brokenPanels;
+                        metrics.totalPanels = panelHealth.totalPanels;
+                    }
+                }
                 updateSectionHealthStatus(section);
             });
             
@@ -9945,6 +10116,11 @@
             updateHealthMonitorPanel();
             
             console.log('✅ Health checks complete');
+            console.log('📊 Panel health summary:', {
+                awsConnected: awsOk,
+                sectionsChecked: Object.keys(sectionHealthMetrics).length,
+                currentSection: currentSection
+            });
         }
         
         // Update the health monitor panel in site diagnostics
@@ -10041,11 +10217,20 @@
                     const lastUpdate = metrics.lastUpdated ? getTimeAgo(metrics.lastUpdated) : 'Never';
                     const responseTime = metrics.apiResponseTime !== null ? `${metrics.apiResponseTime}ms` : '--';
                     
+                    // Panel health info
+                    const panelConfig = sectionPanelConfig[section];
+                    const hasPanels = panelConfig?.panels?.length > 0;
+                    const panelInfo = hasPanels && metrics.totalPanels > 0 
+                        ? `${metrics.totalPanels - (metrics.brokenPanels || 0)}/${metrics.totalPanels} panels OK` 
+                        : '';
+                    const panelColor = (metrics.brokenPanels || 0) > 0 ? 'var(--warning)' : 'var(--success)';
+                    const awsRequired = panelConfig?.requiredAwsData ? '☁️' : '';
+                    
                     return `
                         <div style="padding: 10px; background: var(--bg-tertiary); border-radius: 8px; border-left: 3px solid ${statusColor}; cursor: pointer;" 
                              onclick="showSection('${section}')" title="Click to navigate">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                <span style="font-weight: 500; font-size: 0.8rem;">${label}</span>
+                                <span style="font-weight: 500; font-size: 0.8rem;">${label} ${awsRequired}</span>
                                 <span style="font-size: 0.9rem;">${statusIcon}</span>
                             </div>
                             <div style="font-size: 0.7rem; color: var(--text-muted);">
@@ -10057,6 +10242,12 @@
                                     <span>Response:</span>
                                     <span>${responseTime}</span>
                                 </div>
+                                ${panelInfo ? `
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Panels:</span>
+                                    <span style="color: ${panelColor};">${panelInfo}</span>
+                                </div>
+                                ` : ''}
                                 <div style="display: flex; justify-content: space-between;">
                                     <span>Status:</span>
                                     <span style="color: ${statusColor};">${metrics.message}</span>
@@ -10067,22 +10258,38 @@
                 }).join('');
             }
             
-            // Render issues list
+            // Render issues list with detailed panel information
             const issuesList = document.getElementById('healthIssuesList');
             if (issuesList) {
                 if (issues.length === 0) {
-                    issuesList.innerHTML = '<div style="color: var(--success); font-size: 0.8rem;">✅ No issues detected - all sections healthy!</div>';
+                    issuesList.innerHTML = '<div style="color: var(--success); font-size: 0.8rem;">✅ No issues detected - all sections showing accurate AWS data!</div>';
                 } else {
                     issuesList.innerHTML = issues.map(issue => {
                         const icon = issue.severity === 'error' ? '❌' : '⚠️';
                         const color = issue.severity === 'error' ? 'var(--danger)' : 'var(--warning)';
+                        const metrics = sectionHealthMetrics[issue.section];
+                        
+                        // Show panel-level issues if available
+                        let panelDetails = '';
+                        if (metrics?.panelIssues && metrics.panelIssues.length > 0) {
+                            panelDetails = `
+                                <div style="margin-top: 4px; padding-left: 20px; font-size: 0.7rem; color: var(--text-muted);">
+                                    ${metrics.panelIssues.slice(0, 3).map(pi => `<div>• ${pi}</div>`).join('')}
+                                    ${metrics.panelIssues.length > 3 ? `<div>...and ${metrics.panelIssues.length - 3} more</div>` : ''}
+                                </div>
+                            `;
+                        }
+                        
                         return `
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border);">
-                                <span style="font-size: 0.9rem;">${icon}</span>
-                                <span style="font-weight: 500; min-width: 100px; color: ${color};">${issue.section}</span>
-                                <span style="font-size: 0.8rem; color: var(--text-muted);">${issue.message}</span>
-                                <button class="btn btn-secondary" onclick="showSection('${issue.section}')" 
-                                        style="margin-left: auto; font-size: 0.7rem; padding: 2px 8px;">View</button>
+                            <div style="padding: 8px 0; border-bottom: 1px solid var(--border);">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 0.9rem;">${icon}</span>
+                                    <span style="font-weight: 500; min-width: 120px; color: ${color};">${issue.section}</span>
+                                    <span style="font-size: 0.8rem; color: var(--text-muted);">${issue.message}</span>
+                                    <button class="btn btn-secondary" onclick="showSection('${issue.section}')" 
+                                            style="margin-left: auto; font-size: 0.7rem; padding: 2px 8px;">View</button>
+                                </div>
+                                ${panelDetails}
                             </div>
                         `;
                     }).join('');
@@ -12532,6 +12739,13 @@
                     } else {
                         trackSectionUpdate(section, 0);
                     }
+                    
+                    // Run panel health check after async data loads
+                    setTimeout(() => {
+                        if (currentSection === section) {
+                            updateSectionHealthStatus(section);
+                        }
+                    }, 3000); // Check panels after 3s to allow async AWS data to load
                 }
             } catch (error) {
                 console.error(`Error rendering section ${section}:`, error);
