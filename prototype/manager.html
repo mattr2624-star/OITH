@@ -7126,6 +7126,73 @@
                 }
             }
         }
+
+        function formatSyncTimestamp(value) {
+            if (!value) return '--';
+            const date = value instanceof Date ? value : new Date(value);
+            return date.toLocaleTimeString();
+        }
+
+        function updateAwsSyncStatusUI() {
+            const recvEl = document.getElementById('awsLastReceive');
+            const sendEl = document.getElementById('awsLastSend');
+            const dotEl = document.getElementById('awsSyncDot');
+            const indicatorEl = document.getElementById('awsSyncIndicator');
+
+            const setStatus = (el, timestamp, ok, message) => {
+                if (!el) return;
+                if (!timestamp) {
+                    el.textContent = '--';
+                    el.className = 'aws-status muted';
+                    return;
+                }
+                const statusText = `${formatSyncTimestamp(timestamp)} (${message || (ok ? 'success' : 'failed')})`;
+                el.textContent = statusText;
+                el.className = `aws-status ${ok === false ? 'error' : 'success'}`;
+            };
+
+            setStatus(recvEl, awsSyncStatus.lastReceive, awsSyncStatus.lastReceiveOk, awsSyncStatus.lastReceiveMessage);
+            setStatus(sendEl, awsSyncStatus.lastSend, awsSyncStatus.lastSendOk, awsSyncStatus.lastSendMessage);
+
+            const hasFailure = awsSyncStatus.lastReceiveOk === false || awsSyncStatus.lastSendOk === false;
+            if (dotEl) {
+                if (hasFailure) {
+                    dotEl.style.background = 'var(--danger)';
+                } else if (awsSyncStatus.lastReceive || awsSyncStatus.lastSend) {
+                    dotEl.style.background = 'var(--success)';
+                } else {
+                    dotEl.style.background = 'var(--text-muted)';
+                }
+            }
+
+            if (indicatorEl) {
+                if (hasFailure) {
+                    indicatorEl.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                    indicatorEl.style.color = 'var(--danger)';
+                    indicatorEl.style.background = 'rgba(239, 68, 68, 0.1)';
+                } else {
+                    indicatorEl.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+                    indicatorEl.style.color = 'var(--success)';
+                    indicatorEl.style.background = 'rgba(34, 197, 94, 0.1)';
+                }
+            }
+        }
+
+        function recordAwsReceive(ok, message) {
+            awsSyncStatus.lastReceive = Date.now();
+            awsSyncStatus.lastReceiveOk = ok;
+            awsSyncStatus.lastReceiveMessage = message || (ok ? 'success' : 'failed');
+            updateAwsSyncStatusUI();
+        }
+
+        function recordAwsSend(ok, message) {
+            awsSyncStatus.lastSend = Date.now();
+            awsSyncStatus.lastSendOk = ok;
+            awsSyncStatus.lastSendMessage = message || (ok ? 'success' : 'failed');
+            updateAwsSyncStatusUI();
+        }
+
+        updateAwsSyncStatusUI();
         
         // Auto-refresh timer for users section
         let autoRefreshInterval = null;
@@ -8071,7 +8138,10 @@
             
             try {
                 const response = await fetch(`${awsApiUrl}/users`);
-                if (!response.ok) return;
+                if (!response.ok) {
+                    recordAwsReceive(false, `HTTP ${response.status}`);
+                    return;
+                }
                 
                 const responseText = await response.text();
                 const responseBytes = new Blob([responseText]).size;
@@ -8079,6 +8149,7 @@
                 
                 const awsUsers = JSON.parse(responseText);
                 console.log(`☁️ Fetched ${Object.keys(awsUsers).length} users from DynamoDB (${(responseBytes/1024).toFixed(1)}KB)`);
+                recordAwsReceive(true, `${Object.keys(awsUsers).length} users`);
                 
                 // CLEAR existing local users first
                 const existingUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
@@ -8135,6 +8206,7 @@
                 
             } catch (error) {
                 console.log('⚠️ AWS fetch failed (offline?):', error.message);
+                recordAwsReceive(false, error.message);
             }
         }
         
@@ -8205,6 +8277,7 @@
                 
                 const userCount = Object.keys(awsUsers).length;
                 showToast(`✅ Replaced local database with ${userCount} users from DynamoDB`, 'success');
+                recordAwsReceive(true, `${userCount} users`);
                 
                 // Reload UI
                 refreshData();
@@ -8212,6 +8285,7 @@
             } catch (error) {
                 console.error('AWS sync error:', error);
                 showToast('❌ Failed to pull from AWS: ' + error.message, 'error');
+                recordAwsReceive(false, error.message);
             }
         }
         
@@ -8285,9 +8359,11 @@
                     ? '✅ DynamoDB cleared! (0 users)'
                     : `✅ Replaced DynamoDB with ${result.count || usersToUpload.length} users!`;
                 showToast(successMsg, 'success');
+                recordAwsSend(true, usersToUpload.length === 0 ? 'Cleared DynamoDB' : `${result.count || usersToUpload.length} users`);
                 
             } catch (error) {
                 console.error('Push error:', error);
+                recordAwsSend(false, error.message || 'Bulk upload failed');
                 
                 // Fallback: push one by one if bulk fails
                 showToast('⚠️ Bulk upload failed, trying one by one...', 'warning');
@@ -8329,6 +8405,7 @@
                 }
                 
                 showToast(`✅ Pushed ${successCount}/${userEmails.length} users to DynamoDB`, 'success');
+                recordAwsSend(successCount > 0 || userEmails.length === 0, `${successCount}/${userEmails.length} users`);
             }
         }
         
