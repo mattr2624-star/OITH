@@ -1555,9 +1555,9 @@
         }
 
         // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             initZoomConnection();
-            loadCustomEvents();
+            await loadCustomEvents();
             updateStats();
             renderCalendar();
             renderUpcoming();
@@ -1565,20 +1565,88 @@
             updateLastUpdated();
         });
 
-        function loadCustomEvents() {
-            const saved = localStorage.getItem('oith_shared_calendar_events');
-            if (saved) {
-                const customEvents = JSON.parse(saved);
-                customEvents.forEach(e => {
-                    e.custom = true;
-                    calendarEvents.push(e);
+        async function loadCustomEvents() {
+            // Load events from ADMIN calendar localStorage (same key as manager.html)
+            const adminSaved = localStorage.getItem('oith_calendar_events');
+            if (adminSaved) {
+                const adminEvents = JSON.parse(adminSaved);
+                adminEvents.forEach(e => {
+                    // Avoid duplicates based on id or title+date combo
+                    const exists = calendarEvents.some(existing => 
+                        existing.id === e.id || 
+                        (existing.title === e.title && existing.date === e.date)
+                    );
+                    if (!exists) {
+                        e.custom = true;
+                        calendarEvents.push(e);
+                    }
                 });
+            }
+            
+            // Also load any events created directly on shared calendar
+            const sharedSaved = localStorage.getItem('oith_shared_calendar_events');
+            if (sharedSaved) {
+                const sharedEvents = JSON.parse(sharedSaved);
+                sharedEvents.forEach(e => {
+                    const exists = calendarEvents.some(existing => 
+                        existing.id === e.id || 
+                        (existing.title === e.title && existing.date === e.date)
+                    );
+                    if (!exists) {
+                        e.custom = true;
+                        calendarEvents.push(e);
+                    }
+                });
+            }
+            
+            // Try to fetch from server API (for AWS synced events)
+            try {
+                const response = await fetch('/api/calendar/events');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.events && data.events.length > 0) {
+                        data.events.forEach(e => {
+                            const exists = calendarEvents.some(existing => 
+                                existing.id === e.id || 
+                                (existing.title === e.title && existing.date === e.date)
+                            );
+                            if (!exists) {
+                                e.custom = true;
+                                calendarEvents.push(e);
+                            }
+                        });
+                        console.log(`✅ Loaded ${data.events.length} events from server`);
+                    }
+                }
+            } catch (err) {
+                console.log('Server not available, using local storage only');
             }
         }
 
         function saveCustomEvents() {
             const customEvents = calendarEvents.filter(e => e.custom);
+            // Save to BOTH keys for backwards compatibility
             localStorage.setItem('oith_shared_calendar_events', JSON.stringify(customEvents));
+            localStorage.setItem('oith_calendar_events', JSON.stringify(customEvents));
+            
+            // Also try to sync to server
+            syncToServer(customEvents);
+        }
+        
+        async function syncToServer(events) {
+            try {
+                const response = await fetch('/api/calendar/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ events })
+                });
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log(`✅ Synced ${result.syncedCount || 0} events to server`);
+                }
+            } catch (err) {
+                // Server not available, local save is fine
+            }
         }
 
         function updateStats() {
