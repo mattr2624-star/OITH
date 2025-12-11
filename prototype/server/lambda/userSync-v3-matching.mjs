@@ -1177,6 +1177,163 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
         }
         
+        // ============ STRESS TEST LOGS ============
+        
+        // POST /stress-test/logs - Save stress test run log
+        if (method === 'POST' && path.includes('/stress-test/logs')) {
+            const body = JSON.parse(event.body || '{}');
+            const { runId, result, logOutput, timestamp } = body;
+            
+            if (!runId || !result) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'runId and result required' }) };
+            }
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'STRESSTEST#logs',
+                    sk: `RUN#${runId}`,
+                    runId: runId,
+                    result: result, // Full simulation result data
+                    logOutput: logOutput || [], // Array of console log entries
+                    userCount: result.userCount || 0,
+                    successRate: result.successRate || '0',
+                    avgTime: result.avgTime || 0,
+                    p95: result.p95 || 0,
+                    issues: result.issues || 0,
+                    realLifeEnabled: result.realLifeEnabled || false,
+                    realLifeMetrics: result.realLifeMetrics || null,
+                    createdAt: timestamp || new Date().toISOString()
+                }
+            }));
+            
+            console.log(`📊 Stress test log saved: ${runId} (${result.userCount?.toLocaleString() || 0} users, ${result.issues || 0} issues)`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, runId }) };
+        }
+        
+        // GET /stress-test/logs - Get all stress test logs (list)
+        if (method === 'GET' && path === '/stress-test/logs') {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'STRESSTEST#logs' },
+                ScanIndexForward: false, // newest first
+                Limit: 100
+            }));
+            
+            const logs = result.Items?.map(item => ({
+                runId: item.runId,
+                result: item.result,
+                userCount: item.userCount,
+                successRate: item.successRate,
+                avgTime: item.avgTime,
+                p95: item.p95,
+                issues: item.issues,
+                realLifeEnabled: item.realLifeEnabled,
+                realLifeMetrics: item.realLifeMetrics,
+                createdAt: item.createdAt,
+                logCount: item.logOutput?.length || 0
+            })) || [];
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ logs }) };
+        }
+        
+        // GET /stress-test/logs/{runId} - Get specific stress test log
+        if (method === 'GET' && path.includes('/stress-test/logs/')) {
+            const runId = path.split('/stress-test/logs/')[1];
+            if (!runId) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'runId required' }) };
+            }
+            
+            const result = await docClient.send(new GetCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'STRESSTEST#logs', sk: `RUN#${runId}` }
+            }));
+            
+            if (!result.Item) {
+                return { statusCode: 404, headers, body: JSON.stringify({ error: 'Stress test log not found' }) };
+            }
+            
+            return { statusCode: 200, headers, body: JSON.stringify(result.Item) };
+        }
+        
+        // DELETE /stress-test/logs/{runId} - Delete a stress test log
+        if (method === 'DELETE' && path.includes('/stress-test/logs/')) {
+            const runId = path.split('/stress-test/logs/')[1];
+            if (!runId) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'runId required' }) };
+            }
+            
+            await docClient.send(new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'STRESSTEST#logs', sk: `RUN#${runId}` }
+            }));
+            
+            console.log(`🗑️ Stress test log deleted: ${runId}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
+        // ============ SHARED CALENDAR ============
+        
+        // POST /calendar/sync - Sync calendar events from admin
+        if (method === 'POST' && path.includes('/calendar/sync')) {
+            const body = JSON.parse(event.body || '{}');
+            const { events } = body;
+            
+            if (!events || !Array.isArray(events)) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'events array required' }) };
+            }
+            
+            // Save all events to DynamoDB
+            for (const event of events) {
+                await docClient.send(new PutCommand({
+                    TableName: TABLE_NAME,
+                    Item: {
+                        pk: 'CALENDAR#shared',
+                        sk: `EVENT#${event.id}`,
+                        ...event,
+                        updatedAt: new Date().toISOString()
+                    }
+                }));
+            }
+            
+            console.log(`📅 Calendar synced: ${events.length} events`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, count: events.length }) };
+        }
+        
+        // GET /calendar/events - Get all shared calendar events
+        if (method === 'GET' && path.includes('/calendar/events')) {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'CALENDAR#shared' }
+            }));
+            
+            const events = result.Items?.map(item => {
+                const { pk, sk, updatedAt, ...eventData } = item;
+                return eventData;
+            }) || [];
+            
+            console.log(`📅 Calendar events fetched: ${events.length}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ events }) };
+        }
+        
+        // DELETE /calendar/event/{eventId} - Delete a calendar event
+        if (method === 'DELETE' && path.includes('/calendar/event/')) {
+            const eventId = path.split('/calendar/event/')[1];
+            if (!eventId) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'eventId required' }) };
+            }
+            
+            await docClient.send(new DeleteCommand({
+                TableName: TABLE_NAME,
+                Key: { pk: 'CALENDAR#shared', sk: `EVENT#${eventId}` }
+            }));
+            
+            console.log(`📅 Calendar event deleted: ${eventId}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
+        }
+        
         // ============ DOCUMENTS (Patents & Compliance) ============
         
         // POST /documents/patent - Save patent documents
