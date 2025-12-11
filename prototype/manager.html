@@ -3503,6 +3503,12 @@
                     </svg>
                     Calendar
                 </div>
+                <div class="nav-item" onclick="showSection('simulation')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                    </svg>
+                    Stress Test
+                </div>
             </div>
 
             <!-- USER APP / INDEX SECTION -->
@@ -6893,6 +6899,301 @@
                     <div class="card-body">
                         <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
                             <!-- Calendar grid populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stress Test / Simulation Section -->
+            <div id="simulation-section" style="display: none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">⚡ Matching Algorithm Stress Test</h2>
+                        <p class="page-subtitle">Simulate user load to identify scalability issues in the matching algorithm.</p>
+                    </div>
+                    <div class="header-actions" style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" onclick="clearSimulationHistory()" id="clearSimHistoryBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            Clear History
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportSimulationResults()" id="exportSimBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            Export Results
+                        </button>
+                        <button class="btn btn-primary" onclick="runMatchingSimulation()" id="runSimBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            Run Simulation
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Control Panel -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--accent);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(0, 120, 212, 0.1), rgba(0, 120, 212, 0.05));">
+                        <h3 class="card-title">🎛️ Simulation Control Panel</h3>
+                        <span id="simStatusBadge" class="status-badge" style="font-size: 0.75rem;">Ready</span>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+                            <!-- Simulation Parameters -->
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">SIMULATION PARAMETERS</div>
+                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">User Count</label>
+                                        <select id="simUserCount" style="width: 100%; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                            <option value="100">100 users</option>
+                                            <option value="500">500 users</option>
+                                            <option value="1000" selected>1,000 users</option>
+                                            <option value="2500">2,500 users</option>
+                                            <option value="5000">5,000 users</option>
+                                            <option value="10000">10,000 users</option>
+                                            <option value="25000">25,000 users</option>
+                                            <option value="50000">50,000 users</option>
+                                            <option value="100000">100,000 users</option>
+                                            <option value="250000">250,000 users</option>
+                                            <option value="500000">500,000 users</option>
+                                            <option value="1000000">1 Million users</option>
+                                            <option value="2500000">2.5 Million users</option>
+                                            <option value="5000000">5 Million users</option>
+                                            <option value="10000000">10 Million users</option>
+                                            <option value="25000000">25 Million users</option>
+                                            <option value="50000000">50 Million users</option>
+                                            <option value="100000000">100 Million users</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Match Attempts</label>
+                                        <input type="number" id="simMatchAttempts" value="100" min="10" max="1000" 
+                                               style="width: 100%; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Use Geohash Index</label>
+                                        <select id="simUseGeohash" style="width: 100%; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                            <option value="true" selected>Yes (Optimized)</option>
+                                            <option value="false">No (Baseline - Full Scan)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">City Focus</label>
+                                        <select id="simCityFocus" style="width: 100%; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                            <option value="">Random Distribution</option>
+                                            <option value="New York">New York</option>
+                                            <option value="Los Angeles">Los Angeles</option>
+                                            <option value="Chicago">Chicago</option>
+                                            <option value="Austin">Austin</option>
+                                            <option value="Miami">Miami</option>
+                                            <option value="Seattle">Seattle</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">QUICK ACTIONS</div>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="runScalingTestAdmin()">
+                                        📈 Scaling Test (100 → 1M users)
+                                    </button>
+                                    <button class="btn btn-secondary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(168, 85, 247, 0.2)); border-color: var(--danger);" onclick="runMassiveScaleTest()">
+                                        🚀 Massive Scale (1M → 100M users)
+                                    </button>
+                                    <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="runComparisonTest()">
+                                        🔄 Compare Geohash vs Full Scan
+                                    </button>
+                                    <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="runCityAnalysis()">
+                                        🗺️ Analyze City Distribution
+                                    </button>
+                                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-top: 8px;">
+                                        <input type="checkbox" id="simAutoSave" checked style="width: 18px; height: 18px; accent-color: var(--accent);">
+                                        <span style="font-size: 0.9rem;">Auto-save results to history</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Live Stats -->
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">LIVE SIMULATION STATS</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="simUsersGenerated">0</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">Users Generated</div>
+                                    </div>
+                                    <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--info);" id="simMatchesRun">0</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">Matches Run</div>
+                                    </div>
+                                    <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="simAvgTime">—</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">Avg Time (ms)</div>
+                                    </div>
+                                    <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);" id="simProgress">0%</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">Progress</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 12px;">
+                                    <div style="background: var(--bg-secondary); border-radius: 8px; height: 8px; overflow: hidden;">
+                                        <div id="simProgressBar" style="background: linear-gradient(90deg, var(--accent), var(--info)); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Metrics -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                    <div class="card" style="padding: 20px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Users</div>
+                        <div style="font-size: 2rem; font-weight: 700;" id="simMetricUsers">—</div>
+                    </div>
+                    <div class="card" style="padding: 20px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Match Success Rate</div>
+                        <div style="font-size: 2rem; font-weight: 700;" id="simMetricSuccess">—</div>
+                    </div>
+                    <div class="card" style="padding: 20px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Avg Match Time</div>
+                        <div style="font-size: 2rem; font-weight: 700;" id="simMetricAvgTime">—</div>
+                    </div>
+                    <div class="card" style="padding: 20px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">P95 Response</div>
+                        <div style="font-size: 2rem; font-weight: 700;" id="simMetricP95">—</div>
+                    </div>
+                    <div class="card" style="padding: 20px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Profiles Scanned</div>
+                        <div style="font-size: 2rem; font-weight: 700;" id="simMetricScans">—</div>
+                    </div>
+                    <div class="card" style="padding: 20px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Duration</div>
+                        <div style="font-size: 2rem; font-weight: 700;" id="simMetricDuration">—</div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                    <!-- Response Time Distribution -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📊 Response Time Distribution</h3>
+                        </div>
+                        <div class="card-body" id="simTimeChart" style="min-height: 250px;">
+                            <div style="text-align: center; padding: 60px; color: var(--text-muted);">
+                                <div style="font-size: 2.5rem; margin-bottom: 12px;">📊</div>
+                                <div style="font-weight: 600;">No data yet</div>
+                                <div style="font-size: 0.85rem;">Run a simulation to see results</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scaling Performance -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📈 Scaling Performance</h3>
+                        </div>
+                        <div class="card-body" id="simScalingChart" style="min-height: 250px;">
+                            <div style="text-align: center; padding: 60px; color: var(--text-muted);">
+                                <div style="font-size: 2.5rem; margin-bottom: 12px;">📈</div>
+                                <div style="font-weight: 600;">No scaling data</div>
+                                <div style="font-size: 0.85rem;">Run scaling test to compare performance</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Charts Row -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 20px;">
+                    <!-- User Distribution -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">👥 User Distribution</h3>
+                        </div>
+                        <div class="card-body" id="simUserChart" style="min-height: 200px;">
+                            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <div style="font-size: 2.5rem; margin-bottom: 12px;">👥</div>
+                                <div style="font-weight: 600;">No users generated</div>
+                                <div style="font-size: 0.85rem;">Run a simulation to see distribution</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Match Analysis -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">❤️ Match Analysis</h3>
+                        </div>
+                        <div class="card-body" id="simMatchChart" style="min-height: 200px;">
+                            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <div style="font-size: 2.5rem; margin-bottom: 12px;">❤️</div>
+                                <div style="font-weight: 600;">No match data</div>
+                                <div style="font-size: 0.85rem;">Run a simulation to analyze matches</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Debug Console -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header" style="cursor: pointer;" onclick="toggleSimConsole()">
+                        <h3 class="card-title">🖥️ Debug Console</h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem;" onclick="event.stopPropagation(); clearSimLog()">Clear</button>
+                            <svg id="simConsoleToggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s;">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="simConsoleBody" style="display: block;">
+                        <div class="card-body" style="padding: 0;">
+                            <div id="simLogOutput" style="background: #0d1117; border-radius: 0 0 12px 12px; padding: 16px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.75rem; max-height: 300px; overflow-y: auto; line-height: 1.8;">
+                                <div style="display: flex; gap: 12px;">
+                                    <span style="color: #7d8590;">[00:00:00]</span>
+                                    <span style="color: #58a6ff;">Ready to run simulation. Configure parameters above and click Run.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Issues & Recommendations -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--warning);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(255, 140, 0, 0.1), rgba(255, 140, 0, 0.05));">
+                        <h3 class="card-title">⚠️ Detected Issues & Recommendations</h3>
+                        <span id="simIssueCount" class="status-badge" style="font-size: 0.75rem; background: var(--warning);">0 issues</span>
+                    </div>
+                    <div class="card-body" id="simIssuesList">
+                        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            <div style="font-size: 2.5rem; margin-bottom: 12px;">✅</div>
+                            <div style="font-weight: 600;">No issues detected</div>
+                            <div style="font-size: 0.85rem;">Run a simulation to identify potential bottlenecks</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saved Results History -->
+                <div class="card">
+                    <div class="card-header" style="cursor: pointer;" onclick="toggleSimHistory()">
+                        <h3 class="card-title">📁 Saved Results History</h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span id="simHistoryCount" class="status-badge" style="font-size: 0.75rem;">0 saved</span>
+                            <svg id="simHistoryToggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s;">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="simHistoryBody" style="display: none;">
+                        <div class="card-body" id="simHistoryList" style="padding: 0;">
+                            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <div>No saved results yet</div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -10684,9 +10985,888 @@
                 case 'payroll': renderPayroll(); break;
                 case 'tax': renderTax(); break;
                 case 'calendar': initCalendarSection(); break;
+                case 'simulation': renderSimulation(); break;
                 case 'diagnostics': renderDiagnostics(); break;
                 case 'site-diagnostics': renderSiteDiagnostics(); break;
             }
+        }
+
+        // ==========================================
+        // STRESS TEST / SIMULATION
+        // ==========================================
+        
+        // Simulation state
+        let simRunning = false;
+        let simScalingResults = [];
+        let simHistory = JSON.parse(localStorage.getItem('oithSimHistory') || '[]');
+        let simLogStartTime = 0;
+        
+        // User generation data
+        const SIM_DATA = {
+            firstNames: {
+                male: ['James', 'John', 'Michael', 'David', 'Robert', 'William', 'Christopher', 'Matthew', 'Daniel', 'Andrew', 'Joshua', 'Ryan', 'Brandon', 'Tyler', 'Kevin', 'Brian', 'Justin', 'Austin', 'Eric', 'Jason'],
+                female: ['Emma', 'Olivia', 'Sophia', 'Ava', 'Isabella', 'Mia', 'Charlotte', 'Amelia', 'Harper', 'Evelyn', 'Jessica', 'Ashley', 'Emily', 'Sarah', 'Amanda', 'Jennifer', 'Lauren', 'Samantha', 'Hannah', 'Rachel']
+            },
+            occupations: ['Software Engineer', 'Teacher', 'Nurse', 'Marketing Manager', 'Designer', 'Accountant', 'Sales Rep', 'Project Manager', 'Lawyer', 'Doctor', 'Consultant', 'Writer', 'Chef', 'Data Scientist'],
+            interests: ['Travel', 'Hiking', 'Cooking', 'Reading', 'Movies', 'Music', 'Fitness', 'Photography', 'Art', 'Gaming', 'Dancing', 'Yoga', 'Coffee', 'Wine', 'Sports', 'Dogs', 'Cats', 'Beach'],
+            heights: ['5\'4"', '5\'5"', '5\'6"', '5\'7"', '5\'8"', '5\'9"', '5\'10"', '5\'11"', '6\'0"', '6\'1"', '6\'2"'],
+            drinking: ['Never', 'Rarely', 'Socially', 'Often'],
+            smoking: ['Never', 'Occasionally', 'Regularly'],
+            exercise: ['Never', 'Sometimes', 'Regularly', 'Daily'],
+            children: ['No children', 'Want someday', 'Have & want more', 'Have, done', 'Not sure'],
+            religion: ['Christian', 'Catholic', 'Jewish', 'Muslim', 'Hindu', 'Buddhist', 'Spiritual', 'Agnostic', 'Atheist'],
+            lookingFor: ['relationship', 'casual', 'friendship', 'not_sure'],
+            cities: [
+                { name: 'New York, NY', lat: 40.7128, lng: -74.0060 },
+                { name: 'Los Angeles, CA', lat: 34.0522, lng: -118.2437 },
+                { name: 'Chicago, IL', lat: 41.8781, lng: -87.6298 },
+                { name: 'Houston, TX', lat: 29.7604, lng: -95.3698 },
+                { name: 'Phoenix, AZ', lat: 33.4484, lng: -112.0740 },
+                { name: 'Austin, TX', lat: 30.2672, lng: -97.7431 },
+                { name: 'Seattle, WA', lat: 47.6062, lng: -122.3321 },
+                { name: 'Denver, CO', lat: 39.7392, lng: -104.9903 },
+                { name: 'Boston, MA', lat: 42.3601, lng: -71.0589 },
+                { name: 'Miami, FL', lat: 25.7617, lng: -80.1918 }
+            ]
+        };
+        
+        // Helper functions for simulation
+        const simRandomChoice = arr => arr[Math.floor(Math.random() * arr.length)];
+        const simRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const simRandomSubset = (arr, min, max) => {
+            const count = simRandomInt(min, Math.min(max, arr.length));
+            return [...arr].sort(() => Math.random() - 0.5).slice(0, count);
+        };
+        
+        const SIM_BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+        
+        function simEncodeGeohash(lat, lng, precision = 4) {
+            let idx = 0, bit = 0, evenBit = true, geohash = '';
+            let latMin = -90, latMax = 90, lngMin = -180, lngMax = 180;
+            
+            while (geohash.length < precision) {
+                if (evenBit) {
+                    const mid = (lngMin + lngMax) / 2;
+                    if (lng >= mid) { idx = idx * 2 + 1; lngMin = mid; }
+                    else { idx = idx * 2; lngMax = mid; }
+                } else {
+                    const mid = (latMin + latMax) / 2;
+                    if (lat >= mid) { idx = idx * 2 + 1; latMin = mid; }
+                    else { idx = idx * 2; latMax = mid; }
+                }
+                evenBit = !evenBit;
+                if (++bit === 5) { geohash += SIM_BASE32[idx]; bit = 0; idx = 0; }
+            }
+            return geohash;
+        }
+        
+        function simGenerateUser(index, cityFocus = null) {
+            const gender = Math.random() < 0.6 ? 'male' : 'female';
+            const age = simRandomInt(22, 45);
+            let city = simRandomChoice(SIM_DATA.cities);
+            
+            if (cityFocus) {
+                const focusCity = SIM_DATA.cities.find(c => c.name.includes(cityFocus));
+                if (focusCity && Math.random() < 0.5) city = focusCity;
+            }
+            
+            const coords = {
+                lat: city.lat + (Math.random() - 0.5) * 0.15,
+                lng: city.lng + (Math.random() - 0.5) * 0.15
+            };
+            
+            const interestedIn = gender === 'male' 
+                ? (Math.random() < 0.92 ? 'women' : 'everyone')
+                : (Math.random() < 0.92 ? 'men' : 'everyone');
+            
+            return {
+                email: `user_${index}@test.com`,
+                firstName: simRandomChoice(SIM_DATA.firstNames[gender]),
+                age,
+                gender,
+                location: city.name,
+                coordinates: coords,
+                geohash: simEncodeGeohash(coords.lat, coords.lng, 4),
+                occupation: simRandomChoice(SIM_DATA.occupations),
+                interests: simRandomSubset(SIM_DATA.interests, 3, 6),
+                drinking: simRandomChoice(SIM_DATA.drinking),
+                smoking: simRandomChoice(SIM_DATA.smoking),
+                exercise: simRandomChoice(SIM_DATA.exercise),
+                children: simRandomChoice(SIM_DATA.children),
+                religion: simRandomChoice(SIM_DATA.religion),
+                lookingFor: simRandomChoice(SIM_DATA.lookingFor),
+                matchPreferences: {
+                    interestedIn,
+                    ageMin: Math.max(18, age - simRandomInt(5, 12)),
+                    ageMax: Math.min(99, age + simRandomInt(5, 12)),
+                    maxDistance: simRandomChoice([15, 25, 50, 100])
+                },
+                isVisible: true
+            };
+        }
+        
+        function simCalculateDistance(lat1, lng1, lat2, lng2) {
+            if (!lat1 || !lng1 || !lat2 || !lng2) return 9999;
+            const R = 3959;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLng/2) * Math.sin(dLng/2);
+            return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+        }
+        
+        function simCheckPreferenceMatch(profile, prefs, viewerProfile) {
+            const interestedIn = prefs.interestedIn || 'everyone';
+            if (interestedIn !== 'everyone') {
+                const genderMap = { 'men': 'male', 'women': 'female' };
+                if (profile.gender !== genderMap[interestedIn]) return { matches: false };
+            }
+            
+            const profileAge = profile.age || 25;
+            if (profileAge < (prefs.ageMin || 18) || profileAge > (prefs.ageMax || 99)) {
+                return { matches: false };
+            }
+            
+            const distance = simCalculateDistance(
+                viewerProfile.coordinates?.lat, viewerProfile.coordinates?.lng,
+                profile.coordinates?.lat, profile.coordinates?.lng
+            );
+            if (distance > (prefs.maxDistance || 100)) {
+                return { matches: false, distance };
+            }
+            
+            return { matches: true, distance };
+        }
+        
+        function simCalculateCompatibility(p1, p2) {
+            let score = 50;
+            const i1 = p1.interests || [], i2 = p2.interests || [];
+            if (i1.length && i2.length) {
+                const overlap = i1.filter(i => i2.includes(i)).length;
+                score += (overlap / Math.min(i1.length, i2.length)) * 25;
+            }
+            if (p1.drinking === p2.drinking) score += 3;
+            if (p1.smoking === p2.smoking) score += 3;
+            if (p1.exercise === p2.exercise) score += 3;
+            if (p1.lookingFor === p2.lookingFor) score += 10;
+            return Math.min(100, Math.round(score));
+        }
+        
+        function simSimulateMatch(user, allUsers, excludeEmails, useGeohash) {
+            const start = performance.now();
+            const prefs = user.matchPreferences || {};
+            
+            let candidates;
+            if (useGeohash && user.geohash) {
+                candidates = allUsers.filter(u => 
+                    !excludeEmails.includes(u.email) && u.isVisible &&
+                    u.geohash?.substring(0, 3) === user.geohash.substring(0, 3)
+                );
+                if (candidates.length < 10) {
+                    candidates = allUsers.filter(u => !excludeEmails.includes(u.email) && u.isVisible);
+                }
+            } else {
+                candidates = allUsers.filter(u => !excludeEmails.includes(u.email) && u.isVisible);
+            }
+            
+            const matches = [];
+            let prefChecks = 0, compatCalcs = 0;
+            
+            for (const c of candidates) {
+                prefChecks++;
+                const fit1 = simCheckPreferenceMatch(c, prefs, user);
+                if (!fit1.matches) continue;
+                
+                prefChecks++;
+                const fit2 = simCheckPreferenceMatch(user, c.matchPreferences || {}, c);
+                if (!fit2.matches) continue;
+                
+                compatCalcs++;
+                matches.push({ email: c.email, compatibility: simCalculateCompatibility(user, c), distance: fit1.distance });
+            }
+            
+            matches.sort((a, b) => b.compatibility - a.compatibility);
+            
+            return {
+                duration: performance.now() - start,
+                scanned: candidates.length,
+                prefChecks,
+                compatCalcs,
+                match: matches[0] || null
+            };
+        }
+        
+        // Simulation logging
+        function simLog(message, type = 'info') {
+            const output = document.getElementById('simLogOutput');
+            if (!output) return;
+            
+            const elapsed = simLogStartTime ? ((Date.now() - simLogStartTime) / 1000).toFixed(2) : '00.00';
+            const colors = {
+                info: '#58a6ff',
+                success: '#3fb950',
+                warning: '#d29922',
+                error: '#f85149'
+            };
+            
+            const line = document.createElement('div');
+            line.style.cssText = 'display: flex; gap: 12px;';
+            line.innerHTML = `<span style="color: #7d8590;">[${elapsed}s]</span><span style="color: ${colors[type] || colors.info}">${message}</span>`;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearSimLog() {
+            const output = document.getElementById('simLogOutput');
+            if (output) {
+                output.innerHTML = '';
+                simLogStartTime = Date.now();
+                simLog('Console cleared.', 'info');
+            }
+        }
+        
+        function updateSimProgress(percent, usersGen, matchesRun, avgTime) {
+            const progressBar = document.getElementById('simProgressBar');
+            const progressText = document.getElementById('simProgress');
+            const usersEl = document.getElementById('simUsersGenerated');
+            const matchesEl = document.getElementById('simMatchesRun');
+            const avgTimeEl = document.getElementById('simAvgTime');
+            
+            if (progressBar) progressBar.style.width = percent + '%';
+            if (progressText) progressText.textContent = percent + '%';
+            if (usersEl) usersEl.textContent = usersGen.toLocaleString();
+            if (matchesEl) matchesEl.textContent = matchesRun.toLocaleString();
+            if (avgTimeEl) avgTimeEl.textContent = avgTime ? avgTime.toFixed(1) : '—';
+        }
+        
+        function toggleSimConsole() {
+            const body = document.getElementById('simConsoleBody');
+            const toggle = document.getElementById('simConsoleToggle');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                toggle.style.transform = 'rotate(0deg)';
+            } else {
+                body.style.display = 'none';
+                toggle.style.transform = 'rotate(-90deg)';
+            }
+        }
+        
+        function toggleSimHistory() {
+            const body = document.getElementById('simHistoryBody');
+            const toggle = document.getElementById('simHistoryToggle');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                toggle.style.transform = 'rotate(0deg)';
+                renderSimHistory();
+            } else {
+                body.style.display = 'none';
+                toggle.style.transform = 'rotate(-90deg)';
+            }
+        }
+        
+        // Main simulation function
+        async function runMatchingSimulation() {
+            if (simRunning) return;
+            simRunning = true;
+            
+            const userCount = parseInt(document.getElementById('simUserCount')?.value || 1000);
+            const matchAttempts = parseInt(document.getElementById('simMatchAttempts')?.value || 100);
+            const useGeohash = document.getElementById('simUseGeohash')?.value === 'true';
+            const cityFocus = document.getElementById('simCityFocus')?.value || null;
+            const autoSave = document.getElementById('simAutoSave')?.checked;
+            
+            // Determine simulation mode based on user count
+            const SAMPLE_THRESHOLD = 50000; // Above this, use sampling mode
+            const useSampling = userCount > SAMPLE_THRESHOLD;
+            const sampleSize = useSampling ? Math.min(50000, Math.max(10000, Math.floor(userCount / 100))) : userCount;
+            const scaleFactor = useSampling ? userCount / sampleSize : 1;
+            
+            // Update UI
+            document.getElementById('runSimBtn').disabled = true;
+            document.getElementById('simStatusBadge').textContent = 'Running...';
+            document.getElementById('simStatusBadge').style.background = 'var(--warning)';
+            
+            simLogStartTime = Date.now();
+            clearSimLog();
+            simLog(`Starting simulation: ${userCount.toLocaleString()} users, ${matchAttempts} match attempts`, 'info');
+            simLog(`Geohash indexing: ${useGeohash ? 'Enabled (Optimized)' : 'Disabled (Full Scan)'}`, 'info');
+            if (cityFocus) simLog(`City focus: ${cityFocus}`, 'info');
+            
+            if (useSampling) {
+                simLog(`⚡ Large-scale mode: Using ${sampleSize.toLocaleString()} sample users (${scaleFactor.toFixed(0)}x extrapolation)`, 'warning');
+                simLog(`📊 Results will be extrapolated to estimate ${userCount.toLocaleString()} user behavior`, 'info');
+            }
+            
+            // Generate users (sample size for large counts)
+            const actualGenerateCount = useSampling ? sampleSize : userCount;
+            updateSimProgress(10, 0, 0, 0);
+            simLog(`Generating ${actualGenerateCount.toLocaleString()} ${useSampling ? 'sample ' : ''}user profiles...`);
+            
+            await new Promise(r => setTimeout(r, 50));
+            
+            const users = [];
+            const batchSize = Math.max(500, Math.floor(actualGenerateCount / 100));
+            for (let i = 0; i < actualGenerateCount; i++) {
+                users.push(simGenerateUser(i, cityFocus));
+                if ((i + 1) % batchSize === 0) {
+                    updateSimProgress(10 + (i / actualGenerateCount) * 20, useSampling ? Math.floor((i + 1) * scaleFactor) : i + 1, 0, 0);
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+            
+            simLog(`Generated ${actualGenerateCount.toLocaleString()} users${useSampling ? ` (representing ${userCount.toLocaleString()})` : ''}`, 'success');
+            
+            // Calculate pool stats
+            const genderStats = { male: 0, female: 0 };
+            const cityStats = {};
+            let totalAge = 0;
+            
+            for (const u of users) {
+                genderStats[u.gender]++;
+                cityStats[u.location] = (cityStats[u.location] || 0) + 1;
+                totalAge += u.age;
+            }
+            
+            // Run matching
+            updateSimProgress(35, userCount, 0, 0);
+            simLog(`Running ${matchAttempts} match attempts...`);
+            
+            const results = [];
+            const matchHistory = new Map();
+            let runningAvgTime = 0;
+            
+            for (let i = 0; i < matchAttempts; i++) {
+                const user = users[Math.floor(Math.random() * users.length)];
+                const excluded = matchHistory.get(user.email) || [user.email];
+                
+                const result = simSimulateMatch(user, users, excluded, useGeohash);
+                results.push(result);
+                
+                if (result.match) {
+                    const history = matchHistory.get(user.email) || [user.email];
+                    history.push(result.match.email);
+                    matchHistory.set(user.email, history);
+                }
+                
+                runningAvgTime = results.reduce((a, r) => a + r.duration, 0) / results.length;
+                
+                if ((i + 1) % 10 === 0) {
+                    updateSimProgress(35 + (i / matchAttempts) * 55, userCount, i + 1, runningAvgTime);
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
+            
+            // Calculate metrics
+            const times = results.map(r => r.duration);
+            const scans = results.map(r => r.scanned);
+            const successful = results.filter(r => r.match).length;
+            
+            const avgTime = times.reduce((a, b) => a + b, 0) / times.length;
+            const sortedTimes = [...times].sort((a, b) => a - b);
+            const p95 = sortedTimes[Math.floor(sortedTimes.length * 0.95)] || 0;
+            const avgScans = scans.reduce((a, b) => a + b, 0) / scans.length;
+            const totalDuration = times.reduce((a, b) => a + b, 0);
+            
+            updateSimProgress(95, userCount, matchAttempts, avgTime);
+            
+            // Update metrics display
+            document.getElementById('simMetricUsers').textContent = userCount.toLocaleString();
+            const successRate = (successful / matchAttempts) * 100;
+            document.getElementById('simMetricSuccess').textContent = successRate.toFixed(1) + '%';
+            document.getElementById('simMetricSuccess').style.color = successRate > 50 ? 'var(--success)' : 'var(--warning)';
+            document.getElementById('simMetricAvgTime').textContent = avgTime.toFixed(1) + 'ms';
+            document.getElementById('simMetricAvgTime').style.color = avgTime < 50 ? 'var(--success)' : avgTime < 200 ? 'var(--warning)' : 'var(--danger)';
+            document.getElementById('simMetricP95').textContent = p95.toFixed(1) + 'ms';
+            document.getElementById('simMetricP95').style.color = p95 < 200 ? 'var(--success)' : p95 < 500 ? 'var(--warning)' : 'var(--danger)';
+            document.getElementById('simMetricScans').textContent = Math.round(avgScans).toLocaleString();
+            document.getElementById('simMetricScans').style.color = avgScans < userCount * 0.3 ? 'var(--success)' : 'var(--warning)';
+            document.getElementById('simMetricDuration').textContent = totalDuration.toFixed(0) + 'ms';
+            
+            // Render charts
+            renderSimTimeChart(times);
+            renderSimUserChart(genderStats, Math.round(totalAge / userCount));
+            renderSimMatchChart(successful, matchAttempts, avgTime, avgScans);
+            
+            // Detect issues - extrapolate scan counts for large scale
+            const issues = [];
+            const extrapolatedScans = avgScans * scaleFactor;
+            const extrapolatedTime = useSampling ? avgTime * Math.log10(scaleFactor + 1) : avgTime; // O(log n) estimate
+            const extrapolatedP95 = useSampling ? p95 * Math.log10(scaleFactor + 1) : p95;
+            
+            if (avgScans > sampleSize * 0.5) {
+                issues.push({
+                    severity: 'high',
+                    title: 'Full Table Scans Detected',
+                    detail: `Scanning ${Math.round(avgScans)} profiles per match (${((avgScans / sampleSize) * 100).toFixed(1)}% of ${useSampling ? 'sample' : 'users'})${useSampling ? `. At ${userCount.toLocaleString()} users, this would scan ~${Math.round(extrapolatedScans).toLocaleString()} profiles!` : ''}`,
+                    recommendation: 'Implement GSI on geohash_prefix for location-based filtering in DynamoDB'
+                });
+            }
+            
+            if (p95 > 200 || (useSampling && extrapolatedP95 > 200)) {
+                issues.push({
+                    severity: 'high',
+                    title: 'Slow P95 Response Time',
+                    detail: `P95 is ${p95.toFixed(1)}ms${useSampling ? ` (extrapolated: ~${extrapolatedP95.toFixed(0)}ms at full scale)` : ''} (target: < 200ms for good UX)`,
+                    recommendation: 'Add caching layer (ElastiCache/Redis) or pre-compute compatibility scores'
+                });
+            }
+            
+            if (successRate < 50) {
+                issues.push({
+                    severity: 'medium',
+                    title: 'Low Match Success Rate',
+                    detail: `Only ${successRate.toFixed(1)}% of attempts found matches`,
+                    recommendation: 'Consider expanding geohash search radius or relaxing preference matching'
+                });
+            }
+            
+            if (avgScans > 500 || (useSampling && extrapolatedScans > 5000)) {
+                issues.push({
+                    severity: 'medium',
+                    title: 'High Scan Count May Hit Lambda Limits',
+                    detail: `Scanning ${Math.round(avgScans)} profiles${useSampling ? ` (~${Math.round(extrapolatedScans).toLocaleString()} at full scale)` : ''} may timeout on Lambda with 15s limit`,
+                    recommendation: 'Implement pagination or move to Step Functions for large pools'
+                });
+            }
+            
+            // Large scale specific warnings
+            if (userCount >= 1000000) {
+                issues.push({
+                    severity: 'medium',
+                    title: 'Million+ User Scale Considerations',
+                    detail: `At ${(userCount / 1000000).toFixed(1)}M users, you need distributed infrastructure`,
+                    recommendation: 'Consider: DynamoDB On-Demand, ElastiCache cluster, Lambda provisioned concurrency, CloudFront caching'
+                });
+            }
+            
+            if (userCount >= 10000000) {
+                issues.push({
+                    severity: 'high',
+                    title: 'Enterprise Scale Architecture Required',
+                    detail: `At ${(userCount / 1000000).toFixed(0)}M users, single-region architecture won't suffice`,
+                    recommendation: 'Implement: Multi-region replication, sharded matching pools, dedicated RDS Aurora clusters, global accelerator'
+                });
+            }
+            
+            if (userCount >= 50000000 && !useGeohash) {
+                issues.push({
+                    severity: 'high',
+                    title: 'Geohash Indexing Critical at This Scale',
+                    detail: `Full table scans at ${(userCount / 1000000).toFixed(0)}M users will cause severe performance issues`,
+                    recommendation: 'Enable geohash indexing immediately - this is non-negotiable at 50M+ users'
+                });
+            }
+            
+            renderSimIssues(issues);
+            
+            // Log summary
+            simLog(`Simulation complete!`, 'success');
+            simLog(`Match success rate: ${successRate.toFixed(1)}%`);
+            simLog(`Average match time: ${avgTime.toFixed(2)}ms | P95: ${p95.toFixed(2)}ms`);
+            simLog(`Avg profiles scanned per match: ${Math.round(avgScans)}`);
+            
+            if (issues.length > 0) {
+                simLog(`⚠️ ${issues.length} potential issues detected`, 'warning');
+            } else {
+                simLog(`✅ No critical issues at this scale`, 'success');
+            }
+            
+            // Store for scaling comparison
+            const resultData = {
+                timestamp: new Date().toISOString(),
+                userCount,
+                matchAttempts,
+                useGeohash,
+                cityFocus,
+                avgTime,
+                p95,
+                avgScans: Math.round(avgScans),
+                successRate: successRate.toFixed(1),
+                issues: issues.length,
+                totalDuration
+            };
+            
+            simScalingResults.push(resultData);
+            
+            if (simScalingResults.length > 1) {
+                renderSimScalingChart(simScalingResults);
+            }
+            
+            // Auto-save to history
+            if (autoSave) {
+                simHistory.unshift(resultData);
+                if (simHistory.length > 50) simHistory = simHistory.slice(0, 50);
+                localStorage.setItem('oithSimHistory', JSON.stringify(simHistory));
+                document.getElementById('simHistoryCount').textContent = `${simHistory.length} saved`;
+            }
+            
+            updateSimProgress(100, userCount, matchAttempts, avgTime);
+            
+            // Reset UI
+            document.getElementById('runSimBtn').disabled = false;
+            document.getElementById('simStatusBadge').textContent = 'Complete';
+            document.getElementById('simStatusBadge').style.background = 'var(--success)';
+            
+            simRunning = false;
+            
+            return resultData;
+        }
+        
+        async function runScalingTestAdmin() {
+            simScalingResults = [];
+            const counts = [100, 1000, 10000, 100000, 1000000];
+            
+            clearSimLog();
+            simLog('Starting scaling test across multiple user counts (100 → 1M)...', 'info');
+            simLog('Note: Larger counts use sampling for performance', 'info');
+            
+            for (const count of counts) {
+                document.getElementById('simUserCount').value = count;
+                await runMatchingSimulation();
+                await new Promise(r => setTimeout(r, 500));
+            }
+            
+            simLog('Scaling test complete!', 'success');
+            
+            // Analysis
+            if (simScalingResults.length >= 2) {
+                const first = simScalingResults[0];
+                const last = simScalingResults[simScalingResults.length - 1];
+                const userScale = last.userCount / first.userCount;
+                const timeScale = last.avgTime / first.avgTime;
+                
+                simLog(`User scale: ${userScale.toLocaleString()}x (${first.userCount.toLocaleString()} → ${last.userCount.toLocaleString()})`, 'info');
+                simLog(`Time scale: ${timeScale.toFixed(2)}x`, timeScale > userScale * 0.1 ? 'warning' : 'success');
+                
+                if (timeScale > userScale * 0.5) {
+                    simLog('⚠️ Algorithm appears to scale poorly (O(n) or worse)', 'warning');
+                } else if (timeScale > userScale * 0.1) {
+                    simLog('🟡 Algorithm scales moderately (O(log n) - may need optimization at 10M+)', 'warning');
+                } else {
+                    simLog('✅ Algorithm scales well (sub-linear complexity)', 'success');
+                }
+                
+                // Estimate time at 100M
+                const estimate100M = first.avgTime * Math.pow(timeScale, Math.log10(100000000 / first.userCount) / Math.log10(userScale));
+                simLog(`📊 Estimated avg time at 100M users: ~${estimate100M.toFixed(0)}ms`, estimate100M > 1000 ? 'error' : estimate100M > 200 ? 'warning' : 'success');
+            }
+        }
+        
+        async function runMassiveScaleTest() {
+            simScalingResults = [];
+            const counts = [1000000, 5000000, 10000000, 25000000, 50000000, 100000000];
+            
+            clearSimLog();
+            simLog('🚀 Starting MASSIVE scale test (1M → 100M users)...', 'info');
+            simLog('⚡ Using sampling extrapolation for realistic estimates', 'info');
+            
+            for (const count of counts) {
+                document.getElementById('simUserCount').value = count;
+                await runMatchingSimulation();
+                await new Promise(r => setTimeout(r, 500));
+            }
+            
+            simLog('Massive scale test complete!', 'success');
+            
+            if (simScalingResults.length >= 2) {
+                const first = simScalingResults[0];
+                const last = simScalingResults[simScalingResults.length - 1];
+                
+                simLog(`📊 Results from ${first.userCount.toLocaleString()} to ${last.userCount.toLocaleString()} users:`, 'info');
+                simLog(`   Avg time growth: ${(last.avgTime / first.avgTime).toFixed(2)}x`, 'info');
+                simLog(`   P95 at max scale: ${last.p95.toFixed(1)}ms`, last.p95 > 500 ? 'error' : 'success');
+            }
+        }
+        
+        async function runComparisonTest() {
+            simScalingResults = [];
+            const userCount = parseInt(document.getElementById('simUserCount')?.value || 1000);
+            
+            clearSimLog();
+            simLog('Starting comparison test: Geohash vs Full Scan...', 'info');
+            
+            // Run with geohash
+            document.getElementById('simUseGeohash').value = 'true';
+            simLog('Running with Geohash indexing enabled...', 'info');
+            await runMatchingSimulation();
+            await new Promise(r => setTimeout(r, 500));
+            
+            // Run without geohash
+            document.getElementById('simUseGeohash').value = 'false';
+            simLog('Running with Full Scan (no indexing)...', 'info');
+            await runMatchingSimulation();
+            
+            // Reset to geohash
+            document.getElementById('simUseGeohash').value = 'true';
+            
+            simLog('Comparison test complete!', 'success');
+            
+            if (simScalingResults.length >= 2) {
+                const withGeo = simScalingResults[0];
+                const withoutGeo = simScalingResults[1];
+                const speedup = withoutGeo.avgTime / withGeo.avgTime;
+                const scanReduction = ((withoutGeo.avgScans - withGeo.avgScans) / withoutGeo.avgScans * 100);
+                
+                simLog(`Geohash speedup: ${speedup.toFixed(2)}x faster`, speedup > 1.5 ? 'success' : 'warning');
+                simLog(`Scan reduction: ${scanReduction.toFixed(1)}% fewer profiles scanned`, scanReduction > 30 ? 'success' : 'info');
+            }
+        }
+        
+        async function runCityAnalysis() {
+            simScalingResults = [];
+            const cities = ['New York', 'Los Angeles', 'Chicago', 'Austin', 'Miami'];
+            
+            clearSimLog();
+            simLog('Starting city distribution analysis...', 'info');
+            
+            for (const city of cities) {
+                document.getElementById('simCityFocus').value = city;
+                simLog(`Analyzing ${city}...`, 'info');
+                await runMatchingSimulation();
+                await new Promise(r => setTimeout(r, 500));
+            }
+            
+            // Reset
+            document.getElementById('simCityFocus').value = '';
+            
+            simLog('City analysis complete!', 'success');
+        }
+        
+        function renderSimTimeChart(times) {
+            const container = document.getElementById('simTimeChart');
+            if (!container) return;
+            
+            const buckets = [0, 10, 25, 50, 100, 200, 500, 1000];
+            const counts = new Array(buckets.length).fill(0);
+            
+            for (const t of times) {
+                for (let i = buckets.length - 1; i >= 0; i--) {
+                    if (t >= buckets[i]) { counts[i]++; break; }
+                }
+            }
+            
+            const max = Math.max(...counts);
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            for (let i = 0; i < buckets.length - 1; i++) {
+                const label = `${buckets[i]}-${buckets[i+1]}ms`;
+                const pct = (counts[i] / max) * 100;
+                const color = buckets[i] < 50 ? 'var(--success)' : buckets[i] < 200 ? 'var(--warning)' : 'var(--danger)';
+                html += `
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 70px; font-size: 0.75rem; color: var(--text-secondary); text-align: right;">${label}</div>
+                        <div style="flex: 1; height: 20px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; width: ${pct}%; background: ${color}; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 0.7rem; font-weight: 600; color: white;">${counts[i]}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function renderSimUserChart(genderStats, avgAge) {
+            const container = document.getElementById('simUserChart');
+            if (!container) return;
+            
+            const total = genderStats.male + genderStats.female;
+            const malePct = ((genderStats.male / total) * 100).toFixed(1);
+            const femalePct = ((genderStats.female / total) * 100).toFixed(1);
+            
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 60px; font-size: 0.75rem; color: var(--text-secondary); text-align: right;">Male</div>
+                        <div style="flex: 1; height: 24px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; width: ${malePct}%; background: var(--accent); border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: white;">${genderStats.male.toLocaleString()} (${malePct}%)</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 60px; font-size: 0.75rem; color: var(--text-secondary); text-align: right;">Female</div>
+                        <div style="flex: 1; height: 24px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; width: ${femalePct}%; background: var(--success); border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: white;">${genderStats.female.toLocaleString()} (${femalePct}%)</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Average Age</div>
+                        <div style="font-size: 2rem; font-weight: 700;">${avgAge}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderSimMatchChart(successful, total, avgTime, avgScans) {
+            const container = document.getElementById('simMatchChart');
+            if (!container) return;
+            
+            const successRate = ((successful / total) * 100).toFixed(1);
+            const failRate = (100 - parseFloat(successRate)).toFixed(1);
+            
+            container.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 60px; font-size: 0.75rem; color: var(--text-secondary); text-align: right;">Success</div>
+                        <div style="flex: 1; height: 24px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; width: ${successRate}%; background: var(--success); border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: white;">${successful} (${successRate}%)</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 60px; font-size: 0.75rem; color: var(--text-secondary); text-align: right;">Failed</div>
+                        <div style="flex: 1; height: 24px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; width: ${failRate}%; background: var(--danger); border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 0.75rem; font-weight: 600; color: white;">${total - successful} (${failRate}%)</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: center;">
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Avg Time</div>
+                            <div style="font-size: 1.25rem; font-weight: 700;">${avgTime.toFixed(1)}ms</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Avg Scans</div>
+                            <div style="font-size: 1.25rem; font-weight: 700;">${Math.round(avgScans)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderSimScalingChart(results) {
+            const container = document.getElementById('simScalingChart');
+            if (!container) return;
+            
+            const maxTime = Math.max(...results.map(r => r.avgTime));
+            const maxScans = Math.max(...results.map(r => r.avgScans));
+            
+            let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+            for (const r of results) {
+                const timePct = (r.avgTime / maxTime) * 50;
+                const scansPct = (r.avgScans / maxScans) * 50;
+                const geoLabel = r.useGeohash ? '(GH)' : '(FS)';
+                html += `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 90px; font-size: 0.7rem; color: var(--text-secondary); text-align: right;">${r.userCount.toLocaleString()} ${geoLabel}</div>
+                        <div style="flex: 1; display: flex; gap: 4px;">
+                            <div style="height: 18px; width: ${timePct}%; background: var(--accent); border-radius: 3px; display: flex; align-items: center; padding-left: 6px; font-size: 0.65rem; font-weight: 500; color: white;">${r.avgTime.toFixed(1)}ms</div>
+                            <div style="height: 18px; width: ${scansPct}%; background: var(--warning); opacity: 0.8; border-radius: 3px; display: flex; align-items: center; padding-left: 6px; font-size: 0.65rem; font-weight: 500; color: white;">${r.avgScans}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += `
+                <div style="margin-top: 8px; font-size: 0.7rem; color: var(--text-muted); display: flex; gap: 16px;">
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background: var(--accent); border-radius: 2px; margin-right: 4px;"></span>Avg Time</span>
+                    <span><span style="display: inline-block; width: 12px; height: 12px; background: var(--warning); opacity: 0.8; border-radius: 2px; margin-right: 4px;"></span>Avg Scans</span>
+                    <span style="margin-left: auto;">(GH) = Geohash, (FS) = Full Scan</span>
+                </div>
+            </div>`;
+            
+            container.innerHTML = html;
+        }
+        
+        function renderSimIssues(issues) {
+            const container = document.getElementById('simIssuesList');
+            const countBadge = document.getElementById('simIssueCount');
+            
+            if (!container) return;
+            
+            countBadge.textContent = `${issues.length} issues`;
+            countBadge.style.background = issues.length === 0 ? 'var(--success)' : issues.some(i => i.severity === 'high') ? 'var(--danger)' : 'var(--warning)';
+            
+            if (issues.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--success);">
+                        <div style="font-size: 2.5rem; margin-bottom: 12px;">✅</div>
+                        <div style="font-weight: 600;">No Critical Issues Detected</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Algorithm is performing well at this scale</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            for (const issue of issues) {
+                const colors = { high: 'var(--danger)', medium: 'var(--warning)', low: 'var(--success)' };
+                const icons = { high: '🔴', medium: '🟡', low: '🟢' };
+                html += `
+                    <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 12px; border-left: 4px solid ${colors[issue.severity]};">
+                        <div style="font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                            ${icons[issue.severity]} ${issue.title}
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">${issue.detail}</div>
+                        <div style="font-size: 0.8rem; color: var(--accent-light); padding: 8px 12px; background: rgba(0, 120, 212, 0.1); border-radius: 4px;">💡 ${issue.recommendation}</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+        
+        function renderSimHistory() {
+            const container = document.getElementById('simHistoryList');
+            if (!container) return;
+            
+            if (simHistory.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No saved results yet</div>';
+                return;
+            }
+            
+            let html = '<div style="display: flex; flex-direction: column;">';
+            for (const result of simHistory.slice(0, 20)) {
+                const date = new Date(result.timestamp);
+                const timeStr = date.toLocaleTimeString();
+                const dateStr = date.toLocaleDateString();
+                html += `
+                    <div style="display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--border);">
+                        <div style="min-width: 120px;">
+                            <div style="font-size: 0.85rem; font-weight: 600;">${dateStr}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${timeStr}</div>
+                        </div>
+                        <div style="flex: 1; display: flex; gap: 24px; flex-wrap: wrap;">
+                            <div><span style="color: var(--text-muted);">Users:</span> <strong>${result.userCount.toLocaleString()}</strong></div>
+                            <div><span style="color: var(--text-muted);">Avg Time:</span> <strong style="color: ${result.avgTime < 50 ? 'var(--success)' : result.avgTime < 200 ? 'var(--warning)' : 'var(--danger)'};">${result.avgTime.toFixed(1)}ms</strong></div>
+                            <div><span style="color: var(--text-muted);">P95:</span> <strong>${result.p95.toFixed(1)}ms</strong></div>
+                            <div><span style="color: var(--text-muted);">Success:</span> <strong>${result.successRate}%</strong></div>
+                            <div><span style="color: var(--text-muted);">Geohash:</span> <strong>${result.useGeohash ? '✅' : '❌'}</strong></div>
+                            <div><span style="color: var(--text-muted);">Issues:</span> <strong style="color: ${result.issues === 0 ? 'var(--success)' : 'var(--warning)'};">${result.issues}</strong></div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function clearSimulationHistory() {
+            if (confirm('Are you sure you want to clear all saved simulation results?')) {
+                simHistory = [];
+                localStorage.removeItem('oithSimHistory');
+                document.getElementById('simHistoryCount').textContent = '0 saved';
+                renderSimHistory();
+                simLog('Simulation history cleared.', 'info');
+            }
+        }
+        
+        function exportSimulationResults() {
+            const data = {
+                exportDate: new Date().toISOString(),
+                currentResults: simScalingResults,
+                history: simHistory
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `oith-simulation-results-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            simLog('Results exported to JSON file.', 'success');
+        }
+        
+        function renderSimulation() {
+            // Update history count on load
+            document.getElementById('simHistoryCount').textContent = `${simHistory.length} saved`;
         }
 
         // ==========================================
@@ -26166,7 +27346,20 @@
             if (savedEvents) {
                 const customEvents = JSON.parse(savedEvents);
                 customEvents.forEach(e => {
-                    e.date = new Date(e.date);
+                    // Fix timezone issue: parse date strings as LOCAL dates, not UTC
+                    // "2025-12-12" parsed as-is becomes UTC midnight (wrong day in local time)
+                    if (typeof e.date === 'string') {
+                        if (e.date.includes('T')) {
+                            // ISO format with time - parse normally
+                            e.date = new Date(e.date);
+                        } else {
+                            // Date-only string like "2025-12-12" - parse as local date
+                            const parts = e.date.split('-');
+                            e.date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                        }
+                    } else {
+                        e.date = new Date(e.date);
+                    }
                     calendarEvents.push(e);
                 });
             }
