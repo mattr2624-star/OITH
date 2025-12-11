@@ -1713,6 +1713,19 @@
                         <label>Description</label>
                         <textarea class="form-control" id="newEventDescription" placeholder="Add event description..."></textarea>
                     </div>
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2D8CFF" stroke-width="2">
+                                <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7c0-1.1.9-2 2-2z"/>
+                            </svg>
+                            Zoom Meeting ID (optional)
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" class="form-control" id="newZoomMeetingId" placeholder="e.g., 123 4567 8901" style="font-family: 'JetBrains Mono', monospace;">
+                            <button type="button" onclick="pasteZoomId()" class="btn btn-secondary" style="padding: 10px 14px; white-space: nowrap;" title="Paste from clipboard">📋</button>
+                        </div>
+                        <small style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; display: block;">Enter a Zoom Meeting ID to generate a clickable join link</small>
+                    </div>
                     <div class="form-group" id="sharedCalLocationField">
                         <label>Location (optional)</label>
                         <input type="text" class="form-control" id="newEventLocation" placeholder="Enter location or meeting link...">
@@ -2194,6 +2207,37 @@
                 `;
             }
             
+            // Display Zoom Meeting Link if present
+            if (event.zoomLink || event.zoomMeetingId) {
+                const zoomLink = event.zoomLink || `https://zoom.us/j/${(event.zoomMeetingId || '').replace(/[\s\-]/g, '')}`;
+                bodyHTML += `
+                    <div class="detail-row" style="background: linear-gradient(135deg, rgba(45, 140, 255, 0.1), rgba(14, 114, 237, 0.1)); border: 1px solid rgba(45, 140, 255, 0.3); border-radius: 12px; padding: 16px; margin: 8px 0;">
+                        <div class="detail-icon" style="background: linear-gradient(135deg, #2D8CFF, #0E72ED); border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7c0-1.1.9-2 2-2z"/>
+                            </svg>
+                        </div>
+                        <div class="detail-content" style="flex: 1;">
+                            <div class="detail-label" style="color: #2D8CFF; font-weight: 600;">Zoom Meeting</div>
+                            <div class="detail-value" style="margin-top: 4px;">
+                                <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+                                    ID: ${event.zoomMeetingId || event.zoomLink?.split('/j/')[1] || 'N/A'}
+                                </div>
+                                <a href="${zoomLink}" target="_blank" rel="noopener noreferrer" 
+                                   style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: linear-gradient(135deg, #2D8CFF, #0E72ED); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; box-shadow: 0 4px 12px rgba(45, 140, 255, 0.3);"
+                                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(45, 140, 255, 0.4)';"
+                                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(45, 140, 255, 0.3)';">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M15.6 11.6L22 7v10l-6.4-4.5v-1zM4 5h9a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7c0-1.1.9-2 2-2z"/>
+                                    </svg>
+                                    Join Zoom Meeting
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
             if (event.description) {
                 bodyHTML += `
                     <div class="detail-row">
@@ -2269,6 +2313,31 @@
         function closeAddEventModal() {
             document.getElementById('addEventModal').classList.remove('active');
             document.getElementById('addEventForm').reset();
+            // Also clear the Zoom Meeting ID field
+            const zoomIdField = document.getElementById('newZoomMeetingId');
+            if (zoomIdField) zoomIdField.value = '';
+        }
+        
+        // Paste Zoom Meeting ID from clipboard
+        async function pasteZoomId() {
+            try {
+                const text = await navigator.clipboard.readText();
+                // Clean and extract meeting ID (numbers, spaces, dashes)
+                const cleanedId = text.replace(/[^\d\s\-]/g, '').trim();
+                if (cleanedId) {
+                    document.getElementById('newZoomMeetingId').value = cleanedId;
+                    showToast('📋 Meeting ID pasted!', 'success');
+                } else {
+                    showToast('No valid meeting ID found in clipboard', 'error');
+                }
+            } catch (err) {
+                // Fallback: prompt user
+                const manualId = prompt('Paste your Zoom Meeting ID:');
+                if (manualId) {
+                    document.getElementById('newZoomMeetingId').value = manualId.replace(/[^\d\s\-]/g, '').trim();
+                    showToast('📋 Meeting ID entered!', 'success');
+                }
+            }
         }
         
         // Zoom helper functions for shared calendar
@@ -2458,7 +2527,10 @@
             const location = document.getElementById('newEventLocation').value.trim();
             const eventType = document.getElementById('newEventType')?.value || 'in-person';
             
-            // Zoom settings
+            // Zoom Meeting ID (simple field)
+            const zoomMeetingIdRaw = document.getElementById('newZoomMeetingId')?.value?.trim() || '';
+            
+            // Zoom settings (advanced panel)
             const zoomId = document.getElementById('sharedCalZoomId')?.value || '';
             const zoomPasscode = document.getElementById('sharedCalZoomPasscode')?.value || '';
             const waitingRoom = document.getElementById('sharedCalWaitingRoom')?.checked || false;
@@ -2485,6 +2557,13 @@
                 custom: true,
                 createdAt: new Date().toISOString()
             };
+            
+            // Add Zoom Meeting ID and generate link
+            if (zoomMeetingIdRaw) {
+                const cleanZoomId = zoomMeetingIdRaw.replace(/[\s\-]/g, '');
+                newEvent.zoomMeetingId = zoomMeetingIdRaw;
+                newEvent.zoomLink = `https://zoom.us/j/${cleanZoomId}`;
+            }
             
             // Add Zoom settings if virtual or hybrid
             if ((eventType === 'virtual' || eventType === 'hybrid') && zoomId) {

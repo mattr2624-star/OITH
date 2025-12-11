@@ -34,7 +34,9 @@ router.get('/events', async (req, res) => {
             category: item.category,
             description: item.description,
             section: item.section,
-            custom: item.custom
+            custom: item.custom,
+            zoomMeetingId: item.zoomMeetingId,
+            zoomLink: item.zoomLink
         }));
 
         res.json({
@@ -82,6 +84,8 @@ router.post('/sync', async (req, res) => {
                     description: event.description || '',
                     section: event.section || 'calendar',
                     custom: event.custom || false,
+                    zoomMeetingId: event.zoomMeetingId || '',
+                    zoomLink: event.zoomLink || '',
                     syncedAt: new Date().toISOString()
                 }
             }));
@@ -104,19 +108,26 @@ router.post('/sync', async (req, res) => {
 // ==========================================
 router.post('/event', async (req, res) => {
     try {
-        const { id, title, date, category, description, section } = req.body;
+        const { id, title, date, category, description, section, zoomMeetingId } = req.body;
 
         if (!title || !date) {
             return res.status(400).json({ error: 'Title and date required' });
         }
 
         const eventId = id || `event_${Date.now()}`;
+        
+        // Generate Zoom link from meeting ID if provided
+        let zoomLink = '';
+        if (zoomMeetingId) {
+            const cleanZoomId = zoomMeetingId.replace(/[\s\-]/g, '');
+            zoomLink = `https://zoom.us/j/${cleanZoomId}`;
+        }
 
         if (!isAWSConfigured()) {
             return res.json({
                 success: true,
                 local: true,
-                event: { id: eventId, title, date, category, description, section }
+                event: { id: eventId, title, date, category, description, section, zoomMeetingId, zoomLink }
             });
         }
 
@@ -130,6 +141,8 @@ router.post('/event', async (req, res) => {
                 category: category || 'meeting',
                 description: description || '',
                 section: section || 'calendar',
+                zoomMeetingId: zoomMeetingId || '',
+                zoomLink: zoomLink,
                 custom: true,
                 createdAt: new Date().toISOString()
             }
@@ -137,7 +150,7 @@ router.post('/event', async (req, res) => {
 
         res.json({
             success: true,
-            event: { id: eventId, title, date, category, description, section }
+            event: { id: eventId, title, date, category, description, section, zoomMeetingId, zoomLink }
         });
     } catch (error) {
         console.error('Error adding calendar event:', error);
@@ -151,17 +164,24 @@ router.post('/event', async (req, res) => {
 router.put('/event/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, date, category, description, section, location } = req.body;
+        const { title, date, category, description, section, location, zoomMeetingId } = req.body;
 
         if (!title || !date) {
             return res.status(400).json({ error: 'Title and date required' });
+        }
+        
+        // Generate Zoom link from meeting ID if provided
+        let zoomLink = '';
+        if (zoomMeetingId) {
+            const cleanZoomId = zoomMeetingId.replace(/[\s\-]/g, '');
+            zoomLink = `https://zoom.us/j/${cleanZoomId}`;
         }
 
         if (!isAWSConfigured()) {
             return res.json({
                 success: true,
                 local: true,
-                event: { id, title, date, category, description, section, location }
+                event: { id, title, date, category, description, section, location, zoomMeetingId, zoomLink }
             });
         }
 
@@ -176,6 +196,8 @@ router.put('/event/:id', async (req, res) => {
                 description: description || '',
                 section: section || 'calendar',
                 location: location || '',
+                zoomMeetingId: zoomMeetingId || '',
+                zoomLink: zoomLink,
                 custom: true,
                 updatedAt: new Date().toISOString()
             }
@@ -183,7 +205,7 @@ router.put('/event/:id', async (req, res) => {
 
         res.json({
             success: true,
-            event: { id, title, date, category, description, section, location }
+            event: { id, title, date, category, description, section, location, zoomMeetingId, zoomLink }
         });
     } catch (error) {
         console.error('Error updating calendar event:', error);
@@ -544,12 +566,28 @@ router.get('/export.ics', async (req, res) => {
             ics.push(`DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`);
             ics.push(`DTSTART;VALUE=DATE:${formatDate(event.date)}`);
             ics.push(`SUMMARY:${(event.title || '').replace(/,/g, '\\,')}`);
-            if (event.description) {
-                ics.push(`DESCRIPTION:${event.description.replace(/\n/g, '\\n')}`);
+            
+            // Build description with Zoom link if present
+            let description = event.description || '';
+            if (event.zoomLink) {
+                description = description ? `${description}\\n\\nZoom Meeting: ${event.zoomLink}` : `Zoom Meeting: ${event.zoomLink}`;
             }
+            if (description) {
+                ics.push(`DESCRIPTION:${description.replace(/\n/g, '\\n')}`);
+            }
+            
+            // Use Zoom link as location if no physical location
             if (event.location) {
                 ics.push(`LOCATION:${event.location.replace(/,/g, '\\,')}`);
+            } else if (event.zoomLink) {
+                ics.push(`LOCATION:${event.zoomLink}`);
             }
+            
+            // Add Zoom URL for calendar apps that support it
+            if (event.zoomLink) {
+                ics.push(`URL:${event.zoomLink}`);
+            }
+            
             ics.push('END:VEVENT');
         });
 
