@@ -377,6 +377,6 @@ By using [App Name], you agree to these terms.
 
 ---
 
-*Last Updated: December 2024*
+*Last Updated: December 2025*
 *Review Due: December 2025*
 

@@ -8411,12 +8411,23 @@ async function submitSupportMessage(event) {
     const message = document.getElementById('supportMessage').value;
     
     const supportData = {
+        id: Date.now(),
         userEmail: appState.user?.email || 'anonymous',
+        userName: appState.user?.name || 'Anonymous User',
         subject: subject,
-        message: message
+        message: message,
+        timestamp: new Date().toISOString(),
+        read: false,
+        replied: false
     };
     
     console.log('Support message submitted:', supportData);
+    
+    // Save to admin inbox (localStorage)
+    let adminInbox = JSON.parse(localStorage.getItem('oith_admin_inbox') || '[]');
+    adminInbox.unshift(supportData); // Add to beginning
+    localStorage.setItem('oith_admin_inbox', JSON.stringify(adminInbox));
+    console.log('📧 Message saved to admin inbox at admin@oith.com');
     
     // Sync support message to AWS
     try {
@@ -8436,11 +8447,11 @@ async function submitSupportMessage(event) {
     }
     
     closeModal();
-    showToast('Message sent! We\'ll get back to you within 24 hours.', 'success');
+    showToast('Message sent to admin@oith.com! We\'ll get back to you within 24 hours.', 'success');
 }
 
 function openEmail() {
-    window.location.href = 'mailto:support@oith.app?subject=OITH Support Request';
+    window.location.href = 'mailto:admin@oith.com?subject=OITH Support Request';
 }
 
 function openLiveChat() {

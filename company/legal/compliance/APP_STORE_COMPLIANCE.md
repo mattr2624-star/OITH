@@ -287,6 +287,6 @@ Your community guidelines must address:
 
 ---
 
-*Last Updated: December 2024*
+*Last Updated: December 2025*
 *Review Due: Per App Update*
 

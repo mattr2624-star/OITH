@@ -335,6 +335,6 @@ In-app video chat benefits:
 
 ---
 
-*Last Updated: December 2024*
+*Last Updated: December 2025*
 *Review Due: March 2025*
 

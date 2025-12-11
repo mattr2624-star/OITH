@@ -97,6 +97,742 @@
             text-transform: uppercase;
         }
 
+        .header-quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 12px;
+            padding-left: 12px;
+            border-left: 1px solid var(--border-subtle);
+        }
+
+        .header-icon-btn {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(139, 92, 246, 0.05));
+            color: var(--accent);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .header-icon-btn:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(139, 92, 246, 0.15));
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .header-icon-btn.mail-btn {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            color: var(--info);
+        }
+
+        .header-icon-btn.mail-btn:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(59, 130, 246, 0.15));
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .calendar-badge, .mail-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            min-width: 16px;
+            height: 16px;
+            background: var(--danger);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+        }
+
+        .calendar-badge:empty, .mail-badge:empty,
+        .calendar-badge[data-count="0"], .mail-badge[data-count="0"] {
+            display: none;
+        }
+
+        /* Admin Calendar Styles */
+        .calendar-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .calendar-modal.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .calendar-container {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .calendar-title-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .calendar-title-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+        }
+
+        .calendar-title h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .calendar-title p {
+            margin: 4px 0 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .calendar-nav-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .calendar-nav-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .calendar-month-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .calendar-today-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-today-btn:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .calendar-close-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            margin-left: 16px;
+        }
+
+        .calendar-close-btn:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .calendar-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .calendar-main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 0;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            min-height: 80px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calendar-day:hover {
+            background: rgba(139, 92, 246, 0.1);
+            transform: scale(1.02);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+        }
+
+        .calendar-day.today {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+            border: 2px solid var(--accent);
+        }
+
+        .calendar-day.selected {
+            background: var(--accent);
+        }
+
+        .calendar-day.selected .day-number {
+            color: white;
+        }
+
+        .day-number {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .day-events {
+            margin-top: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .day-event {
+            font-size: 0.65rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+        .day-event.payroll { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .day-event.report { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .day-event.experiment { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+        .day-event.compliance { background: rgba(249, 115, 22, 0.2); color: #f97316; }
+        .day-event.meeting { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+        .day-event.tax { background: rgba(236, 72, 153, 0.2); color: #ec4899; }
+        .day-event.milestone { background: rgba(14, 165, 233, 0.2); color: #0ea5e9; }
+        .day-event.patent { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+
+        .day-event-count {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .calendar-sidebar {
+            width: 320px;
+            background: var(--bg-tertiary);
+            border-left: 1px solid var(--border-subtle);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upcoming-event {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid var(--accent);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .upcoming-event:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .upcoming-event.payroll { border-left-color: #22c55e; }
+        .upcoming-event.report { border-left-color: #ef4444; }
+        .upcoming-event.experiment { border-left-color: #3b82f6; }
+        .upcoming-event.compliance { border-left-color: #f97316; }
+        .upcoming-event.meeting { border-left-color: #8b5cf6; }
+        .upcoming-event.tax { border-left-color: #ec4899; }
+        .upcoming-event.milestone { border-left-color: #0ea5e9; }
+        .upcoming-event.patent { border-left-color: #a855f7; }
+
+        .event-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .event-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .event-category {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+
+        .legend-dot.payroll { background: #22c55e; }
+        .legend-dot.report { background: #ef4444; }
+        .legend-dot.experiment { background: #3b82f6; }
+        .legend-dot.compliance { background: #f97316; }
+        .legend-dot.meeting { background: #8b5cf6; }
+        .legend-dot.tax { background: #ec4899; }
+        .legend-dot.milestone { background: #0ea5e9; }
+        .legend-dot.patent { background: #a855f7; }
+
+        .add-event-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px dashed var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .add-event-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        /* Mail Client Placeholder */
+        .mail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mail-modal.active {
+            display: flex;
+        }
+
+        .mail-container {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            width: 95%;
+            max-width: 900px;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .mail-title-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mail-icon-large {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--info), #0ea5e9);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .mail-title h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--text-primary);
+        }
+
+        .mail-title p {
+            margin: 4px 0 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .mail-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .mail-sidebar {
+            width: 200px;
+            background: var(--bg-tertiary);
+            border-right: 1px solid var(--border-subtle);
+            padding: 16px;
+        }
+
+        .mail-folder {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+
+        .mail-folder:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .mail-folder.active {
+            background: var(--info);
+            color: white;
+        }
+
+        .mail-folder-count {
+            margin-left: auto;
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .mail-folder.active .mail-folder-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .mail-list {
+            width: 320px;
+            border-right: 1px solid var(--border-subtle);
+            overflow-y: auto;
+        }
+
+        .mail-list-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .mail-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mail-item:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .mail-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid var(--info);
+        }
+
+        .mail-item.unread {
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        .mail-item.unread .mail-item-subject {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .mail-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .mail-item-from {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        .mail-item-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .mail-item-subject {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .mail-item-preview {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mail-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .mail-content-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+        }
+
+        .mail-content-empty svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .mail-view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .mail-view-subject {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .mail-view-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .mail-view-body {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            white-space: pre-wrap;
+        }
+
+        .mail-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mail-action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .mail-action-btn:hover {
+            background: var(--info);
+            color: white;
+            border-color: var(--info);
+        }
+
+        .mail-action-btn.danger:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .reply-form {
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .reply-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 12px;
+        }
+
         .header-center {
             display: flex;
             align-items: center;
@@ -1208,18 +1944,33 @@
             background: linear-gradient(135deg, var(--info), #60a5fa);
         }
 
-        /* Status indicator on nodes */
+        /* Status indicator on nodes - hidden by default, only shows on error */
         .node-status {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             flex-shrink: 0;
+            display: none; /* Hidden by default */
         }
 
-        .node-status.green { background: var(--success); box-shadow: 0 0 6px var(--success); }
-        .node-status.yellow { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
-        .node-status.red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
-        .node-status.gray { background: var(--text-muted); opacity: 0.5; }
+        /* Only show status light when there's an error */
+        .node-status.error {
+            display: inline-block;
+            background: var(--danger);
+            box-shadow: 0 0 6px var(--danger);
+            animation: pulse-error 1.5s infinite;
+        }
+
+        @keyframes pulse-error {
+            0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--danger); }
+            50% { opacity: 0.6; box-shadow: 0 0 12px var(--danger); }
+        }
+
+        /* Legacy classes kept for compatibility but hidden by default */
+        .node-status.green { display: none; }
+        .node-status.yellow { display: none; }
+        .node-status.red { display: none; }
+        .node-status.gray { display: none; }
 
         /* Page ID badges */
         .page-id {
@@ -1522,6 +2273,25 @@
                 <h1>OITH Manager</h1>
             </div>
             <span class="logo-badge">Admin</span>
+            <div class="header-quick-actions">
+                <button class="header-icon-btn" onclick="openAdminCalendar()" title="Admin Calendar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                        <circle cx="12" cy="16" r="2" fill="currentColor"/>
+                    </svg>
+                    <span class="calendar-badge" id="calendarEventCount">0</span>
+                </button>
+                <button class="header-icon-btn mail-btn" onclick="openMailClient()" title="OITH Mail (@oith.com)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <span class="mail-badge" id="unreadMailCount">0</span>
+                </button>
+            </div>
         </div>
         <div class="header-center">
             <div class="live-indicator" id="awsSyncIndicator">
@@ -1694,6 +2464,16 @@
                     </svg>
                     Tax
                 </div>
+                <div class="nav-item" onclick="showSection('calendar')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>
+                    </svg>
+                    Calendar
+                </div>
             </div>
 
             <!-- USER APP / INDEX SECTION -->
@@ -1855,8 +2635,8 @@
                         <div class="tree-container">
                             <!-- Root Node -->
                             <div class="tree-root">
-                                <div class="tree-node root admin-root" onclick="showSection('dashboard')" data-component="dashboard">
-                                    <span class="node-status green"></span>
+                                <div class="tree-node root admin-root" onclick="showSection('dashboard')" data-component="admin-root" data-connection="aws">
+                                    <span class="node-status" id="status-admin-root"></span>
                                     🏢 OITH Admin Panel
                                 </div>
                                 <div class="tree-connector"></div>
@@ -1866,82 +2646,82 @@
                                 <!-- Analytics Branch -->
                                 <div class="tree-branch">
                                     <div class="tree-connector"></div>
-                                    <div class="tree-node" onclick="showSection('analytics')" data-component="analytics">
-                                        <span class="node-status green"></span>
+                                    <div class="tree-node" onclick="showSection('analytics')" data-component="analytics" data-connection="aws">
+                                        <span class="node-status" id="status-analytics"></span>
                                         📊 Analytics
                                     </div>
                                     <div class="tree-connector"></div>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" onclick="showSection('dashboard')" data-component="dashboard"><span class="node-status green"></span>Dashboard</div>
-                                        <div class="flow-node" onclick="showSection('realtime')" data-component="realtime"><span class="node-status green"></span>Real-time</div>
-                                        <div class="flow-node" onclick="showSection('mlmodels')" data-component="mlmodels"><span class="node-status yellow"></span>ML Models</div>
+                                        <div class="flow-node" onclick="showSection('dashboard')" data-component="dashboard" data-connection="aws"><span class="node-status" id="status-dashboard"></span>Dashboard</div>
+                                        <div class="flow-node" onclick="showSection('realtime')" data-component="realtime" data-connection="index"><span class="node-status" id="status-realtime"></span>Real-time</div>
+                                        <div class="flow-node" onclick="showSection('mlmodels')" data-component="mlmodels" data-connection="aws"><span class="node-status" id="status-mlmodels"></span>ML Models</div>
                                     </div>
                                 </div>
                                 <!-- Users Branch -->
                                 <div class="tree-branch">
                                     <div class="tree-connector"></div>
-                                    <div class="tree-node" onclick="showSection('users')" data-component="users">
-                                        <span class="node-status green"></span>
+                                    <div class="tree-node" onclick="showSection('users')" data-component="users" data-connection="aws">
+                                        <span class="node-status" id="status-users"></span>
                                         👥 Users
                                     </div>
                                     <div class="tree-connector"></div>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" onclick="showSection('matches')" data-component="matches"><span class="node-status green"></span>Matches</div>
-                                        <div class="flow-node" onclick="showSection('funnel')" data-component="funnel"><span class="node-status green"></span>Funnel</div>
+                                        <div class="flow-node" onclick="showSection('matches')" data-component="matches" data-connection="aws"><span class="node-status" id="status-matches"></span>Matches</div>
+                                        <div class="flow-node" onclick="showSection('funnel')" data-component="funnel" data-connection="aws"><span class="node-status" id="status-funnel"></span>Funnel</div>
                                     </div>
                                 </div>
                                 <!-- Business Branch -->
                                 <div class="tree-branch">
                                     <div class="tree-connector"></div>
-                                    <div class="tree-node" onclick="showSection('revenue')" data-component="revenue">
-                                        <span class="node-status green"></span>
+                                    <div class="tree-node" onclick="showSection('revenue')" data-component="business" data-connection="aws">
+                                        <span class="node-status" id="status-business"></span>
                                         💰 Business
                                     </div>
                                     <div class="tree-connector"></div>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" onclick="showSection('revenue')" data-component="revenue"><span class="node-status green"></span>Revenue</div>
-                                        <div class="flow-node" onclick="showSection('geographic')" data-component="geographic"><span class="node-status yellow"></span>Geographic</div>
+                                        <div class="flow-node" onclick="showSection('revenue')" data-component="revenue" data-connection="aws"><span class="node-status" id="status-revenue"></span>Revenue</div>
+                                        <div class="flow-node" onclick="showSection('geographic')" data-component="geographic" data-connection="aws"><span class="node-status" id="status-geographic"></span>Geographic</div>
                                     </div>
                                 </div>
                                 <!-- Safety Branch -->
                                 <div class="tree-branch">
                                     <div class="tree-connector"></div>
-                                    <div class="tree-node" onclick="showSection('safety')" data-component="safety">
-                                        <span class="node-status red"></span>
+                                    <div class="tree-node" onclick="showSection('safety')" data-component="safety" data-connection="aws">
+                                        <span class="node-status" id="status-safety"></span>
                                         🛡️ Safety
                                     </div>
                                     <div class="tree-connector"></div>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" onclick="showSection('safety')" data-component="safety"><span class="node-status red"></span>Reports</div>
-                                        <div class="flow-node" onclick="showSection('feedback')" data-component="feedback"><span class="node-status green"></span>Feedback</div>
+                                        <div class="flow-node" onclick="showSection('safety')" data-component="reports" data-connection="aws"><span class="node-status" id="status-reports"></span>Reports</div>
+                                        <div class="flow-node" onclick="showSection('feedback')" data-component="feedback" data-connection="aws"><span class="node-status" id="status-feedback"></span>Feedback</div>
                                     </div>
                                 </div>
                                 <!-- Testing Branch -->
                                 <div class="tree-branch">
                                     <div class="tree-connector"></div>
-                                    <div class="tree-node" onclick="showSection('testbots')" data-component="testbots">
-                                        <span class="node-status green"></span>
+                                    <div class="tree-node" onclick="showSection('testbots')" data-component="testing" data-connection="index">
+                                        <span class="node-status" id="status-testing"></span>
                                         🧪 Testing
                                     </div>
                                     <div class="tree-connector"></div>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" onclick="showSection('testbots')" data-component="testbots"><span class="node-status green"></span>Test Bots</div>
-                                        <div class="flow-node" onclick="showSection('diagnostics')" data-component="diagnostics"><span class="node-status green"></span>Diagnostics</div>
-                                        <div class="flow-node" onclick="showSection('database')" data-component="database"><span class="node-status green"></span>Database</div>
+                                        <div class="flow-node" onclick="showSection('testbots')" data-component="testbots" data-connection="index"><span class="node-status" id="status-testbots"></span>Test Bots</div>
+                                        <div class="flow-node" onclick="showSection('diagnostics')" data-component="diagnostics" data-connection="index"><span class="node-status" id="status-diagnostics"></span>Diagnostics</div>
+                                        <div class="flow-node" onclick="showSection('database')" data-component="database" data-connection="aws"><span class="node-status" id="status-database"></span>Database</div>
                                     </div>
                                 </div>
                                 <!-- Legal Branch -->
                                 <div class="tree-branch">
                                     <div class="tree-connector"></div>
-                                    <div class="tree-node" onclick="showSection('legal')" data-component="legal">
-                                        <span class="node-status yellow"></span>
+                                    <div class="tree-node" onclick="showSection('legal')" data-component="legal" data-connection="local">
+                                        <span class="node-status" id="status-legal"></span>
                                         📋 Legal
                                     </div>
                                     <div class="tree-connector"></div>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" onclick="showSection('legal')" data-component="legal"><span class="node-status yellow"></span>Patents & IP</div>
-                                        <div class="flow-node" onclick="showSection('compliance')" data-component="compliance"><span class="node-status green"></span>Compliance</div>
-                                        <div class="flow-node" onclick="showSection('tax')" data-component="tax"><span class="node-status yellow"></span>Tax</div>
+                                        <div class="flow-node" onclick="showSection('legal')" data-component="patents" data-connection="local"><span class="node-status" id="status-patents"></span>Patents & IP</div>
+                                        <div class="flow-node" onclick="showSection('compliance')" data-component="compliance" data-connection="local"><span class="node-status" id="status-compliance"></span>Compliance</div>
+                                        <div class="flow-node" onclick="showSection('tax')" data-component="tax" data-connection="local"><span class="node-status" id="status-tax"></span>Tax</div>
                                     </div>
                                 </div>
                             </div>
@@ -1974,8 +2754,8 @@
                         <div class="vertical-flow" style="margin-bottom: 20px;">
                             <div class="flow-group">
                                 <span class="flow-group-label">Entry Point</span>
-                                <div class="flow-node highlight" data-component="splash" data-page-id="1.0">
-                                    <span class="node-status green"></span>
+                                <div class="flow-node highlight" data-component="splash" data-page-id="1.0" data-connection="index">
+                                    <span class="node-status"></span>
                                     <span class="page-id">1.0</span> 🚀 Splash Screen
                                 </div>
                             </div>
@@ -1985,16 +2765,16 @@
                             <div class="flow-row">
                                 <div class="flow-group">
                                     <span class="flow-group-label">Existing User</span>
-                                    <div class="flow-node" data-component="login" data-page-id="1.1">
-                                        <span class="node-status green"></span>
+                                    <div class="flow-node" data-component="login" data-page-id="1.1" data-connection="index">
+                                        <span class="node-status"></span>
                                         <span class="page-id">1.1</span> 🔐 Login
                                     </div>
                                 </div>
                                 <span style="color: var(--text-muted); padding: 0 12px;">OR</span>
                                 <div class="flow-group">
                                     <span class="flow-group-label">New User</span>
-                                    <div class="flow-node" data-component="signup" data-page-id="1.2">
-                                        <span class="node-status green"></span>
+                                    <div class="flow-node" data-component="signup" data-page-id="1.2" data-connection="index">
+                                        <span class="node-status"></span>
                                         <span class="page-id">1.2</span> 📝 Sign Up
                                     </div>
                                 </div>
@@ -2005,28 +2785,28 @@
                         <div style="border: 1px dashed var(--info); border-radius: 12px; padding: 16px; margin-bottom: 20px;">
                             <div style="font-size: 0.7rem; color: var(--info); margin-bottom: 12px; text-transform: uppercase; font-weight: 600;">New User Onboarding Flow</div>
                             <div class="flow-row" style="flex-wrap: wrap; justify-content: center;">
-                                <div class="flow-node" data-component="onboarding" data-page-id="2.0">
-                                    <span class="node-status green"></span>
+                                <div class="flow-node" data-component="onboarding" data-page-id="2.0" data-connection="index">
+                                    <span class="node-status"></span>
                                     <span class="page-id">2.0</span> 📖 Intro
                                 </div>
                                 <span class="flow-arrow">→</span>
-                                <div class="flow-node" data-component="preferences" data-page-id="2.1">
-                                    <span class="node-status green"></span>
+                                <div class="flow-node" data-component="preferences" data-page-id="2.1" data-connection="index">
+                                    <span class="node-status"></span>
                                     <span class="page-id">2.1</span> 🎯 Preferences
                                 </div>
                                 <span class="flow-arrow">→</span>
-                                <div class="flow-node" data-component="profile-details" data-page-id="2.2">
-                                    <span class="node-status green"></span>
+                                <div class="flow-node" data-component="profile-details" data-page-id="2.2" data-connection="index">
+                                    <span class="node-status"></span>
                                     <span class="page-id">2.2</span> 👤 Details
                                 </div>
                                 <span class="flow-arrow">→</span>
-                                <div class="flow-node" data-component="profile-setup" data-page-id="2.3">
-                                    <span class="node-status green"></span>
+                                <div class="flow-node" data-component="profile-setup" data-page-id="2.3" data-connection="index">
+                                    <span class="node-status"></span>
                                     <span class="page-id">2.3</span> 📸 Photos
                                 </div>
                                 <span class="flow-arrow">→</span>
-                                <div class="flow-node" data-component="payment" data-page-id="2.4">
-                                    <span class="node-status green"></span>
+                                <div class="flow-node" data-component="payment" data-page-id="2.4" data-connection="aws">
+                                    <span class="node-status"></span>
                                     <span class="page-id">2.4</span> 💳 Payment
                                 </div>
                             </div>
@@ -2037,10 +2817,10 @@
                         </div>
                         
                         <!-- Main App Hub -->
-                        <div style="border: 2px solid var(--accent); border-radius: 12px; padding: 20px; background: rgba(196, 88, 74, 0.05);">
+                        <div style="border: 2px solid var(--accent); border-radius: 12px; padding: 20px; background: rgba(0, 120, 212, 0.05);">
                             <div style="text-align: center; margin-bottom: 16px;">
-                                <div class="tree-node root" style="display: inline-flex;" data-component="match" data-page-id="3.0">
-                                    <span class="node-status green"></span>
+                                <div class="tree-node root" style="display: inline-flex;" data-component="match" data-page-id="3.0" data-connection="index">
+                                    <span class="node-status"></span>
                                     <span class="page-id" style="background: var(--accent);">3.0</span> 💕 Main App (Match Screen)
                                 </div>
                             </div>
@@ -2051,9 +2831,9 @@
                                 <div class="flow-group">
                                     <span class="flow-group-label">Matching States (4.x)</span>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" data-component="waiting-match" data-page-id="4.0"><span class="node-status green"></span><span class="page-id">4.0</span> ⏳ Waiting</div>
-                                        <div class="flow-node" data-component="no-matches" data-page-id="4.1"><span class="node-status yellow"></span><span class="page-id">4.1</span> 🔍 No Matches</div>
-                                        <div class="flow-node" data-component="profile-view" data-page-id="4.2"><span class="node-status green"></span><span class="page-id">4.2</span> 👁️ View Profile</div>
+                                        <div class="flow-node" data-component="waiting-match" data-page-id="4.0" data-connection="aws"><span class="node-status"></span><span class="page-id">4.0</span> ⏳ Waiting</div>
+                                        <div class="flow-node" data-component="no-matches" data-page-id="4.1" data-connection="aws"><span class="node-status"></span><span class="page-id">4.1</span> 🔍 No Matches</div>
+                                        <div class="flow-node" data-component="profile-view" data-page-id="4.2" data-connection="index"><span class="node-status"></span><span class="page-id">4.2</span> 👁️ View Profile</div>
                                     </div>
                                 </div>
                                 
@@ -2061,9 +2841,9 @@
                                 <div class="flow-group">
                                     <span class="flow-group-label">Communication (5.x)</span>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" data-component="chat-list" data-page-id="5.0"><span class="node-status green"></span><span class="page-id">5.0</span> 💬 Chat List</div>
-                                        <div class="flow-node" data-component="chat" data-page-id="5.1"><span class="node-status green"></span><span class="page-id">5.1</span> 📨 Messages</div>
-                                        <div class="flow-node" data-component="date-plan" data-page-id="5.2"><span class="node-status green"></span><span class="page-id">5.2</span> 📅 Date Plan</div>
+                                        <div class="flow-node" data-component="chat-list" data-page-id="5.0" data-connection="index"><span class="node-status"></span><span class="page-id">5.0</span> 💬 Chat List</div>
+                                        <div class="flow-node" data-component="chat" data-page-id="5.1" data-connection="index"><span class="node-status"></span><span class="page-id">5.1</span> 📨 Messages</div>
+                                        <div class="flow-node" data-component="date-plan" data-page-id="5.2" data-connection="index"><span class="node-status"></span><span class="page-id">5.2</span> 📅 Date Plan</div>
                                     </div>
                                 </div>
                                 
@@ -2071,10 +2851,10 @@
                                 <div class="flow-group">
                                     <span class="flow-group-label">Profile Management (6.x)</span>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" data-component="my-profile" data-page-id="6.0"><span class="node-status green"></span><span class="page-id">6.0</span> 👤 My Profile</div>
-                                        <div class="flow-node" data-component="edit-profile" data-page-id="6.1"><span class="node-status green"></span><span class="page-id">6.1</span> ✏️ Edit</div>
-                                        <div class="flow-node" data-component="manage-photos" data-page-id="6.2"><span class="node-status green"></span><span class="page-id">6.2</span> 🖼️ Photos</div>
-                                        <div class="flow-node" data-component="match-preferences-edit" data-page-id="6.3"><span class="node-status green"></span><span class="page-id">6.3</span> 🎚️ Preferences</div>
+                                        <div class="flow-node" data-component="my-profile" data-page-id="6.0" data-connection="index"><span class="node-status"></span><span class="page-id">6.0</span> 👤 My Profile</div>
+                                        <div class="flow-node" data-component="edit-profile" data-page-id="6.1" data-connection="index"><span class="node-status"></span><span class="page-id">6.1</span> ✏️ Edit</div>
+                                        <div class="flow-node" data-component="manage-photos" data-page-id="6.2" data-connection="index"><span class="node-status"></span><span class="page-id">6.2</span> 🖼️ Photos</div>
+                                        <div class="flow-node" data-component="match-preferences-edit" data-page-id="6.3" data-connection="index"><span class="node-status"></span><span class="page-id">6.3</span> 🎚️ Preferences</div>
                                     </div>
                                 </div>
                                 
@@ -2082,10 +2862,10 @@
                                 <div class="flow-group">
                                     <span class="flow-group-label">Settings & Account (7.x)</span>
                                     <div class="flow-nodes" style="flex-direction: column; gap: 4px;">
-                                        <div class="flow-node" data-component="settings" data-page-id="7.0"><span class="node-status green"></span><span class="page-id">7.0</span> ⚙️ Settings</div>
-                                        <div class="flow-node" data-component="safety-privacy" data-page-id="7.1"><span class="node-status green"></span><span class="page-id">7.1</span> 🔒 Privacy</div>
-                                        <div class="flow-node" data-component="manage-subscription" data-page-id="7.2"><span class="node-status green"></span><span class="page-id">7.2</span> 💎 Subscription</div>
-                                        <div class="flow-node" data-component="feedback-metrics" data-page-id="7.3"><span class="node-status gray"></span><span class="page-id">7.3</span> 📊 Feedback</div>
+                                        <div class="flow-node" data-component="settings" data-page-id="7.0" data-connection="index"><span class="node-status"></span><span class="page-id">7.0</span> ⚙️ Settings</div>
+                                        <div class="flow-node" data-component="safety-privacy" data-page-id="7.1" data-connection="index"><span class="node-status"></span><span class="page-id">7.1</span> 🔒 Privacy</div>
+                                        <div class="flow-node" data-component="manage-subscription" data-page-id="7.2" data-connection="aws"><span class="node-status"></span><span class="page-id">7.2</span> 💎 Subscription</div>
+                                        <div class="flow-node" data-component="feedback-metrics" data-page-id="7.3" data-connection="aws"><span class="node-status"></span><span class="page-id">7.3</span> 📊 Feedback</div>
                                     </div>
                                 </div>
                             </div>
@@ -2094,10 +2874,8 @@
                     
                     <!-- Legend -->
                     <div class="hierarchy-legend" style="margin-top: 16px; border-radius: var(--radius-lg);">
-                        <div class="legend-item"><span class="legend-dot green"></span> Operational</div>
-                        <div class="legend-item"><span class="legend-dot yellow"></span> Warning/Partial</div>
-                        <div class="legend-item"><span class="legend-dot red"></span> Issue/Error</div>
-                        <div class="legend-item"><span class="legend-dot gray"></span> Offline/Beta</div>
+                        <div class="legend-item"><span class="legend-dot red" style="animation: pulse-error 1.5s infinite;"></span> Connection Error (AWS/App)</div>
+                        <div class="legend-item" style="color: var(--text-muted);"><span style="opacity: 0.5;">○</span> No issues (hidden)</div>
                         <div class="legend-item" style="margin-left: 20px;"><span style="font-size: 0.9rem;">→</span> User Flow Direction</div>
                         <div class="legend-item" style="margin-left: 20px; color: var(--info);"><span style="font-size: 0.9rem;">👆</span> Click to preview</div>
                     </div>
@@ -5005,6 +5783,130 @@
                 </div>
             </div>
 
+            <!-- Calendar Section -->
+            <div id="calendar-section" style="display: none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">📅 Project Calendar & Milestones</h2>
+                        <p class="page-subtitle">Company start: Nov 28, 2025 • Launch target: Feb 1, 2026</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="exportCalendar()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timeline Overview -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--accent);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(0, 120, 212, 0.15), rgba(0, 120, 212, 0.05));">
+                        <h3 class="card-title">🏁 Launch Timeline Overview</h3>
+                        <span class="status-badge" style="background: var(--warning);">~9 Weeks to Launch</span>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
+                            <div style="flex: 1; min-width: 150px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border-left: 4px solid var(--warning);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">PHASE 1</div>
+                                <div style="font-weight: 600;">Foundation</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Nov 28 - Dec 7</div>
+                            </div>
+                            <div style="flex: 1; min-width: 150px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border-left: 4px solid var(--info);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">PHASE 2</div>
+                                <div style="font-weight: 600;">Development</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Dec 8 - Dec 28</div>
+                            </div>
+                            <div style="flex: 1; min-width: 150px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border-left: 4px solid var(--purple);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">PHASE 3</div>
+                                <div style="font-weight: 600;">Testing</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Dec 29 - Jan 11</div>
+                            </div>
+                            <div style="flex: 1; min-width: 150px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border-left: 4px solid var(--warning);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">PHASE 4</div>
+                                <div style="font-weight: 600;">Pre-Launch</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Jan 12 - Jan 31</div>
+                            </div>
+                            <div style="flex: 1; min-width: 150px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border-left: 4px solid var(--success);">
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">PHASE 5</div>
+                                <div style="font-weight: 600;">🚀 Launch</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Feb 1, 2026</div>
+                            </div>
+                        </div>
+                        <!-- Category Legend -->
+                        <div style="display: flex; gap: 16px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border);">
+                            <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">CATEGORY LEGEND:</span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 12px; height: 12px; border-radius: 3px; background: #ec4899;"></div>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">💰 Tax</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 12px; height: 12px; border-radius: 3px; background: #a855f7;"></div>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">📜 Legal/Patents</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 12px; height: 12px; border-radius: 3px; background: #f97316;"></div>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">✅ Compliance</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 12px; height: 12px; border-radius: 3px; background: #22c55e;"></div>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">💵 Payroll</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 12px; height: 12px; border-radius: 3px; background: var(--accent);"></div>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">📌 Milestones</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 12px; height: 12px; border-radius: 3px; background: var(--danger);"></div>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">⚠️ Critical</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Milestones -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Key Milestones</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: flex; flex-direction: column; gap: 8px;" id="milestonesContainer">
+                            <!-- Milestone items will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Tasks -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Upcoming Tasks (Next 7 Days)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="upcomingTasksContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full Calendar View -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📆 Full Calendar View</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary" onclick="calendarPrevMonth()" style="padding: 4px 10px;">←</button>
+                            <span id="calendarMonthLabel" style="min-width: 120px; text-align: center; font-weight: 600;"></span>
+                            <button class="btn btn-secondary" onclick="calendarNextMonth()" style="padding: 4px 10px;">→</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+                            <!-- Calendar grid populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- App Diagnostics & Navigation Tests Section -->
             <div id="diagnostics-section" style="display: none;">
                     <div class="page-header">
@@ -6294,14 +7196,17 @@
         }
         
         function updateHierarchyStatusCounts() {
-            // Count both old .status-light and new .node-status classes
-            const greenLights = document.querySelectorAll('#systemHierarchy .node-status.green, #systemHierarchy .status-light.green').length;
-            const yellowLights = document.querySelectorAll('#systemHierarchy .node-status.yellow, #systemHierarchy .status-light.yellow').length;
-            const redLights = document.querySelectorAll('#systemHierarchy .node-status.red, #systemHierarchy .status-light.red').length;
+            // Only count error lights now (hidden by default, only show on connection errors)
+            const errorLights = document.querySelectorAll('#systemHierarchy .node-status.error').length;
             
-            document.getElementById('hierGreenCount').textContent = greenLights;
-            document.getElementById('hierYellowCount').textContent = yellowLights;
-            document.getElementById('hierRedCount').textContent = redLights;
+            const greenEl = document.getElementById('hierGreenCount');
+            const yellowEl = document.getElementById('hierYellowCount');
+            const redEl = document.getElementById('hierRedCount');
+            
+            // Show dash for green/yellow since we only track errors now
+            if (greenEl) greenEl.textContent = '—';
+            if (yellowEl) yellowEl.textContent = '—';
+            if (redEl) redEl.textContent = errorLights;
         }
         
         // Track last known connection state for the hierarchy so we only surface new issues
@@ -7121,6 +8026,79 @@
             lastReceiveOk: null,
             lastReceiveMessage: ''
         };
+
+        // Connection error tracking for architecture diagram
+        let connectionErrors = {
+            aws: false,
+            index: false,
+            awsMessage: '',
+            indexMessage: ''
+        };
+
+        // Update architecture diagram node status based on connection errors
+        function updateArchitectureNodeStatus() {
+            // Get all nodes with data-connection attribute
+            const nodes = document.querySelectorAll('[data-connection]');
+            
+            nodes.forEach(node => {
+                const connectionType = node.getAttribute('data-connection');
+                const statusLight = node.querySelector('.node-status');
+                
+                if (!statusLight) return;
+                
+                // Check if this connection type has an error
+                let hasError = false;
+                if (connectionType === 'aws' && connectionErrors.aws) {
+                    hasError = true;
+                } else if (connectionType === 'index' && connectionErrors.index) {
+                    hasError = true;
+                }
+                // 'local' connections never show errors (they're local files)
+                
+                // Update the status light
+                if (hasError) {
+                    statusLight.classList.add('error');
+                    statusLight.title = connectionType === 'aws' 
+                        ? `AWS Error: ${connectionErrors.awsMessage}` 
+                        : `App Error: ${connectionErrors.indexMessage}`;
+                } else {
+                    statusLight.classList.remove('error');
+                    statusLight.title = '';
+                }
+            });
+            
+            // Update error count display
+            updateArchitectureErrorCount();
+        }
+
+        // Count and display errors in architecture section
+        function updateArchitectureErrorCount() {
+            const errorLights = document.querySelectorAll('.tree-diagram .node-status.error').length;
+            const countEl = document.getElementById('hierRedCount');
+            if (countEl) {
+                countEl.textContent = errorLights;
+            }
+            
+            // Update green/yellow counts to 0 since we're only showing errors now
+            const greenEl = document.getElementById('hierGreenCount');
+            const yellowEl = document.getElementById('hierYellowCount');
+            if (greenEl) greenEl.textContent = '—';
+            if (yellowEl) yellowEl.textContent = '—';
+        }
+
+        // Set AWS connection error state
+        function setAwsConnectionError(hasError, message = '') {
+            connectionErrors.aws = hasError;
+            connectionErrors.awsMessage = message;
+            updateArchitectureNodeStatus();
+        }
+
+        // Set index.html (app) connection error state
+        function setIndexConnectionError(hasError, message = '') {
+            connectionErrors.index = hasError;
+            connectionErrors.indexMessage = message;
+            updateArchitectureNodeStatus();
+        }
         
         function trackSyncUpload(bytes) {
             syncTraffic.uploads++;
@@ -7350,6 +8328,7 @@
             setTimeout(() => {
                 if (!bcAppConnected) {
                     showToast('❌ App not responding. Make sure index.html is open.', 'error');
+                    setIndexConnectionError(true, 'App not responding');
                 }
                 updateBroadcastStats();
             }, 3000);
@@ -7380,6 +8359,7 @@
             if (event.data.type === 'pong') {
                 bcLastPongTime = Date.now();
                 bcAppConnected = true;
+                setIndexConnectionError(false); // Clear error on successful connection
                 const appStatusEl = document.getElementById('bcAppStatus');
                 if (appStatusEl && event.data.currentScreen) {
                     appStatusEl.textContent = `Screen: ${event.data.currentScreen}`;
@@ -8166,6 +9146,7 @@
                 const response = await fetch(`${awsApiUrl}/users`);
                 if (!response.ok) {
                     recordAwsReceive(false, `HTTP ${response.status}`);
+                    setAwsConnectionError(true, `HTTP ${response.status}`);
                     return;
                 }
                 
@@ -8176,6 +9157,7 @@
                 const awsUsers = JSON.parse(responseText);
                 console.log(`☁️ Fetched ${Object.keys(awsUsers).length} users from DynamoDB (${(responseBytes/1024).toFixed(1)}KB)`);
                 recordAwsReceive(true, `${Object.keys(awsUsers).length} users`);
+                setAwsConnectionError(false); // Clear error on success
                 
                 // CLEAR existing local users first
                 const existingUsers = JSON.parse(localStorage.getItem('oith_registered_users') || '{}');
@@ -8233,6 +9215,7 @@
             } catch (error) {
                 console.log('⚠️ AWS fetch failed (offline?):', error.message);
                 recordAwsReceive(false, error.message);
+                setAwsConnectionError(true, error.message);
             }
         }
         
@@ -8304,6 +9287,7 @@
                 const userCount = Object.keys(awsUsers).length;
                 showToast(`✅ Replaced local database with ${userCount} users from DynamoDB`, 'success');
                 recordAwsReceive(true, `${userCount} users`);
+                setAwsConnectionError(false); // Clear error on success
                 
                 // Reload UI
                 refreshData();
@@ -8312,6 +9296,7 @@
                 console.error('AWS sync error:', error);
                 showToast('❌ Failed to pull from AWS: ' + error.message, 'error');
                 recordAwsReceive(false, error.message);
+                setAwsConnectionError(true, error.message);
             }
         }
         
@@ -8486,6 +9471,7 @@
                 case 'org-hierarchy': renderOrgHierarchy(); break;
                 case 'payroll': renderPayroll(); break;
                 case 'tax': renderTax(); break;
+                case 'calendar': initCalendarSection(); break;
                 default: renderDashboard();
             }
             
@@ -8707,6 +9693,7 @@
                 case 'org-hierarchy': renderOrgHierarchy(); break;
                 case 'payroll': renderPayroll(); break;
                 case 'tax': renderTax(); break;
+                case 'calendar': initCalendarSection(); break;
                 case 'diagnostics': renderDiagnostics(); break;
                 case 'site-diagnostics': renderSiteDiagnostics(); break;
             }
@@ -22813,6 +23800,1222 @@
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
         }
+
+        // =========================================
+        // CALENDAR SECTION - Milestones & Timeline
+        // =========================================
+        
+        const projectMilestones = [
+            // ============ PHASE 1: Foundation (Nov 28 - Dec 7) ============
+            { date: '2025-11-28', title: '🏁 Company Start Date', phase: 1, type: 'milestone', critical: true },
+            { date: '2025-12-02', title: 'Register LLC', phase: 1, type: 'task' },
+            { date: '2025-12-03', title: 'Obtain EIN', phase: 1, type: 'task' },
+            { date: '2025-12-04', title: 'Developer Accounts (Apple & Google)', phase: 1, type: 'task' },
+            { date: '2025-12-05', title: 'Business Formation Complete', phase: 1, type: 'milestone', critical: true },
+            { date: '2025-12-05', title: 'D-U-N-S Number Received', phase: 1, type: 'task' },
+            { date: '2025-12-05', title: 'Production AWS Environment', phase: 1, type: 'task' },
+            { date: '2025-12-06', title: 'Open Business Bank Account', phase: 1, type: 'task' },
+            { date: '2025-12-07', title: 'Legal Documents Ready', phase: 1, type: 'milestone', critical: true },
+            { date: '2025-12-07', title: 'Infrastructure Setup Complete', phase: 1, type: 'task' },
+            
+            // ============ PHASE 2: Development (Dec 8 - Dec 28) ============
+            { date: '2025-12-08', title: 'Development Kickoff', phase: 2, type: 'milestone' },
+            { date: '2025-12-10', title: 'User Registration & Auth', phase: 2, type: 'task' },
+            { date: '2025-12-10', title: 'API Architecture Ready', phase: 2, type: 'task' },
+            { date: '2025-12-12', title: 'Profile Creation Complete', phase: 2, type: 'task' },
+            { date: '2025-12-14', title: 'Location Services', phase: 2, type: 'task' },
+            { date: '2025-12-17', title: 'Core Matching Algorithm Complete', phase: 2, type: 'milestone', critical: true },
+            { date: '2025-12-19', title: 'Match Notifications', phase: 2, type: 'task' },
+            { date: '2025-12-19', title: 'User Reporting System', phase: 2, type: 'task' },
+            { date: '2025-12-21', title: 'In-App Messaging/Chat', phase: 2, type: 'task' },
+            { date: '2025-12-21', title: 'Push Notifications', phase: 2, type: 'task' },
+            { date: '2025-12-24', title: 'Payment Service', phase: 2, type: 'task' },
+            { date: '2025-12-28', title: 'MVP Feature-Complete', phase: 2, type: 'milestone', critical: true },
+            
+            // ============ PHASE 3: Testing (Dec 29 - Jan 11) ============
+            { date: '2025-12-29', title: 'Alpha Testing Begins', phase: 3, type: 'milestone' },
+            { date: '2026-01-02', title: 'Unit Test Coverage >80%', phase: 3, type: 'task' },
+            { date: '2026-01-02', title: 'Closed Beta (50 users)', phase: 3, type: 'milestone' },
+            { date: '2026-01-06', title: 'Beta Testing 500+ Users', phase: 3, type: 'milestone' },
+            { date: '2026-01-06', title: 'End-to-End Testing', phase: 3, type: 'task' },
+            { date: '2026-01-08', title: 'Security Penetration Testing', phase: 3, type: 'task' },
+            { date: '2026-01-08', title: 'Load Testing (10K users)', phase: 3, type: 'task' },
+            { date: '2026-01-09', title: 'Open Beta (2,000 users)', phase: 3, type: 'milestone' },
+            { date: '2026-01-11', title: 'All Critical Bugs Fixed', phase: 3, type: 'milestone', critical: true },
+            
+            // ============ PHASE 4: Pre-Launch (Jan 12 - Jan 31) ============
+            { date: '2026-01-14', title: 'App Store Screenshots Ready', phase: 4, type: 'task' },
+            { date: '2026-01-14', title: 'Social Media Accounts', phase: 4, type: 'task' },
+            { date: '2026-01-15', title: 'Website Launch (oith.com)', phase: 4, type: 'task' },
+            { date: '2026-01-17', title: 'App Store Assets Ready', phase: 4, type: 'milestone' },
+            { date: '2026-01-17', title: 'Compliance Certifications', phase: 4, type: 'task' },
+            { date: '2026-01-18', title: 'Apps Submitted for Review', phase: 4, type: 'milestone', critical: true },
+            { date: '2026-01-20', title: 'Press Kit Ready', phase: 4, type: 'task' },
+            { date: '2026-01-20', title: 'Customer Support System', phase: 4, type: 'task' },
+            { date: '2026-01-25', title: 'Moderation Team Trained', phase: 4, type: 'task' },
+            { date: '2026-01-25', title: 'Influencer Partnerships', phase: 4, type: 'task' },
+            { date: '2026-01-28', title: 'Both Apps Approved', phase: 4, type: 'milestone', critical: true },
+            { date: '2026-01-28', title: 'Launch PR Campaign', phase: 4, type: 'task' },
+            { date: '2026-01-30', title: 'Launch Team Briefed', phase: 4, type: 'milestone' },
+            { date: '2026-01-30', title: 'On-Call Schedule Set', phase: 4, type: 'task' },
+            { date: '2026-01-31', title: 'Final Infrastructure Check', phase: 5, type: 'task' },
+            
+            // ============ PHASE 5: Launch (Feb 1) ============
+            { date: '2026-02-01', title: '🚀 OFFICIAL LAUNCH', phase: 5, type: 'milestone', critical: true },
+            
+            // ============ TAX DEADLINES ============
+            { date: '2026-01-15', title: '💰 Q4 2025 Estimated Taxes Due', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-01-31', title: '📋 W-2s to Employees / 1099s to Contractors', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-01-31', title: '📋 Form 940 (FUTA) Annual Filing', phase: 0, type: 'tax', category: 'tax' },
+            { date: '2026-01-31', title: '📋 Q4 Form 941 & Ohio Unemployment', phase: 0, type: 'tax', category: 'tax' },
+            { date: '2026-03-15', title: '📋 Form 1065 Partnership Return (or Extension)', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-04-15', title: '💰 Q1 2026 Estimated Taxes (Federal & State)', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-04-30', title: '📋 Q1 Form 941 & Ohio Unemployment', phase: 0, type: 'tax', category: 'tax' },
+            { date: '2026-06-15', title: '💰 Q2 2026 Estimated Taxes', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-07-31', title: '📋 Q2 Form 941 & Ohio Unemployment', phase: 0, type: 'tax', category: 'tax' },
+            { date: '2026-09-15', title: '💰 Q3 2026 Estimated Taxes', phase: 0, type: 'tax', critical: true, category: 'tax' },
+            { date: '2026-10-31', title: '📋 Q3 Form 941 & Ohio Unemployment', phase: 0, type: 'tax', category: 'tax' },
+            
+            // ============ LEGAL / PATENT DEADLINES ============
+            { date: '2024-12-31', title: '📜 Provisional Patents Q4 2024 Filing', phase: 0, type: 'legal', critical: true, category: 'patent' },
+            { date: '2025-03-31', title: '📜 Additional Patents Q1 2025', phase: 0, type: 'legal', category: 'patent' },
+            { date: '2025-06-30', title: '📜 Business Method Patent Q2 2025', phase: 0, type: 'legal', category: 'patent' },
+            { date: '2025-12-31', title: '📜 PCT International Application Q4 2025', phase: 0, type: 'legal', category: 'patent' },
+            { date: '2025-12-05', title: '📝 Articles of Organization Filed', phase: 1, type: 'legal', category: 'legal' },
+            { date: '2025-12-07', title: '📝 Operating Agreement Executed', phase: 1, type: 'legal', category: 'legal' },
+            { date: '2025-12-07', title: '📝 NDA Templates Ready', phase: 1, type: 'legal', category: 'legal' },
+            { date: '2025-12-07', title: '📝 Contractor Agreements Ready', phase: 1, type: 'legal', category: 'legal' },
+            
+            // ============ COMPLIANCE DEADLINES ============
+            { date: '2025-12-15', title: '✅ GDPR Compliance Review', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2025-12-15', title: '✅ CCPA Compliance Review', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2025-12-20', title: '✅ App Store Guidelines Compliance', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2025-12-20', title: '✅ PCI DSS Compliance (Payments)', phase: 0, type: 'compliance', critical: true, category: 'compliance' },
+            { date: '2026-01-10', title: '✅ ADA Accessibility Audit', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-01-17', title: '✅ SOC 2 Type II Certification Started', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-01-17', title: '✅ COPPA Compliance (18+ Only)', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-01-20', title: '✅ Terms of Service Published', phase: 0, type: 'compliance', critical: true, category: 'compliance' },
+            { date: '2026-01-20', title: '✅ Privacy Policy Published', phase: 0, type: 'compliance', critical: true, category: 'compliance' },
+            { date: '2026-03-31', title: '✅ Q1 Compliance Audit', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-06-30', title: '✅ LGPD Brazil Compliance (if applicable)', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-06-30', title: '✅ Q2 Compliance Audit', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-09-30', title: '✅ Q3 Compliance Audit', phase: 0, type: 'compliance', category: 'compliance' },
+            { date: '2026-12-31', title: '✅ Annual Security Audit', phase: 0, type: 'compliance', critical: true, category: 'compliance' },
+            
+            // ============ PAYROLL DEADLINES ============
+            { date: '2025-12-15', title: '💵 First Payroll Run', phase: 0, type: 'payroll', category: 'payroll' },
+            { date: '2025-12-31', title: '💵 December Payroll', phase: 0, type: 'payroll', category: 'payroll' },
+            { date: '2026-01-15', title: '💵 January Payroll (Mid-Month)', phase: 0, type: 'payroll', category: 'payroll' },
+            { date: '2026-01-31', title: '💵 January Payroll (End of Month)', phase: 0, type: 'payroll', category: 'payroll' }
+        ];
+
+        let calendarCurrentMonth = new Date('2025-12-01');
+
+        function initCalendarSection() {
+            renderMilestones();
+            renderUpcomingTasks();
+            renderCalendarGrid();
+        }
+
+        function renderMilestones() {
+            const container = document.getElementById('milestonesContainer');
+            if (!container) return;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Include milestones AND critical deadlines from tax, legal, compliance
+            const milestones = projectMilestones.filter(m => 
+                m.type === 'milestone' || 
+                (m.critical && ['tax', 'legal', 'compliance', 'payroll'].includes(m.type || m.category))
+            ).sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            container.innerHTML = milestones.map(m => {
+                const mDate = new Date(m.date);
+                const isPast = mDate < today;
+                const isToday = mDate.toDateString() === today.toDateString();
+                const isCritical = m.critical;
+                
+                const phaseColors = {
+                    0: 'var(--text-muted)',
+                    1: 'var(--warning)',
+                    2: 'var(--info)',
+                    3: 'var(--purple)',
+                    4: 'var(--warning)',
+                    5: 'var(--success)'
+                };
+                
+                const categoryColors = {
+                    'tax': { color: '#ec4899', label: 'Tax' },
+                    'legal': { color: '#a855f7', label: 'Legal' },
+                    'patent': { color: '#a855f7', label: 'Patent' },
+                    'compliance': { color: '#f97316', label: 'Compliance' },
+                    'payroll': { color: '#22c55e', label: 'Payroll' }
+                };
+                
+                const cat = m.category ? categoryColors[m.category] : null;
+                const borderColor = isPast ? 'var(--success)' : (cat ? cat.color : phaseColors[m.phase]);
+                const labelText = cat ? cat.label : `Phase ${m.phase}`;
+                const labelColor = cat ? cat.color : phaseColors[m.phase];
+                
+                return `
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: ${isPast ? 'rgba(16, 124, 16, 0.1)' : 'var(--bg-tertiary)'}; border-radius: 8px; border-left: 4px solid ${borderColor}; opacity: ${isPast && !isToday ? '0.7' : '1'};">
+                        <div style="min-width: 90px; font-size: 0.8rem; color: ${isToday ? 'var(--accent)' : 'var(--text-muted)'}; font-weight: ${isToday ? '600' : '400'};">
+                            ${mDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: ${isCritical ? '600' : '400'}; color: ${isPast ? 'var(--success)' : 'var(--text-primary)'};">
+                                ${isPast ? '✓ ' : ''}${m.title}
+                            </div>
+                        </div>
+                        <div style="font-size: 0.7rem; padding: 2px 8px; background: ${labelColor}22; color: ${labelColor}; border-radius: 4px;">
+                            ${labelText}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderUpcomingTasks() {
+            const container = document.getElementById('upcomingTasksContainer');
+            if (!container) return;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const weekFromNow = new Date(today);
+            weekFromNow.setDate(weekFromNow.getDate() + 7);
+            
+            const upcoming = projectMilestones.filter(m => {
+                const mDate = new Date(m.date);
+                return mDate >= today && mDate <= weekFromNow;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            if (upcoming.length === 0) {
+                container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 20px;">No tasks in the next 7 days</div>`;
+                return;
+            }
+            
+            container.innerHTML = upcoming.map(m => {
+                const mDate = new Date(m.date);
+                const daysUntil = Math.ceil((mDate - today) / (1000 * 60 * 60 * 24));
+                const urgencyColor = daysUntil <= 1 ? 'var(--danger)' : daysUntil <= 3 ? 'var(--warning)' : 'var(--text-muted)';
+                
+                return `
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--bg-tertiary); border-radius: 6px;">
+                        <div style="min-width: 70px; font-size: 0.75rem; color: ${urgencyColor}; font-weight: 500;">
+                            ${daysUntil === 0 ? 'TODAY' : daysUntil === 1 ? 'Tomorrow' : `In ${daysUntil} days`}
+                        </div>
+                        <div style="font-size: 0.85rem;">${m.title}</div>
+                        <div style="margin-left: auto; font-size: 0.7rem; color: var(--text-muted);">
+                            ${mDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCalendarGrid() {
+            const container = document.getElementById('calendarGrid');
+            const label = document.getElementById('calendarMonthLabel');
+            if (!container || !label) return;
+            
+            const year = calendarCurrentMonth.getFullYear();
+            const month = calendarCurrentMonth.getMonth();
+            
+            label.textContent = calendarCurrentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startOffset = firstDay.getDay();
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Day headers
+            let html = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => 
+                `<div style="text-align: center; font-size: 0.7rem; color: var(--text-muted); padding: 8px 4px; font-weight: 600;">${d}</div>`
+            ).join('');
+            
+            // Empty cells before first day
+            for (let i = 0; i < startOffset; i++) {
+                html += `<div style="padding: 8px;"></div>`;
+            }
+            
+            // Category colors for calendar events
+            const categoryColors = {
+                'tax': { bg: 'rgba(236, 72, 153, 0.2)', color: '#ec4899', label: '💰' },
+                'legal': { bg: 'rgba(168, 85, 247, 0.2)', color: '#a855f7', label: '📜' },
+                'patent': { bg: 'rgba(168, 85, 247, 0.2)', color: '#a855f7', label: '📜' },
+                'compliance': { bg: 'rgba(249, 115, 22, 0.2)', color: '#f97316', label: '✅' },
+                'payroll': { bg: 'rgba(34, 197, 94, 0.2)', color: '#22c55e', label: '💵' }
+            };
+            
+            // Days of the month
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayEvents = projectMilestones.filter(m => m.date === dateStr);
+                const isToday = new Date(dateStr).toDateString() === today.toDateString();
+                const hasCritical = dayEvents.some(e => e.critical);
+                const hasMilestone = dayEvents.some(e => e.type === 'milestone');
+                
+                html += `
+                    <div style="padding: 6px; min-height: 70px; background: ${isToday ? 'rgba(0, 120, 212, 0.15)' : 'var(--bg-tertiary)'}; border-radius: 4px; border: 1px solid ${isToday ? 'var(--accent)' : 'var(--border-subtle)'};">
+                        <div style="font-size: 0.75rem; font-weight: ${isToday ? '700' : '400'}; color: ${isToday ? 'var(--accent)' : 'var(--text-primary)'}; margin-bottom: 4px;">${day}</div>
+                        ${dayEvents.slice(0, 3).map(e => {
+                            const cat = categoryColors[e.category] || categoryColors[e.type];
+                            let bgColor, textColor;
+                            if (e.critical) {
+                                bgColor = 'var(--danger)';
+                                textColor = 'white';
+                            } else if (e.type === 'milestone') {
+                                bgColor = 'var(--accent)';
+                                textColor = 'white';
+                            } else if (cat) {
+                                bgColor = cat.bg;
+                                textColor = cat.color;
+                            } else {
+                                bgColor = 'var(--bg-secondary)';
+                                textColor = 'var(--text-secondary)';
+                            }
+                            return `
+                            <div style="font-size: 0.55rem; padding: 2px 4px; margin-bottom: 2px; background: ${bgColor}; color: ${textColor}; border-radius: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${e.title}">
+                                ${e.title.substring(0, 18)}${e.title.length > 18 ? '...' : ''}
+                            </div>
+                        `}).join('')}
+                        ${dayEvents.length > 3 ? `<div style="font-size: 0.55rem; color: var(--text-muted);">+${dayEvents.length - 3} more</div>` : ''}
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function calendarPrevMonth() {
+            calendarCurrentMonth.setMonth(calendarCurrentMonth.getMonth() - 1);
+            renderCalendarGrid();
+        }
+
+        function calendarNextMonth() {
+            calendarCurrentMonth.setMonth(calendarCurrentMonth.getMonth() + 1);
+            renderCalendarGrid();
+        }
+
+        function exportCalendar() {
+            const events = projectMilestones.map(m => ({
+                date: m.date,
+                title: m.title,
+                phase: m.phase,
+                type: m.type,
+                critical: m.critical || false
+            }));
+            
+            const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'oith_milestones.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Calendar exported!', 'success');
+        }
+
+        // Initialize calendar when section is shown
+        const originalShowSection = showSection;
+        showSection = function(section) {
+            originalShowSection(section);
+            if (section === 'calendar') {
+                initCalendarSection();
+            }
+        };
+
+    </script>
+
+    <!-- Admin Calendar Modal -->
+    <div class="calendar-modal" id="adminCalendarModal">
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="calendar-title-area">
+                    <div class="calendar-title-icon">📅</div>
+                    <div class="calendar-title">
+                        <h2>OITH Admin Calendar</h2>
+                        <p>Integrated schedule across all admin sections</p>
+                    </div>
+                </div>
+                <div class="calendar-nav">
+                    <button class="calendar-today-btn" onclick="calendarGoToday()">Today</button>
+                    <button class="calendar-nav-btn" onclick="calendarPrevMonth()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    </button>
+                    <span class="calendar-month-display" id="calendarMonthDisplay">December 2025</span>
+                    <button class="calendar-nav-btn" onclick="calendarNextMonth()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </button>
+                    <button class="calendar-close-btn" onclick="closeAdminCalendar()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="calendar-body">
+                <div class="calendar-main">
+                    <div class="calendar-weekdays">
+                        <div class="calendar-weekday">Sun</div>
+                        <div class="calendar-weekday">Mon</div>
+                        <div class="calendar-weekday">Tue</div>
+                        <div class="calendar-weekday">Wed</div>
+                        <div class="calendar-weekday">Thu</div>
+                        <div class="calendar-weekday">Fri</div>
+                        <div class="calendar-weekday">Sat</div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar days will be generated here -->
+                    </div>
+                </div>
+                <div class="calendar-sidebar">
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                            Upcoming Events
+                        </div>
+                        <div id="upcomingEventsList">
+                            <!-- Upcoming events will be generated here -->
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="sidebar-section-title">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M3 9h18"/>
+                            </svg>
+                            Event Categories
+                        </div>
+                        <div class="legend-items">
+                            <div class="legend-item"><div class="legend-dot payroll"></div>Payroll</div>
+                            <div class="legend-item"><div class="legend-dot report"></div>Reports</div>
+                            <div class="legend-item"><div class="legend-dot experiment"></div>Experiments</div>
+                            <div class="legend-item"><div class="legend-dot compliance"></div>Compliance</div>
+                            <div class="legend-item"><div class="legend-dot meeting"></div>Meetings</div>
+                            <div class="legend-item"><div class="legend-dot tax"></div>Tax</div>
+                            <div class="legend-item"><div class="legend-dot milestone"></div>Milestones</div>
+                            <div class="legend-item"><div class="legend-dot patent"></div>Patents</div>
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
+                        <button class="add-event-btn" onclick="openAddEventModal()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add New Event
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mail Client Modal -->
+    <div class="mail-modal" id="mailClientModal">
+        <div class="mail-container">
+            <div class="mail-header">
+                <div class="mail-title-area">
+                    <div class="mail-icon-large">📧</div>
+                    <div class="mail-title">
+                        <h2>OITH Mail</h2>
+                        <p>admin@oith.com • Support Inbox</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="refreshMailInbox()" style="font-size: 0.8rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                    <button class="calendar-close-btn" onclick="closeMailClient()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="mail-body">
+                <div class="mail-sidebar">
+                    <div class="mail-folder active" onclick="switchMailFolder('inbox')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+                            <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>
+                        </svg>
+                        Inbox
+                        <span class="mail-folder-count" id="inboxCount">0</span>
+                    </div>
+                    <div class="mail-folder" onclick="switchMailFolder('support')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                        </svg>
+                        Support
+                        <span class="mail-folder-count" id="supportCount">0</span>
+                    </div>
+                    <div class="mail-folder" onclick="switchMailFolder('sent')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        Sent
+                    </div>
+                    <div class="mail-folder" onclick="switchMailFolder('archive')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="21 8 21 21 3 21 3 8"/>
+                            <rect x="1" y="3" width="22" height="5"/>
+                            <line x1="10" y1="12" x2="14" y2="12"/>
+                        </svg>
+                        Archive
+                    </div>
+                </div>
+                <div class="mail-list" id="mailList">
+                    <div class="mail-list-header">
+                        <span id="mailListTitle">Inbox</span>
+                    </div>
+                    <div id="mailListItems">
+                        <!-- Mail items will be rendered here -->
+                    </div>
+                </div>
+                <div class="mail-content" id="mailContent">
+                    <div class="mail-content-empty" id="mailEmptyState">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                        <p>Select an email to view</p>
+                    </div>
+                    <div id="mailViewContent" style="display: none;">
+                        <!-- Selected email content will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Event Modal -->
+    <div class="modal" id="addEventModal" style="z-index: 2100;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin: 0;">➕ Add Calendar Event</h3>
+                <button onclick="closeAddEventModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem;">&times;</button>
+            </div>
+            <form id="addEventForm" onsubmit="saveCalendarEvent(event)">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Event Title</label>
+                    <input type="text" id="eventTitle" required placeholder="Enter event title..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Date</label>
+                        <input type="date" id="eventDate" required style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Category</label>
+                        <select id="eventCategory" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                            <option value="meeting">Meeting</option>
+                            <option value="payroll">Payroll</option>
+                            <option value="report">Report</option>
+                            <option value="experiment">Experiment</option>
+                            <option value="compliance">Compliance</option>
+                            <option value="tax">Tax</option>
+                            <option value="milestone">Milestone</option>
+                            <option value="patent">Patent</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Description (optional)</label>
+                    <textarea id="eventDescription" rows="3" placeholder="Add details..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); resize: vertical;"></textarea>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddEventModal()" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Event
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // ADMIN CALENDAR SYSTEM
+        // ==========================================
+        
+        let calendarCurrentDate = new Date();
+        let calendarSelectedDate = null;
+        let calendarEvents = [];
+        
+        // Initialize calendar events from all admin sections
+        function initCalendarEvents() {
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth();
+            
+            // Map section for different types
+            const sectionMap = {
+                'tax': 'tax',
+                'legal': 'legal',
+                'patent': 'legal',
+                'compliance': 'compliance',
+                'payroll': 'payroll',
+                'milestone': 'overview',
+                'task': 'calendar'
+            };
+            
+            // Convert projectMilestones to calendar events
+            calendarEvents = projectMilestones.map(m => ({
+                date: new Date(m.date),
+                title: m.title,
+                category: m.category || m.type || 'milestone',
+                section: sectionMap[m.category] || sectionMap[m.type] || 'calendar',
+                critical: m.critical || false,
+                phase: m.phase
+            }));
+            
+            // Add recurring events
+            const recurringEvents = [
+                // Weekly safety reports
+                { date: new Date(currentYear, currentMonth, 7), title: 'Weekly Safety Report', category: 'report', section: 'safety' },
+                { date: new Date(currentYear, currentMonth, 14), title: 'Weekly Safety Report', category: 'report', section: 'safety' },
+                { date: new Date(currentYear, currentMonth, 21), title: 'Weekly Safety Report', category: 'report', section: 'safety' },
+                { date: new Date(currentYear, currentMonth, 28), title: 'Weekly Safety Report', category: 'report', section: 'safety' },
+                
+                // Team meetings
+                { date: new Date(currentYear, currentMonth, 3), title: 'Leadership Standup', category: 'meeting', section: 'org-hierarchy' },
+                { date: new Date(currentYear, currentMonth, 10), title: 'All Hands Meeting', category: 'meeting', section: 'org-hierarchy' },
+                { date: new Date(currentYear, currentMonth, 17), title: 'Leadership Standup', category: 'meeting', section: 'org-hierarchy' },
+                { date: new Date(currentYear, currentMonth, 24), title: 'Sprint Planning', category: 'meeting', section: 'org-hierarchy' },
+                
+                // Monthly KPI review
+                { date: new Date(currentYear, currentMonth, 1), title: 'Monthly KPI Review', category: 'milestone', section: 'dashboard' }
+            ];
+            
+            calendarEvents.push(...recurringEvents);
+            
+            // Load custom events from localStorage
+            const savedEvents = localStorage.getItem('oith_calendar_events');
+            if (savedEvents) {
+                const customEvents = JSON.parse(savedEvents);
+                customEvents.forEach(e => {
+                    e.date = new Date(e.date);
+                    calendarEvents.push(e);
+                });
+            }
+            
+            updateCalendarBadge();
+        }
+        
+        function updateCalendarBadge() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            
+            const upcomingCount = calendarEvents.filter(e => {
+                const eventDate = new Date(e.date);
+                eventDate.setHours(0, 0, 0, 0);
+                return eventDate >= today && eventDate <= nextWeek;
+            }).length;
+            
+            const badge = document.getElementById('calendarEventCount');
+            if (badge) {
+                badge.textContent = upcomingCount;
+                badge.setAttribute('data-count', upcomingCount);
+            }
+        }
+        
+        function openAdminCalendar() {
+            initCalendarEvents();
+            calendarCurrentDate = new Date();
+            renderCalendar();
+            renderUpcomingEvents();
+            document.getElementById('adminCalendarModal').classList.add('active');
+        }
+        
+        function closeAdminCalendar() {
+            document.getElementById('adminCalendarModal').classList.remove('active');
+        }
+        
+        function calendarPrevMonth() {
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+            renderCalendar();
+        }
+        
+        function calendarNextMonth() {
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+            renderCalendar();
+        }
+        
+        function calendarGoToday() {
+            calendarCurrentDate = new Date();
+            renderCalendar();
+        }
+        
+        function renderCalendar() {
+            const year = calendarCurrentDate.getFullYear();
+            const month = calendarCurrentDate.getMonth();
+            
+            // Update month display
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            document.getElementById('calendarMonthDisplay').textContent = `${monthNames[month]} ${year}`;
+            
+            // Get first day of month and total days
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDayOfWeek = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+            
+            // Get previous month's last days
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            // Add previous month's trailing days
+            for (let i = startingDayOfWeek - 1; i >= 0; i--) {
+                const dayNum = prevMonthLastDay - i;
+                const dayEl = createCalendarDay(dayNum, true, new Date(year, month - 1, dayNum));
+                grid.appendChild(dayEl);
+            }
+            
+            // Add current month's days
+            for (let day = 1; day <= totalDays; day++) {
+                const date = new Date(year, month, day);
+                const isToday = date.getTime() === today.getTime();
+                const dayEl = createCalendarDay(day, false, date, isToday);
+                grid.appendChild(dayEl);
+            }
+            
+            // Add next month's leading days
+            const totalCells = grid.children.length;
+            const remainingCells = 42 - totalCells; // 6 rows × 7 days
+            for (let i = 1; i <= remainingCells; i++) {
+                const dayEl = createCalendarDay(i, true, new Date(year, month + 1, i));
+                grid.appendChild(dayEl);
+            }
+        }
+        
+        function createCalendarDay(dayNum, isOtherMonth, date, isToday = false) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'calendar-day';
+            if (isOtherMonth) dayEl.classList.add('other-month');
+            if (isToday) dayEl.classList.add('today');
+            
+            dayEl.innerHTML = `<div class="day-number">${dayNum}</div><div class="day-events"></div>`;
+            
+            // Get events for this day
+            const dayEvents = calendarEvents.filter(e => {
+                const eventDate = new Date(e.date);
+                return eventDate.getDate() === date.getDate() && 
+                       eventDate.getMonth() === date.getMonth() && 
+                       eventDate.getFullYear() === date.getFullYear();
+            });
+            
+            const eventsContainer = dayEl.querySelector('.day-events');
+            const maxVisible = 2;
+            
+            dayEvents.slice(0, maxVisible).forEach(event => {
+                const eventEl = document.createElement('div');
+                eventEl.className = `day-event ${event.category}`;
+                eventEl.textContent = event.title;
+                eventEl.onclick = (e) => {
+                    e.stopPropagation();
+                    navigateToSection(event.section);
+                };
+                eventsContainer.appendChild(eventEl);
+            });
+            
+            if (dayEvents.length > maxVisible) {
+                const moreEl = document.createElement('div');
+                moreEl.className = 'day-event-count';
+                moreEl.textContent = `+${dayEvents.length - maxVisible} more`;
+                eventsContainer.appendChild(moreEl);
+            }
+            
+            dayEl.onclick = () => selectCalendarDay(date, dayEvents);
+            
+            return dayEl;
+        }
+        
+        function selectCalendarDay(date, events) {
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            calendarSelectedDate = date;
+            
+            // Update sidebar with selected day's events
+            if (events.length > 0) {
+                renderDayEvents(date, events);
+            }
+        }
+        
+        function renderDayEvents(date, events) {
+            const list = document.getElementById('upcomingEventsList');
+            list.innerHTML = `<div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 12px; font-weight: 600;">
+                ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </div>`;
+            
+            events.forEach(event => {
+                const eventEl = document.createElement('div');
+                eventEl.className = `upcoming-event ${event.category}`;
+                eventEl.innerHTML = `
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-meta">
+                        <span class="event-category" style="background: rgba(var(--${getCategoryColor(event.category)}), 0.2); color: var(--${getCategoryColorVar(event.category)});">${event.category}</span>
+                        <span>→ ${event.section}</span>
+                    </div>
+                `;
+                eventEl.onclick = () => navigateToSection(event.section);
+                list.appendChild(eventEl);
+            });
+        }
+        
+        function renderUpcomingEvents() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const upcoming = calendarEvents
+                .filter(e => new Date(e.date) >= today)
+                .sort((a, b) => new Date(a.date) - new Date(b.date))
+                .slice(0, 5);
+            
+            const list = document.getElementById('upcomingEventsList');
+            list.innerHTML = '';
+            
+            if (upcoming.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 20px;">No upcoming events</div>';
+                return;
+            }
+            
+            upcoming.forEach(event => {
+                const eventDate = new Date(event.date);
+                const isToday = eventDate.toDateString() === today.toDateString();
+                const isTomorrow = eventDate.toDateString() === new Date(today.getTime() + 86400000).toDateString();
+                
+                let dateStr = eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                if (isToday) dateStr = 'Today';
+                if (isTomorrow) dateStr = 'Tomorrow';
+                
+                const eventEl = document.createElement('div');
+                eventEl.className = `upcoming-event ${event.category}`;
+                eventEl.innerHTML = `
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-meta">
+                        <span>${dateStr}</span>
+                        <span>•</span>
+                        <span>${event.section}</span>
+                    </div>
+                `;
+                eventEl.onclick = () => navigateToSection(event.section);
+                list.appendChild(eventEl);
+            });
+        }
+        
+        function getCategoryColor(category) {
+            const colors = {
+                payroll: '34, 197, 94',
+                report: '239, 68, 68',
+                experiment: '59, 130, 246',
+                compliance: '249, 115, 22',
+                meeting: '139, 92, 246',
+                tax: '236, 72, 153',
+                milestone: '14, 165, 233',
+                patent: '168, 85, 247'
+            };
+            return colors[category] || '139, 92, 246';
+        }
+        
+        function getCategoryColorVar(category) {
+            const vars = {
+                payroll: 'success',
+                report: 'danger',
+                experiment: 'info',
+                compliance: 'warning',
+                meeting: 'accent',
+                tax: 'pink',
+                milestone: 'info',
+                patent: 'purple'
+            };
+            return vars[category] || 'accent';
+        }
+        
+        function navigateToSection(section) {
+            closeAdminCalendar();
+            if (section && typeof showSection === 'function') {
+                showSection(section);
+            }
+        }
+        
+        function openAddEventModal() {
+            document.getElementById('addEventModal').style.display = 'flex';
+            // Set default date to today
+            document.getElementById('eventDate').valueAsDate = new Date();
+        }
+        
+        function closeAddEventModal() {
+            document.getElementById('addEventModal').style.display = 'none';
+            document.getElementById('addEventForm').reset();
+        }
+        
+        function saveCalendarEvent(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('eventTitle').value;
+            const date = new Date(document.getElementById('eventDate').value);
+            const category = document.getElementById('eventCategory').value;
+            const description = document.getElementById('eventDescription').value;
+            
+            const newEvent = {
+                id: Date.now(),
+                title,
+                date: date.toISOString(),
+                category,
+                description,
+                section: 'overview',
+                custom: true
+            };
+            
+            // Save to localStorage
+            let savedEvents = JSON.parse(localStorage.getItem('oith_calendar_events') || '[]');
+            savedEvents.push(newEvent);
+            localStorage.setItem('oith_calendar_events', JSON.stringify(savedEvents));
+            
+            // Add to current events
+            newEvent.date = date;
+            calendarEvents.push(newEvent);
+            
+            // Re-render
+            renderCalendar();
+            renderUpcomingEvents();
+            updateCalendarBadge();
+            closeAddEventModal();
+            
+            showToast('Event added successfully!');
+        }
+        
+        // ==========================================
+        // ADMIN MAIL CLIENT SYSTEM
+        // ==========================================
+        
+        let currentMailFolder = 'inbox';
+        let selectedMailId = null;
+        let adminInbox = [];
+        
+        function openMailClient() {
+            loadAdminInbox();
+            renderMailList();
+            updateMailBadge();
+            document.getElementById('mailClientModal').classList.add('active');
+        }
+        
+        function closeMailClient() {
+            document.getElementById('mailClientModal').classList.remove('active');
+        }
+        
+        function loadAdminInbox() {
+            adminInbox = JSON.parse(localStorage.getItem('oith_admin_inbox') || '[]');
+        }
+        
+        function refreshMailInbox() {
+            loadAdminInbox();
+            renderMailList();
+            updateMailBadge();
+            showToast('Inbox refreshed');
+        }
+        
+        function updateMailBadge() {
+            const unreadCount = adminInbox.filter(m => !m.read).length;
+            const badge = document.getElementById('unreadMailCount');
+            if (badge) {
+                badge.textContent = unreadCount;
+                badge.setAttribute('data-count', unreadCount);
+            }
+            
+            // Update folder counts
+            const inboxCount = document.getElementById('inboxCount');
+            const supportCount = document.getElementById('supportCount');
+            if (inboxCount) inboxCount.textContent = adminInbox.length;
+            if (supportCount) supportCount.textContent = adminInbox.filter(m => m.subject).length;
+        }
+        
+        function switchMailFolder(folder) {
+            currentMailFolder = folder;
+            
+            // Update active folder UI
+            document.querySelectorAll('.mail-folder').forEach(f => f.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Update list title
+            const titles = {
+                'inbox': 'Inbox',
+                'support': 'Support Requests',
+                'sent': 'Sent',
+                'archive': 'Archive'
+            };
+            document.getElementById('mailListTitle').textContent = titles[folder] || 'Inbox';
+            
+            renderMailList();
+        }
+        
+        function renderMailList() {
+            const listContainer = document.getElementById('mailListItems');
+            
+            if (adminInbox.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="padding: 40px 20px; text-align: center; color: var(--text-muted);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.3;">
+                            <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+                            <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/>
+                        </svg>
+                        <p>No messages yet</p>
+                        <p style="font-size: 0.75rem; margin-top: 8px;">Support messages from users will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            listContainer.innerHTML = adminInbox.map(mail => {
+                const date = new Date(mail.timestamp);
+                const isToday = date.toDateString() === new Date().toDateString();
+                const timeStr = isToday 
+                    ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+                    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                const subjectLabels = {
+                    'account': 'Account Issue',
+                    'billing': 'Billing',
+                    'matches': 'Matching',
+                    'technical': 'Technical',
+                    'feedback': 'Feedback',
+                    'other': 'Other'
+                };
+                
+                return `
+                    <div class="mail-item ${!mail.read ? 'unread' : ''} ${selectedMailId === mail.id ? 'active' : ''}" 
+                         onclick="viewMail(${mail.id})">
+                        <div class="mail-item-header">
+                            <span class="mail-item-from">${mail.userName || mail.userEmail}</span>
+                            <span class="mail-item-time">${timeStr}</span>
+                        </div>
+                        <div class="mail-item-subject">${subjectLabels[mail.subject] || mail.subject}</div>
+                        <div class="mail-item-preview">${mail.message.substring(0, 60)}${mail.message.length > 60 ? '...' : ''}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function viewMail(mailId) {
+            selectedMailId = mailId;
+            const mail = adminInbox.find(m => m.id === mailId);
+            
+            if (!mail) return;
+            
+            // Mark as read
+            if (!mail.read) {
+                mail.read = true;
+                localStorage.setItem('oith_admin_inbox', JSON.stringify(adminInbox));
+                updateMailBadge();
+            }
+            
+            // Re-render list to update active state
+            renderMailList();
+            
+            // Show mail content
+            document.getElementById('mailEmptyState').style.display = 'none';
+            const viewContent = document.getElementById('mailViewContent');
+            viewContent.style.display = 'block';
+            
+            const date = new Date(mail.timestamp);
+            const dateStr = date.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+            
+            const subjectLabels = {
+                'account': 'Account Issue',
+                'billing': 'Billing & Payments',
+                'matches': 'Matching Questions',
+                'technical': 'Technical Problem',
+                'feedback': 'Feedback & Suggestions',
+                'other': 'Other'
+            };
+            
+            viewContent.innerHTML = `
+                <div class="mail-view-header">
+                    <div>
+                        <div class="mail-view-subject">${subjectLabels[mail.subject] || mail.subject}</div>
+                        <div class="mail-view-meta">
+                            <span>From: <strong>${mail.userName || 'User'}</strong> &lt;${mail.userEmail}&gt;</span>
+                            <span>•</span>
+                            <span>${dateStr}</span>
+                        </div>
+                    </div>
+                    <div class="mail-actions">
+                        <button class="mail-action-btn" onclick="replyToMail(${mail.id})" title="Reply">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 17 4 12 9 7"/>
+                                <path d="M20 18v-2a4 4 0 00-4-4H4"/>
+                            </svg>
+                        </button>
+                        <button class="mail-action-btn" onclick="archiveMail(${mail.id})" title="Archive">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="21 8 21 21 3 21 3 8"/>
+                                <rect x="1" y="3" width="22" height="5"/>
+                            </svg>
+                        </button>
+                        <button class="mail-action-btn danger" onclick="deleteMail(${mail.id})" title="Delete">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="mail-view-body">${mail.message}</div>
+                <div class="reply-form" id="replyForm" style="display: none;">
+                    <h4 style="margin-bottom: 12px; color: var(--text-primary);">Reply to ${mail.userName || 'User'}</h4>
+                    <textarea id="replyMessage" placeholder="Type your reply..."></textarea>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="cancelReply()">Cancel</button>
+                        <button class="btn btn-primary" onclick="sendReply(${mail.id})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                            </svg>
+                            Send Reply
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function replyToMail(mailId) {
+            document.getElementById('replyForm').style.display = 'block';
+            document.getElementById('replyMessage').focus();
+        }
+        
+        function cancelReply() {
+            document.getElementById('replyForm').style.display = 'none';
+            document.getElementById('replyMessage').value = '';
+        }
+        
+        function sendReply(mailId) {
+            const replyText = document.getElementById('replyMessage').value;
+            if (!replyText.trim()) {
+                showToast('Please enter a reply message', 'warning');
+                return;
+            }
+            
+            const mail = adminInbox.find(m => m.id === mailId);
+            if (mail) {
+                mail.replied = true;
+                mail.replyMessage = replyText;
+                mail.replyTimestamp = new Date().toISOString();
+                localStorage.setItem('oith_admin_inbox', JSON.stringify(adminInbox));
+            }
+            
+            cancelReply();
+            showToast(`Reply sent to ${mail.userEmail}`, 'success');
+        }
+        
+        function archiveMail(mailId) {
+            const index = adminInbox.findIndex(m => m.id === mailId);
+            if (index > -1) {
+                adminInbox.splice(index, 1);
+                localStorage.setItem('oith_admin_inbox', JSON.stringify(adminInbox));
+                renderMailList();
+                updateMailBadge();
+                
+                // Reset view
+                document.getElementById('mailEmptyState').style.display = 'flex';
+                document.getElementById('mailViewContent').style.display = 'none';
+                selectedMailId = null;
+                
+                showToast('Email archived');
+            }
+        }
+        
+        function deleteMail(mailId) {
+            if (!confirm('Are you sure you want to delete this email?')) return;
+            
+            const index = adminInbox.findIndex(m => m.id === mailId);
+            if (index > -1) {
+                adminInbox.splice(index, 1);
+                localStorage.setItem('oith_admin_inbox', JSON.stringify(adminInbox));
+                renderMailList();
+                updateMailBadge();
+                
+                // Reset view
+                document.getElementById('mailEmptyState').style.display = 'flex';
+                document.getElementById('mailViewContent').style.display = 'none';
+                selectedMailId = null;
+                
+                showToast('Email deleted');
+            }
+        }
+        
+        // Close modals on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAdminCalendar();
+                closeMailClient();
+                closeAddEventModal();
+            }
+        });
+        
+        // Close modals on backdrop click
+        document.getElementById('adminCalendarModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeAdminCalendar();
+        });
+        
+        document.getElementById('mailClientModal')?.addEventListener('click', function(e) {
+            if (e.target === this) closeMailClient();
+        });
+        
+        // Initialize calendar and mail badges on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initCalendarEvents();
+            loadAdminInbox();
+            updateMailBadge();
+        });
+        
+        // Poll for new emails every 30 seconds
+        setInterval(function() {
+            const previousCount = adminInbox.length;
+            loadAdminInbox();
+            updateMailBadge();
+            if (adminInbox.length > previousCount) {
+                showToast('📧 New support message received!', 'info');
+            }
+        }, 30000);
     </script>
 </body>
 </html>

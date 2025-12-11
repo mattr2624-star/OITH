@@ -385,6 +385,6 @@ We'll take appropriate action based on our review.
 
 ---
 
-*Last Updated: December 2024*
+*Last Updated: December 2025*
 *Review Due: June 2025*
 

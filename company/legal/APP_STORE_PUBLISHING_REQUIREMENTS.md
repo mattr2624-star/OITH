@@ -314,6 +314,6 @@ Apple may require one of:
 
 ---
 
-*Last Updated: December 2024*
+*Last Updated: December 2025*
 *Document Location: `company/legal/APP_STORE_PUBLISHING_REQUIREMENTS.md`*
 

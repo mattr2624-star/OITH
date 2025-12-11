@@ -82,6 +82,6 @@ This document serves as the master compliance reference for OITH's dating applic
 
 ---
 
-*Last Updated: December 2024*
+*Last Updated: December 2025*
 *Document Owner: OITH Compliance Team*
 
