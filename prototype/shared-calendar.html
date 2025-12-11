@@ -1085,6 +1085,163 @@
             background: var(--text-secondary);
         }
 
+        /* Export Modal Styles */
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .export-option-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .export-option-card:hover {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .export-option-card.selected {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .export-option-icon {
+            font-size: 28px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+        }
+
+        .export-option-info {
+            flex: 1;
+        }
+
+        .export-option-info h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0 0 4px 0;
+        }
+
+        .export-option-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .export-option-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .export-option-card.selected .export-option-check {
+            background: var(--accent);
+            color: white;
+        }
+
+        .export-section {
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            margin-top: 16px;
+            border: 1px solid var(--border);
+            animation: slideDown 0.2s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .saved-phone-btn {
+            padding: 8px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .saved-phone-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .range-btn {
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .range-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .range-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .export-summary {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .export-summary-icon {
+            font-size: 24px;
+        }
+
+        .export-summary-info {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .export-summary-info span {
+            font-weight: 700;
+            color: var(--success);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .header {
@@ -1148,6 +1305,14 @@
                         <line x1="5" y1="12" x2="19" y2="12"/>
                     </svg>
                     Add Event
+                </button>
+                <button class="add-event-btn" onclick="openExportModal()" style="background: linear-gradient(135deg, #10b981, #06b6d4);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Export
                 </button>
                 <div class="header-badge">
                     <div class="live-dot"></div>
@@ -1285,6 +1450,152 @@
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeEventDetails()">Close</button>
                 <button class="btn btn-danger" id="deleteEventBtn" onclick="deleteEvent()" style="display: none;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Calendar Modal -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <div class="modal-icon" style="background: linear-gradient(135deg, #10b981, #06b6d4);">📤</div>
+                    <div class="modal-title">
+                        <h2>Export Calendar</h2>
+                        <p>Download or send to your device</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeExportModal()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Export Options -->
+                <div class="export-options">
+                    <div class="export-option-card" onclick="selectExportOption('download')" id="exportOptDownload">
+                        <div class="export-option-icon">📥</div>
+                        <div class="export-option-info">
+                            <h4>Download .ics File</h4>
+                            <p>Import to Google Calendar, Outlook, or any calendar app</p>
+                        </div>
+                        <div class="export-option-check">✓</div>
+                    </div>
+                    <div class="export-option-card" onclick="selectExportOption('sms')" id="exportOptSMS">
+                        <div class="export-option-icon">📱</div>
+                        <div class="export-option-info">
+                            <h4>Send to Phone (SMS)</h4>
+                            <p>Receive a download link via text message</p>
+                        </div>
+                        <div class="export-option-check">✓</div>
+                    </div>
+                    <div class="export-option-card" onclick="selectExportOption('email')" id="exportOptEmail">
+                        <div class="export-option-icon">📧</div>
+                        <div class="export-option-info">
+                            <h4>Send via Email</h4>
+                            <p>Email calendar file to yourself</p>
+                        </div>
+                        <div class="export-option-check">✓</div>
+                    </div>
+                </div>
+
+                <!-- SMS Section -->
+                <div id="smsExportSection" class="export-section" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 16px;">
+                        <label style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 8px; display: block;">
+                            📱 Phone Number
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="countryCode" class="form-control" style="width: 100px;">
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+86">🇨🇳 +86</option>
+                                <option value="+81">🇯🇵 +81</option>
+                                <option value="+49">🇩🇪 +49</option>
+                                <option value="+33">🇫🇷 +33</option>
+                                <option value="+61">🇦🇺 +61</option>
+                                <option value="+55">🇧🇷 +55</option>
+                                <option value="+52">🇲🇽 +52</option>
+                            </select>
+                            <input type="tel" id="phoneNumber" class="form-control" placeholder="(555) 123-4567" style="flex: 1;">
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+                            You'll receive a text with a link to add the calendar to your Android device
+                        </p>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <button type="button" class="saved-phone-btn" onclick="useSavedPhone('+1 (555) 123-4567')">
+                            📞 +1 (555) 123-4567
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Email Section -->
+                <div id="emailExportSection" class="export-section" style="display: none;">
+                    <div class="form-group">
+                        <label style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 8px; display: block;">
+                            📧 Email Address
+                        </label>
+                        <input type="email" id="exportEmail" class="form-control" placeholder="your@email.com">
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">
+                            The calendar file will be attached to the email
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Export Range -->
+                <div class="form-group" style="margin-top: 20px;">
+                    <label style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 8px; display: block;">
+                        📅 Export Range
+                    </label>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                        <button type="button" class="range-btn active" data-range="all" onclick="selectExportRange('all')">
+                            All Events
+                        </button>
+                        <button type="button" class="range-btn" data-range="upcoming" onclick="selectExportRange('upcoming')">
+                            Upcoming Only
+                        </button>
+                        <button type="button" class="range-btn" data-range="custom" onclick="selectExportRange('custom')">
+                            Custom Range
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Date Range (hidden by default) -->
+                <div id="customRangeSection" style="display: none; margin-top: 16px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin: 0;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted);">From</label>
+                            <input type="date" id="exportFromDate" class="form-control">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label style="font-size: 0.8rem; color: var(--text-muted);">To</label>
+                            <input type="date" id="exportToDate" class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Summary -->
+                <div class="export-summary" id="exportSummary">
+                    <div class="export-summary-icon">📊</div>
+                    <div class="export-summary-info">
+                        <span id="exportEventCount">--</span> events will be exported
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" id="exportBtn" onclick="executeExport()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span id="exportBtnText">Download Calendar</span>
+                </button>
             </div>
         </div>
     </div>

@@ -3547,6 +3547,8 @@
             padding-left: 14px;
         }
     </style>
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <header class="header">
@@ -7082,6 +7084,16 @@
                                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                             </svg>
                             Export Report
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportExpenseReportAsPDF()" style="background: #dc2626;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10,9 9,9 8,9"/>
+                            </svg>
+                            Export as PDF
                         </button>
                         <button class="btn btn-primary" onclick="addExpenseEntry()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -30275,7 +30287,7 @@
             // Export regular expenses
             expenseData.forEach(exp => {
                 const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
-                csv += `"${exp.name}","${exp.category}","${cost}","${exp.billing}","${exp.status}","${exp.vendor}","${exp.notes}","${exp.startDate}"\n`;
+                csv += `"${exp.name}","${exp.category}","${exp.billing}","${exp.status}","${exp.vendor}","${exp.notes}","${exp.startDate}"\n`;
             });
             
             // Export payroll (employee salaries)
@@ -30293,6 +30305,379 @@
             a.download = 'oith_expenses_' + new Date().toISOString().split('T')[0] + '.csv';
             a.click();
             URL.revokeObjectURL(url);
+        }
+
+        /**
+         * Export Expense Report as PDF
+         * Generates a detailed, organized line-by-line report of all expenses
+         * Uses the EXACT same calculation logic as renderExpenses() for consistency
+         */
+        function exportExpenseReportAsPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Document configuration
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 20;
+            const contentWidth = pageWidth - (margin * 2);
+            let yPos = margin;
+            
+            // Helper function to check if we need a new page
+            function checkNewPage(requiredSpace = 20) {
+                if (yPos + requiredSpace > pageHeight - margin) {
+                    doc.addPage();
+                    yPos = margin;
+                    return true;
+                }
+                return false;
+            }
+            
+            // Helper function to format currency (matches UI formatCurrency)
+            function formatCurrencyPDF(amount) {
+                return '$' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            }
+            
+            // Helper function to format date
+            function formatDatePDF(dateStr) {
+                if (!dateStr) return 'N/A';
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+            
+            // Category display names
+            const categoryNames = {
+                'development': 'Development Tools',
+                'cloud': 'Cloud Infrastructure',
+                'communication': 'Communication & Email',
+                'legal': 'Legal & Compliance',
+                'other': 'Other Expenses',
+                'payroll': 'Payroll & Salaries'
+            };
+            
+            // ===== CALCULATE TOTALS USING EXACT SAME LOGIC AS renderExpenses() =====
+            const now = new Date();
+            const startDate = new Date('2025-11-28');
+            const monthsActive = Math.max(1, Math.ceil((now - startDate) / (1000 * 60 * 60 * 24 * 30)));
+            
+            let totalToDate = 0;
+            let monthlyRecurring = 0;
+            let yearlyEquivalent = 0;
+            let activeServices = 0;
+            
+            expenseData.forEach(exp => {
+                if (exp.status === 'active' || exp.status === 'pending') {
+                    activeServices++;
+                    
+                    if (exp.billing === 'monthly') {
+                        const monthlyCost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                        monthlyRecurring += monthlyCost;
+                        totalToDate += monthlyCost * monthsActive;
+                    } else if (exp.billing === 'yearly') {
+                        yearlyEquivalent += exp.cost;
+                        totalToDate += exp.cost; // Count yearly as paid once
+                    } else if (exp.billing === 'one-time') {
+                        totalToDate += exp.cost;
+                    }
+                }
+            });
+            
+            // Calculate payroll from employee salaries (same as renderExpenses)
+            const activeEmployees = orgData.employees.filter(e => e.status === 'active');
+            const totalAnnualPayroll = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
+            const monthlyPayroll = totalAnnualPayroll / 12;
+            
+            // Add payroll to monthly burn rate and totals
+            const totalMonthlyBurn = monthlyRecurring + monthlyPayroll;
+            totalToDate += monthlyPayroll * monthsActive;
+            
+            // Calculate potential savings (same as calculatePotentialSavings)
+            let potentialSavings = 0;
+            const cursor = expenseData.find(e => e.id === 'cursor');
+            if (cursor && cursor.cost > 0) {
+                potentialSavings += 5;
+            }
+            const googleWS = expenseData.find(e => e.id === 'google-workspace');
+            if (googleWS && googleWS.users > 1) {
+                potentialSavings += googleWS.cost * 0.1 * googleWS.users;
+            }
+            
+            // ===== HEADER =====
+            doc.setFillColor(31, 31, 31); // Dark background
+            doc.rect(0, 0, pageWidth, 45, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(24);
+            doc.setFont('helvetica', 'bold');
+            doc.text('OITH Expense Report', margin, 25);
+            
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.text('One In The Hand, LLC', margin, 35);
+            
+            // Report date on right side
+            doc.setFontSize(10);
+            doc.text('Generated: ' + new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            }), pageWidth - margin, 25, { align: 'right' });
+            
+            yPos = 55;
+            doc.setTextColor(0, 0, 0);
+            
+            // ===== EXECUTIVE SUMMARY (matches UI stat cards) =====
+            doc.setFillColor(240, 240, 240);
+            doc.rect(margin, yPos, contentWidth, 45, 'F');
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Executive Summary', margin + 5, yPos + 10);
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            
+            // Row 1 - Main metrics (matching the stat cards on the page)
+            const summaryY = yPos + 22;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Total Spent to Date:', margin + 5, summaryY);
+            doc.setTextColor(220, 38, 38); // Red like the UI
+            doc.text(formatCurrencyPDF(totalToDate), margin + 50, summaryY);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.text('Monthly Burn Rate:', margin + 85, summaryY);
+            doc.text(formatCurrencyPDF(totalMonthlyBurn), margin + 130, summaryY);
+            
+            // Row 2
+            const summaryY2 = summaryY + 10;
+            doc.text('Active Services:', margin + 5, summaryY2);
+            doc.setFont('helvetica', 'normal');
+            doc.text(activeServices.toString(), margin + 50, summaryY2);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.text('Monthly Payroll:', margin + 85, summaryY2);
+            doc.setFont('helvetica', 'normal');
+            doc.text(formatCurrencyPDF(monthlyPayroll), margin + 130, summaryY2);
+            
+            // Row 3
+            const summaryY3 = summaryY2 + 10;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Potential Savings:', margin + 5, summaryY3);
+            doc.setTextColor(16, 185, 129); // Green
+            doc.text(formatCurrencyPDF(potentialSavings) + '/mo', margin + 50, summaryY3);
+            doc.setTextColor(0, 0, 0);
+            
+            doc.setFont('helvetica', 'bold');
+            doc.text('Months Active:', margin + 85, summaryY3);
+            doc.setFont('helvetica', 'normal');
+            doc.text(monthsActive.toString(), margin + 130, summaryY3);
+            
+            yPos += 55;
+            
+            // ===== DETAILED EXPENSE BREAKDOWN BY CATEGORY =====
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Detailed Expense Breakdown', margin, yPos);
+            yPos += 10;
+            
+            // Group expenses by category
+            const expensesByCategory = {};
+            expenseData.forEach(exp => {
+                if (!expensesByCategory[exp.category]) {
+                    expensesByCategory[exp.category] = [];
+                }
+                expensesByCategory[exp.category].push(exp);
+            });
+            
+            // Add payroll as a category
+            if (activeEmployees.length > 0) {
+                expensesByCategory['payroll'] = activeEmployees.map(emp => {
+                    const dept = orgData.departments.find(d => d.id === emp.department);
+                    return {
+                        name: `${emp.name} (${emp.role})`,
+                        category: 'payroll',
+                        cost: (emp.salary || 0) / 12,
+                        billing: 'monthly',
+                        status: 'active',
+                        vendor: 'Internal',
+                        notes: `${dept?.name || ''} Department`,
+                        startDate: emp.startDate
+                    };
+                });
+            }
+            
+            // Category order
+            const categoryOrder = ['development', 'cloud', 'communication', 'legal', 'payroll', 'other'];
+            
+            categoryOrder.forEach(category => {
+                const expenses = expensesByCategory[category];
+                if (!expenses || expenses.length === 0) return;
+                
+                checkNewPage(40);
+                
+                // Category header
+                doc.setFillColor(0, 120, 212); // Accent blue
+                doc.rect(margin, yPos, contentWidth, 8, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.text(categoryNames[category] || category.toUpperCase(), margin + 3, yPos + 6);
+                
+                // Calculate category total (same logic as renderCategoryExpenses)
+                let categoryTotal = 0;
+                expenses.forEach(exp => {
+                    const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                    if (exp.billing === 'monthly') {
+                        categoryTotal += cost;
+                    } else if (exp.billing === 'yearly') {
+                        categoryTotal += cost / 12; // Convert yearly to monthly equivalent
+                    }
+                });
+                doc.text(formatCurrencyPDF(categoryTotal) + '/mo', pageWidth - margin - 3, yPos + 6, { align: 'right' });
+                
+                yPos += 12;
+                doc.setTextColor(0, 0, 0);
+                
+                // Table header
+                doc.setFillColor(250, 250, 250);
+                doc.rect(margin, yPos, contentWidth, 7, 'F');
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Service', margin + 2, yPos + 5);
+                doc.text('Cost', margin + 55, yPos + 5);
+                doc.text('Billing', margin + 75, yPos + 5);
+                doc.text('Status', margin + 95, yPos + 5);
+                doc.text('Vendor', margin + 115, yPos + 5);
+                doc.text('Notes', margin + 140, yPos + 5);
+                yPos += 9;
+                
+                // Expense rows
+                doc.setFont('helvetica', 'normal');
+                expenses.forEach((exp, index) => {
+                    checkNewPage(12);
+                    
+                    // Alternating row colors
+                    if (index % 2 === 0) {
+                        doc.setFillColor(248, 248, 248);
+                        doc.rect(margin, yPos - 3, contentWidth, 10, 'F');
+                    }
+                    
+                    const cost = exp.perUser ? exp.cost * (exp.users || 1) : exp.cost;
+                    
+                    // Service name (truncate if too long)
+                    let serviceName = exp.name;
+                    if (serviceName.length > 25) serviceName = serviceName.substring(0, 22) + '...';
+                    doc.text(serviceName, margin + 2, yPos + 3);
+                    
+                    // Cost with billing suffix
+                    const billingLabel = exp.billing === 'monthly' ? '/mo' : exp.billing === 'yearly' ? '/yr' : '';
+                    const costDisplay = cost === 0 ? 'FREE' : formatCurrencyPDF(cost) + billingLabel;
+                    doc.text(costDisplay, margin + 55, yPos + 3);
+                    
+                    // Billing frequency
+                    doc.text(exp.billing || 'N/A', margin + 75, yPos + 3);
+                    
+                    // Status with color indicator
+                    const statusColors = {
+                        'active': [16, 185, 129],    // Green
+                        'pending': [245, 158, 11],   // Orange
+                        'planned': [59, 130, 246],   // Blue
+                        'inactive': [156, 163, 175]  // Gray
+                    };
+                    const statusColor = statusColors[exp.status] || [100, 100, 100];
+                    doc.setTextColor(...statusColor);
+                    doc.text(exp.status || 'N/A', margin + 95, yPos + 3);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    // Vendor
+                    let vendor = exp.vendor || 'N/A';
+                    if (vendor.length > 12) vendor = vendor.substring(0, 10) + '...';
+                    doc.text(vendor, margin + 115, yPos + 3);
+                    
+                    // Notes (truncate)
+                    let notes = exp.notes || '';
+                    if (notes.length > 25) notes = notes.substring(0, 22) + '...';
+                    doc.setFontSize(7);
+                    doc.text(notes, margin + 140, yPos + 3);
+                    doc.setFontSize(8);
+                    
+                    yPos += 10;
+                });
+                
+                yPos += 8; // Space between categories
+            });
+            
+            // ===== FINANCIAL PROJECTIONS =====
+            checkNewPage(70);
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Financial Projections', margin, yPos);
+            yPos += 10;
+            
+            doc.setFillColor(245, 245, 245);
+            doc.rect(margin, yPos, contentWidth, 55, 'F');
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            
+            yPos += 8;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Projection Type', margin + 5, yPos);
+            doc.text('Amount', margin + 120, yPos);
+            doc.setFont('helvetica', 'normal');
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin + 5, yPos + 2, margin + contentWidth - 10, yPos + 2);
+            
+            yPos += 10;
+            doc.text('Monthly Burn Rate (Services + Payroll)', margin + 5, yPos);
+            doc.setFont('helvetica', 'bold');
+            doc.text(formatCurrencyPDF(totalMonthlyBurn), margin + 120, yPos);
+            doc.setFont('helvetica', 'normal');
+            
+            yPos += 8;
+            doc.text('Quarterly Projection (3 months)', margin + 5, yPos);
+            doc.text(formatCurrencyPDF(totalMonthlyBurn * 3), margin + 120, yPos);
+            
+            yPos += 8;
+            doc.text('6-Month Projection', margin + 5, yPos);
+            doc.text(formatCurrencyPDF(totalMonthlyBurn * 6), margin + 120, yPos);
+            
+            yPos += 8;
+            doc.text('Annual Projection (12 months)', margin + 5, yPos);
+            doc.setFont('helvetica', 'bold');
+            doc.text(formatCurrencyPDF(totalMonthlyBurn * 12 + yearlyEquivalent), margin + 120, yPos);
+            doc.setFont('helvetica', 'normal');
+            
+            yPos += 8;
+            doc.text('Yearly Service Costs (billed annually)', margin + 5, yPos);
+            doc.text(formatCurrencyPDF(yearlyEquivalent), margin + 120, yPos);
+            
+            // ===== FOOTER =====
+            yPos += 20;
+            checkNewPage(25);
+            
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, yPos, pageWidth - margin, yPos);
+            yPos += 8;
+            
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+            doc.text('This report was automatically generated by OITH Manager.', margin, yPos);
+            yPos += 5;
+            doc.text('One In The Hand, LLC - Confidential', margin, yPos);
+            doc.text('Page 1 of ' + doc.internal.getNumberOfPages(), pageWidth - margin, yPos, { align: 'right' });
+            
+            // Update page numbers on all pages
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(128, 128, 128);
+                doc.text(`Page ${i} of ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+            }
+            
+            // Save the PDF
+            const filename = 'OITH_Expense_Report_' + new Date().toISOString().split('T')[0] + '.pdf';
+            doc.save(filename);
         }
 
         let calendarCurrentMonth = new Date('2025-12-01');
