@@ -5550,8 +5550,8 @@
             <div id="revenue-section" style="display: none;">
                 <div class="page-header">
                     <div>
-                        <h2 class="page-title">Revenue</h2>
-                        <p class="page-subtitle">Subscription and revenue metrics</p>
+                        <h2 class="page-title">💰 Revenue</h2>
+                        <p class="page-subtitle">Subscription and revenue metrics from AWS</p>
                     </div>
                     <div class="header-actions">
                         <span id="revenueDataSource" class="status-badge" style="background: var(--info);">Loading...</span>
@@ -5568,22 +5568,22 @@
                 <div class="stats-grid">
                     <div class="stat-card revenue">
                         <div class="stat-icon revenue">💰</div>
-                        <div class="stat-value" id="revMrrValue">--</div>
+                        <div class="stat-value" id="mrrValue">--</div>
                         <div class="stat-label">Monthly Recurring Revenue</div>
                     </div>
                     <div class="stat-card users">
                         <div class="stat-icon users">⭐</div>
-                        <div class="stat-value" id="revPremiumUsers">--</div>
+                        <div class="stat-value" id="premiumUsers">--</div>
                         <div class="stat-label">Premium Subscribers</div>
                     </div>
                     <div class="stat-card matches">
                         <div class="stat-icon matches">📊</div>
-                        <div class="stat-value" id="revConversionRate">--</div>
+                        <div class="stat-value" id="conversionRate">--</div>
                         <div class="stat-label">Free → Premium Rate</div>
                     </div>
                     <div class="stat-card danger">
                         <div class="stat-icon safety">📉</div>
-                        <div class="stat-value" id="revChurnRate">--</div>
+                        <div class="stat-value" id="churnRate">--</div>
                         <div class="stat-label">Monthly Churn</div>
                     </div>
                 </div>
@@ -21002,6 +21002,12 @@
             document.getElementById('conversionRate').textContent = '...';
             document.getElementById('churnRate').textContent = '...';
             
+            const sourceEl = document.getElementById('revenueDataSource');
+            if (sourceEl) {
+                sourceEl.textContent = 'Fetching...';
+                sourceEl.style.background = 'var(--info)';
+            }
+            
             let premiumUsers = 0;
             let freeUsers = 0;
             let trialUsers = 0;
@@ -21015,6 +21021,8 @@
             // Try to fetch REAL data from AWS/Stripe first
             try {
                 const PAYMENT_API_URL = localStorage.getItem('oith_payment_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+                console.log('📊 Fetching revenue stats from:', PAYMENT_API_URL);
+                
                 const response = await fetch(`${PAYMENT_API_URL}/subscription-stats`, {
                     method: 'GET',
                     headers: { 'Content-Type': 'application/json' }
@@ -21031,10 +21039,54 @@
                     conversionRate = stats.conversionRate || 0;
                     revenueByMonth = stats.revenueByMonth || {};
                     freeUsers = (stats.totalCustomers || 0) - premiumUsers;
-                    dataSource = 'Stripe';
+                    dataSource = 'AWS/Stripe';
+                } else {
+                    console.warn('⚠️ Stripe API returned:', response.status);
                 }
             } catch (error) {
-                console.warn('⚠️ Could not fetch from Stripe API, falling back to localStorage:', error.message);
+                console.warn('⚠️ Could not fetch from Stripe API:', error.message);
+            }
+            
+            // Try fetching from main AWS API for user subscription data
+            if (dataSource === 'localStorage') {
+                try {
+                    console.log('📊 Trying main AWS API for user data...');
+                    const response = await fetch(`${AWS_API_URL}/users`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        const awsData = await response.json();
+                        const users = awsData.users || [];
+                        console.log('📊 Loaded', users.length, 'users from AWS');
+                        
+                        // Calculate metrics from AWS user data
+                        users.forEach(user => {
+                            const subscription = user.subscription;
+                            if (subscription?.type === 'premium' && subscription?.status === 'active') {
+                                premiumUsers++;
+                                currentMRR += subscription.amount || 10.00;
+                            } else if (subscription?.type === 'trial') {
+                                trialUsers++;
+                            } else if (subscription?.status === 'canceled') {
+                                canceledUsers++;
+                            } else {
+                                freeUsers++;
+                            }
+                        });
+                        
+                        const totalSubscribers = premiumUsers + canceledUsers;
+                        churnRate = totalSubscribers > 0 ? Math.round((canceledUsers / totalSubscribers) * 100) : 0;
+                        conversionRate = (freeUsers + premiumUsers) > 0 ? Math.round((premiumUsers / (freeUsers + premiumUsers)) * 100) : 0;
+                        
+                        if (users.length > 0) {
+                            dataSource = 'AWS DynamoDB';
+                        }
+                    }
+                } catch (error) {
+                    console.warn('⚠️ Could not fetch from AWS API:', error.message);
+                }
             }
             
             // Fallback to localStorage if API failed
@@ -21140,6 +21192,16 @@
                 <div class="metric-row"><span class="metric-label">Canceled</span><span class="metric-value" style="color: var(--danger);">${canceledUsers} user${canceledUsers !== 1 ? 's' : ''}</span></div>
                 <div style="margin-top: 8px; font-size: 0.7rem; color: var(--text-muted);">📡 Source: ${dataSource}</div>
             `;
+            
+            // Update data source badge
+            if (sourceEl) {
+                sourceEl.textContent = dataSource;
+                if (dataSource.includes('AWS') || dataSource.includes('Stripe')) {
+                    sourceEl.style.background = 'var(--success)';
+                } else {
+                    sourceEl.style.background = 'var(--warning)';
+                }
+            }
 
             // Calculate LTV/CAC
             const subscriptionPrice = pricingConfig.subscriptionPrice;
