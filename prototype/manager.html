@@ -7264,6 +7264,9 @@
                                     <button class="btn btn-secondary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2)); border-color: var(--purple);" onclick="runRealLifeStressTest()">
                                         🎭 Full Real-Life Stress Test
                                     </button>
+                                    <button class="btn btn-secondary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(234, 88, 12, 0.2)); border-color: var(--warning);" onclick="runPeakHourTest()">
+                                        📈 Peak Hour Stress Test
+                                    </button>
                                     <button class="btn btn-secondary" style="width: 100%; justify-content: center;" onclick="runComparisonTest()">
                                         🔄 Compare Geohash vs Full Scan
                                     </button>
@@ -7333,6 +7336,60 @@
                     <div class="card" style="padding: 20px; text-align: center;">
                         <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Total Duration</div>
                         <div style="font-size: 2rem; font-weight: 700;" id="simMetricDuration">—</div>
+                    </div>
+                </div>
+
+                <!-- Real-Life Scenario Metrics Row -->
+                <div id="simRealLifeMetrics" style="display: none; margin-bottom: 20px;">
+                    <div class="card" style="border: 2px solid var(--purple);">
+                        <div class="card-header" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.05));">
+                            <h3 class="card-title">🎭 Real-Life Scenario Results</h3>
+                            <span class="status-badge" style="background: var(--purple);">Production Simulation</span>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border-left: 3px solid var(--info);">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--info);" id="simRLColdStarts">0</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">❄️ Cold Starts</div>
+                                </div>
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border-left: 3px solid var(--warning);">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="simRLRateLimited">0</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">🚦 Rate Limited</div>
+                                </div>
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border-left: 3px solid var(--danger);">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--danger);" id="simRLNetworkErrors">0</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">📡 Network Errors</div>
+                                </div>
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border-left: 3px solid var(--purple);">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--purple);" id="simRLRaceConditions">0</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">⚡ Race Conditions</div>
+                                </div>
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border-left: 3px solid var(--accent);">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);" id="simRLPeakConcurrent">0</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">📈 Peak Concurrent</div>
+                                </div>
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border-left: 3px solid var(--success);">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="simRLDbLatency">0ms</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">💾 Avg DB Latency</div>
+                                </div>
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border-left: 3px solid var(--warning);">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="simRLPoolExhausted">0</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">🔄 Pool Exhausted</div>
+                                </div>
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border-left: 3px solid var(--text-secondary);">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-secondary);" id="simRLBlockedHits">0</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">🚫 Blocked Encounters</div>
+                                </div>
+                            </div>
+                            <!-- Traffic Pattern Visualization -->
+                            <div id="simTrafficPattern" style="margin-top: 16px; display: none;">
+                                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">📊 24-Hour Traffic Pattern</div>
+                                <div id="simTrafficBars" style="display: flex; align-items: flex-end; gap: 2px; height: 60px; background: var(--bg-secondary); border-radius: 8px; padding: 8px;"></div>
+                                <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">
+                                    <span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -11773,15 +11830,38 @@
         }
         
         // Main simulation function
-        async function runMatchingSimulation() {
+        async function runMatchingSimulation(realLifeMode = null) {
             if (simRunning) return;
             simRunning = true;
+            simResetRealLifeMetrics();
             
             const userCount = parseInt(document.getElementById('simUserCount')?.value || 1000);
             const matchAttempts = parseInt(document.getElementById('simMatchAttempts')?.value || 100);
             const useGeohash = document.getElementById('simUseGeohash')?.value === 'true';
             const cityFocus = document.getElementById('simCityFocus')?.value || null;
             const autoSave = document.getElementById('simAutoSave')?.checked;
+            
+            // Read real-life scenario settings
+            const enableRealLife = realLifeMode === true || (realLifeMode === null && (
+                document.getElementById('simConcurrentUsers')?.checked ||
+                document.getElementById('simRateLimiting')?.checked ||
+                document.getElementById('simColdStarts')?.checked ||
+                document.getElementById('simDbLatency')?.checked ||
+                document.getElementById('simPeakHours')?.checked
+            ));
+            
+            const realLifeOptions = {
+                enableRealLife,
+                concurrentUsers: document.getElementById('simConcurrentUsers')?.checked || realLifeMode,
+                rateLimiting: document.getElementById('simRateLimiting')?.checked || realLifeMode,
+                coldStarts: document.getElementById('simColdStarts')?.checked || realLifeMode,
+                dbLatency: document.getElementById('simDbLatency')?.checked || realLifeMode,
+                blockedUsers: document.getElementById('simBlockedUsers')?.checked || realLifeMode,
+                poolExhaustion: document.getElementById('simPoolExhaustion')?.checked || realLifeMode,
+                timerExpiry: document.getElementById('simTimerExpiry')?.checked || realLifeMode,
+                networkErrors: document.getElementById('simNetworkErrors')?.checked || realLifeMode,
+                peakHours: document.getElementById('simPeakHours')?.checked || realLifeMode
+            };
             
             // Determine simulation mode based on user count
             const SAMPLE_THRESHOLD = 50000; // Above this, use sampling mode
@@ -11800,6 +11880,18 @@
             simLog(`Geohash indexing: ${useGeohash ? 'Enabled (Optimized)' : 'Disabled (Full Scan)'}`, 'info');
             if (cityFocus) simLog(`City focus: ${cityFocus}`, 'info');
             
+            if (enableRealLife) {
+                simLog(`🎭 Real-life scenarios ENABLED:`, 'info');
+                if (realLifeOptions.concurrentUsers) simLog(`   ⚡ Concurrent users (parallel requests)`, 'info');
+                if (realLifeOptions.peakHours) simLog(`   📈 Peak hours traffic (3x spike at 8-10 PM)`, 'info');
+                if (realLifeOptions.rateLimiting) simLog(`   🚦 Rate limiting (20 req/min)`, 'info');
+                if (realLifeOptions.coldStarts) simLog(`   ❄️ Lambda cold starts (~300ms)`, 'info');
+                if (realLifeOptions.dbLatency) simLog(`   💾 Database latency (5-50ms)`, 'info');
+                if (realLifeOptions.blockedUsers) simLog(`   🚫 Blocked users (2%)`, 'info');
+                if (realLifeOptions.networkErrors) simLog(`   📡 Network failures (0.5%)`, 'info');
+                if (realLifeOptions.poolExhaustion) simLog(`   🔄 Pool exhaustion tracking`, 'info');
+            }
+            
             if (useSampling) {
                 simLog(`⚡ Large-scale mode: Using ${sampleSize.toLocaleString()} sample users (${scaleFactor.toFixed(0)}x extrapolation)`, 'warning');
                 simLog(`📊 Results will be extrapolated to estimate ${userCount.toLocaleString()} user behavior`, 'info');
@@ -11813,9 +11905,18 @@
             await new Promise(r => setTimeout(r, 50));
             
             const users = [];
+            const blockedUsers = new Set();
             const batchSize = Math.max(500, Math.floor(actualGenerateCount / 100));
             for (let i = 0; i < actualGenerateCount; i++) {
-                users.push(simGenerateUser(i, cityFocus));
+                const user = simGenerateUser(i, cityFocus);
+                user.idx = i;
+                users.push(user);
+                
+                // 2% of users are blocked
+                if (realLifeOptions.blockedUsers && Math.random() < 0.02) {
+                    blockedUsers.add(user.email);
+                }
+                
                 if ((i + 1) % batchSize === 0) {
                     updateSimProgress(10 + (i / actualGenerateCount) * 20, useSampling ? Math.floor((i + 1) * scaleFactor) : i + 1, 0, 0);
                     await new Promise(r => setTimeout(r, 0));
@@ -11823,6 +11924,9 @@
             }
             
             simLog(`Generated ${actualGenerateCount.toLocaleString()} users${useSampling ? ` (representing ${userCount.toLocaleString()})` : ''}`, 'success');
+            if (blockedUsers.size > 0) {
+                simLog(`🚫 ${blockedUsers.size} users marked as blocked (${((blockedUsers.size / actualGenerateCount) * 100).toFixed(1)}%)`, 'info');
+            }
             
             // Calculate pool stats
             const genderStats = { male: 0, female: 0 };
@@ -11835,32 +11939,120 @@
                 totalAge += u.age;
             }
             
-            // Run matching
+            // Run matching with real-life scenarios
             updateSimProgress(35, userCount, 0, 0);
+            
+            // Calculate concurrent batch size based on peak hours
+            let effectiveMatchAttempts = matchAttempts;
+            let concurrentBatchSize = 1;
+            
+            if (realLifeOptions.peakHours) {
+                // Simulate across a 24-hour period
+                simLog(`📊 Simulating 24-hour traffic pattern with peak at 8-10 PM...`, 'info');
+            }
+            
+            if (realLifeOptions.concurrentUsers) {
+                // Simulate batches of concurrent requests
+                concurrentBatchSize = Math.max(1, Math.min(50, Math.floor(userCount / 1000)));
+                simLog(`⚡ Simulating ${concurrentBatchSize} concurrent users per batch...`, 'info');
+            }
+            
             simLog(`Running ${matchAttempts} match attempts...`);
             
             const results = [];
             const matchHistory = new Map();
             let runningAvgTime = 0;
             
-            for (let i = 0; i < matchAttempts; i++) {
-                const user = users[Math.floor(Math.random() * users.length)];
-                const excluded = matchHistory.get(user.email) || [user.email];
+            // Track errors by type
+            let rateLimitedCount = 0;
+            let networkErrorCount = 0;
+            let poolExhaustedCount = 0;
+            let coldStartCount = 0;
+            let raceConditionCount = 0;
+            
+            // Simulate over time
+            const totalSimulatedHours = realLifeOptions.peakHours ? 24 : 1;
+            const attemptsPerHour = Math.ceil(matchAttempts / totalSimulatedHours);
+            
+            for (let hour = 0; hour < totalSimulatedHours; hour++) {
+                simRealLifeMetrics.currentHour = hour;
+                const hourMultiplier = realLifeOptions.peakHours ? PEAK_HOURS_PATTERN[hour] : 1;
+                const hourAttempts = Math.ceil(attemptsPerHour * hourMultiplier);
                 
-                const result = simSimulateMatch(user, users, excluded, useGeohash);
-                results.push(result);
-                
-                if (result.match) {
-                    const history = matchHistory.get(user.email) || [user.email];
-                    history.push(result.match.email);
-                    matchHistory.set(user.email, history);
+                if (realLifeOptions.peakHours && hour % 6 === 0) {
+                    simLog(`🕐 Hour ${hour}:00 - Traffic multiplier: ${hourMultiplier.toFixed(1)}x (${hourAttempts} requests)`, 'info');
                 }
                 
-                runningAvgTime = results.reduce((a, r) => a + r.duration, 0) / results.length;
-                
-                if ((i + 1) % 10 === 0) {
-                    updateSimProgress(35 + (i / matchAttempts) * 55, userCount, i + 1, runningAvgTime);
-                    await new Promise(r => setTimeout(r, 0));
+                for (let i = 0; i < hourAttempts && results.length < matchAttempts; i++) {
+                    // Simulate concurrent batch
+                    const batchResults = [];
+                    const batchUsers = [];
+                    
+                    for (let j = 0; j < concurrentBatchSize && results.length + batchResults.length < matchAttempts; j++) {
+                        const user = users[Math.floor(Math.random() * users.length)];
+                        batchUsers.push(user);
+                    }
+                    
+                    // Track concurrent requests
+                    simRealLifeMetrics.concurrentRequests = batchUsers.length;
+                    simRealLifeMetrics.peakConcurrent = Math.max(simRealLifeMetrics.peakConcurrent, batchUsers.length);
+                    
+                    // Process batch (simulating parallel execution)
+                    for (const user of batchUsers) {
+                        const excluded = matchHistory.get(user.email) || [user.email];
+                        
+                        const result = simSimulateMatch(user, users, excluded, useGeohash, {
+                            ...realLifeOptions,
+                            blockedUsers
+                        });
+                        
+                        // Track error types
+                        if (result.error === 'RATE_LIMITED') rateLimitedCount++;
+                        if (result.error === 'NETWORK_ERROR') networkErrorCount++;
+                        if (result.error === 'POOL_EXHAUSTED') poolExhaustedCount++;
+                        if (result.hadColdStart) coldStartCount++;
+                        if (result.hadRaceCondition) raceConditionCount++;
+                        
+                        batchResults.push(result);
+                        
+                        if (result.match && !result.error) {
+                            const history = matchHistory.get(user.email) || [user.email];
+                            history.push(result.match.email);
+                            matchHistory.set(user.email, history);
+                            
+                            // Clear lock after "decision"
+                            if (realLifeOptions.concurrentUsers) {
+                                simClearMatchLock(result.match.email);
+                            }
+                        }
+                    }
+                    
+                    simRealLifeMetrics.concurrentRequests = 0;
+                    results.push(...batchResults);
+                    
+                    runningAvgTime = results.reduce((a, r) => a + r.duration, 0) / results.length;
+                    
+                    if (results.length % 10 === 0) {
+                        updateSimProgress(35 + (results.length / matchAttempts) * 55, userCount, results.length, runningAvgTime);
+                        await new Promise(r => setTimeout(r, 0));
+                    }
+                }
+            }
+            
+            // Log real-life scenario summary
+            if (enableRealLife) {
+                simLog(``, 'info');
+                simLog(`📊 Real-Life Scenario Results:`, 'info');
+                if (coldStartCount > 0) simLog(`   ❄️ Cold starts: ${coldStartCount} (${((coldStartCount / results.length) * 100).toFixed(1)}%)`, 'warning');
+                if (rateLimitedCount > 0) simLog(`   🚦 Rate limited: ${rateLimitedCount} requests blocked`, 'error');
+                if (networkErrorCount > 0) simLog(`   📡 Network errors: ${networkErrorCount} failures`, 'error');
+                if (poolExhaustedCount > 0) simLog(`   🔄 Pool exhausted: ${poolExhaustedCount} users with no matches`, 'warning');
+                if (raceConditionCount > 0) simLog(`   ⚡ Race conditions: ${raceConditionCount} conflicts detected`, 'warning');
+                if (simRealLifeMetrics.blockedUserHits > 0) simLog(`   🚫 Blocked user encounters: ${simRealLifeMetrics.blockedUserHits}`, 'info');
+                simLog(`   📈 Peak concurrent requests: ${simRealLifeMetrics.peakConcurrent}`, 'info');
+                if (simRealLifeMetrics.totalDbLatency > 0) {
+                    const avgDbLatency = simRealLifeMetrics.totalDbLatency / results.length;
+                    simLog(`   💾 Avg DB latency: ${avgDbLatency.toFixed(1)}ms`, avgDbLatency > 30 ? 'warning' : 'success');
                 }
             }
             
@@ -11901,6 +12093,83 @@
             const extrapolatedTime = useSampling ? avgTime * Math.log10(scaleFactor + 1) : avgTime; // O(log n) estimate
             const extrapolatedP95 = useSampling ? p95 * Math.log10(scaleFactor + 1) : p95;
             
+            // === REAL-LIFE SCENARIO ISSUES ===
+            if (enableRealLife) {
+                // Rate limiting issues
+                if (rateLimitedCount > matchAttempts * 0.01) {
+                    issues.push({
+                        severity: 'high',
+                        title: 'Rate Limiting Blocking Users',
+                        detail: `${rateLimitedCount} requests (${((rateLimitedCount / matchAttempts) * 100).toFixed(1)}%) were rate limited`,
+                        recommendation: 'Implement request queuing, add retry logic with exponential backoff, or increase rate limits for authenticated users'
+                    });
+                }
+                
+                // Network error issues
+                if (networkErrorCount > matchAttempts * 0.005) {
+                    issues.push({
+                        severity: 'high',
+                        title: 'High Network Failure Rate',
+                        detail: `${networkErrorCount} network errors (${((networkErrorCount / matchAttempts) * 100).toFixed(2)}%) - above 0.5% threshold`,
+                        recommendation: 'Implement circuit breakers, add retry with jitter, use multiple availability zones'
+                    });
+                }
+                
+                // Cold start impact
+                if (coldStartCount > matchAttempts * 0.1) {
+                    issues.push({
+                        severity: 'medium',
+                        title: 'Frequent Cold Starts Impacting Performance',
+                        detail: `${coldStartCount} cold starts (${((coldStartCount / matchAttempts) * 100).toFixed(1)}%) adding ~300ms latency each`,
+                        recommendation: 'Use Lambda Provisioned Concurrency, implement warming functions, or consider container-based deployment'
+                    });
+                }
+                
+                // Race conditions
+                if (raceConditionCount > matchAttempts * 0.02) {
+                    issues.push({
+                        severity: 'high',
+                        title: 'Race Conditions in Concurrent Matching',
+                        detail: `${raceConditionCount} race conditions (${((raceConditionCount / matchAttempts) * 100).toFixed(1)}%) - users competing for same matches`,
+                        recommendation: 'Implement distributed locking (Redis/DynamoDB), use optimistic concurrency, or add match reservation system'
+                    });
+                }
+                
+                // Pool exhaustion
+                if (poolExhaustedCount > matchAttempts * 0.05) {
+                    issues.push({
+                        severity: 'medium',
+                        title: 'Match Pool Exhaustion',
+                        detail: `${poolExhaustedCount} users (${((poolExhaustedCount / matchAttempts) * 100).toFixed(1)}%) ran out of potential matches`,
+                        recommendation: 'Expand search radius gradually, implement "refresh pool" feature, suggest profile changes to increase visibility'
+                    });
+                }
+                
+                // Peak hour stress
+                if (realLifeOptions.peakHours && simRealLifeMetrics.peakConcurrent > 20) {
+                    issues.push({
+                        severity: 'medium',
+                        title: 'High Concurrency During Peak Hours',
+                        detail: `Peak of ${simRealLifeMetrics.peakConcurrent} concurrent requests during 8-10 PM spike`,
+                        recommendation: 'Implement request throttling, use SQS queues for matching, scale Lambda concurrency limits'
+                    });
+                }
+                
+                // DB latency under load
+                if (simRealLifeMetrics.totalDbLatency > 0) {
+                    const avgDbLatency = simRealLifeMetrics.totalDbLatency / results.length;
+                    if (avgDbLatency > 30) {
+                        issues.push({
+                            severity: 'medium',
+                            title: 'Database Latency Under Load',
+                            detail: `Average DB latency is ${avgDbLatency.toFixed(1)}ms (target: < 30ms)`,
+                            recommendation: 'Enable DynamoDB DAX caching, use read replicas, implement connection pooling'
+                        });
+                    }
+                }
+            }
+            
+            // === EXISTING PERFORMANCE ISSUES ===
             if (avgScans > sampleSize * 0.5) {
                 issues.push({
                     severity: 'high',
@@ -11967,6 +12236,22 @@
             
             renderSimIssues(issues);
             
+            // Update real-life metrics display if enabled
+            if (enableRealLife) {
+                updateRealLifeMetricsDisplay({
+                    coldStarts: coldStartCount,
+                    rateLimited: rateLimitedCount,
+                    networkErrors: networkErrorCount,
+                    raceConditions: raceConditionCount,
+                    peakConcurrent: simRealLifeMetrics.peakConcurrent,
+                    avgDbLatency: simRealLifeMetrics.totalDbLatency > 0 ? 
+                        (simRealLifeMetrics.totalDbLatency / results.length).toFixed(1) : 0,
+                    poolExhausted: poolExhaustedCount
+                }, realLifeOptions.peakHours);
+            } else {
+                updateRealLifeMetricsDisplay(null);
+            }
+            
             // Log summary
             simLog(`Simulation complete!`, 'success');
             simLog(`Match success rate: ${successRate.toFixed(1)}%`);
@@ -11991,7 +12276,19 @@
                 avgScans: Math.round(avgScans),
                 successRate: successRate.toFixed(1),
                 issues: issues.length,
-                totalDuration
+                totalDuration,
+                // Real-life scenario metrics
+                realLifeEnabled: enableRealLife,
+                realLifeMetrics: enableRealLife ? {
+                    coldStarts: coldStartCount,
+                    rateLimited: rateLimitedCount,
+                    networkErrors: networkErrorCount,
+                    poolExhausted: poolExhaustedCount,
+                    raceConditions: raceConditionCount,
+                    peakConcurrent: simRealLifeMetrics.peakConcurrent,
+                    avgDbLatency: simRealLifeMetrics.totalDbLatency > 0 ? 
+                        (simRealLifeMetrics.totalDbLatency / results.length).toFixed(1) : 0
+                } : null
             };
             
             simScalingResults.push(resultData);
@@ -12138,6 +12435,118 @@
             document.getElementById('simCityFocus').value = '';
             
             simLog('City analysis complete!', 'success');
+        }
+        
+        // Full Real-Life Stress Test - simulates production conditions
+        async function runRealLifeStressTest() {
+            simScalingResults = [];
+            
+            clearSimLog();
+            simLog('🎭 FULL REAL-LIFE STRESS TEST', 'info');
+            simLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            simLog('Testing production scenarios that can break your app:', 'info');
+            simLog('• Concurrent users competing for matches', 'info');
+            simLog('• Peak hour traffic (3x spike at 8-10 PM)', 'info');
+            simLog('• Rate limiting under load', 'info');
+            simLog('• Lambda cold starts', 'info');
+            simLog('• Database latency and throttling', 'info');
+            simLog('• Network failures (0.5%)', 'info');
+            simLog('• Race conditions (two users matching same person)', 'info');
+            simLog('• Match pool exhaustion', 'info');
+            simLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            
+            // Enable all real-life scenarios
+            const checkboxes = [
+                'simConcurrentUsers', 'simRateLimiting', 'simColdStarts', 
+                'simDbLatency', 'simBlockedUsers', 'simPoolExhaustion',
+                'simNetworkErrors', 'simPeakHours'
+            ];
+            checkboxes.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.checked = true;
+            });
+            
+            // Run tests at increasing scales
+            const testConfigs = [
+                { users: 1000, attempts: 200, label: 'Small Scale (1K users)' },
+                { users: 10000, attempts: 500, label: 'Medium Scale (10K users)' },
+                { users: 50000, attempts: 1000, label: 'Large Scale (50K users)' },
+                { users: 100000, attempts: 500, label: 'Very Large (100K users, sampled)' }
+            ];
+            
+            for (const config of testConfigs) {
+                simLog(``, 'info');
+                simLog(`🔥 Testing: ${config.label}`, 'info');
+                simLog(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+                
+                document.getElementById('simUserCount').value = config.users;
+                document.getElementById('simMatchAttempts').value = config.attempts;
+                
+                await runMatchingSimulation(true); // Force real-life mode
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            
+            // Summary
+            simLog(``, 'info');
+            simLog(`🏁 STRESS TEST COMPLETE`, 'success');
+            simLog(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`, 'info');
+            
+            if (simScalingResults.length > 0) {
+                const totalIssues = simScalingResults.reduce((sum, r) => sum + r.issues, 0);
+                const worstP95 = Math.max(...simScalingResults.map(r => r.p95));
+                const avgSuccess = simScalingResults.reduce((sum, r) => sum + parseFloat(r.successRate), 0) / simScalingResults.length;
+                
+                simLog(`📊 Summary across ${simScalingResults.length} test runs:`, 'info');
+                simLog(`   Total issues detected: ${totalIssues}`, totalIssues > 5 ? 'error' : totalIssues > 0 ? 'warning' : 'success');
+                simLog(`   Worst P95 response: ${worstP95.toFixed(1)}ms`, worstP95 > 500 ? 'error' : worstP95 > 200 ? 'warning' : 'success');
+                simLog(`   Average match success: ${avgSuccess.toFixed(1)}%`, avgSuccess < 50 ? 'warning' : 'success');
+                
+                // Check for critical real-life issues
+                let criticalIssues = 0;
+                for (const r of simScalingResults) {
+                    if (r.realLifeMetrics) {
+                        if (r.realLifeMetrics.raceConditions > 0) criticalIssues++;
+                        if (r.realLifeMetrics.rateLimited > r.matchAttempts * 0.01) criticalIssues++;
+                        if (r.realLifeMetrics.networkErrors > r.matchAttempts * 0.005) criticalIssues++;
+                    }
+                }
+                
+                if (criticalIssues > 0) {
+                    simLog(``, 'info');
+                    simLog(`⚠️ ${criticalIssues} CRITICAL PRODUCTION ISSUES FOUND!`, 'error');
+                    simLog(`   These WILL cause problems in real deployment.`, 'error');
+                    simLog(`   Review the detected issues above and implement fixes before launch.`, 'error');
+                } else {
+                    simLog(``, 'info');
+                    simLog(`✅ System appears stable under real-life conditions`, 'success');
+                    simLog(`   Continue monitoring during beta testing phase`, 'info');
+                }
+            }
+        }
+        
+        // Quick peak hour stress test
+        async function runPeakHourTest() {
+            simScalingResults = [];
+            
+            clearSimLog();
+            simLog('📈 PEAK HOUR STRESS TEST', 'info');
+            simLog('Simulating traffic patterns for a 24-hour period...', 'info');
+            simLog('Focus: Evening peak (7 PM - 11 PM) with 3x traffic spike', 'info');
+            
+            // Enable only peak hours and concurrent users
+            document.getElementById('simConcurrentUsers').checked = true;
+            document.getElementById('simPeakHours').checked = true;
+            document.getElementById('simDbLatency').checked = true;
+            document.getElementById('simColdStarts').checked = true;
+            
+            const userCount = parseInt(document.getElementById('simUserCount')?.value || 10000);
+            document.getElementById('simMatchAttempts').value = Math.min(2000, Math.max(500, Math.floor(userCount / 10)));
+            
+            await runMatchingSimulation(true);
+            
+            simLog(``, 'info');
+            simLog(`Peak hour analysis complete!`, 'success');
+            simLog(`Review the hourly traffic logs above for bottleneck identification.`, 'info');
         }
         
         function renderSimTimeChart(times) {
@@ -12306,6 +12715,68 @@
                 `;
             }
             container.innerHTML = html;
+        }
+        
+        // Update real-life metrics display
+        function updateRealLifeMetricsDisplay(metrics, showTrafficPattern = false) {
+            const container = document.getElementById('simRealLifeMetrics');
+            if (!container) return;
+            
+            if (!metrics) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            
+            // Update metric values
+            const setMetric = (id, value, suffix = '') => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = typeof value === 'number' ? value.toLocaleString() + suffix : value + suffix;
+            };
+            
+            setMetric('simRLColdStarts', metrics.coldStarts || 0);
+            setMetric('simRLRateLimited', metrics.rateLimited || 0);
+            setMetric('simRLNetworkErrors', metrics.networkErrors || 0);
+            setMetric('simRLRaceConditions', metrics.raceConditions || 0);
+            setMetric('simRLPeakConcurrent', metrics.peakConcurrent || 0);
+            setMetric('simRLDbLatency', metrics.avgDbLatency || 0, 'ms');
+            setMetric('simRLPoolExhausted', metrics.poolExhausted || 0);
+            setMetric('simRLBlockedHits', simRealLifeMetrics.blockedUserHits || 0);
+            
+            // Update colors based on severity
+            const setColor = (id, value, thresholds) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (value >= thresholds.high) el.style.color = 'var(--danger)';
+                    else if (value >= thresholds.medium) el.style.color = 'var(--warning)';
+                    else el.style.color = 'var(--success)';
+                }
+            };
+            
+            setColor('simRLRateLimited', metrics.rateLimited || 0, { high: 10, medium: 3 });
+            setColor('simRLNetworkErrors', metrics.networkErrors || 0, { high: 5, medium: 2 });
+            setColor('simRLRaceConditions', metrics.raceConditions || 0, { high: 5, medium: 2 });
+            
+            // Traffic pattern visualization
+            const trafficContainer = document.getElementById('simTrafficPattern');
+            const trafficBars = document.getElementById('simTrafficBars');
+            
+            if (showTrafficPattern && trafficBars) {
+                trafficContainer.style.display = 'block';
+                let barsHtml = '';
+                for (let hour = 0; hour < 24; hour++) {
+                    const multiplier = PEAK_HOURS_PATTERN[hour];
+                    const height = Math.max(5, multiplier * 20);
+                    const color = multiplier >= 2.5 ? 'var(--danger)' : 
+                                  multiplier >= 1.5 ? 'var(--warning)' : 
+                                  multiplier >= 0.5 ? 'var(--accent)' : 'var(--text-muted)';
+                    barsHtml += `<div style="flex: 1; height: ${height}px; background: ${color}; border-radius: 2px;" title="${hour}:00 - ${multiplier.toFixed(1)}x traffic"></div>`;
+                }
+                trafficBars.innerHTML = barsHtml;
+            } else if (trafficContainer) {
+                trafficContainer.style.display = 'none';
+            }
         }
         
         function renderSimHistory() {
