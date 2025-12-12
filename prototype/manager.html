@@ -6170,19 +6170,57 @@
 
             <!-- Advertising Section -->
             <div id="advertising-section" style="display: none;">
+                <style>
+                    .pulse-dot {
+                        display: inline-block;
+                        width: 8px;
+                        height: 8px;
+                        background: currentColor;
+                        border-radius: 50%;
+                        margin-right: 6px;
+                        animation: pulse 1.5s infinite;
+                    }
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; transform: scale(1); }
+                        50% { opacity: 0.5; transform: scale(0.8); }
+                    }
+                    .live-indicator {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 8px 12px;
+                        background: var(--bg-tertiary);
+                        border-radius: 8px;
+                        font-size: 0.85rem;
+                    }
+                    .live-indicator .status-dot {
+                        width: 10px;
+                        height: 10px;
+                        border-radius: 50%;
+                        animation: pulse 2s infinite;
+                    }
+                    .live-indicator .status-dot.live { background: var(--success); }
+                    .live-indicator .status-dot.syncing { background: var(--info); }
+                    .live-indicator .status-dot.offline { background: var(--danger); }
+                </style>
                 <div class="page-header">
                     <div>
                         <h2 class="page-title">📢 Advertising</h2>
-                        <p class="page-subtitle">Campaign performance, spending, and visibility metrics</p>
+                        <p class="page-subtitle">Real-time campaign performance, spending, and visibility metrics</p>
                     </div>
-                    <div class="header-actions">
-                        <span id="advertisingDataSource" class="status-badge" style="background: var(--info);">Loading...</span>
-                        <button class="btn btn-secondary" onclick="refreshAdvertisingData()">
+                    <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
+                        <div class="live-indicator">
+                            <span id="advertisingDataSource" class="status-badge" style="background: var(--info); display: flex; align-items: center;">
+                                <span class="pulse-dot"></span> Connecting...
+                            </span>
+                            <span id="advertisingLastSync" style="color: var(--text-muted); font-size: 0.8rem;">--</span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="refreshAdvertisingData()" title="Force refresh from AWS">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M23 4v6h-6M1 20v-6h6"/>
                                 <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
                             </svg>
-                            Refresh
+                            Sync Now
                         </button>
                         <button class="btn btn-primary" onclick="showCreateCampaignModal()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -6191,6 +6229,29 @@
                             </svg>
                             New Campaign
                         </button>
+                    </div>
+                </div>
+
+                <!-- Real-time Status Bar -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05)); border: 1px solid var(--accent); border-radius: 12px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">📊</span>
+                            <span style="font-weight: 600;">Active Campaigns: <span id="activeCampaignCount" style="color: var(--accent);">0</span></span>
+                        </div>
+                        <div style="width: 1px; height: 20px; background: var(--border);"></div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">⏸️</span>
+                            <span>Paused: <span id="pausedCampaignCount" style="color: var(--warning);">0</span></span>
+                        </div>
+                        <div style="width: 1px; height: 20px; background: var(--border);"></div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">📅</span>
+                            <span>Today's Spend: <span id="todaySpend" style="color: var(--success);">$0</span></span>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        Auto-refreshes every 30s
                     </div>
                 </div>
 
@@ -24036,16 +24097,142 @@
             metrics: { impressions: 0, clicks: 0, conversions: 0 }
         };
         
+        let advertisingAutoRefreshInterval = null;
+        let lastAdvertisingSync = null;
+        
         async function renderAdvertising() {
-            console.log('📢 Loading advertising data...');
+            console.log('📢 Loading advertising data from AWS...');
             
             const sourceEl = document.getElementById('advertisingDataSource');
+            const lastSyncEl = document.getElementById('advertisingLastSync');
+            
             if (sourceEl) {
-                sourceEl.textContent = 'Loading...';
+                sourceEl.innerHTML = '<span class="pulse-dot"></span> Syncing...';
                 sourceEl.style.background = 'var(--info)';
             }
             
-            // Try to load from AWS
+            let dataSource = 'none';
+            
+            // ALWAYS try to load from AWS first (real-time data)
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
+                const response = await fetch(`${AWS_API_URL}/advertising`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.advertising) {
+                        advertisingData = { ...advertisingData, ...data.advertising };
+                        dataSource = 'aws';
+                        lastAdvertisingSync = new Date();
+                        console.log('📢 Loaded real-time advertising data from AWS');
+                        
+                        // Also save to localStorage as cache
+                        localStorage.setItem('oith_advertising_data', JSON.stringify(advertisingData));
+                        
+                        if (sourceEl) {
+                            sourceEl.innerHTML = '🟢 AWS Live';
+                            sourceEl.style.background = 'var(--success)';
+                        }
+                    } else {
+                        // AWS returned empty data - check localStorage
+                        dataSource = 'aws-empty';
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch advertising from AWS:', error.message);
+                if (sourceEl) {
+                    sourceEl.innerHTML = '🔴 Offline';
+                    sourceEl.style.background = 'var(--danger)';
+                }
+            }
+            
+            // Fallback to localStorage if AWS empty or failed
+            if (dataSource !== 'aws') {
+                const saved = localStorage.getItem('oith_advertising_data');
+                if (saved) {
+                    try {
+                        const parsed = JSON.parse(saved);
+                        if (parsed.campaigns && parsed.campaigns.length > 0) {
+                            advertisingData = { ...advertisingData, ...parsed };
+                            dataSource = 'local';
+                            console.log('📢 Loaded advertising data from localStorage cache');
+                            if (sourceEl) {
+                                sourceEl.innerHTML = '🟡 Cached';
+                                sourceEl.style.background = 'var(--warning)';
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error parsing saved advertising data:', e);
+                    }
+                }
+            }
+            
+            // Initialize with demo data if still empty
+            if (!advertisingData.campaigns || advertisingData.campaigns.length === 0) {
+                advertisingData = generateDemoAdvertisingData();
+                dataSource = 'demo';
+                if (sourceEl) {
+                    sourceEl.innerHTML = '🟣 Demo Mode';
+                    sourceEl.style.background = 'var(--purple)';
+                }
+            }
+            
+            // Update last sync time display
+            updateLastSyncDisplay();
+            
+            // Update the UI
+            updateAdvertisingUI();
+            
+            // Start auto-refresh if not already running
+            startAdvertisingAutoRefresh();
+            
+            // Also load sponsored venues
+            await loadSponsoredVenues();
+        }
+        
+        function updateLastSyncDisplay() {
+            const lastSyncEl = document.getElementById('advertisingLastSync');
+            if (lastSyncEl && lastAdvertisingSync) {
+                const now = new Date();
+                const diffSeconds = Math.floor((now - lastAdvertisingSync) / 1000);
+                
+                if (diffSeconds < 60) {
+                    lastSyncEl.textContent = `Last sync: ${diffSeconds}s ago`;
+                } else if (diffSeconds < 3600) {
+                    lastSyncEl.textContent = `Last sync: ${Math.floor(diffSeconds / 60)}m ago`;
+                } else {
+                    lastSyncEl.textContent = `Last sync: ${lastAdvertisingSync.toLocaleTimeString()}`;
+                }
+            }
+        }
+        
+        function startAdvertisingAutoRefresh() {
+            // Clear any existing interval
+            if (advertisingAutoRefreshInterval) {
+                clearInterval(advertisingAutoRefreshInterval);
+            }
+            
+            // Auto-refresh every 30 seconds when on advertising section
+            advertisingAutoRefreshInterval = setInterval(async () => {
+                if (currentSection === 'advertising') {
+                    console.log('📢 Auto-refreshing advertising data...');
+                    await silentAdvertisingRefresh();
+                }
+            }, 30000);
+            
+            // Also update the "last sync" display every 10 seconds
+            setInterval(updateLastSyncDisplay, 10000);
+        }
+        
+        async function silentAdvertisingRefresh() {
             try {
                 const response = await fetch(`${AWS_API_URL}/advertising`, {
                     method: 'GET',
@@ -24054,47 +24241,23 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.advertising) {
+                    if (data.advertising && data.advertising.campaigns) {
                         advertisingData = { ...advertisingData, ...data.advertising };
-                        console.log('📢 Loaded advertising data from AWS');
+                        lastAdvertisingSync = new Date();
+                        localStorage.setItem('oith_advertising_data', JSON.stringify(advertisingData));
+                        updateAdvertisingUI();
+                        updateLastSyncDisplay();
+                        
+                        const sourceEl = document.getElementById('advertisingDataSource');
                         if (sourceEl) {
-                            sourceEl.textContent = 'AWS Synced';
+                            sourceEl.innerHTML = '🟢 AWS Live';
                             sourceEl.style.background = 'var(--success)';
                         }
                     }
                 }
             } catch (error) {
-                console.warn('⚠️ Could not fetch advertising from AWS:', error.message);
+                console.warn('Silent refresh failed:', error.message);
             }
-            
-            // Fallback to localStorage
-            const saved = localStorage.getItem('oith_advertising_data');
-            if (saved && !advertisingData.campaigns.length) {
-                try {
-                    advertisingData = { ...advertisingData, ...JSON.parse(saved) };
-                    console.log('📢 Loaded advertising data from localStorage');
-                    if (sourceEl) {
-                        sourceEl.textContent = 'Local Data';
-                        sourceEl.style.background = 'var(--warning)';
-                    }
-                } catch (e) {
-                    console.error('Error parsing saved advertising data:', e);
-                }
-            }
-            
-            // Initialize with demo data if empty
-            if (!advertisingData.campaigns.length) {
-                advertisingData = generateDemoAdvertisingData();
-                if (sourceEl) {
-                    sourceEl.textContent = 'Demo Data';
-                    sourceEl.style.background = 'var(--purple)';
-                }
-            }
-            
-            updateAdvertisingUI();
-            
-            // Also load sponsored venues
-            await loadSponsoredVenues();
         }
         
         function generateDemoAdvertisingData() {
@@ -24210,6 +24373,24 @@
         
         function updateAdvertisingUI() {
             const data = advertisingData;
+            const campaigns = data.campaigns || [];
+            
+            // Update real-time status bar
+            const activeCampaigns = campaigns.filter(c => c.status === 'active');
+            const pausedCampaigns = campaigns.filter(c => c.status === 'paused');
+            
+            const activeCampaignCountEl = document.getElementById('activeCampaignCount');
+            const pausedCampaignCountEl = document.getElementById('pausedCampaignCount');
+            const todaySpendEl = document.getElementById('todaySpend');
+            
+            if (activeCampaignCountEl) activeCampaignCountEl.textContent = activeCampaigns.length;
+            if (pausedCampaignCountEl) pausedCampaignCountEl.textContent = pausedCampaigns.length;
+            
+            // Calculate today's spend from daily spend array
+            const today = new Date().toISOString().split('T')[0];
+            const todayData = (data.dailySpend || []).find(d => d.date === today);
+            const todaySpend = todayData?.amount || 0;
+            if (todaySpendEl) todaySpendEl.textContent = '$' + todaySpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             
             // Update main stats
             document.getElementById('adTotalSpend').textContent = '$' + (data.totalSpend || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
