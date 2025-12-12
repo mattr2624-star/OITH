@@ -10295,10 +10295,49 @@
                 }
                 
                 // Token is valid locally - also check user data exists
-                const user = getAdminUser();
+                let user = getAdminUser();
                 if (!user || !user.email) {
-                    console.log('🔒 No user data found');
-                    return false;
+                    // User data missing - try to fetch from server before failing
+                    console.log('⚠️ User data missing, attempting to fetch from server...');
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 3000);
+                        
+                        const response = await fetch(`${LOCAL_API_URL}/auth/validate`, {
+                            headers: { 'Authorization': `Bearer ${token}` },
+                            signal: controller.signal
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        if (response.ok) {
+                            const contentType = response.headers.get('content-type');
+                            if (contentType && contentType.includes('application/json')) {
+                                const data = await response.json();
+                                if (data.valid && data.user) {
+                                    // Restore user data to prevent future issues
+                                    const isLocalStorage = !!localStorage.getItem('oith_admin_token');
+                                    const storage = isLocalStorage ? localStorage : sessionStorage;
+                                    storage.setItem('oith_admin_user', JSON.stringify(data.user));
+                                    console.log('✅ User data restored from server');
+                                    user = data.user;
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.log('⚠️ Could not fetch user data from server');
+                    }
+                    
+                    // If still no user data, fail auth
+                    if (!user || !user.email) {
+                        console.log('🔒 No user data found - clearing invalid session');
+                        // Clear the orphaned token to prevent login loop
+                        localStorage.removeItem('oith_admin_token');
+                        localStorage.removeItem('oith_admin_user');
+                        sessionStorage.removeItem('oith_admin_token');
+                        sessionStorage.removeItem('oith_admin_user');
+                        return false;
+                    }
                 }
                 
                 console.log('✅ Token valid (offline mode)');
@@ -10330,7 +10369,12 @@
                     const contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('application/json')) {
                         const data = await response.json();
-                        if (!data.valid) {
+                        if (data.valid && data.user) {
+                            // Keep user data in sync
+                            const isLocalStorage = !!localStorage.getItem('oith_admin_token');
+                            const storage = isLocalStorage ? localStorage : sessionStorage;
+                            storage.setItem('oith_admin_user', JSON.stringify(data.user));
+                        } else if (!data.valid) {
                             console.log('⚠️ Server rejected token');
                             // Optionally logout: logoutAdmin();
                         }

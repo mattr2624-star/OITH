@@ -1201,6 +1201,7 @@
             await loadAuthorizedEmployees();
             
             const token = localStorage.getItem('oith_admin_token') || sessionStorage.getItem('oith_admin_token');
+            const isLocalStorage = !!localStorage.getItem('oith_admin_token');
             
             if (token) {
                 // Validate token - but allow offline access if server unavailable
@@ -1213,7 +1214,12 @@
                         const contentType = response.headers.get('content-type');
                         if (contentType && contentType.includes('application/json')) {
                             const data = await response.json();
-                            if (data.valid) {
+                            if (data.valid && data.user) {
+                                // IMPORTANT: Sync user data to prevent login loop
+                                // Manager.html requires BOTH token AND user data
+                                const storage = isLocalStorage ? localStorage : sessionStorage;
+                                storage.setItem('oith_admin_user', JSON.stringify(data.user));
+                                console.log('✅ Session valid, user data synced');
                                 window.location.href = 'manager.html';
                                 return;
                             }
@@ -1230,9 +1236,22 @@
                         const payload = JSON.parse(atob(token));
                         // Check if token is less than 24 hours old
                         if (Date.now() - payload.timestamp < 24 * 60 * 60 * 1000) {
-                            console.log('⚠️ Server unavailable, using cached session');
-                            window.location.href = 'manager.html';
-                            return;
+                            // Also verify user data exists to prevent login loop
+                            const existingUser = localStorage.getItem('oith_admin_user') || sessionStorage.getItem('oith_admin_user');
+                            if (existingUser) {
+                                try {
+                                    const userData = JSON.parse(existingUser);
+                                    if (userData && userData.email) {
+                                        console.log('⚠️ Server unavailable, using cached session');
+                                        window.location.href = 'manager.html';
+                                        return;
+                                    }
+                                } catch {
+                                    // Invalid user data
+                                }
+                            }
+                            // Token valid but no user data - cannot proceed offline
+                            console.log('⚠️ Token valid but no user data - clearing session');
                         }
                     } catch {
                         // Invalid token format
