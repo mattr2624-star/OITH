@@ -20558,6 +20558,7 @@
                 
                 if (response.ok) {
                     console.log('☁️ ML settings saved to AWS');
+                    logAdminActivity('sync', 'Saved ML settings to AWS', 'Compatibility weights updated');
                 }
             } catch (error) {
                 console.log('⚠️ Could not save ML settings to AWS:', error.message);
@@ -21796,6 +21797,9 @@
             loadAllData();
             renderUsers();
             
+            // Log activity
+            logAdminActivity('user', `Updated ${isTestBot ? 'test bot' : 'user'} profile`, `${updates.firstName} (${email})`, { changes: Object.keys(updates) });
+            
             showToast(`${isTestBot ? 'Test bot' : 'User'} ${updates.firstName} updated successfully`);
         }
 
@@ -21835,6 +21839,9 @@
             
             // Broadcast to app
             broadcastAdminSync('user_deleted', { email });
+            
+            // Log activity
+            logAdminActivity('delete', 'Deleted user account', email);
             
             showToast('User deleted successfully');
         }
@@ -24361,6 +24368,7 @@
                     bot.relationshipGoal = relationshipGoal;
                     
                     logBotActivity('System', `Bot "${name}" updated`, 'info');
+                    logAdminActivity('user', 'Updated test bot', name, { gender: gender, location: location });
                     showToast(`✅ Bot "${name}" updated!`);
                 }
             } else {
@@ -24386,6 +24394,7 @@
                 
                 testBots.push(newBot);
                 logBotActivity('System', `New bot "${name}" created`, 'success');
+                logAdminActivity('create', 'Created test bot', name, { gender: gender, location: location });
                 showToast(`✅ Bot "${name}" created!`);
             }
             
@@ -24402,6 +24411,7 @@
                 testBots = testBots.filter(b => b.id !== botId);
                 saveTestBots();
                 logBotActivity('System', `Bot "${bot.name}" deleted`, 'warning');
+                logAdminActivity('delete', 'Deleted test bot', bot.name);
                 showToast(`🗑️ Bot "${bot.name}" deleted`);
                 renderTestBots();
             }
@@ -26864,6 +26874,8 @@
                 const empIndex = orgData.employees.findIndex(e => e.id === empId);
                 if (empIndex !== -1) {
                     orgData.employees[empIndex] = { ...orgData.employees[empIndex], ...employeeData };
+                    // Log activity
+                    logAdminActivity('user', 'Updated employee record', employeeData.name, { department: employeeData.department, role: employeeData.role });
                     showToast(`✅ ${employeeData.name} updated successfully`, 'success');
                 }
             } else {
@@ -26873,6 +26885,8 @@
                     ...employeeData
                 };
                 orgData.employees.push(newEmployee);
+                // Log activity
+                logAdminActivity('create', 'Added new employee', employeeData.name, { department: employeeData.department, role: employeeData.role, email: employeeData.email });
                 showToast(`✅ ${employeeData.name} added to the organization`, 'success');
             }
             
@@ -31432,6 +31446,9 @@
             expenseData.push(newExpense);
             saveExpenses();
             
+            // Log activity
+            logAdminActivity('file', 'Added new expense', name, { category: category, cost: cost, billing: billing });
+            
             document.querySelector('.modal').remove();
             renderExpenses();
         }
@@ -35500,6 +35517,9 @@
             if (typeof renderUpcomingTasks === 'function') renderUpcomingTasks();
             closeAddEventModal();
             
+            // Log activity
+            logAdminActivity('event', 'Created calendar event', title, { date: dateVal, category: category, type: eventType });
+            
             showToast('✅ Event added successfully!', 'success');
         }
         
@@ -36336,6 +36356,9 @@
             if (typeof renderUpcomingTasks === 'function') renderUpcomingTasks();
             
             closeMeetingScheduler();
+            
+            // Log activity
+            logAdminActivity('event', 'Scheduled meeting', title, { date: date, duration: duration, invitees: meetingInvitees.length, type: eventType });
             
             const inviteCount = meetingInvitees.length;
             const inviteText = inviteCount > 0 ? ` and ${inviteCount} invite${inviteCount > 1 ? 's' : ''} sent` : '';
@@ -39719,6 +39742,7 @@ GMAIL_EMAIL=admin@oith.com</pre>
                     console.log(`📅 Calendar synced to AWS: ${data.count || savedEvents.length} events`);
                     if (!silent) {
                         showToast(`📅 Synced to AWS`, 'success');
+                        logAdminActivity('sync', 'Synced calendar to AWS', `${savedEvents.length} events`);
                     }
                     return { success: true, count: savedEvents.length };
                 } else {

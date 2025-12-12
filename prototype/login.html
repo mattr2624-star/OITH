@@ -747,9 +747,46 @@
 
     <script>
         // Configuration
-        const API_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3001/api'
-            : 'https://main.d3cpep2ztx08x2.amplifyapp.com/api';
+        const LOCAL_API_URL = 'http://localhost:3001/api';
+        const AWS_API_URL = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+        
+        // Determine which API to use
+        let API_URL = LOCAL_API_URL;
+        
+        // Try to detect if local server is available
+        async function detectApiUrl() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const response = await fetch(`${LOCAL_API_URL}/health`, { 
+                    signal: controller.signal,
+                    mode: 'cors'
+                });
+                clearTimeout(timeoutId);
+                if (response.ok) {
+                    console.log('✅ Using local API server');
+                    API_URL = LOCAL_API_URL;
+                    return;
+                }
+            } catch (e) {
+                console.log('⚠️ Local server not available, using AWS API');
+            }
+            API_URL = AWS_API_URL;
+            console.log('☁️ Using AWS API:', API_URL);
+        }
+        
+        // Helper to safely parse JSON response
+        async function parseJsonResponse(response) {
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                if (text.startsWith('<!DOCTYPE') || text.startsWith('<html')) {
+                    throw new Error('Server returned HTML instead of JSON. The API endpoint may not exist.');
+                }
+                throw new Error('Server returned non-JSON response');
+            }
+            return response.json();
+        }
 
         // View Management
         function showView(view) {
@@ -813,6 +850,17 @@
             }
         }
 
+        // Simple hash function for local password verification
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(16);
+        }
+        
         // Login Handler
         async function handleLogin(event) {
             event.preventDefault();
@@ -826,13 +874,14 @@
             setLoading('loginBtn', true);
 
             try {
+                // Try API first
                 const response = await fetch(`${API_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
 
-                const data = await response.json();
+                const data = await parseJsonResponse(response);
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Login failed');
@@ -851,7 +900,34 @@
                 }, 1000);
 
             } catch (error) {
-                showMessage('loginMessage', error.message, 'error');
+                // If API fails, try local authentication
+                console.log('API login failed, trying local auth:', error.message);
+                
+                const localUsers = JSON.parse(localStorage.getItem('oith_local_admins') || '{}');
+                const lowerEmail = email.toLowerCase();
+                const user = localUsers[lowerEmail];
+                
+                if (user && user.passwordHash === simpleHash(password + 'oith')) {
+                    // Local login success
+                    const token = btoa(JSON.stringify({ email: lowerEmail, timestamp: Date.now() }));
+                    const storage = remember ? localStorage : sessionStorage;
+                    storage.setItem('oith_admin_token', token);
+                    storage.setItem('oith_admin_user', JSON.stringify({ 
+                        email: lowerEmail, 
+                        name: user.name,
+                        role: user.role || 'admin'
+                    }));
+                    
+                    showMessage('loginMessage', 'Login successful (offline mode)! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'manager.html';
+                    }, 1000);
+                } else if (!user && authorizedEmployees.find(e => e.email === lowerEmail)) {
+                    // Employee exists but hasn't registered locally yet
+                    showMessage('loginMessage', 'Account not found. Please create an account first.', 'error');
+                } else {
+                    showMessage('loginMessage', error.message || 'Invalid email or password', 'error');
+                }
             } finally {
                 setLoading('loginBtn', false);
                 document.getElementById('loginBtn').textContent = 'Sign In';
@@ -863,22 +939,25 @@
         
         async function loadAuthorizedEmployees() {
             try {
-                // Try AWS first
+                // Try API first
                 const response = await fetch(`${API_URL}/org/all`);
                 if (response.ok) {
-                    const data = await response.json();
-                    authorizedEmployees = (data.employees || [])
-                        .filter(e => e.status === 'active' && e.email)
-                        .map(e => ({
-                            email: e.email.toLowerCase(),
-                            name: e.name,
-                            role: e.title || 'Employee'
-                        }));
-                    console.log(`Loaded ${authorizedEmployees.length} authorized employees`);
-                    return;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        authorizedEmployees = (data.employees || [])
+                            .filter(e => e.status === 'active' && e.email)
+                            .map(e => ({
+                                email: e.email.toLowerCase(),
+                                name: e.name,
+                                role: e.title || 'Employee'
+                            }));
+                        console.log(`Loaded ${authorizedEmployees.length} authorized employees`);
+                        return;
+                    }
                 }
             } catch (e) {
-                console.log('Could not load org data from AWS');
+                console.log('Could not load org data from API:', e.message);
             }
             
             // Fallback to localStorage
@@ -976,7 +1055,7 @@
                     })
                 });
 
-                const data = await response.json();
+                const data = await parseJsonResponse(response);
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Registration failed');
@@ -990,7 +1069,32 @@
                 }, 2000);
 
             } catch (error) {
-                showMessage('registerMessage', error.message, 'error');
+                // If API fails, save locally
+                console.log('API registration failed, saving locally:', error.message);
+                
+                const lowerEmail = email.toLowerCase();
+                const localUsers = JSON.parse(localStorage.getItem('oith_local_admins') || '{}');
+                
+                if (localUsers[lowerEmail]) {
+                    showMessage('registerMessage', 'An account with this email already exists.', 'error');
+                } else {
+                    // Save user locally
+                    localUsers[lowerEmail] = {
+                        name: authorizedEmployee?.name || name,
+                        email: lowerEmail,
+                        passwordHash: simpleHash(password + 'oith'),
+                        role: authorizedEmployee?.role || 'admin',
+                        createdAt: new Date().toISOString()
+                    };
+                    localStorage.setItem('oith_local_admins', JSON.stringify(localUsers));
+                    
+                    showMessage('registerMessage', 'Account created successfully (offline mode)! You can now login.', 'success');
+                    
+                    setTimeout(() => {
+                        showView('login');
+                        document.getElementById('loginEmail').value = email;
+                    }, 2000);
+                }
             } finally {
                 setLoading('registerBtn', false);
                 document.getElementById('registerBtn').textContent = 'Create Account';
@@ -1014,7 +1118,7 @@
                     body: JSON.stringify({ email })
                 });
 
-                const data = await response.json();
+                const data = await parseJsonResponse(response);
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Request failed');
@@ -1068,7 +1172,7 @@
                     body: JSON.stringify({ token, newPassword })
                 });
 
-                const data = await response.json();
+                const data = await parseJsonResponse(response);
 
                 if (!response.ok) {
                     throw new Error(data.error || 'Reset failed');
@@ -1090,29 +1194,55 @@
 
         // Check for existing session on load
         document.addEventListener('DOMContentLoaded', async () => {
+            // Detect which API to use (local or AWS)
+            await detectApiUrl();
+            
             // Load authorized employees for registration validation
             await loadAuthorizedEmployees();
             
             const token = localStorage.getItem('oith_admin_token') || sessionStorage.getItem('oith_admin_token');
             
             if (token) {
-                // Validate token
-                fetch(`${API_URL}/auth/validate`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.valid) {
-                        window.location.href = 'manager.html';
+                // Validate token - but allow offline access if server unavailable
+                try {
+                    const response = await fetch(`${API_URL}/auth/validate`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const data = await response.json();
+                            if (data.valid) {
+                                window.location.href = 'manager.html';
+                                return;
+                            }
+                        }
                     }
-                })
-                .catch(() => {
                     // Token invalid, clear storage
                     localStorage.removeItem('oith_admin_token');
                     localStorage.removeItem('oith_admin_user');
                     sessionStorage.removeItem('oith_admin_token');
                     sessionStorage.removeItem('oith_admin_user');
-                });
+                } catch (e) {
+                    // Server unavailable - validate token locally
+                    try {
+                        const payload = JSON.parse(atob(token));
+                        // Check if token is less than 24 hours old
+                        if (Date.now() - payload.timestamp < 24 * 60 * 60 * 1000) {
+                            console.log('⚠️ Server unavailable, using cached session');
+                            window.location.href = 'manager.html';
+                            return;
+                        }
+                    } catch {
+                        // Invalid token format
+                    }
+                    // Clear invalid token
+                    localStorage.removeItem('oith_admin_token');
+                    localStorage.removeItem('oith_admin_user');
+                    sessionStorage.removeItem('oith_admin_token');
+                    sessionStorage.removeItem('oith_admin_user');
+                }
             }
 
             // Check for reset token in URL
