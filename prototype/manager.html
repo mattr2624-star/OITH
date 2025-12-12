@@ -4135,6 +4135,17 @@
                     Revenue
                     <span class="health-indicator" id="health-revenue"></span>
                 </div>
+                <div class="nav-item" onclick="showSection('advertising')" data-health-section="advertising">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                        <path d="M16 2v4"/>
+                        <path d="M8 2v4"/>
+                        <circle cx="12" cy="14" r="3"/>
+                        <path d="M12 11v1"/>
+                    </svg>
+                    Advertising
+                    <span class="health-indicator" id="health-advertising"></span>
+                </div>
                 <div class="nav-item" onclick="showSection('geographic')" data-health-section="geographic">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
@@ -6153,6 +6164,269 @@
                                 <!-- Populated by JS -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advertising Section -->
+            <div id="advertising-section" style="display: none;">
+                <div class="page-header">
+                    <div>
+                        <h2 class="page-title">📢 Advertising</h2>
+                        <p class="page-subtitle">Campaign performance, spending, and visibility metrics</p>
+                    </div>
+                    <div class="header-actions">
+                        <span id="advertisingDataSource" class="status-badge" style="background: var(--info);">Loading...</span>
+                        <button class="btn btn-secondary" onclick="refreshAdvertisingData()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6"/>
+                                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                            Refresh
+                        </button>
+                        <button class="btn btn-primary" onclick="showCreateCampaignModal()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            New Campaign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Advertising Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card revenue">
+                        <div class="stat-icon revenue">💵</div>
+                        <div class="stat-value" id="adTotalSpend">$0</div>
+                        <div class="stat-label">Total Ad Spend (MTD)</div>
+                    </div>
+                    <div class="stat-card users">
+                        <div class="stat-icon users">👁️</div>
+                        <div class="stat-value" id="adImpressions">0</div>
+                        <div class="stat-label">Total Impressions</div>
+                    </div>
+                    <div class="stat-card matches">
+                        <div class="stat-icon matches">👆</div>
+                        <div class="stat-value" id="adClicks">0</div>
+                        <div class="stat-label">Total Clicks</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon safety">📥</div>
+                        <div class="stat-value" id="adConversions">0</div>
+                        <div class="stat-label">Conversions (Installs)</div>
+                    </div>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="stats-grid" style="margin-top: 16px;">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="adCTR">0%</div>
+                        <div class="stat-label">Click-Through Rate</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-value" id="adCPC">$0</div>
+                        <div class="stat-label">Cost Per Click</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📱</div>
+                        <div class="stat-value" id="adCPI">$0</div>
+                        <div class="stat-label">Cost Per Install</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-value" id="adROAS">0x</div>
+                        <div class="stat-label">Return on Ad Spend</div>
+                    </div>
+                </div>
+
+                <!-- Active Campaigns -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">🚀 Active Campaigns</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="campaignFilter" style="padding: 6px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary);" onchange="filterCampaigns()">
+                                <option value="all">All Platforms</option>
+                                <option value="google">Google Ads</option>
+                                <option value="meta">Meta (FB/IG)</option>
+                                <option value="tiktok">TikTok</option>
+                                <option value="apple">Apple Search Ads</option>
+                                <option value="twitter">Twitter/X</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Campaign</th>
+                                    <th>Platform</th>
+                                    <th>Status</th>
+                                    <th>Budget</th>
+                                    <th>Spent</th>
+                                    <th>Impressions</th>
+                                    <th>Clicks</th>
+                                    <th>CTR</th>
+                                    <th>CPC</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="campaignsTableBody">
+                                <tr>
+                                    <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                                        Loading campaigns...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Spending by Platform -->
+                <div class="cards-grid" style="margin-top: 20px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📊 Spending by Platform</h3>
+                        </div>
+                        <div class="card-body" id="platformSpendingChart">
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div class="platform-spend-row" data-platform="google">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span>🔍 Google Ads</span>
+                                        <span id="googleSpend">$0</span>
+                                    </div>
+                                    <div style="height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                                        <div id="googleSpendBar" style="height: 100%; background: #4285F4; width: 0%; transition: width 0.5s;"></div>
+                                    </div>
+                                </div>
+                                <div class="platform-spend-row" data-platform="meta">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span>📘 Meta (FB/IG)</span>
+                                        <span id="metaSpend">$0</span>
+                                    </div>
+                                    <div style="height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                                        <div id="metaSpendBar" style="height: 100%; background: #1877F2; width: 0%; transition: width 0.5s;"></div>
+                                    </div>
+                                </div>
+                                <div class="platform-spend-row" data-platform="tiktok">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span>🎵 TikTok</span>
+                                        <span id="tiktokSpend">$0</span>
+                                    </div>
+                                    <div style="height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                                        <div id="tiktokSpendBar" style="height: 100%; background: #000000; width: 0%; transition: width 0.5s;"></div>
+                                    </div>
+                                </div>
+                                <div class="platform-spend-row" data-platform="apple">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span>🍎 Apple Search Ads</span>
+                                        <span id="appleSpend">$0</span>
+                                    </div>
+                                    <div style="height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                                        <div id="appleSpendBar" style="height: 100%; background: #A2AAAD; width: 0%; transition: width 0.5s;"></div>
+                                    </div>
+                                </div>
+                                <div class="platform-spend-row" data-platform="twitter">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                        <span>🐦 Twitter/X</span>
+                                        <span id="twitterSpend">$0</span>
+                                    </div>
+                                    <div style="height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                                        <div id="twitterSpendBar" style="height: 100%; background: #1DA1F2; width: 0%; transition: width 0.5s;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📈 Daily Spend Trend</h3>
+                        </div>
+                        <div class="card-body" id="dailySpendChart">
+                            <div style="display: flex; align-items: flex-end; justify-content: space-between; height: 150px; gap: 4px;" id="spendTrendBars">
+                                <!-- Populated by JS -->
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted);" id="spendTrendLabels">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Settings -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">💳 Budget Settings</h3>
+                        <button class="btn btn-primary btn-small" onclick="saveAdvertisingBudget()">Save Changes</button>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Daily Budget Limit</label>
+                                <div style="position: relative;">
+                                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">$</span>
+                                    <input type="number" id="dailyBudgetLimit" placeholder="500" style="width: 100%; padding: 10px 10px 10px 28px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Monthly Budget Cap</label>
+                                <div style="position: relative;">
+                                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">$</span>
+                                    <input type="number" id="monthlyBudgetCap" placeholder="10000" style="width: 100%; padding: 10px 10px 10px 28px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Alert Threshold (%)</label>
+                                <input type="number" id="budgetAlertThreshold" placeholder="80" min="0" max="100" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 16px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 500;">Monthly Budget Usage</span>
+                                <span id="budgetUsagePercent" style="font-weight: 600; color: var(--success);">0%</span>
+                            </div>
+                            <div style="height: 8px; background: var(--bg-secondary); border-radius: 4px; margin-top: 8px; overflow: hidden;">
+                                <div id="budgetUsageBar" style="height: 100%; background: var(--success); width: 0%; transition: width 0.5s;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 12px; color: var(--text-muted);">
+                                <span>Spent: <span id="budgetSpentAmount">$0</span></span>
+                                <span>Remaining: <span id="budgetRemainingAmount">$0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audience Targeting -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">🎯 Audience Insights</h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 8px;">👥</div>
+                                <div style="font-size: 1.5rem; font-weight: 700;" id="audienceReach">0</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Total Reach</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 8px;">🎂</div>
+                                <div style="font-size: 1.5rem; font-weight: 700;" id="topAgeGroup">18-24</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Top Age Group</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 8px;">📍</div>
+                                <div style="font-size: 1.5rem; font-weight: 700;" id="topLocation">--</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Top Location</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 8px;">📱</div>
+                                <div style="font-size: 1.5rem; font-weight: 700;" id="topDevice">iOS</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Top Device</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -13442,6 +13716,7 @@
                 case 'matches': renderMatches(); break;
                 case 'funnel': renderFunnel(); break;
                 case 'revenue': renderRevenue(); break;
+                case 'advertising': renderAdvertising(); break;
                 case 'geographic': renderGeographic(); break;
                 case 'safety': renderSafety(); break;
                 case 'feedback': renderFeedback(); break;
@@ -13672,6 +13947,7 @@
                     case 'matches': renderMatches(); break;
                     case 'funnel': renderFunnel(); break;
                     case 'revenue': renderRevenue(); break;
+                    case 'advertising': renderAdvertising(); break;
                     case 'geographic': renderGeographic(); break;
                     case 'safety': renderSafety(); break;
                     case 'feedback': renderFeedback(); break;
@@ -23621,6 +23897,522 @@
             a.click();
             
             showToast('Transactions exported!');
+        }
+
+        // ==========================================
+        // ADVERTISING - Campaign & Spend Management
+        // ==========================================
+        
+        // Global advertising data
+        let advertisingData = {
+            campaigns: [],
+            budget: { daily: 500, monthly: 10000, alertThreshold: 80 },
+            totalSpend: 0,
+            platformSpend: { google: 0, meta: 0, tiktok: 0, apple: 0, twitter: 0 },
+            dailySpend: [],
+            metrics: { impressions: 0, clicks: 0, conversions: 0 }
+        };
+        
+        async function renderAdvertising() {
+            console.log('📢 Loading advertising data...');
+            
+            const sourceEl = document.getElementById('advertisingDataSource');
+            if (sourceEl) {
+                sourceEl.textContent = 'Loading...';
+                sourceEl.style.background = 'var(--info)';
+            }
+            
+            // Try to load from AWS
+            try {
+                const response = await fetch(`${AWS_API_URL}/advertising`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.advertising) {
+                        advertisingData = { ...advertisingData, ...data.advertising };
+                        console.log('📢 Loaded advertising data from AWS');
+                        if (sourceEl) {
+                            sourceEl.textContent = 'AWS Synced';
+                            sourceEl.style.background = 'var(--success)';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch advertising from AWS:', error.message);
+            }
+            
+            // Fallback to localStorage
+            const saved = localStorage.getItem('oith_advertising_data');
+            if (saved && !advertisingData.campaigns.length) {
+                try {
+                    advertisingData = { ...advertisingData, ...JSON.parse(saved) };
+                    console.log('📢 Loaded advertising data from localStorage');
+                    if (sourceEl) {
+                        sourceEl.textContent = 'Local Data';
+                        sourceEl.style.background = 'var(--warning)';
+                    }
+                } catch (e) {
+                    console.error('Error parsing saved advertising data:', e);
+                }
+            }
+            
+            // Initialize with demo data if empty
+            if (!advertisingData.campaigns.length) {
+                advertisingData = generateDemoAdvertisingData();
+                if (sourceEl) {
+                    sourceEl.textContent = 'Demo Data';
+                    sourceEl.style.background = 'var(--purple)';
+                }
+            }
+            
+            updateAdvertisingUI();
+        }
+        
+        function generateDemoAdvertisingData() {
+            const now = new Date();
+            const campaigns = [
+                {
+                    id: 'camp_001',
+                    name: 'App Launch Campaign',
+                    platform: 'google',
+                    status: 'active',
+                    budget: 2000,
+                    spent: 1247.50,
+                    impressions: 125000,
+                    clicks: 3125,
+                    conversions: 312,
+                    startDate: new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString(),
+                    endDate: null
+                },
+                {
+                    id: 'camp_002',
+                    name: 'Dating App Users',
+                    platform: 'meta',
+                    status: 'active',
+                    budget: 1500,
+                    spent: 892.30,
+                    impressions: 89000,
+                    clicks: 2670,
+                    conversions: 178,
+                    startDate: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
+                    endDate: null
+                },
+                {
+                    id: 'camp_003',
+                    name: 'Gen Z Awareness',
+                    platform: 'tiktok',
+                    status: 'active',
+                    budget: 1000,
+                    spent: 456.80,
+                    impressions: 230000,
+                    clicks: 4600,
+                    conversions: 92,
+                    startDate: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    endDate: null
+                },
+                {
+                    id: 'camp_004',
+                    name: 'iOS App Store',
+                    platform: 'apple',
+                    status: 'active',
+                    budget: 800,
+                    spent: 234.20,
+                    impressions: 15000,
+                    clicks: 750,
+                    conversions: 150,
+                    startDate: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+                    endDate: null
+                },
+                {
+                    id: 'camp_005',
+                    name: 'Brand Awareness',
+                    platform: 'twitter',
+                    status: 'paused',
+                    budget: 500,
+                    spent: 123.40,
+                    impressions: 45000,
+                    clicks: 450,
+                    conversions: 23,
+                    startDate: new Date(now - 21 * 24 * 60 * 60 * 1000).toISOString(),
+                    endDate: null
+                }
+            ];
+            
+            // Generate daily spend for last 14 days
+            const dailySpend = [];
+            for (let i = 13; i >= 0; i--) {
+                const date = new Date(now - i * 24 * 60 * 60 * 1000);
+                dailySpend.push({
+                    date: date.toISOString().split('T')[0],
+                    amount: Math.round((150 + Math.random() * 150) * 100) / 100
+                });
+            }
+            
+            // Calculate platform spend
+            const platformSpend = { google: 0, meta: 0, tiktok: 0, apple: 0, twitter: 0 };
+            campaigns.forEach(c => {
+                platformSpend[c.platform] = (platformSpend[c.platform] || 0) + c.spent;
+            });
+            
+            const totalSpend = Object.values(platformSpend).reduce((a, b) => a + b, 0);
+            const totalImpressions = campaigns.reduce((a, c) => a + c.impressions, 0);
+            const totalClicks = campaigns.reduce((a, c) => a + c.clicks, 0);
+            const totalConversions = campaigns.reduce((a, c) => a + c.conversions, 0);
+            
+            return {
+                campaigns,
+                budget: { daily: 500, monthly: 10000, alertThreshold: 80 },
+                totalSpend,
+                platformSpend,
+                dailySpend,
+                metrics: { 
+                    impressions: totalImpressions, 
+                    clicks: totalClicks, 
+                    conversions: totalConversions 
+                },
+                audience: {
+                    reach: 504000,
+                    topAgeGroup: '18-24',
+                    topLocation: 'New York',
+                    topDevice: 'iOS'
+                }
+            };
+        }
+        
+        function updateAdvertisingUI() {
+            const data = advertisingData;
+            
+            // Update main stats
+            document.getElementById('adTotalSpend').textContent = '$' + (data.totalSpend || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('adImpressions').textContent = (data.metrics?.impressions || 0).toLocaleString();
+            document.getElementById('adClicks').textContent = (data.metrics?.clicks || 0).toLocaleString();
+            document.getElementById('adConversions').textContent = (data.metrics?.conversions || 0).toLocaleString();
+            
+            // Calculate rates
+            const ctr = data.metrics?.impressions > 0 ? ((data.metrics.clicks / data.metrics.impressions) * 100).toFixed(2) : 0;
+            const cpc = data.metrics?.clicks > 0 ? (data.totalSpend / data.metrics.clicks).toFixed(2) : 0;
+            const cpi = data.metrics?.conversions > 0 ? (data.totalSpend / data.metrics.conversions).toFixed(2) : 0;
+            const roas = data.totalSpend > 0 ? ((data.metrics.conversions * 10) / data.totalSpend).toFixed(1) : 0; // Assuming $10 LTV
+            
+            document.getElementById('adCTR').textContent = ctr + '%';
+            document.getElementById('adCPC').textContent = '$' + cpc;
+            document.getElementById('adCPI').textContent = '$' + cpi;
+            document.getElementById('adROAS').textContent = roas + 'x';
+            
+            // Update platform spending bars
+            const maxSpend = Math.max(...Object.values(data.platformSpend || {}), 1);
+            ['google', 'meta', 'tiktok', 'apple', 'twitter'].forEach(platform => {
+                const spend = data.platformSpend?.[platform] || 0;
+                const spendEl = document.getElementById(platform + 'Spend');
+                const barEl = document.getElementById(platform + 'SpendBar');
+                if (spendEl) spendEl.textContent = '$' + spend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                if (barEl) barEl.style.width = ((spend / maxSpend) * 100) + '%';
+            });
+            
+            // Update daily spend trend
+            updateDailySpendChart(data.dailySpend || []);
+            
+            // Update campaigns table
+            renderCampaignsTable(data.campaigns || []);
+            
+            // Update budget info
+            document.getElementById('dailyBudgetLimit').value = data.budget?.daily || 500;
+            document.getElementById('monthlyBudgetCap').value = data.budget?.monthly || 10000;
+            document.getElementById('budgetAlertThreshold').value = data.budget?.alertThreshold || 80;
+            
+            const monthlyBudget = data.budget?.monthly || 10000;
+            const usagePercent = monthlyBudget > 0 ? Math.round((data.totalSpend / monthlyBudget) * 100) : 0;
+            document.getElementById('budgetUsagePercent').textContent = usagePercent + '%';
+            document.getElementById('budgetUsageBar').style.width = Math.min(usagePercent, 100) + '%';
+            document.getElementById('budgetUsageBar').style.background = usagePercent > 90 ? 'var(--danger)' : usagePercent > 70 ? 'var(--warning)' : 'var(--success)';
+            document.getElementById('budgetSpentAmount').textContent = '$' + data.totalSpend.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('budgetRemainingAmount').textContent = '$' + Math.max(0, monthlyBudget - data.totalSpend).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            
+            // Update audience insights
+            if (data.audience) {
+                document.getElementById('audienceReach').textContent = (data.audience.reach || 0).toLocaleString();
+                document.getElementById('topAgeGroup').textContent = data.audience.topAgeGroup || '18-24';
+                document.getElementById('topLocation').textContent = data.audience.topLocation || '--';
+                document.getElementById('topDevice').textContent = data.audience.topDevice || 'iOS';
+            }
+        }
+        
+        function updateDailySpendChart(dailySpend) {
+            const barsContainer = document.getElementById('spendTrendBars');
+            const labelsContainer = document.getElementById('spendTrendLabels');
+            if (!barsContainer || !labelsContainer) return;
+            
+            const maxAmount = Math.max(...dailySpend.map(d => d.amount), 1);
+            
+            barsContainer.innerHTML = dailySpend.map((d, i) => {
+                const height = (d.amount / maxAmount) * 100;
+                const isToday = i === dailySpend.length - 1;
+                return `<div style="flex: 1; background: ${isToday ? 'var(--accent)' : 'var(--accent-light)'}; height: ${height}%; border-radius: 4px 4px 0 0; opacity: ${isToday ? 1 : 0.7};" title="${d.date}: $${d.amount}"></div>`;
+            }).join('');
+            
+            labelsContainer.innerHTML = dailySpend.filter((_, i) => i % 2 === 0 || i === dailySpend.length - 1).map(d => {
+                const date = new Date(d.date);
+                return `<span>${date.getMonth() + 1}/${date.getDate()}</span>`;
+            }).join('');
+        }
+        
+        function renderCampaignsTable(campaigns) {
+            const tbody = document.getElementById('campaignsTableBody');
+            if (!tbody) return;
+            
+            if (!campaigns.length) {
+                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 40px;">No campaigns found. Click "New Campaign" to create one.</td></tr>`;
+                return;
+            }
+            
+            const platformIcons = {
+                google: '🔍',
+                meta: '📘',
+                tiktok: '🎵',
+                apple: '🍎',
+                twitter: '🐦'
+            };
+            
+            const platformNames = {
+                google: 'Google Ads',
+                meta: 'Meta',
+                tiktok: 'TikTok',
+                apple: 'Apple',
+                twitter: 'Twitter/X'
+            };
+            
+            tbody.innerHTML = campaigns.map(c => {
+                const ctr = c.impressions > 0 ? ((c.clicks / c.impressions) * 100).toFixed(2) : 0;
+                const cpc = c.clicks > 0 ? (c.spent / c.clicks).toFixed(2) : 0;
+                const statusClass = c.status === 'active' ? 'success' : c.status === 'paused' ? 'warning' : 'danger';
+                
+                return `<tr>
+                    <td><strong>${c.name}</strong></td>
+                    <td>${platformIcons[c.platform] || '📢'} ${platformNames[c.platform] || c.platform}</td>
+                    <td><span class="status-badge ${statusClass}" style="text-transform: capitalize;">${c.status}</span></td>
+                    <td>$${c.budget.toLocaleString()}</td>
+                    <td>$${c.spent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    <td>${c.impressions.toLocaleString()}</td>
+                    <td>${c.clicks.toLocaleString()}</td>
+                    <td>${ctr}%</td>
+                    <td>$${cpc}</td>
+                    <td>
+                        <button class="btn btn-small btn-secondary" onclick="editCampaign('${c.id}')" title="Edit">✏️</button>
+                        <button class="btn btn-small btn-secondary" onclick="toggleCampaignStatus('${c.id}')" title="${c.status === 'active' ? 'Pause' : 'Resume'}">${c.status === 'active' ? '⏸️' : '▶️'}</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+        function filterCampaigns() {
+            const filter = document.getElementById('campaignFilter').value;
+            const filtered = filter === 'all' 
+                ? advertisingData.campaigns 
+                : advertisingData.campaigns.filter(c => c.platform === filter);
+            renderCampaignsTable(filtered);
+        }
+        
+        async function refreshAdvertisingData() {
+            await renderAdvertising();
+            showNotification('Advertising data refreshed', 'success');
+        }
+        
+        async function saveAdvertisingBudget() {
+            advertisingData.budget = {
+                daily: parseFloat(document.getElementById('dailyBudgetLimit').value) || 500,
+                monthly: parseFloat(document.getElementById('monthlyBudgetCap').value) || 10000,
+                alertThreshold: parseInt(document.getElementById('budgetAlertThreshold').value) || 80
+            };
+            
+            await saveAdvertisingToAWS();
+            updateAdvertisingUI();
+            showNotification('Budget settings saved', 'success');
+        }
+        
+        async function saveAdvertisingToAWS() {
+            // Save to localStorage first
+            localStorage.setItem('oith_advertising_data', JSON.stringify(advertisingData));
+            
+            // Try to sync to AWS
+            try {
+                const response = await fetch(`${AWS_API_URL}/advertising`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ advertising: advertisingData })
+                });
+                
+                if (response.ok) {
+                    console.log('📢 Advertising data synced to AWS');
+                    const sourceEl = document.getElementById('advertisingDataSource');
+                    if (sourceEl) {
+                        sourceEl.textContent = 'AWS Synced';
+                        sourceEl.style.background = 'var(--success)';
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not sync advertising to AWS:', error.message);
+            }
+        }
+        
+        function showCreateCampaignModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal dynamic-modal';
+            modal.style.display = 'flex';
+            modal.id = 'createCampaignModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h3>🚀 Create New Campaign</h3>
+                        <button class="modal-close" onclick="document.getElementById('createCampaignModal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Campaign Name</label>
+                            <input type="text" id="newCampaignName" placeholder="e.g., Summer Launch 2024" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label>Platform</label>
+                            <select id="newCampaignPlatform" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                <option value="google">🔍 Google Ads</option>
+                                <option value="meta">📘 Meta (Facebook/Instagram)</option>
+                                <option value="tiktok">🎵 TikTok</option>
+                                <option value="apple">🍎 Apple Search Ads</option>
+                                <option value="twitter">🐦 Twitter/X</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label>Budget ($)</label>
+                            <input type="number" id="newCampaignBudget" placeholder="1000" min="0" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="document.getElementById('createCampaignModal').remove()">Cancel</button>
+                        <button class="btn btn-primary" onclick="createCampaign()">Create Campaign</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function createCampaign() {
+            const name = document.getElementById('newCampaignName').value.trim();
+            const platform = document.getElementById('newCampaignPlatform').value;
+            const budget = parseFloat(document.getElementById('newCampaignBudget').value) || 0;
+            
+            if (!name) {
+                showNotification('Please enter a campaign name', 'error');
+                return;
+            }
+            
+            if (budget <= 0) {
+                showNotification('Please enter a valid budget', 'error');
+                return;
+            }
+            
+            const newCampaign = {
+                id: 'camp_' + Date.now(),
+                name,
+                platform,
+                status: 'active',
+                budget,
+                spent: 0,
+                impressions: 0,
+                clicks: 0,
+                conversions: 0,
+                startDate: new Date().toISOString(),
+                endDate: null
+            };
+            
+            advertisingData.campaigns.push(newCampaign);
+            await saveAdvertisingToAWS();
+            updateAdvertisingUI();
+            
+            document.getElementById('createCampaignModal').remove();
+            showNotification('Campaign created successfully!', 'success');
+        }
+        
+        function editCampaign(campaignId) {
+            const campaign = advertisingData.campaigns.find(c => c.id === campaignId);
+            if (!campaign) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal dynamic-modal';
+            modal.style.display = 'flex';
+            modal.id = 'editCampaignModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h3>✏️ Edit Campaign</h3>
+                        <button class="modal-close" onclick="document.getElementById('editCampaignModal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Campaign Name</label>
+                            <input type="text" id="editCampaignName" value="${campaign.name}" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label>Budget ($)</label>
+                            <input type="number" id="editCampaignBudget" value="${campaign.budget}" min="0" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="margin-top: 16px;">
+                            <label>Status</label>
+                            <select id="editCampaignStatus" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                <option value="active" ${campaign.status === 'active' ? 'selected' : ''}>Active</option>
+                                <option value="paused" ${campaign.status === 'paused' ? 'selected' : ''}>Paused</option>
+                                <option value="ended" ${campaign.status === 'ended' ? 'selected' : ''}>Ended</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                        <button class="btn btn-danger" onclick="deleteCampaign('${campaignId}')">Delete</button>
+                        <button class="btn btn-secondary" onclick="document.getElementById('editCampaignModal').remove()">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveCampaignEdit('${campaignId}')">Save Changes</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function saveCampaignEdit(campaignId) {
+            const campaign = advertisingData.campaigns.find(c => c.id === campaignId);
+            if (!campaign) return;
+            
+            campaign.name = document.getElementById('editCampaignName').value.trim();
+            campaign.budget = parseFloat(document.getElementById('editCampaignBudget').value) || campaign.budget;
+            campaign.status = document.getElementById('editCampaignStatus').value;
+            
+            await saveAdvertisingToAWS();
+            updateAdvertisingUI();
+            
+            document.getElementById('editCampaignModal').remove();
+            showNotification('Campaign updated', 'success');
+        }
+        
+        async function deleteCampaign(campaignId) {
+            if (!confirm('Are you sure you want to delete this campaign?')) return;
+            
+            advertisingData.campaigns = advertisingData.campaigns.filter(c => c.id !== campaignId);
+            await saveAdvertisingToAWS();
+            updateAdvertisingUI();
+            
+            const modal = document.getElementById('editCampaignModal');
+            if (modal) modal.remove();
+            
+            showNotification('Campaign deleted', 'success');
+        }
+        
+        async function toggleCampaignStatus(campaignId) {
+            const campaign = advertisingData.campaigns.find(c => c.id === campaignId);
+            if (!campaign) return;
+            
+            campaign.status = campaign.status === 'active' ? 'paused' : 'active';
+            await saveAdvertisingToAWS();
+            updateAdvertisingUI();
+            
+            showNotification(`Campaign ${campaign.status === 'active' ? 'resumed' : 'paused'}`, 'success');
         }
 
         // ==========================================

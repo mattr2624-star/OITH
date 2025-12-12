@@ -2355,6 +2355,58 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ employees, departments }) };
         }
         
+        // ============ ADVERTISING ENDPOINTS ============
+        
+        // GET /advertising - Get advertising data
+        if (method === 'GET' && path.includes('/advertising')) {
+            console.log('📢 Fetching advertising data...');
+            
+            try {
+                const result = await docClient.send(new GetCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: 'COMPANY#advertising', sk: 'DATA' }
+                }));
+                
+                if (result.Item) {
+                    const { pk, sk, ...advertising } = result.Item;
+                    return { statusCode: 200, headers, body: JSON.stringify({ advertising }) };
+                }
+                
+                return { statusCode: 200, headers, body: JSON.stringify({ advertising: null }) };
+            } catch (error) {
+                console.error('Error fetching advertising:', error);
+                return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+            }
+        }
+        
+        // POST /advertising - Save advertising data
+        if (method === 'POST' && path.includes('/advertising')) {
+            console.log('📢 Saving advertising data...');
+            
+            const { advertising } = body;
+            if (!advertising) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Advertising data required' }) };
+            }
+            
+            try {
+                await docClient.send(new PutCommand({
+                    TableName: TABLE_NAME,
+                    Item: {
+                        pk: 'COMPANY#advertising',
+                        sk: 'DATA',
+                        ...advertising,
+                        updatedAt: new Date().toISOString()
+                    }
+                }));
+                
+                console.log('📢 Advertising data saved');
+                return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Advertising data saved' }) };
+            } catch (error) {
+                console.error('Error saving advertising:', error);
+                return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+            }
+        }
+        
         // Health check
         return { statusCode: 200, headers, body: JSON.stringify({ status: 'ok' }) };
         
