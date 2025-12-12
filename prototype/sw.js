@@ -3,20 +3,25 @@
  * Handles push notifications and offline caching
  */
 
-const CACHE_NAME = 'oith-v1';
+const CACHE_NAME = 'oith-v2';
 const ASSETS_TO_CACHE = [
-    '/',
-    '/index.html',
-    '/app.js',
-    '/styles.css'
+    'index.html',
+    'styles.css'
 ];
 
-// Install event - cache assets
+// Install event - cache assets (with graceful failure handling)
 self.addEventListener('install', (event) => {
-    console.log('Service Worker installing...');
+    console.log('OITH SW: Installing...');
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
+            // Cache assets individually to avoid failing on missing files
+            return Promise.allSettled(
+                ASSETS_TO_CACHE.map(url => 
+                    cache.add(url).catch(err => {
+                        console.log(`OITH SW: Could not cache ${url}:`, err.message);
+                    })
+                )
+            );
         })
     );
     self.skipWaiting();
@@ -24,7 +29,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker activating...');
+    console.log('OITH SW: Activating...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
@@ -37,12 +42,44 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first, with cache fallback for static assets only
 self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+    
+    // NEVER intercept API requests - let them go directly to network
+    if (url.pathname.includes('/api/') || 
+        url.hostname.includes('amazonaws.com') ||
+        url.hostname.includes('execute-api') ||
+        url.hostname !== self.location.hostname) {
+        // Don't intercept - let the browser handle it normally
+        return;
+    }
+    
+    // For same-origin static assets: network first, cache fallback
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
+        fetch(event.request)
+            .then(response => {
+                // Cache successful responses for static assets
+                if (response.ok && event.request.method === 'GET') {
+                    const responseClone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseClone);
+                    });
+                }
+                return response;
+            })
+            .catch(() => {
+                // Network failed, try cache
+                return caches.match(event.request).then(cachedResponse => {
+                    if (cachedResponse) {
+                        console.log('OITH SW: Serving from cache:', event.request.url);
+                        return cachedResponse;
+                    }
+                    // No cache available
+                    console.log('OITH SW: Network failed, no cache:', event.request.url);
+                    return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+                });
+            })
     );
 });
 
