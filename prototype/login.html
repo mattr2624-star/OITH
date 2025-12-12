@@ -850,7 +850,16 @@
             }
         }
 
-        // Simple hash function for local password verification
+        // SHA-256 hash function for local password verification (matches server's hashPassword)
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password + 'oith_salt_2024');
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        // Legacy simple hash (for backwards compatibility with old local accounts)
         function simpleHash(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -891,6 +900,22 @@
                 const storage = remember ? localStorage : sessionStorage;
                 storage.setItem('oith_admin_token', data.token);
                 storage.setItem('oith_admin_user', JSON.stringify(data.user));
+                
+                // Also save locally for future offline access
+                const lowerEmail = email.toLowerCase();
+                const localUsers = JSON.parse(localStorage.getItem('oith_local_admins') || '{}');
+                if (!localUsers[lowerEmail]) {
+                    const passwordHash = await hashPassword(password);
+                    localUsers[lowerEmail] = {
+                        name: data.user.name,
+                        email: lowerEmail,
+                        passwordHash: passwordHash,
+                        role: data.user.role || 'admin',
+                        createdAt: new Date().toISOString()
+                    };
+                    localStorage.setItem('oith_local_admins', JSON.stringify(localUsers));
+                    console.log('Admin credentials cached for offline access');
+                }
 
                 showMessage('loginMessage', 'Login successful! Redirecting...', 'success');
                 
@@ -907,22 +932,37 @@
                 const lowerEmail = email.toLowerCase();
                 const user = localUsers[lowerEmail];
                 
-                if (user && user.passwordHash === simpleHash(password + 'oith')) {
-                    // Local login success
-                    const token = btoa(JSON.stringify({ email: lowerEmail, timestamp: Date.now() }));
-                    const storage = remember ? localStorage : sessionStorage;
-                    storage.setItem('oith_admin_token', token);
-                    storage.setItem('oith_admin_user', JSON.stringify({ 
-                        email: lowerEmail, 
-                        name: user.name,
-                        role: user.role || 'admin'
-                    }));
+                if (user) {
+                    // Try SHA-256 hash first (matches server), then legacy simpleHash for old accounts
+                    const sha256Hash = await hashPassword(password);
+                    const legacyHash = simpleHash(password + 'oith');
                     
-                    showMessage('loginMessage', 'Login successful (offline mode)! Redirecting...', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'manager.html';
-                    }, 1000);
-                } else if (!user && authorizedEmployees.find(e => e.email === lowerEmail)) {
+                    if (user.passwordHash === sha256Hash || user.passwordHash === legacyHash) {
+                        // Local login success - upgrade to SHA-256 if using legacy hash
+                        if (user.passwordHash === legacyHash && user.passwordHash !== sha256Hash) {
+                            localUsers[lowerEmail].passwordHash = sha256Hash;
+                            localStorage.setItem('oith_local_admins', JSON.stringify(localUsers));
+                            console.log('Upgraded password hash to SHA-256');
+                        }
+                        
+                        const token = btoa(JSON.stringify({ email: lowerEmail, timestamp: Date.now() }));
+                        const storage = remember ? localStorage : sessionStorage;
+                        storage.setItem('oith_admin_token', token);
+                        storage.setItem('oith_admin_user', JSON.stringify({ 
+                            email: lowerEmail, 
+                            name: user.name,
+                            role: user.role || 'admin'
+                        }));
+                        
+                        showMessage('loginMessage', 'Login successful (offline mode)! Redirecting...', 'success');
+                        setTimeout(() => {
+                            window.location.href = 'manager.html';
+                        }, 1000);
+                        return;
+                    }
+                }
+                
+                if (!user && authorizedEmployees.find(e => e.email === lowerEmail)) {
                     // Employee exists but hasn't registered locally yet
                     showMessage('loginMessage', 'Account not found. Please create an account first.', 'error');
                 } else {
@@ -1061,6 +1101,21 @@
                     throw new Error(data.error || 'Registration failed');
                 }
 
+                // ALWAYS save locally so user can log in offline
+                const lowerEmail = email.toLowerCase();
+                const localUsers = JSON.parse(localStorage.getItem('oith_local_admins') || '{}');
+                const passwordHash = await hashPassword(password);
+                
+                localUsers[lowerEmail] = {
+                    name: authorizedEmployee?.name || name,
+                    email: lowerEmail,
+                    passwordHash: passwordHash,
+                    role: authorizedEmployee?.role || 'admin',
+                    createdAt: new Date().toISOString()
+                };
+                localStorage.setItem('oith_local_admins', JSON.stringify(localUsers));
+                console.log('Admin account saved locally for offline access');
+
                 showMessage('registerMessage', 'Account created successfully! You can now login.', 'success');
                 
                 setTimeout(() => {
@@ -1078,11 +1133,12 @@
                 if (localUsers[lowerEmail]) {
                     showMessage('registerMessage', 'An account with this email already exists.', 'error');
                 } else {
-                    // Save user locally
+                    // Save user locally with SHA-256 hash (matches server)
+                    const passwordHash = await hashPassword(password);
                     localUsers[lowerEmail] = {
                         name: authorizedEmployee?.name || name,
                         email: lowerEmail,
-                        passwordHash: simpleHash(password + 'oith'),
+                        passwordHash: passwordHash,
                         role: authorizedEmployee?.role || 'admin',
                         createdAt: new Date().toISOString()
                     };
