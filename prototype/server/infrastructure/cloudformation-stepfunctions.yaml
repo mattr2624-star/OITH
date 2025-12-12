@@ -1,0 +1,498 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'OITH Step Functions for Distributed Matching'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - development
+      - staging
+      - production
+      
+  UsersTableName:
+    Type: String
+    Default: oith-users
+    Description: DynamoDB users table name
+    
+  MatchesTableName:
+    Type: String
+    Default: oith-matches
+    Description: DynamoDB matches table name
+
+Resources:
+  # ==========================================
+  # IAM ROLE FOR STEP FUNCTIONS
+  # ==========================================
+  
+  StepFunctionsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'oith-${Environment}-stepfunctions-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: states.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StepFunctionsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Lambda invocation
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-*'
+              # DynamoDB access
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${UsersTableName}'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${UsersTableName}/index/*'
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${MatchesTableName}'
+              # CloudWatch metrics
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: '*'
+              # X-Ray tracing
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: '*'
+              # Logging
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                Resource: '*'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================
+  # STEP FUNCTIONS LOG GROUP
+  # ==========================================
+  
+  StepFunctionsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/stepfunctions/oith-${Environment}-matching'
+      RetentionInDays: 30
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================
+  # DISTRIBUTED MATCHING STATE MACHINE
+  # ==========================================
+  
+  DistributedMatchingStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub 'oith-${Environment}-distributed-matching'
+      StateMachineType: EXPRESS  # For low-latency, high-volume
+      RoleArn: !GetAtt StepFunctionsExecutionRole.Arn
+      TracingConfiguration:
+        Enabled: true
+      LoggingConfiguration:
+        Level: ERROR
+        IncludeExecutionData: false
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StepFunctionsLogGroup.Arn
+      DefinitionString: !Sub |
+        {
+          "Comment": "OITH Distributed Matching Workflow",
+          "StartAt": "ValidateRequest",
+          "States": {
+            "ValidateRequest": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.userEmail",
+                  "IsPresent": true,
+                  "Next": "GetUserProfile"
+                }
+              ],
+              "Default": "InvalidRequest"
+            },
+            "InvalidRequest": {
+              "Type": "Fail",
+              "Error": "InvalidRequestError",
+              "Cause": "Missing required field: userEmail"
+            },
+            "GetUserProfile": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:getItem",
+              "Parameters": {
+                "TableName": "${UsersTableName}",
+                "Key": {
+                  "email": {"S.$": "$.userEmail"}
+                }
+              },
+              "ResultPath": "$.user",
+              "Next": "CheckUserExists",
+              "Retry": [
+                {
+                  "ErrorEquals": ["DynamoDB.ProvisionedThroughputExceededException"],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ]
+            },
+            "CheckUserExists": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.user.Item",
+                  "IsPresent": true,
+                  "Next": "EstimatePoolSize"
+                }
+              ],
+              "Default": "UserNotFound"
+            },
+            "UserNotFound": {
+              "Type": "Fail",
+              "Error": "UserNotFoundError",
+              "Cause": "User profile not found"
+            },
+            "EstimatePoolSize": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-estimate-pool-size",
+              "Parameters": {
+                "userEmail.$": "$.userEmail",
+                "geohash.$": "$.user.Item.geohash_prefix.S"
+              },
+              "ResultPath": "$.poolEstimate",
+              "Next": "ChooseProcessingPath",
+              "Retry": [
+                {
+                  "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": ["States.ALL"],
+                  "ResultPath": "$.error",
+                  "Next": "DirectMatching"
+                }
+              ]
+            },
+            "ChooseProcessingPath": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.poolEstimate.estimatedSize",
+                  "NumericLessThan": 1000,
+                  "Next": "DirectMatching"
+                },
+                {
+                  "Variable": "$.poolEstimate.estimatedSize",
+                  "NumericLessThan": 10000,
+                  "Next": "ChunkedMatching"
+                }
+              ],
+              "Default": "DistributedMatching"
+            },
+            "DirectMatching": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-matching-service",
+              "Parameters": {
+                "action": "FIND_NEXT_MATCH",
+                "userEmail.$": "$.userEmail",
+                "mode": "direct"
+              },
+              "ResultPath": "$.matchResult",
+              "Next": "RecordMetrics",
+              "Retry": [
+                {
+                  "ErrorEquals": ["Lambda.ServiceException"],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ]
+            },
+            "ChunkedMatching": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-create-chunks",
+              "Parameters": {
+                "userEmail.$": "$.userEmail",
+                "geohash.$": "$.user.Item.geohash_prefix.S",
+                "chunkSize": 500
+              },
+              "ResultPath": "$.chunks",
+              "Next": "ProcessChunks"
+            },
+            "ProcessChunks": {
+              "Type": "Map",
+              "ItemsPath": "$.chunks.items",
+              "MaxConcurrency": 10,
+              "Parameters": {
+                "chunkId.$": "$$.Map.Item.Value.chunkId",
+                "startKey.$": "$$.Map.Item.Value.startKey",
+                "userEmail.$": "$.userEmail"
+              },
+              "Iterator": {
+                "StartAt": "ProcessSingleChunk",
+                "States": {
+                  "ProcessSingleChunk": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-process-chunk",
+                    "Retry": [
+                      {
+                        "ErrorEquals": ["Lambda.ServiceException"],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 2,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "ResultPath": "$.chunkResults",
+              "Next": "AggregateResults"
+            },
+            "DistributedMatching": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-create-geo-shards",
+              "Parameters": {
+                "userEmail.$": "$.userEmail",
+                "centerGeohash.$": "$.user.Item.geohash_prefix.S",
+                "radiusMiles": 100
+              },
+              "ResultPath": "$.shards",
+              "Next": "ProcessGeoShards"
+            },
+            "ProcessGeoShards": {
+              "Type": "Map",
+              "ItemsPath": "$.shards.items",
+              "MaxConcurrency": 20,
+              "Parameters": {
+                "shardGeohash.$": "$$.Map.Item.Value.geohash",
+                "userEmail.$": "$.userEmail"
+              },
+              "Iterator": {
+                "StartAt": "ProcessGeoShard",
+                "States": {
+                  "ProcessGeoShard": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-process-geo-shard",
+                    "Retry": [
+                      {
+                        "ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"],
+                        "IntervalSeconds": 2,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "ResultPath": "$.shardResults",
+              "Next": "AggregateResults"
+            },
+            "AggregateResults": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-aggregate-matches",
+              "Parameters": {
+                "userEmail.$": "$.userEmail",
+                "results.$": "States.ArrayGetItem(States.Array($.chunkResults, $.shardResults), 0)"
+              },
+              "ResultPath": "$.matchResult",
+              "Next": "RecordMetrics"
+            },
+            "RecordMetrics": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::cloudwatch:putMetricData",
+              "Parameters": {
+                "Namespace": "OITH/Matching",
+                "MetricData": [
+                  {
+                    "MetricName": "MatchingExecutions",
+                    "Unit": "Count",
+                    "Value": 1
+                  }
+                ]
+              },
+              "ResultPath": null,
+              "Next": "Success"
+            },
+            "Success": {
+              "Type": "Succeed",
+              "OutputPath": "$.matchResult"
+            }
+          }
+        }
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================
+  # BATCH COMPATIBILITY PRE-COMPUTATION
+  # ==========================================
+  
+  BatchPrecomputeStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub 'oith-${Environment}-batch-precompute'
+      StateMachineType: STANDARD  # For long-running batch jobs
+      RoleArn: !GetAtt StepFunctionsExecutionRole.Arn
+      TracingConfiguration:
+        Enabled: true
+      DefinitionString: !Sub |
+        {
+          "Comment": "OITH Batch Compatibility Pre-computation",
+          "StartAt": "GetActiveUsers",
+          "States": {
+            "GetActiveUsers": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-get-active-users",
+              "Parameters": {
+                "lastActiveWithin": 7
+              },
+              "ResultPath": "$.users",
+              "Next": "CreateBatches"
+            },
+            "CreateBatches": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-create-user-batches",
+              "Parameters": {
+                "users.$": "$.users.items",
+                "batchSize": 100
+              },
+              "ResultPath": "$.batches",
+              "Next": "ProcessUserBatches"
+            },
+            "ProcessUserBatches": {
+              "Type": "Map",
+              "ItemsPath": "$.batches.items",
+              "MaxConcurrency": 5,
+              "Parameters": {
+                "batchId.$": "$$.Map.Item.Value.batchId",
+                "users.$": "$$.Map.Item.Value.users"
+              },
+              "Iterator": {
+                "StartAt": "ComputeCompatibility",
+                "States": {
+                  "ComputeCompatibility": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-compute-compatibility",
+                    "Retry": [
+                      {
+                        "ErrorEquals": ["Lambda.ServiceException"],
+                        "IntervalSeconds": 5,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2
+                      }
+                    ],
+                    "Next": "CacheResults"
+                  },
+                  "CacheResults": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:oith-${Environment}-cache-compatibility",
+                    "End": true
+                  }
+                }
+              },
+              "ResultPath": "$.results",
+              "Next": "ReportCompletion"
+            },
+            "ReportCompletion": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::cloudwatch:putMetricData",
+              "Parameters": {
+                "Namespace": "OITH/BatchJobs",
+                "MetricData": [
+                  {
+                    "MetricName": "PrecomputeCompletions",
+                    "Unit": "Count",
+                    "Value": 1
+                  }
+                ]
+              },
+              "End": true
+            }
+          }
+        }
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================
+  # EVENTBRIDGE RULE FOR SCHEDULED PRECOMPUTE
+  # ==========================================
+  
+  PrecomputeScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub 'oith-${Environment}-precompute-schedule'
+      Description: Trigger batch precompute daily at 4 AM UTC
+      ScheduleExpression: 'cron(0 4 * * ? *)'
+      State: ENABLED
+      Targets:
+        - Id: BatchPrecomputeTarget
+          Arn: !Ref BatchPrecomputeStateMachine
+          RoleArn: !GetAtt EventBridgeRole.Arn
+
+  EventBridgeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'oith-${Environment}-eventbridge-sfn-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: events.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StartStepFunctions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource:
+                  - !Ref BatchPrecomputeStateMachine
+
+Outputs:
+  DistributedMatchingArn:
+    Description: Distributed matching state machine ARN
+    Value: !Ref DistributedMatchingStateMachine
+    Export:
+      Name: !Sub '${AWS::StackName}-matching-sfn-arn'
+      
+  BatchPrecomputeArn:
+    Description: Batch precompute state machine ARN
+    Value: !Ref BatchPrecomputeStateMachine
+    Export:
+      Name: !Sub '${AWS::StackName}-precompute-sfn-arn'
+      
+  StepFunctionsRoleArn:
+    Description: Step Functions execution role ARN
+    Value: !GetAtt StepFunctionsExecutionRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-sfn-role-arn'
+

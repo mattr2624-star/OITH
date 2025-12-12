@@ -1,0 +1,652 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'OITH Enterprise Infrastructure - ElastiCache, DAX, SQS, Step Functions, CloudWatch'
+
+Parameters:
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues:
+      - development
+      - staging
+      - production
+    Description: Deployment environment
+    
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC ID for the infrastructure
+    
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet::Id
+    Description: First private subnet for high availability
+    
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet::Id
+    Description: Second private subnet for high availability
+    
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet::Id
+    Description: Third private subnet for high availability (optional)
+    Default: ''
+    
+  LambdaSecurityGroupId:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security group ID for Lambda functions
+    
+  AlertEmail:
+    Type: String
+    Description: Email address for CloudWatch alerts
+    Default: alerts@oith.com
+
+Conditions:
+  HasThirdSubnet: !Not [!Equals [!Ref PrivateSubnet3, '']]
+  IsProduction: !Equals [!Ref Environment, 'production']
+
+Resources:
+  # ==========================================
+  # ELASTICACHE REDIS CLUSTER
+  # ==========================================
+  
+  ElastiCacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub 'oith-${Environment}-elasticache-sg'
+      GroupDescription: Security group for ElastiCache Redis
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref LambdaSecurityGroupId
+          Description: Allow Redis access from Lambda
+      Tags:
+        - Key: Name
+          Value: !Sub 'oith-${Environment}-elasticache-sg'
+        - Key: Environment
+          Value: !Ref Environment
+
+  ElastiCacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      CacheSubnetGroupName: !Sub 'oith-${Environment}-redis-subnet-group'
+      Description: Subnet group for OITH Redis cluster
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+        - !If [HasThirdSubnet, !Ref PrivateSubnet3, !Ref 'AWS::NoValue']
+
+  ElastiCacheParameterGroup:
+    Type: AWS::ElastiCache::ParameterGroup
+    Properties:
+      CacheParameterGroupFamily: redis7
+      Description: OITH Redis parameter group
+      Properties:
+        maxmemory-policy: allkeys-lru
+        timeout: 300
+        tcp-keepalive: 300
+
+  ElastiCacheReplicationGroup:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      ReplicationGroupId: !Sub 'oith-${Environment}-redis'
+      ReplicationGroupDescription: OITH Redis cluster for caching
+      Engine: redis
+      EngineVersion: '7.0'
+      CacheNodeType: !If [IsProduction, 'cache.r6g.large', 'cache.t3.medium']
+      NumCacheClusters: !If [IsProduction, 3, 2]
+      AutomaticFailoverEnabled: !If [IsProduction, true, false]
+      MultiAZEnabled: !If [IsProduction, true, false]
+      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
+      CacheParameterGroupName: !Ref ElastiCacheParameterGroup
+      SecurityGroupIds:
+        - !Ref ElastiCacheSecurityGroup
+      AtRestEncryptionEnabled: true
+      TransitEncryptionEnabled: true
+      SnapshotRetentionLimit: !If [IsProduction, 7, 1]
+      SnapshotWindow: '03:00-05:00'
+      PreferredMaintenanceWindow: 'sun:05:00-sun:07:00'
+      Tags:
+        - Key: Name
+          Value: !Sub 'oith-${Environment}-redis'
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================
+  # DYNAMODB DAX CLUSTER
+  # ==========================================
+  
+  DAXSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub 'oith-${Environment}-dax-sg'
+      GroupDescription: Security group for DAX cluster
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8111
+          ToPort: 8111
+          SourceSecurityGroupId: !Ref LambdaSecurityGroupId
+          Description: Allow DAX access from Lambda
+      Tags:
+        - Key: Name
+          Value: !Sub 'oith-${Environment}-dax-sg'
+        - Key: Environment
+          Value: !Ref Environment
+
+  DAXSubnetGroup:
+    Type: AWS::DAX::SubnetGroup
+    Properties:
+      SubnetGroupName: !Sub 'oith-${Environment}-dax-subnet-group'
+      Description: Subnet group for OITH DAX cluster
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+  DAXRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'oith-${Environment}-dax-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: dax.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  DAXParameterGroup:
+    Type: AWS::DAX::ParameterGroup
+    Properties:
+      ParameterGroupName: !Sub 'oith-${Environment}-dax-params'
+      Description: OITH DAX parameter group
+      ParameterNameValues:
+        query-ttl-millis: '300000'  # 5 minutes
+        record-ttl-millis: '300000'  # 5 minutes
+
+  DAXCluster:
+    Type: AWS::DAX::Cluster
+    Properties:
+      ClusterName: !Sub 'oith-${Environment}-dax'
+      Description: OITH DAX cluster for DynamoDB caching
+      NodeType: !If [IsProduction, 'dax.r5.large', 'dax.t3.medium']
+      ReplicationFactor: !If [IsProduction, 3, 2]
+      IAMRoleARN: !GetAtt DAXRole.Arn
+      SubnetGroupName: !Ref DAXSubnetGroup
+      SecurityGroupIds:
+        - !Ref DAXSecurityGroup
+      ParameterGroupName: !Ref DAXParameterGroup
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'oith-${Environment}-dax'
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================
+  # SQS QUEUES
+  # ==========================================
+  
+  MatchingDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'oith-${Environment}-matching-dlq.fifo'
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      MessageRetentionPeriod: 1209600  # 14 days
+      Tags:
+        - Key: Name
+          Value: !Sub 'oith-${Environment}-matching-dlq'
+        - Key: Environment
+          Value: !Ref Environment
+
+  MatchingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'oith-${Environment}-matching-queue.fifo'
+      FifoQueue: true
+      ContentBasedDeduplication: true
+      VisibilityTimeout: 60
+      MessageRetentionPeriod: 86400  # 1 day
+      ReceiveMessageWaitTimeSeconds: 20  # Long polling
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt MatchingDeadLetterQueue.Arn
+        maxReceiveCount: 3
+      Tags:
+        - Key: Name
+          Value: !Sub 'oith-${Environment}-matching-queue'
+        - Key: Environment
+          Value: !Ref Environment
+
+  NotificationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'oith-${Environment}-notifications'
+      VisibilityTimeout: 30
+      MessageRetentionPeriod: 86400
+      ReceiveMessageWaitTimeSeconds: 20
+      Tags:
+        - Key: Name
+          Value: !Sub 'oith-${Environment}-notifications'
+        - Key: Environment
+          Value: !Ref Environment
+
+  # ==========================================
+  # SNS TOPICS FOR ALERTS
+  # ==========================================
+  
+  AlertTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'oith-${Environment}-alerts'
+      DisplayName: OITH Alerts
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  AlertEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlertTopic
+      Protocol: email
+      Endpoint: !Ref AlertEmail
+
+  # ==========================================
+  # CLOUDWATCH ALARMS
+  # ==========================================
+  
+  # P95 Response Time Alarm
+  P95ResponseTimeAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'oith-${Environment}-p95-response-time'
+      AlarmDescription: P95 response time exceeds 200ms threshold
+      MetricName: Duration
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Sub 'oith-${Environment}-matching-service'
+      ExtendedStatistic: p95
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 200
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+      OKActions:
+        - !Ref AlertTopic
+
+  # Error Rate Alarm
+  ErrorRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'oith-${Environment}-error-rate'
+      AlarmDescription: Error rate exceeds 0.5% threshold
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Dimensions:
+        - Name: FunctionName
+          Value: !Sub 'oith-${Environment}-matching-service'
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 5
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # DynamoDB Throttling Alarm
+  DynamoDBThrottlingAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'oith-${Environment}-dynamodb-throttling'
+      AlarmDescription: DynamoDB requests are being throttled
+      MetricName: ThrottledRequests
+      Namespace: AWS/DynamoDB
+      Dimensions:
+        - Name: TableName
+          Value: oith-users
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # DynamoDB Latency Alarm
+  DynamoDBLatencyAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'oith-${Environment}-dynamodb-latency'
+      AlarmDescription: DynamoDB latency exceeds 30ms target
+      MetricName: SuccessfulRequestLatency
+      Namespace: AWS/DynamoDB
+      Dimensions:
+        - Name: TableName
+          Value: oith-users
+        - Name: Operation
+          Value: GetItem
+      ExtendedStatistic: p95
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 30
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # SQS Queue Depth Alarm
+  SQSQueueDepthAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'oith-${Environment}-sqs-queue-depth'
+      AlarmDescription: Matching queue depth is high
+      MetricName: ApproximateNumberOfMessagesVisible
+      Namespace: AWS/SQS
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt MatchingQueue.QueueName
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 3
+      Threshold: 1000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # ElastiCache CPU Alarm
+  ElastiCacheCPUAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'oith-${Environment}-elasticache-cpu'
+      AlarmDescription: ElastiCache CPU utilization is high
+      MetricName: CPUUtilization
+      Namespace: AWS/ElastiCache
+      Dimensions:
+        - Name: ReplicationGroupId
+          Value: !Ref ElastiCacheReplicationGroup
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # ElastiCache Memory Alarm
+  ElastiCacheMemoryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'oith-${Environment}-elasticache-memory'
+      AlarmDescription: ElastiCache memory usage is high
+      MetricName: DatabaseMemoryUsagePercentage
+      Namespace: AWS/ElastiCache
+      Dimensions:
+        - Name: ReplicationGroupId
+          Value: !Ref ElastiCacheReplicationGroup
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # DAX Cache Hit Rate Alarm
+  DAXCacheHitRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'oith-${Environment}-dax-cache-hit-rate'
+      AlarmDescription: DAX cache hit rate is below threshold
+      MetricName: ItemCacheHits
+      Namespace: AWS/DAX
+      Dimensions:
+        - Name: ClusterId
+          Value: !Ref DAXCluster
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 3
+      Threshold: 60
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertTopic
+
+  # ==========================================
+  # CLOUDWATCH DASHBOARD
+  # ==========================================
+  
+  MonitoringDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: !Sub 'OITH-${Environment}-Dashboard'
+      DashboardBody: !Sub |
+        {
+          "widgets": [
+            {
+              "type": "text",
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 1,
+              "properties": {
+                "markdown": "# OITH ${Environment} Infrastructure Dashboard"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 1,
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "title": "Lambda Response Time (P95)",
+                "metrics": [
+                  ["AWS/Lambda", "Duration", "FunctionName", "oith-${Environment}-matching-service", {"stat": "p95", "color": "#ff7f0e"}],
+                  ["...", {"stat": "Average", "color": "#1f77b4"}]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "annotations": {
+                  "horizontal": [
+                    {"value": 200, "label": "Target P95", "color": "#d62728"}
+                  ]
+                }
+              }
+            },
+            {
+              "type": "metric",
+              "x": 8,
+              "y": 1,
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "title": "Lambda Invocations & Errors",
+                "metrics": [
+                  ["AWS/Lambda", "Invocations", "FunctionName", "oith-${Environment}-matching-service", {"stat": "Sum", "color": "#2ca02c"}],
+                  [".", "Errors", ".", ".", {"stat": "Sum", "color": "#d62728"}]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 16,
+              "y": 1,
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "title": "DynamoDB Latency",
+                "metrics": [
+                  ["AWS/DynamoDB", "SuccessfulRequestLatency", "TableName", "oith-users", "Operation", "GetItem", {"stat": "p95", "color": "#ff7f0e"}],
+                  ["...", "Query", {"stat": "p95", "color": "#1f77b4"}]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "annotations": {
+                  "horizontal": [
+                    {"value": 30, "label": "Target", "color": "#d62728"}
+                  ]
+                }
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 7,
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "title": "ElastiCache Hit Rate",
+                "metrics": [
+                  ["AWS/ElastiCache", "CacheHits", "ReplicationGroupId", "${ElastiCacheReplicationGroup}", {"stat": "Sum", "color": "#2ca02c"}],
+                  [".", "CacheMisses", ".", ".", {"stat": "Sum", "color": "#d62728"}]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 8,
+              "y": 7,
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "title": "DAX Performance",
+                "metrics": [
+                  ["AWS/DAX", "ItemCacheHits", "ClusterId", "${DAXCluster}", {"stat": "Sum", "color": "#2ca02c"}],
+                  [".", "ItemCacheMisses", ".", ".", {"stat": "Sum", "color": "#ff7f0e"}]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 16,
+              "y": 7,
+              "width": 8,
+              "height": 6,
+              "properties": {
+                "title": "SQS Queue Metrics",
+                "metrics": [
+                  ["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${MatchingQueue.QueueName}", {"stat": "Maximum", "color": "#1f77b4"}],
+                  [".", "ApproximateAgeOfOldestMessage", ".", ".", {"stat": "Maximum", "color": "#ff7f0e", "yAxis": "right"}]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}"
+              }
+            },
+            {
+              "type": "metric",
+              "x": 0,
+              "y": 13,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "title": "ElastiCache CPU & Memory",
+                "metrics": [
+                  ["AWS/ElastiCache", "CPUUtilization", "ReplicationGroupId", "${ElastiCacheReplicationGroup}", {"stat": "Average", "color": "#1f77b4"}],
+                  [".", "DatabaseMemoryUsagePercentage", ".", ".", {"stat": "Average", "color": "#ff7f0e"}]
+                ],
+                "period": 60,
+                "region": "${AWS::Region}",
+                "annotations": {
+                  "horizontal": [
+                    {"value": 80, "label": "Alert Threshold", "color": "#d62728"}
+                  ]
+                }
+              }
+            },
+            {
+              "type": "alarm",
+              "x": 12,
+              "y": 13,
+              "width": 12,
+              "height": 6,
+              "properties": {
+                "title": "Active Alarms",
+                "alarms": [
+                  "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:oith-${Environment}-p95-response-time",
+                  "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:oith-${Environment}-error-rate",
+                  "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:oith-${Environment}-dynamodb-throttling",
+                  "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:oith-${Environment}-dynamodb-latency",
+                  "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:oith-${Environment}-sqs-queue-depth",
+                  "arn:aws:cloudwatch:${AWS::Region}:${AWS::AccountId}:alarm:oith-${Environment}-elasticache-cpu"
+                ]
+              }
+            }
+          ]
+        }
+
+Outputs:
+  # ElastiCache Outputs
+  ElastiCacheEndpoint:
+    Description: ElastiCache Redis primary endpoint
+    Value: !GetAtt ElastiCacheReplicationGroup.PrimaryEndPoint.Address
+    Export:
+      Name: !Sub '${AWS::StackName}-redis-endpoint'
+      
+  ElastiCachePort:
+    Description: ElastiCache Redis port
+    Value: !GetAtt ElastiCacheReplicationGroup.PrimaryEndPoint.Port
+    Export:
+      Name: !Sub '${AWS::StackName}-redis-port'
+
+  # DAX Outputs
+  DAXEndpoint:
+    Description: DAX cluster endpoint
+    Value: !GetAtt DAXCluster.ClusterDiscoveryEndpoint
+    Export:
+      Name: !Sub '${AWS::StackName}-dax-endpoint'
+
+  # SQS Outputs
+  MatchingQueueUrl:
+    Description: Matching queue URL
+    Value: !Ref MatchingQueue
+    Export:
+      Name: !Sub '${AWS::StackName}-matching-queue-url'
+      
+  MatchingQueueArn:
+    Description: Matching queue ARN
+    Value: !GetAtt MatchingQueue.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-matching-queue-arn'
+      
+  MatchingDLQUrl:
+    Description: Matching dead letter queue URL
+    Value: !Ref MatchingDeadLetterQueue
+    Export:
+      Name: !Sub '${AWS::StackName}-matching-dlq-url'
+
+  NotificationQueueUrl:
+    Description: Notification queue URL
+    Value: !Ref NotificationQueue
+    Export:
+      Name: !Sub '${AWS::StackName}-notification-queue-url'
+
+  # SNS Outputs
+  AlertTopicArn:
+    Description: SNS topic for alerts
+    Value: !Ref AlertTopic
+    Export:
+      Name: !Sub '${AWS::StackName}-alert-topic-arn'
+
+  # Dashboard
+  DashboardUrl:
+    Description: CloudWatch Dashboard URL
+    Value: !Sub 'https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=OITH-${Environment}-Dashboard'
+
