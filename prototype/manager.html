@@ -6429,6 +6429,129 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Sponsored Venues Section -->
+                <div class="card" style="margin-top: 20px; border: 2px solid var(--accent);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">📍</div>
+                            <div>
+                                <h3 class="card-title" style="margin: 0;">Sponsored Venues</h3>
+                                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Partner locations featured on "Plan a Date"</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="showAddVenueModal()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Venue
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <!-- Venue Stats -->
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);" id="totalVenues">0</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Active Venues</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="venueViews">0</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Total Views</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--info);" id="venueClicks">0</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Directions Clicked</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 8px; text-align: center;">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="venueBookings">0</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Date Bookings</div>
+                            </div>
+                        </div>
+
+                        <!-- Venue Type Filter -->
+                        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+                            <button class="btn btn-small venue-filter-btn active" onclick="filterVenues('all')" data-filter="all">All</button>
+                            <button class="btn btn-small venue-filter-btn" onclick="filterVenues('restaurant')" data-filter="restaurant">🍽️ Restaurants</button>
+                            <button class="btn btn-small venue-filter-btn" onclick="filterVenues('bar')" data-filter="bar">🍸 Bars</button>
+                            <button class="btn btn-small venue-filter-btn" onclick="filterVenues('cafe')" data-filter="cafe">☕ Cafes</button>
+                            <button class="btn btn-small venue-filter-btn" onclick="filterVenues('entertainment')" data-filter="entertainment">🎭 Entertainment</button>
+                            <button class="btn btn-small venue-filter-btn" onclick="filterVenues('outdoor')" data-filter="outdoor">🌳 Outdoor</button>
+                            <button class="btn btn-small venue-filter-btn" onclick="filterVenues('other')" data-filter="other">✨ Other</button>
+                        </div>
+
+                        <!-- Venues Grid -->
+                        <div id="sponsoredVenuesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+                            <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">
+                                Loading sponsored venues...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Venue Pricing -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h3 class="card-title">💰 Venue Sponsorship Pricing</h3>
+                        <button class="btn btn-secondary btn-small" onclick="saveVenuePricing()">Save Pricing</button>
+                    </div>
+                    <div class="card-body">
+                        <p style="color: var(--text-muted); margin-bottom: 16px; font-size: 0.9rem;">Set pricing tiers for businesses to sponsor their venues on "Plan a Date"</p>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                            <div style="padding: 20px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: 600;">🥉 Basic</span>
+                                    <span style="background: var(--bg-secondary); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">Standard Listing</span>
+                                </div>
+                                <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px;">
+                                    <span style="font-size: 0.9rem; color: var(--text-muted);">$</span>
+                                    <input type="number" id="venuePriceBasic" value="49" style="width: 80px; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 1.2rem; font-weight: 600;">
+                                    <span style="font-size: 0.9rem; color: var(--text-muted);">/month</span>
+                                </div>
+                                <ul style="font-size: 0.85rem; color: var(--text-muted); list-style: none; padding: 0; margin: 0;">
+                                    <li>✓ Listed in search results</li>
+                                    <li>✓ Basic venue info</li>
+                                    <li>✓ 1 photo</li>
+                                </ul>
+                            </div>
+                            <div style="padding: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05)); border-radius: 12px; border: 2px solid var(--accent);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: 600;">🥈 Featured</span>
+                                    <span style="background: var(--accent); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">Popular</span>
+                                </div>
+                                <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px;">
+                                    <span style="font-size: 0.9rem; color: var(--text-muted);">$</span>
+                                    <input type="number" id="venuePriceFeatured" value="149" style="width: 80px; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 1.2rem; font-weight: 600;">
+                                    <span style="font-size: 0.9rem; color: var(--text-muted);">/month</span>
+                                </div>
+                                <ul style="font-size: 0.85rem; color: var(--text-muted); list-style: none; padding: 0; margin: 0;">
+                                    <li>✓ Featured badge</li>
+                                    <li>✓ Priority in results</li>
+                                    <li>✓ Up to 5 photos</li>
+                                    <li>✓ Special offers display</li>
+                                </ul>
+                            </div>
+                            <div style="padding: 20px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05)); border-radius: 12px; border: 1px solid var(--warning);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-weight: 600;">🥇 Premium</span>
+                                    <span style="background: var(--warning); color: black; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem;">Top Placement</span>
+                                </div>
+                                <div style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px;">
+                                    <span style="font-size: 0.9rem; color: var(--text-muted);">$</span>
+                                    <input type="number" id="venuePricePremium" value="299" style="width: 80px; padding: 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 1.2rem; font-weight: 600;">
+                                    <span style="font-size: 0.9rem; color: var(--text-muted);">/month</span>
+                                </div>
+                                <ul style="font-size: 0.85rem; color: var(--text-muted); list-style: none; padding: 0; margin: 0;">
+                                    <li>✓ Top of search results</li>
+                                    <li>✓ Unlimited photos</li>
+                                    <li>✓ Push notifications</li>
+                                    <li>✓ Analytics dashboard</li>
+                                    <li>✓ Reservation integration</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Geographic Section -->
@@ -23969,6 +24092,9 @@
             }
             
             updateAdvertisingUI();
+            
+            // Also load sponsored venues
+            await loadSponsoredVenues();
         }
         
         function generateDemoAdvertisingData() {
@@ -24413,6 +24539,557 @@
             updateAdvertisingUI();
             
             showNotification(`Campaign ${campaign.status === 'active' ? 'resumed' : 'paused'}`, 'success');
+        }
+
+        // ==========================================
+        // SPONSORED VENUES - For "Plan a Date" feature
+        // ==========================================
+        
+        // Global sponsored venues data
+        let sponsoredVenues = [];
+        let venuePricing = { basic: 49, featured: 149, premium: 299 };
+        
+        async function loadSponsoredVenues() {
+            console.log('📍 Loading sponsored venues...');
+            
+            try {
+                const response = await fetch(`${AWS_API_URL}/sponsored-venues`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.venues) {
+                        sponsoredVenues = data.venues;
+                        venuePricing = data.pricing || venuePricing;
+                        console.log('📍 Loaded', sponsoredVenues.length, 'venues from AWS');
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch venues from AWS:', error.message);
+            }
+            
+            // Fallback to localStorage
+            if (!sponsoredVenues.length) {
+                const saved = localStorage.getItem('oith_sponsored_venues');
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        sponsoredVenues = data.venues || [];
+                        venuePricing = data.pricing || venuePricing;
+                    } catch (e) {}
+                }
+            }
+            
+            // Demo data if empty
+            if (!sponsoredVenues.length) {
+                sponsoredVenues = generateDemoVenues();
+            }
+            
+            renderSponsoredVenues();
+            updateVenueStats();
+            
+            // Load pricing
+            document.getElementById('venuePriceBasic').value = venuePricing.basic;
+            document.getElementById('venuePriceFeatured').value = venuePricing.featured;
+            document.getElementById('venuePricePremium').value = venuePricing.premium;
+        }
+        
+        function generateDemoVenues() {
+            return [
+                {
+                    id: 'venue_001',
+                    name: 'The Rooftop Garden',
+                    type: 'restaurant',
+                    tier: 'premium',
+                    address: '123 Main St, New York, NY 10001',
+                    description: 'Romantic rooftop dining with stunning city views. Perfect for special occasions.',
+                    phone: '(212) 555-0123',
+                    website: 'https://rooftopgarden.example.com',
+                    priceRange: '$$$',
+                    cuisineType: 'Contemporary American',
+                    dateIdeas: ['Sunset dinner', 'Anniversary celebration', 'Special occasion'],
+                    photos: ['https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400'],
+                    specialOffer: '15% off for OITH users',
+                    rating: 4.8,
+                    reviews: 342,
+                    views: 1250,
+                    clicks: 89,
+                    bookings: 23,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'venue_002',
+                    name: 'Moonlight Jazz Lounge',
+                    type: 'bar',
+                    tier: 'featured',
+                    address: '456 Broadway, New York, NY 10012',
+                    description: 'Intimate jazz bar with craft cocktails. Live music every night.',
+                    phone: '(212) 555-0456',
+                    website: 'https://moonlightjazz.example.com',
+                    priceRange: '$$',
+                    dateIdeas: ['Live music night', 'Cocktail tasting', 'Late night date'],
+                    photos: ['https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400'],
+                    specialOffer: 'Free appetizer with 2 cocktails',
+                    rating: 4.6,
+                    reviews: 189,
+                    views: 890,
+                    clicks: 67,
+                    bookings: 15,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'venue_003',
+                    name: 'Central Park Picnic Co.',
+                    type: 'outdoor',
+                    tier: 'featured',
+                    address: 'Central Park, New York, NY',
+                    description: 'Luxury picnic setups in Central Park. We handle everything!',
+                    phone: '(212) 555-0789',
+                    website: 'https://parkpicnic.example.com',
+                    priceRange: '$$',
+                    dateIdeas: ['Picnic in the park', 'Proposal setup', 'Sunset experience'],
+                    photos: ['https://images.unsplash.com/photo-1526976668912-1a811878dd37?w=400'],
+                    specialOffer: 'Champagne upgrade included',
+                    rating: 4.9,
+                    reviews: 256,
+                    views: 2100,
+                    clicks: 156,
+                    bookings: 48,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: 'venue_004',
+                    name: 'Artisan Coffee House',
+                    type: 'cafe',
+                    tier: 'basic',
+                    address: '789 Cafe Lane, Brooklyn, NY 11201',
+                    description: 'Cozy coffee shop with artisan brews and homemade pastries.',
+                    phone: '(718) 555-0321',
+                    website: '',
+                    priceRange: '$',
+                    dateIdeas: ['Coffee date', 'Study date', 'Morning brunch'],
+                    photos: ['https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400'],
+                    specialOffer: '',
+                    rating: 4.5,
+                    reviews: 128,
+                    views: 450,
+                    clicks: 34,
+                    bookings: 8,
+                    status: 'active',
+                    createdAt: new Date().toISOString()
+                }
+            ];
+        }
+        
+        function updateVenueStats() {
+            const activeVenues = sponsoredVenues.filter(v => v.status === 'active');
+            const totalViews = sponsoredVenues.reduce((sum, v) => sum + (v.views || 0), 0);
+            const totalClicks = sponsoredVenues.reduce((sum, v) => sum + (v.clicks || 0), 0);
+            const totalBookings = sponsoredVenues.reduce((sum, v) => sum + (v.bookings || 0), 0);
+            
+            document.getElementById('totalVenues').textContent = activeVenues.length;
+            document.getElementById('venueViews').textContent = totalViews.toLocaleString();
+            document.getElementById('venueClicks').textContent = totalClicks.toLocaleString();
+            document.getElementById('venueBookings').textContent = totalBookings.toLocaleString();
+        }
+        
+        function renderSponsoredVenues(filter = 'all') {
+            const grid = document.getElementById('sponsoredVenuesGrid');
+            if (!grid) return;
+            
+            const filtered = filter === 'all' 
+                ? sponsoredVenues 
+                : sponsoredVenues.filter(v => v.type === filter);
+            
+            if (!filtered.length) {
+                grid.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📍</div>
+                        <p>No sponsored venues yet.</p>
+                        <button class="btn btn-primary" onclick="showAddVenueModal()" style="margin-top: 12px;">Add Your First Venue</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            const typeIcons = {
+                restaurant: '🍽️',
+                bar: '🍸',
+                cafe: '☕',
+                entertainment: '🎭',
+                outdoor: '🌳',
+                other: '✨'
+            };
+            
+            const tierBadges = {
+                basic: { label: 'Basic', color: 'var(--text-muted)', bg: 'var(--bg-tertiary)' },
+                featured: { label: 'Featured', color: 'white', bg: 'var(--accent)' },
+                premium: { label: 'Premium', color: 'black', bg: 'var(--warning)' }
+            };
+            
+            grid.innerHTML = filtered.map(venue => {
+                const tier = tierBadges[venue.tier] || tierBadges.basic;
+                const icon = typeIcons[venue.type] || '📍';
+                const photo = venue.photos?.[0] || 'https://via.placeholder.com/400x200?text=No+Image';
+                
+                return `
+                    <div class="venue-card" style="background: var(--bg-tertiary); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <div style="position: relative;">
+                            <img src="${photo}" alt="${venue.name}" style="width: 100%; height: 160px; object-fit: cover;">
+                            <div style="position: absolute; top: 8px; left: 8px; display: flex; gap: 6px;">
+                                <span style="background: ${tier.bg}; color: ${tier.color}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;">${tier.label}</span>
+                                ${venue.status === 'paused' ? '<span style="background: var(--danger); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px;">Paused</span>' : ''}
+                            </div>
+                            <div style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                ${icon} ${venue.type}
+                            </div>
+                        </div>
+                        <div style="padding: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                <h4 style="margin: 0; font-size: 1.1rem;">${venue.name}</h4>
+                                <span style="color: var(--text-muted); font-size: 0.9rem;">${venue.priceRange || '$'}</span>
+                            </div>
+                            <p style="margin: 0 0 8px 0; font-size: 0.85rem; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${venue.description}</p>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+                                📍 ${venue.address}
+                            </div>
+                            ${venue.specialOffer ? `<div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid var(--success); padding: 8px; border-radius: 6px; font-size: 0.8rem; color: var(--success); margin-bottom: 12px;">🎁 ${venue.specialOffer}</div>` : ''}
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 12px;">
+                                <div style="display: flex; gap: 12px;">
+                                    <span>👁️ ${(venue.views || 0).toLocaleString()}</span>
+                                    <span>👆 ${venue.clicks || 0}</span>
+                                    <span>📅 ${venue.bookings || 0}</span>
+                                </div>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="btn btn-small btn-secondary" onclick="editVenue('${venue.id}')" title="Edit">✏️</button>
+                                    <button class="btn btn-small btn-secondary" onclick="toggleVenueStatus('${venue.id}')" title="${venue.status === 'active' ? 'Pause' : 'Activate'}">${venue.status === 'active' ? '⏸️' : '▶️'}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function filterVenues(type) {
+            // Update active button
+            document.querySelectorAll('.venue-filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === type);
+            });
+            renderSponsoredVenues(type);
+        }
+        
+        function showAddVenueModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal dynamic-modal';
+            modal.style.display = 'flex';
+            modal.id = 'addVenueModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <h3>📍 Add Sponsored Venue</h3>
+                        <button class="modal-close" onclick="document.getElementById('addVenueModal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Business Name *</label>
+                                <input type="text" id="newVenueName" placeholder="e.g., The Italian Kitchen" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group">
+                                <label>Venue Type *</label>
+                                <select id="newVenueType" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                    <option value="restaurant">🍽️ Restaurant</option>
+                                    <option value="bar">🍸 Bar / Lounge</option>
+                                    <option value="cafe">☕ Cafe</option>
+                                    <option value="entertainment">🎭 Entertainment</option>
+                                    <option value="outdoor">🌳 Outdoor Activity</option>
+                                    <option value="other">✨ Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Sponsorship Tier *</label>
+                                <select id="newVenueTier" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                    <option value="basic">🥉 Basic ($${venuePricing.basic}/mo)</option>
+                                    <option value="featured">🥈 Featured ($${venuePricing.featured}/mo)</option>
+                                    <option value="premium">🥇 Premium ($${venuePricing.premium}/mo)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Address *</label>
+                                <input type="text" id="newVenueAddress" placeholder="123 Main St, City, State ZIP" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Description *</label>
+                                <textarea id="newVenueDescription" placeholder="Describe the venue and what makes it perfect for a date..." rows="3" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); resize: vertical;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="newVenuePhone" placeholder="(555) 123-4567" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group">
+                                <label>Website</label>
+                                <input type="url" id="newVenueWebsite" placeholder="https://example.com" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group">
+                                <label>Price Range</label>
+                                <select id="newVenuePriceRange" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                    <option value="$">$ - Budget Friendly</option>
+                                    <option value="$$" selected>$$ - Moderate</option>
+                                    <option value="$$$">$$$ - Upscale</option>
+                                    <option value="$$$$">$$$$ - Fine Dining</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Cuisine/Category</label>
+                                <input type="text" id="newVenueCuisine" placeholder="e.g., Italian, Cocktails, Adventure" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Photo URL</label>
+                                <input type="url" id="newVenuePhoto" placeholder="https://example.com/photo.jpg" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Special Offer (for OITH users)</label>
+                                <input type="text" id="newVenueOffer" placeholder="e.g., 10% off for OITH users, Free dessert with meal" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Date Ideas (comma separated)</label>
+                                <input type="text" id="newVenueDateIdeas" placeholder="e.g., Romantic dinner, Anniversary, First date" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <button class="btn btn-secondary" onclick="document.getElementById('addVenueModal').remove()">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveNewVenue()">Add Venue</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function saveNewVenue() {
+            const name = document.getElementById('newVenueName').value.trim();
+            const type = document.getElementById('newVenueType').value;
+            const tier = document.getElementById('newVenueTier').value;
+            const address = document.getElementById('newVenueAddress').value.trim();
+            const description = document.getElementById('newVenueDescription').value.trim();
+            
+            if (!name || !address || !description) {
+                showNotification('Please fill in all required fields', 'error');
+                return;
+            }
+            
+            const newVenue = {
+                id: 'venue_' + Date.now(),
+                name,
+                type,
+                tier,
+                address,
+                description,
+                phone: document.getElementById('newVenuePhone').value.trim(),
+                website: document.getElementById('newVenueWebsite').value.trim(),
+                priceRange: document.getElementById('newVenuePriceRange').value,
+                cuisineType: document.getElementById('newVenueCuisine').value.trim(),
+                photos: document.getElementById('newVenuePhoto').value.trim() ? [document.getElementById('newVenuePhoto').value.trim()] : [],
+                specialOffer: document.getElementById('newVenueOffer').value.trim(),
+                dateIdeas: document.getElementById('newVenueDateIdeas').value.split(',').map(s => s.trim()).filter(Boolean),
+                rating: 0,
+                reviews: 0,
+                views: 0,
+                clicks: 0,
+                bookings: 0,
+                status: 'active',
+                createdAt: new Date().toISOString()
+            };
+            
+            sponsoredVenues.push(newVenue);
+            await saveVenuesToAWS();
+            renderSponsoredVenues();
+            updateVenueStats();
+            
+            document.getElementById('addVenueModal').remove();
+            showNotification('Venue added successfully!', 'success');
+        }
+        
+        function editVenue(venueId) {
+            const venue = sponsoredVenues.find(v => v.id === venueId);
+            if (!venue) return;
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal dynamic-modal';
+            modal.style.display = 'flex';
+            modal.id = 'editVenueModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <h3>✏️ Edit Venue</h3>
+                        <button class="modal-close" onclick="document.getElementById('editVenueModal').remove()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Business Name</label>
+                                <input type="text" id="editVenueName" value="${venue.name}" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group">
+                                <label>Venue Type</label>
+                                <select id="editVenueType" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                    <option value="restaurant" ${venue.type === 'restaurant' ? 'selected' : ''}>🍽️ Restaurant</option>
+                                    <option value="bar" ${venue.type === 'bar' ? 'selected' : ''}>🍸 Bar / Lounge</option>
+                                    <option value="cafe" ${venue.type === 'cafe' ? 'selected' : ''}>☕ Cafe</option>
+                                    <option value="entertainment" ${venue.type === 'entertainment' ? 'selected' : ''}>🎭 Entertainment</option>
+                                    <option value="outdoor" ${venue.type === 'outdoor' ? 'selected' : ''}>🌳 Outdoor Activity</option>
+                                    <option value="other" ${venue.type === 'other' ? 'selected' : ''}>✨ Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Sponsorship Tier</label>
+                                <select id="editVenueTier" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                                    <option value="basic" ${venue.tier === 'basic' ? 'selected' : ''}>🥉 Basic</option>
+                                    <option value="featured" ${venue.tier === 'featured' ? 'selected' : ''}>🥈 Featured</option>
+                                    <option value="premium" ${venue.tier === 'premium' ? 'selected' : ''}>🥇 Premium</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Address</label>
+                                <input type="text" id="editVenueAddress" value="${venue.address}" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Description</label>
+                                <textarea id="editVenueDescription" rows="3" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); resize: vertical;">${venue.description}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" id="editVenuePhone" value="${venue.phone || ''}" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group">
+                                <label>Website</label>
+                                <input type="url" id="editVenueWebsite" value="${venue.website || ''}" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label>Special Offer</label>
+                                <input type="text" id="editVenueOffer" value="${venue.specialOffer || ''}" style="width: 100%; padding: 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary);">
+                            </div>
+                        </div>
+                        
+                        <!-- Stats display -->
+                        <div style="margin-top: 20px; padding: 16px; background: var(--bg-secondary); border-radius: 8px;">
+                            <h4 style="margin: 0 0 12px 0; font-size: 0.9rem; color: var(--text-muted);">Performance Stats</h4>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
+                                <div>
+                                    <div style="font-size: 1.2rem; font-weight: 600;">${(venue.views || 0).toLocaleString()}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">Views</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.2rem; font-weight: 600;">${venue.clicks || 0}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">Clicks</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.2rem; font-weight: 600;">${venue.bookings || 0}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">Bookings</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 1.2rem; font-weight: 600;">⭐ ${venue.rating || 'N/A'}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">Rating</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: space-between; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <button class="btn btn-danger" onclick="deleteVenue('${venue.id}')">Delete Venue</button>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-secondary" onclick="document.getElementById('editVenueModal').remove()">Cancel</button>
+                            <button class="btn btn-primary" onclick="saveVenueEdit('${venue.id}')">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        async function saveVenueEdit(venueId) {
+            const venue = sponsoredVenues.find(v => v.id === venueId);
+            if (!venue) return;
+            
+            venue.name = document.getElementById('editVenueName').value.trim();
+            venue.type = document.getElementById('editVenueType').value;
+            venue.tier = document.getElementById('editVenueTier').value;
+            venue.address = document.getElementById('editVenueAddress').value.trim();
+            venue.description = document.getElementById('editVenueDescription').value.trim();
+            venue.phone = document.getElementById('editVenuePhone').value.trim();
+            venue.website = document.getElementById('editVenueWebsite').value.trim();
+            venue.specialOffer = document.getElementById('editVenueOffer').value.trim();
+            venue.updatedAt = new Date().toISOString();
+            
+            await saveVenuesToAWS();
+            renderSponsoredVenues();
+            
+            document.getElementById('editVenueModal').remove();
+            showNotification('Venue updated successfully!', 'success');
+        }
+        
+        async function deleteVenue(venueId) {
+            if (!confirm('Are you sure you want to delete this venue?')) return;
+            
+            sponsoredVenues = sponsoredVenues.filter(v => v.id !== venueId);
+            await saveVenuesToAWS();
+            renderSponsoredVenues();
+            updateVenueStats();
+            
+            const modal = document.getElementById('editVenueModal');
+            if (modal) modal.remove();
+            
+            showNotification('Venue deleted', 'success');
+        }
+        
+        async function toggleVenueStatus(venueId) {
+            const venue = sponsoredVenues.find(v => v.id === venueId);
+            if (!venue) return;
+            
+            venue.status = venue.status === 'active' ? 'paused' : 'active';
+            await saveVenuesToAWS();
+            renderSponsoredVenues();
+            updateVenueStats();
+            
+            showNotification(`Venue ${venue.status === 'active' ? 'activated' : 'paused'}`, 'success');
+        }
+        
+        async function saveVenuesToAWS() {
+            const data = { venues: sponsoredVenues, pricing: venuePricing };
+            
+            // Save to localStorage first
+            localStorage.setItem('oith_sponsored_venues', JSON.stringify(data));
+            
+            // Try to sync to AWS
+            try {
+                const response = await fetch(`${AWS_API_URL}/sponsored-venues`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    console.log('📍 Venues synced to AWS');
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not sync venues to AWS:', error.message);
+            }
+        }
+        
+        async function saveVenuePricing() {
+            venuePricing = {
+                basic: parseFloat(document.getElementById('venuePriceBasic').value) || 49,
+                featured: parseFloat(document.getElementById('venuePriceFeatured').value) || 149,
+                premium: parseFloat(document.getElementById('venuePricePremium').value) || 299
+            };
+            
+            await saveVenuesToAWS();
+            showNotification('Pricing saved successfully!', 'success');
         }
 
         // ==========================================

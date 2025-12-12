@@ -2407,6 +2407,56 @@ export const handler = async (event) => {
             }
         }
         
+        // ============ SPONSORED VENUES ENDPOINTS ============
+        
+        // GET /sponsored-venues - Get all sponsored venues
+        if (method === 'GET' && path.includes('/sponsored-venues')) {
+            console.log('📍 Fetching sponsored venues...');
+            
+            try {
+                const result = await docClient.send(new GetCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: 'COMPANY#sponsored-venues', sk: 'DATA' }
+                }));
+                
+                if (result.Item) {
+                    const { pk, sk, ...data } = result.Item;
+                    return { statusCode: 200, headers, body: JSON.stringify(data) };
+                }
+                
+                return { statusCode: 200, headers, body: JSON.stringify({ venues: [], pricing: { basic: 49, featured: 149, premium: 299 } }) };
+            } catch (error) {
+                console.error('Error fetching venues:', error);
+                return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+            }
+        }
+        
+        // POST /sponsored-venues - Save sponsored venues
+        if (method === 'POST' && path.includes('/sponsored-venues')) {
+            console.log('📍 Saving sponsored venues...');
+            
+            const { venues, pricing } = body;
+            
+            try {
+                await docClient.send(new PutCommand({
+                    TableName: TABLE_NAME,
+                    Item: {
+                        pk: 'COMPANY#sponsored-venues',
+                        sk: 'DATA',
+                        venues: venues || [],
+                        pricing: pricing || { basic: 49, featured: 149, premium: 299 },
+                        updatedAt: new Date().toISOString()
+                    }
+                }));
+                
+                console.log('📍 Sponsored venues saved:', (venues || []).length, 'venues');
+                return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Venues saved' }) };
+            } catch (error) {
+                console.error('Error saving venues:', error);
+                return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+            }
+        }
+        
         // Health check
         return { statusCode: 200, headers, body: JSON.stringify({ status: 'ok' }) };
         
