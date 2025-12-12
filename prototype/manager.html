@@ -9286,6 +9286,82 @@
                     </div>
                 </div>
 
+                <!-- AWS & Panel Health Monitor -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--danger);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05));">
+                        <h3 class="card-title">☁️ AWS & Panel Health Monitor</h3>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="btn btn-secondary" onclick="runHealthMonitorCheck()" style="font-size: 0.7rem; padding: 4px 10px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6M1 20v-6h6"/>
+                                    <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/>
+                                </svg>
+                                Check Now
+                            </button>
+                            <span class="status-badge" id="awsHealthStatus" style="background: var(--text-muted);">Not Checked</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Health Summary Stats -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px;">
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--success);" id="healthAwsOk">--</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">AWS OK</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--danger);" id="healthAwsErrors">--</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">AWS Errors</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--success);" id="healthPanelsOk">--</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Panels OK</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--danger);" id="healthPanelErrors">--</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Data Errors</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--warning);" id="healthStaleData">--</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">Stale Data</div>
+                            </div>
+                        </div>
+                        
+                        <!-- AWS Endpoints Grid -->
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h4 style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">☁️ AWS API Endpoints</h4>
+                                <span style="font-size: 0.7rem; color: var(--text-muted);" id="awsLastChecked">Last checked: --</span>
+                            </div>
+                            <div id="awsEndpointsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
+                                <div style="padding: 20px; text-align: center; color: var(--text-muted); background: var(--bg-tertiary); border-radius: 8px;">
+                                    Click "Check Now" to test AWS endpoints...
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Panel Data Health Grid -->
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h4 style="font-size: 0.9rem; font-weight: 600; color: var(--text-primary);">📊 Panel Data Health (by Section)</h4>
+                            </div>
+                            <div id="panelHealthGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px;">
+                                <div style="padding: 20px; text-align: center; color: var(--text-muted); background: var(--bg-tertiary); border-radius: 8px;">
+                                    Click "Check Now" to validate panel data...
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Critical Errors List -->
+                        <div id="criticalErrorsSection" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h4 style="font-size: 0.9rem; font-weight: 600; color: var(--danger);">🚨 Critical Errors Requiring Attention</h4>
+                            </div>
+                            <div id="criticalErrorsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Connection Health -->
                 <div class="card" style="margin-bottom: 20px;">
                     <div class="card-header" style="cursor: pointer;" onclick="toggleSiteSection('connectionHealth')">
@@ -16996,6 +17072,9 @@
             // Update health monitor panel
             updateHealthMonitorPanel();
             
+            // Auto-run health monitor check if not done yet
+            onSiteDiagnosticsShown();
+            
             // Test BroadcastChannel connection
             setTimeout(() => {
                 testBroadcastConnection();
@@ -17491,7 +17570,534 @@
                 });
             });
 
+            // 5. Check AWS API endpoints for each admin section
+            appendSiteDiagnosticsLog('');
+            appendSiteDiagnosticsLog('☁️ Checking AWS API endpoints...');
+            const awsHealthResults = await checkAllAWSEndpoints();
+            connections.push(...awsHealthResults);
+            
+            // 6. Check panel data health for each section
+            appendSiteDiagnosticsLog('');
+            appendSiteDiagnosticsLog('📊 Checking panel data health...');
+            const panelHealthResults = await checkAllPanelDataHealth();
+            connections.push(...panelHealthResults);
+
             siteDiagnosticsResults.connections = connections;
+        }
+        
+        // Comprehensive AWS endpoint health checker
+        async function checkAllAWSEndpoints() {
+            const results = [];
+            const apiUrl = window.AWS_API_URL || 'https://api.oith.app';
+            
+            // Define all AWS endpoints that admin sections depend on
+            const awsEndpoints = [
+                { name: 'Users API', endpoint: '/users', section: 'users', critical: true },
+                { name: 'Matches API', endpoint: '/matches', section: 'matches', critical: true },
+                { name: 'Analytics API', endpoint: '/analytics', section: 'analytics', critical: true },
+                { name: 'Revenue API', endpoint: '/revenue', section: 'revenue', critical: true },
+                { name: 'ML Settings API', endpoint: '/ml-settings', section: 'mlmodels', critical: false },
+                { name: 'Calendar API', endpoint: '/calendar', section: 'calendar', critical: false },
+                { name: 'Org Data API', endpoint: '/org-data', section: 'org-hierarchy', critical: false },
+                { name: 'Payroll API', endpoint: '/payroll', section: 'payroll', critical: false },
+                { name: 'Safety Reports API', endpoint: '/safety/reports', section: 'safety', critical: true },
+                { name: 'Geographic API', endpoint: '/geographic', section: 'geographic', critical: false },
+                { name: 'Activity Log API', endpoint: '/admin/activity-log', section: 'site-diagnostics', critical: false },
+                { name: 'Crawler Logs API', endpoint: '/crawler/logs', section: 'diagnostics', critical: false },
+                { name: 'DynamoDB Health', endpoint: '/health/dynamodb', section: 'database', critical: true },
+                { name: 'Stripe Connection', endpoint: '/health/stripe', section: 'revenue', critical: true }
+            ];
+            
+            // Store AWS health for real-time monitoring
+            if (!window.awsEndpointHealth) {
+                window.awsEndpointHealth = {};
+            }
+            
+            for (const ep of awsEndpoints) {
+                const startTime = Date.now();
+                let status = 'error';
+                let description = '';
+                let latency = 0;
+                
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 5000);
+                    
+                    const response = await fetch(`${apiUrl}${ep.endpoint}`, {
+                        method: 'GET',
+                        signal: controller.signal,
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    latency = Date.now() - startTime;
+                    
+                    if (response.ok) {
+                        status = 'ok';
+                        description = `Connected (${latency}ms)`;
+                        appendSiteDiagnosticsLog(`   ✅ ${ep.name}: ${latency}ms`);
+                    } else if (response.status === 404) {
+                        status = 'warning';
+                        description = `Endpoint not configured (404)`;
+                        appendSiteDiagnosticsLog(`   ⚠️ ${ep.name}: Not configured (404)`, 'warn');
+                    } else if (response.status === 401 || response.status === 403) {
+                        status = 'warning';
+                        description = `Auth required (${response.status})`;
+                        appendSiteDiagnosticsLog(`   ⚠️ ${ep.name}: Auth required`, 'warn');
+                    } else {
+                        status = 'error';
+                        description = `Error: HTTP ${response.status}`;
+                        appendSiteDiagnosticsLog(`   ❌ ${ep.name}: HTTP ${response.status}`, 'error');
+                    }
+                } catch (e) {
+                    latency = Date.now() - startTime;
+                    if (e.name === 'AbortError') {
+                        status = 'error';
+                        description = 'Timeout (>5s)';
+                        appendSiteDiagnosticsLog(`   ❌ ${ep.name}: Timeout`, 'error');
+                    } else if (e.message.includes('fetch')) {
+                        status = 'error';
+                        description = 'Network error - AWS unreachable';
+                        appendSiteDiagnosticsLog(`   ❌ ${ep.name}: Network error`, 'error');
+                    } else {
+                        status = 'error';
+                        description = e.message;
+                        appendSiteDiagnosticsLog(`   ❌ ${ep.name}: ${e.message}`, 'error');
+                    }
+                }
+                
+                // Store for real-time monitoring
+                window.awsEndpointHealth[ep.name] = {
+                    status,
+                    latency,
+                    lastChecked: new Date().toISOString(),
+                    section: ep.section,
+                    critical: ep.critical
+                };
+                
+                results.push({
+                    name: ep.name,
+                    type: 'aws-api',
+                    status: status,
+                    description: description,
+                    section: ep.section,
+                    critical: ep.critical,
+                    latency: latency
+                });
+                
+                // Update section health based on AWS status
+                if (status === 'error' && ep.critical) {
+                    trackApiCall(ep.section, startTime, false, new Error(description));
+                }
+            }
+            
+            return results;
+        }
+        
+        // Check panel data health across all sections
+        async function checkAllPanelDataHealth() {
+            const results = [];
+            
+            // Define panels and their expected data elements for each section
+            const panelChecks = {
+                'dashboard': [
+                    { id: 'dashTotalUsers', name: 'Total Users', minValid: 0 },
+                    { id: 'dashActiveUsers', name: 'Active Users', minValid: 0 },
+                    { id: 'dashPremiumUsers', name: 'Premium Users', minValid: 0 },
+                    { id: 'dashTotalMatches', name: 'Total Matches', minValid: 0 }
+                ],
+                'revenue': [
+                    { id: 'mrrValue', name: 'MRR', allowZero: true },
+                    { id: 'premiumUsers', name: 'Premium Subscribers', allowZero: true },
+                    { id: 'conversionRate', name: 'Conversion Rate', allowZero: true },
+                    { id: 'churnRate', name: 'Churn Rate', allowZero: true }
+                ],
+                'users': [
+                    { id: 'userTotalCount', name: 'User Count', minValid: 0 },
+                    { id: 'userActiveToday', name: 'Active Today', allowZero: true },
+                    { id: 'userPremiumCount', name: 'Premium Count', allowZero: true }
+                ],
+                'matches': [
+                    { id: 'matchTotalCount', name: 'Match Count', minValid: 0 },
+                    { id: 'matchSuccessRate', name: 'Success Rate', allowZero: true }
+                ],
+                'safety': [
+                    { id: 'pendingReportsCount', name: 'Pending Reports', allowZero: true },
+                    { id: 'blockedUsersCount', name: 'Blocked Users', allowZero: true }
+                ],
+                'expenses': [
+                    { id: 'totalExpensesToDate', name: 'Total Expenses', allowZero: false },
+                    { id: 'monthlyBurn', name: 'Monthly Burn', allowZero: false }
+                ]
+            };
+            
+            // Invalid data patterns
+            const invalidPatterns = ['--', '...', 'Loading...', 'N/A', 'Error', 'undefined', 'null', '$--', 'NaN'];
+            
+            for (const [section, panels] of Object.entries(panelChecks)) {
+                let sectionErrors = 0;
+                let sectionWarnings = 0;
+                
+                for (const panel of panels) {
+                    const el = document.getElementById(panel.id);
+                    let status = 'ok';
+                    let description = '';
+                    
+                    if (!el) {
+                        status = 'warning';
+                        description = 'Panel element not found';
+                        sectionWarnings++;
+                    } else {
+                        const value = el.textContent?.trim() || '';
+                        
+                        // Check for invalid patterns
+                        const isInvalid = invalidPatterns.some(p => value.includes(p));
+                        const isEmpty = value === '' || value === '0' && !panel.allowZero;
+                        
+                        if (isInvalid) {
+                            status = 'error';
+                            description = `Invalid data: "${value}"`;
+                            sectionErrors++;
+                            appendSiteDiagnosticsLog(`   ❌ ${section}/${panel.name}: Invalid data "${value}"`, 'error');
+                        } else if (isEmpty && !panel.allowZero) {
+                            status = 'warning';
+                            description = `Empty or zero value`;
+                            sectionWarnings++;
+                            appendSiteDiagnosticsLog(`   ⚠️ ${section}/${panel.name}: Empty value`, 'warn');
+                        } else {
+                            description = `Value: ${value.substring(0, 20)}${value.length > 20 ? '...' : ''}`;
+                        }
+                    }
+                    
+                    results.push({
+                        name: `${section}/${panel.name}`,
+                        type: 'panel-data',
+                        status: status,
+                        description: description,
+                        section: section
+                    });
+                }
+                
+                // Update section health indicator
+                if (sectionErrors > 0) {
+                    updateNavHealthIndicator(section, 'red', `${sectionErrors} data errors`);
+                } else if (sectionWarnings > 0) {
+                    updateNavHealthIndicator(section, 'yellow', `${sectionWarnings} warnings`);
+                } else {
+                    updateNavHealthIndicator(section, 'green', 'Healthy');
+                }
+            }
+            
+            return results;
+        }
+        
+        // Update nav health indicator
+        function updateNavHealthIndicator(section, status, message) {
+            const indicator = document.getElementById(`health-${section}`);
+            if (indicator) {
+                indicator.className = `health-indicator visible ${status}`;
+                indicator.title = message;
+            }
+            
+            // Also update sectionHealthMetrics
+            if (sectionHealthMetrics[section]) {
+                sectionHealthMetrics[section].status = status;
+                sectionHealthMetrics[section].message = message;
+            }
+        }
+        
+        // Real-time data freshness checker
+        function checkRealtimeDataFreshness() {
+            const realtimeSections = ['dashboard', 'analytics', 'matches', 'safety'];
+            const staleThreshold = 120000; // 2 minutes
+            const warningThreshold = 60000; // 1 minute
+            
+            const results = [];
+            
+            realtimeSections.forEach(section => {
+                const metrics = sectionHealthMetrics[section];
+                if (!metrics) return;
+                
+                const now = Date.now();
+                const lastUpdate = metrics.lastUpdated || 0;
+                const staleness = now - lastUpdate;
+                
+                let status = 'ok';
+                let description = '';
+                
+                if (lastUpdate === 0) {
+                    status = 'error';
+                    description = 'Never updated - no data received';
+                } else if (staleness > staleThreshold) {
+                    status = 'error';
+                    description = `Data stale: ${Math.round(staleness / 1000)}s ago`;
+                } else if (staleness > warningThreshold) {
+                    status = 'warning';
+                    description = `Data aging: ${Math.round(staleness / 1000)}s ago`;
+                } else {
+                    description = `Fresh: ${Math.round(staleness / 1000)}s ago`;
+                }
+                
+                results.push({
+                    name: `${section} (realtime)`,
+                    type: 'realtime-freshness',
+                    status: status,
+                    description: description,
+                    section: section
+                });
+                
+                // Update indicator
+                if (status !== 'ok') {
+                    updateNavHealthIndicator(section, status, description);
+                }
+            });
+            
+            return results;
+        }
+        
+        // ============================================
+        // HEALTH MONITOR DASHBOARD
+        // ============================================
+        
+        let healthMonitorRunning = false;
+        let lastHealthCheckResults = { aws: [], panels: [], freshness: [] };
+        
+        // Run comprehensive health monitor check
+        async function runHealthMonitorCheck() {
+            if (healthMonitorRunning) return;
+            healthMonitorRunning = true;
+            
+            const statusBadge = document.getElementById('awsHealthStatus');
+            if (statusBadge) {
+                statusBadge.textContent = 'Checking...';
+                statusBadge.style.background = 'var(--info)';
+            }
+            
+            try {
+                // Run all health checks
+                appendSiteDiagnosticsLog('');
+                appendSiteDiagnosticsLog('🏥 Running Health Monitor Check...');
+                
+                // Check AWS endpoints
+                const awsResults = await checkAllAWSEndpoints();
+                lastHealthCheckResults.aws = awsResults;
+                
+                // Check panel data
+                const panelResults = await checkAllPanelDataHealth();
+                lastHealthCheckResults.panels = panelResults;
+                
+                // Check real-time data freshness
+                const freshnessResults = checkRealtimeDataFreshness();
+                lastHealthCheckResults.freshness = freshnessResults;
+                
+                // Render results
+                renderHealthMonitorDashboard();
+                
+                // Update status badge
+                const awsErrors = awsResults.filter(r => r.status === 'error').length;
+                const panelErrors = panelResults.filter(r => r.status === 'error').length;
+                const totalErrors = awsErrors + panelErrors;
+                
+                if (totalErrors === 0) {
+                    statusBadge.textContent = 'All Healthy';
+                    statusBadge.style.background = 'var(--success)';
+                } else {
+                    statusBadge.textContent = `${totalErrors} Error${totalErrors > 1 ? 's' : ''}`;
+                    statusBadge.style.background = 'var(--danger)';
+                }
+                
+                // Log critical errors to activity log
+                const criticalAwsErrors = awsResults.filter(r => r.status === 'error' && r.critical);
+                criticalAwsErrors.forEach(err => {
+                    logAdminActivity('sync', `AWS Error: ${err.name}`, err.description, { section: err.section, critical: true });
+                });
+                
+                // Log panel data errors
+                const criticalPanelErrors = panelResults.filter(r => r.status === 'error');
+                if (criticalPanelErrors.length > 0) {
+                    const sections = [...new Set(criticalPanelErrors.map(e => e.section))];
+                    logAdminActivity('config', `Panel Data Error: ${criticalPanelErrors.length} panels invalid`, 
+                        `Affected sections: ${sections.join(', ')}`, { count: criticalPanelErrors.length });
+                }
+                
+                // Log stale data warnings
+                const staleDataIssues = freshnessResults.filter(r => r.status === 'error');
+                if (staleDataIssues.length > 0) {
+                    logAdminActivity('config', 'Stale Data Warning', 
+                        `${staleDataIssues.length} sections have stale real-time data`, { count: staleDataIssues.length });
+                }
+                
+                appendSiteDiagnosticsLog(`✅ Health check complete: ${awsErrors} AWS errors, ${panelErrors} panel errors`);
+                
+            } catch (e) {
+                console.error('Health monitor error:', e);
+                if (statusBadge) {
+                    statusBadge.textContent = 'Error';
+                    statusBadge.style.background = 'var(--danger)';
+                }
+            } finally {
+                healthMonitorRunning = false;
+            }
+        }
+        
+        // Render health monitor dashboard
+        function renderHealthMonitorDashboard() {
+            const awsResults = lastHealthCheckResults.aws || [];
+            const panelResults = lastHealthCheckResults.panels || [];
+            const freshnessResults = lastHealthCheckResults.freshness || [];
+            
+            // Update summary stats
+            const awsOk = awsResults.filter(r => r.status === 'ok').length;
+            const awsErrors = awsResults.filter(r => r.status === 'error').length;
+            const panelsOk = panelResults.filter(r => r.status === 'ok').length;
+            const panelErrors = panelResults.filter(r => r.status === 'error').length;
+            const staleCount = freshnessResults.filter(r => r.status !== 'ok').length;
+            
+            document.getElementById('healthAwsOk').textContent = awsOk;
+            document.getElementById('healthAwsErrors').textContent = awsErrors;
+            document.getElementById('healthPanelsOk').textContent = panelsOk;
+            document.getElementById('healthPanelErrors').textContent = panelErrors;
+            document.getElementById('healthStaleData').textContent = staleCount;
+            document.getElementById('awsLastChecked').textContent = `Last checked: ${new Date().toLocaleTimeString()}`;
+            
+            // Render AWS endpoints grid
+            renderAWSEndpointsGrid(awsResults);
+            
+            // Render panel health grid
+            renderPanelHealthGrid(panelResults);
+            
+            // Render critical errors
+            renderCriticalErrors(awsResults, panelResults, freshnessResults);
+        }
+        
+        // Render AWS endpoints grid
+        function renderAWSEndpointsGrid(results) {
+            const container = document.getElementById('awsEndpointsGrid');
+            if (!container) return;
+            
+            if (results.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">No AWS endpoints checked yet.</div>';
+                return;
+            }
+            
+            container.innerHTML = results.map(r => {
+                const statusColor = r.status === 'ok' ? 'var(--success)' : r.status === 'warning' ? 'var(--warning)' : 'var(--danger)';
+                const statusIcon = r.status === 'ok' ? '✅' : r.status === 'warning' ? '⚠️' : '❌';
+                const criticalBadge = r.critical ? '<span style="font-size: 0.6rem; background: var(--danger); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">CRITICAL</span>' : '';
+                const latencyText = r.latency ? `${r.latency}ms` : '';
+                
+                return `
+                    <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border-left: 3px solid ${statusColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-weight: 500; font-size: 0.85rem;">${statusIcon} ${r.name}${criticalBadge}</span>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">${latencyText}</span>
+                        </div>
+                        <div style="font-size: 0.75rem; color: ${statusColor};">${r.description}</div>
+                        <div style="font-size: 0.65rem; color: var(--text-muted); margin-top: 4px;">Section: ${r.section || 'global'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Render panel health grid grouped by section
+        function renderPanelHealthGrid(results) {
+            const container = document.getElementById('panelHealthGrid');
+            if (!container) return;
+            
+            if (results.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">No panel data checked yet.</div>';
+                return;
+            }
+            
+            // Group by section
+            const bySection = {};
+            results.forEach(r => {
+                const section = r.section || 'unknown';
+                if (!bySection[section]) bySection[section] = [];
+                bySection[section].push(r);
+            });
+            
+            container.innerHTML = Object.entries(bySection).map(([section, panels]) => {
+                const errors = panels.filter(p => p.status === 'error').length;
+                const warnings = panels.filter(p => p.status === 'warning').length;
+                const ok = panels.filter(p => p.status === 'ok').length;
+                
+                const overallStatus = errors > 0 ? 'error' : warnings > 0 ? 'warning' : 'ok';
+                const statusColor = overallStatus === 'ok' ? 'var(--success)' : overallStatus === 'warning' ? 'var(--warning)' : 'var(--danger)';
+                const statusIcon = overallStatus === 'ok' ? '✅' : overallStatus === 'warning' ? '⚠️' : '❌';
+                
+                const panelDetails = panels.map(p => {
+                    const pIcon = p.status === 'ok' ? '✓' : p.status === 'warning' ? '!' : '✗';
+                    const pColor = p.status === 'ok' ? 'var(--success)' : p.status === 'warning' ? 'var(--warning)' : 'var(--danger)';
+                    const panelName = p.name.split('/')[1] || p.name;
+                    return `<span style="font-size: 0.7rem; color: ${pColor}; margin-right: 8px;" title="${p.description}">${pIcon} ${panelName}</span>`;
+                }).join('');
+                
+                return `
+                    <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border-left: 3px solid ${statusColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 600; font-size: 0.85rem; text-transform: capitalize;">${statusIcon} ${section}</span>
+                            <span style="font-size: 0.7rem; color: var(--text-muted);">${ok}/${panels.length} OK</span>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                            ${panelDetails}
+                        </div>
+                        ${errors > 0 ? `<div style="font-size: 0.7rem; color: var(--danger); margin-top: 8px;">⚠️ ${errors} panel${errors > 1 ? 's' : ''} showing invalid data</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Render critical errors list
+        function renderCriticalErrors(awsResults, panelResults, freshnessResults) {
+            const container = document.getElementById('criticalErrorsList');
+            const section = document.getElementById('criticalErrorsSection');
+            if (!container || !section) return;
+            
+            const criticalErrors = [
+                ...awsResults.filter(r => r.status === 'error' && r.critical).map(r => ({
+                    type: 'AWS',
+                    name: r.name,
+                    description: r.description,
+                    section: r.section
+                })),
+                ...panelResults.filter(r => r.status === 'error').map(r => ({
+                    type: 'Panel',
+                    name: r.name,
+                    description: r.description,
+                    section: r.section
+                })),
+                ...freshnessResults.filter(r => r.status === 'error').map(r => ({
+                    type: 'Realtime',
+                    name: r.name,
+                    description: r.description,
+                    section: r.section
+                }))
+            ];
+            
+            if (criticalErrors.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = criticalErrors.map(err => `
+                <div style="padding: 10px 14px; background: rgba(239, 68, 68, 0.1); border-radius: 6px; border-left: 3px solid var(--danger);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 500; font-size: 0.85rem; color: var(--danger);">❌ ${err.type}: ${err.name}</span>
+                        <span style="font-size: 0.7rem; background: var(--bg-secondary); padding: 2px 8px; border-radius: 4px;">${err.section}</span>
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">${err.description}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Auto-run health check when site diagnostics section is shown
+        function onSiteDiagnosticsShown() {
+            // Check if health monitor hasn't been run yet
+            if (lastHealthCheckResults.aws.length === 0) {
+                runHealthMonitorCheck();
+            }
         }
 
         function renderButtonAnalysis() {
@@ -18544,6 +19150,11 @@
             appendSiteDiagnosticsLog('');
             appendSiteDiagnosticsLog('💾 Analyzing storage...');
             analyzeStorage();
+            
+            // Run comprehensive health monitor
+            appendSiteDiagnosticsLog('');
+            appendSiteDiagnosticsLog('🏥 Running health monitor...');
+            await runHealthMonitorCheck();
             
             appendSiteDiagnosticsLog('');
             appendSiteDiagnosticsLog('═══════════════════════════════════════════');
