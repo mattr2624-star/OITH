@@ -185,6 +185,23 @@ async function handleRegister(body) {
     const lowerEmail = email.toLowerCase();
     
     try {
+        // Check if this is first-user registration (bootstrap mode)
+        let isFirstUser = false;
+        try {
+            const existingAdmins = await docClient.send(new ScanCommand({
+                TableName: TABLE_NAME,
+                FilterExpression: 'dataType = :type',
+                ExpressionAttributeValues: { ':type': 'admin_user' },
+                Limit: 1
+            }));
+            isFirstUser = !existingAdmins.Items || existingAdmins.Items.length === 0;
+            if (isFirstUser) {
+                console.log('🚀 First user registration - bootstrap mode enabled');
+            }
+        } catch (e) {
+            console.log('Could not check for existing admins:', e.message);
+        }
+        
         // Check if user has admin token (super admin bypass)
         let hasAdminToken = false;
         if (creatorToken) {
@@ -198,8 +215,8 @@ async function handleRegister(body) {
             }
         }
         
-        // If no admin token, verify employee is in the org hierarchy
-        if (!hasAdminToken) {
+        // If first user, admin token, skip employee check - otherwise verify
+        if (!isFirstUser && !hasAdminToken) {
             let isAuthorizedEmployee = false;
             
             try {
@@ -237,7 +254,7 @@ async function handleRegister(body) {
             return response(409, { error: 'User already exists' });
         }
         
-        // Create new user
+        // Create new user (first user is automatically super_admin)
         const newUser = {
             pk: `ADMIN#${lowerEmail}`,
             sk: 'PROFILE',
@@ -245,11 +262,15 @@ async function handleRegister(body) {
             email: lowerEmail,
             name,
             password: hashPassword(password),
-            role: role || 'admin',
+            role: isFirstUser ? 'super_admin' : (role || 'admin'),
             createdAt: new Date().toISOString(),
             lastLogin: null,
             isActive: true
         };
+        
+        if (isFirstUser) {
+            console.log(`🎉 First admin created as super_admin: ${lowerEmail}`);
+        }
         
         await docClient.send(new PutCommand({
             TableName: TABLE_NAME,
