@@ -10285,37 +10285,60 @@
             const token = getAdminToken();
             if (!token) return false;
             
+            // First, validate token locally (quick check)
             try {
-                // Try local server first, then AWS
-                let response;
-                try {
-                    response = await fetch(`${LOCAL_API_URL}/auth/validate`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                } catch {
-                    response = await fetch(`${AWS_API_URL}/auth/validate`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                }
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.valid === true;
-                }
-                return false;
-            } catch (e) {
-                // If server is unavailable, validate token locally (check expiration)
-                try {
-                    const payload = JSON.parse(atob(token));
-                    // Token expires after 24 hours
-                    if (Date.now() - payload.timestamp > 24 * 60 * 60 * 1000) {
-                        logoutAdmin();
-                        return false;
-                    }
-                    return true;
-                } catch {
+                const payload = JSON.parse(atob(token));
+                // Token expires after 24 hours
+                if (Date.now() - payload.timestamp > 24 * 60 * 60 * 1000) {
+                    console.log('🔒 Token expired');
                     return false;
                 }
+                
+                // Token is valid locally - also check user data exists
+                const user = getAdminUser();
+                if (!user || !user.email) {
+                    console.log('🔒 No user data found');
+                    return false;
+                }
+                
+                console.log('✅ Token valid (offline mode)');
+                
+                // Optionally verify with server (non-blocking)
+                verifyTokenWithServer(token).catch(() => {});
+                
+                return true;
+            } catch (e) {
+                console.log('🔒 Token validation failed:', e.message);
+                return false;
+            }
+        }
+        
+        // Non-blocking server verification
+        async function verifyTokenWithServer(token) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                
+                const response = await fetch(`${LOCAL_API_URL}/auth/validate`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        if (!data.valid) {
+                            console.log('⚠️ Server rejected token');
+                            // Optionally logout: logoutAdmin();
+                        }
+                    }
+                }
+            } catch (e) {
+                // Server unavailable, continue with local validation
+                console.log('⚠️ Server verification skipped (offline)');
             }
         }
         
