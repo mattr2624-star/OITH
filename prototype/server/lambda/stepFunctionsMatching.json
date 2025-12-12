@@ -1,0 +1,245 @@
+{
+  "Comment": "OITH Distributed Matching Workflow - Handles large user pools that would timeout Lambda",
+  "StartAt": "ValidateRequest",
+  "States": {
+    "ValidateRequest": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.userEmail",
+          "IsPresent": true,
+          "Next": "GetUserProfile"
+        }
+      ],
+      "Default": "InvalidRequest"
+    },
+    
+    "InvalidRequest": {
+      "Type": "Fail",
+      "Error": "InvalidRequestError",
+      "Cause": "Missing required field: userEmail"
+    },
+    
+    "GetUserProfile": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::dynamodb:getItem",
+      "Parameters": {
+        "TableName": "${UsersTable}",
+        "Key": {
+          "email": { "S.$": "$.userEmail" }
+        }
+      },
+      "ResultPath": "$.user",
+      "Next": "CheckUserExists"
+    },
+    
+    "CheckUserExists": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.user.Item",
+          "IsPresent": true,
+          "Next": "DeterminePoolSize"
+        }
+      ],
+      "Default": "UserNotFound"
+    },
+    
+    "UserNotFound": {
+      "Type": "Fail",
+      "Error": "UserNotFoundError",
+      "Cause": "User profile not found"
+    },
+    
+    "DeterminePoolSize": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-estimate-pool-size",
+      "Parameters": {
+        "userEmail.$": "$.userEmail",
+        "geohash.$": "$.user.Item.geohash_prefix.S",
+        "preferences.$": "$.user.Item.matchPreferences.M"
+      },
+      "ResultPath": "$.poolEstimate",
+      "Next": "ChooseProcessingPath"
+    },
+    
+    "ChooseProcessingPath": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.poolEstimate.estimatedSize",
+          "NumericLessThan": 1000,
+          "Next": "DirectMatching"
+        },
+        {
+          "Variable": "$.poolEstimate.estimatedSize",
+          "NumericLessThan": 10000,
+          "Next": "ChunkedMatching"
+        }
+      ],
+      "Default": "DistributedMatching"
+    },
+    
+    "DirectMatching": {
+      "Comment": "For small pools (<1000), process directly",
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-matching-service",
+      "Parameters": {
+        "action": "FIND_NEXT_MATCH",
+        "userEmail.$": "$.userEmail",
+        "mode": "direct"
+      },
+      "ResultPath": "$.matchResult",
+      "Next": "FormatResponse"
+    },
+    
+    "ChunkedMatching": {
+      "Comment": "For medium pools (1000-10000), process in chunks",
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-create-chunks",
+      "Parameters": {
+        "userEmail.$": "$.userEmail",
+        "geohash.$": "$.user.Item.geohash_prefix.S",
+        "chunkSize": 500
+      },
+      "ResultPath": "$.chunks",
+      "Next": "ProcessChunks"
+    },
+    
+    "ProcessChunks": {
+      "Type": "Map",
+      "ItemsPath": "$.chunks.items",
+      "MaxConcurrency": 10,
+      "Parameters": {
+        "chunkId.$": "$$.Map.Item.Value.chunkId",
+        "startKey.$": "$$.Map.Item.Value.startKey",
+        "userEmail.$": "$.userEmail",
+        "userPreferences.$": "$.user.Item.matchPreferences.M"
+      },
+      "Iterator": {
+        "StartAt": "ProcessSingleChunk",
+        "States": {
+          "ProcessSingleChunk": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-process-chunk",
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.chunkResults",
+      "Next": "AggregateChunkResults"
+    },
+    
+    "AggregateChunkResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-aggregate-matches",
+      "Parameters": {
+        "userEmail.$": "$.userEmail",
+        "results.$": "$.chunkResults"
+      },
+      "ResultPath": "$.matchResult",
+      "Next": "FormatResponse"
+    },
+    
+    "DistributedMatching": {
+      "Comment": "For large pools (>10000), use geographic sharding",
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-create-geo-shards",
+      "Parameters": {
+        "userEmail.$": "$.userEmail",
+        "centerGeohash.$": "$.user.Item.geohash_prefix.S",
+        "radiusMiles": 100
+      },
+      "ResultPath": "$.shards",
+      "Next": "ProcessGeoShards"
+    },
+    
+    "ProcessGeoShards": {
+      "Type": "Map",
+      "ItemsPath": "$.shards.items",
+      "MaxConcurrency": 20,
+      "Parameters": {
+        "shardGeohash.$": "$$.Map.Item.Value.geohash",
+        "userEmail.$": "$.userEmail",
+        "userPreferences.$": "$.user.Item.matchPreferences.M",
+        "userCoordinates.$": "$.user.Item.coordinates.M"
+      },
+      "Iterator": {
+        "StartAt": "ProcessGeoShard",
+        "States": {
+          "ProcessGeoShard": {
+            "Type": "Task",
+            "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-process-geo-shard",
+            "Retry": [
+              {
+                "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.TooManyRequestsException"],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.shardResults",
+      "Next": "AggregateShardResults"
+    },
+    
+    "AggregateShardResults": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-aggregate-matches",
+      "Parameters": {
+        "userEmail.$": "$.userEmail",
+        "results.$": "$.shardResults",
+        "mode": "geo-sharded"
+      },
+      "ResultPath": "$.matchResult",
+      "Next": "FormatResponse"
+    },
+    
+    "FormatResponse": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:${Region}:${Account}:function:oith-format-match-response",
+      "Parameters": {
+        "userEmail.$": "$.userEmail",
+        "match.$": "$.matchResult"
+      },
+      "ResultPath": "$.response",
+      "Next": "RecordMetrics"
+    },
+    
+    "RecordMetrics": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::cloudwatch:putMetricData",
+      "Parameters": {
+        "Namespace": "OITH/Matching",
+        "MetricData": [
+          {
+            "MetricName": "MatchingDuration",
+            "Unit": "Milliseconds",
+            "Value.$": "$.response.durationMs"
+          },
+          {
+            "MetricName": "CandidatesScanned",
+            "Unit": "Count",
+            "Value.$": "$.response.candidatesScanned"
+          },
+          {
+            "MetricName": "MatchFound",
+            "Unit": "Count",
+            "Value.$": "$.response.matchFound"
+          }
+        ]
+      },
+      "ResultPath": null,
+      "Next": "Success"
+    },
+    
+    "Success": {
+      "Type": "Succeed",
+      "OutputPath": "$.response"
+    }
+  }
+}
+
