@@ -137,7 +137,17 @@
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        .calendar-badge, .mail-badge {
+        .header-icon-btn.files-btn {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            color: var(--success);
+        }
+
+        .header-icon-btn.files-btn:hover {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.15));
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .calendar-badge, .mail-badge, .files-badge {
             position: absolute;
             top: -4px;
             right: -4px;
@@ -155,8 +165,8 @@
             box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
         }
 
-        .calendar-badge:empty, .mail-badge:empty,
-        .calendar-badge[data-count="0"], .mail-badge[data-count="0"] {
+        .calendar-badge:empty, .mail-badge:empty, .files-badge:empty,
+        .calendar-badge[data-count="0"], .mail-badge[data-count="0"], .files-badge[data-count="0"] {
             display: none;
         }
 
@@ -1862,6 +1872,318 @@
             margin-bottom: 12px;
         }
 
+        /* File Storage Modal */
+        .file-storage-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-storage-modal.active {
+            display: flex;
+        }
+
+        .file-storage-container {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            width: 95%;
+            max-width: 1200px;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-storage-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .file-storage-title-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .file-storage-icon-large {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--success), #059669);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .file-storage-title h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--text-primary);
+        }
+
+        .file-storage-title p {
+            margin: 4px 0 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .file-storage-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            height: calc(85vh - 100px);
+        }
+
+        .file-storage-sidebar {
+            width: 200px;
+            background: var(--bg-tertiary);
+            border-right: 1px solid var(--border-subtle);
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .file-folder {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .file-folder:hover {
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .file-folder.active {
+            background: var(--success);
+            color: white;
+        }
+
+        .file-folder-count {
+            margin-left: auto;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .file-folder.active .file-folder-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .file-list {
+            flex: 1;
+            border-right: 1px solid var(--border-subtle);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .file-list-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-list-header span {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .file-item {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-subtle);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-item:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .file-item.active {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid var(--success);
+        }
+
+        .file-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background: var(--bg-tertiary);
+        }
+
+        .file-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-item-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-item-meta {
+            display: flex;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .file-preview {
+            width: 320px;
+            overflow-y: auto;
+            background: var(--bg-primary);
+        }
+
+        .file-preview-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            padding: 20px;
+            text-align: center;
+        }
+
+        .file-preview-content {
+            padding: 20px;
+        }
+
+        .file-preview-header {
+            padding: 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .file-preview-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            background: var(--bg-secondary);
+            margin-bottom: 12px;
+        }
+
+        .file-preview-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            word-break: break-word;
+        }
+
+        .file-preview-details {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .file-preview-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .file-preview-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .file-preview-section-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .file-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 2px;
+        }
+
+        .admin-profile-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 8px;
+        }
+
+        .admin-profile-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .admin-avatar {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .admin-name {
+            font-size: 13px;
+            color: var(--text-secondary);
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         .header-center {
             display: flex;
             align-items: center;
@@ -2747,6 +3069,119 @@
             color: var(--text-muted);
         }
 
+        /* Admin Activity Log */
+        .admin-activity-log {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        
+        .admin-activity-log::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .admin-activity-log::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .admin-activity-log::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .admin-activity-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s ease;
+        }
+        
+        .admin-activity-entry:hover {
+            background: var(--bg-secondary);
+        }
+        
+        .admin-activity-entry:last-child {
+            border-bottom: none;
+        }
+
+        .admin-activity-type-icon {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .admin-activity-type-icon.user { background: rgba(34, 197, 94, 0.15); }
+        .admin-activity-type-icon.file { background: rgba(168, 85, 247, 0.15); }
+        .admin-activity-type-icon.event { background: rgba(245, 158, 11, 0.15); }
+        .admin-activity-type-icon.config { background: rgba(59, 130, 246, 0.15); }
+        .admin-activity-type-icon.sync { background: rgba(236, 72, 153, 0.15); }
+        .admin-activity-type-icon.delete { background: rgba(239, 68, 68, 0.15); }
+        .admin-activity-type-icon.create { background: rgba(16, 185, 129, 0.15); }
+
+        .admin-activity-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .admin-activity-action {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .admin-activity-target {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-activity-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .admin-activity-timestamp {
+            font-weight: 500;
+        }
+
+        .admin-activity-user {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .admin-activity-sync-badge {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .admin-activity-sync-badge.pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .admin-activity-sync-badge.failed {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
         /* Report Card */
         .report-card {
             background: rgba(239, 68, 68, 0.05);
@@ -3576,6 +4011,12 @@
                     </svg>
                     <span class="mail-badge" id="unreadMailCount">0</span>
                 </button>
+                <button class="header-icon-btn files-btn" onclick="openFileStorage()" title="File Storage (AWS S3)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span class="files-badge" id="fileCount">0</span>
+                </button>
             </div>
         </div>
         <div class="header-center">
@@ -3620,6 +4061,13 @@
                     <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
                 </svg>
             </button>
+            <div class="admin-profile-btn" onclick="showAdminProfile()" title="Admin Profile">
+                <div class="admin-avatar" id="adminAvatarHeader">👤</div>
+                <span class="admin-name" id="adminNameHeader">Admin</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </div>
         </div>
     </header>
 
@@ -8623,6 +9071,149 @@
                     </div>
                 </div>
 
+                <!-- Security Vulnerability Scanner -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--danger);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05)); cursor: pointer;" onclick="toggleSiteSection('securityScanner')">
+                        <h3 class="card-title">🛡️ Security Vulnerability Scanner</h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span id="securityScanStatus" class="status-badge" style="font-size: 0.75rem;">Not Scanned</span>
+                            <svg id="securityScannerToggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.3s;">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div id="securityScannerBody" style="display: none;">
+                        <div class="card-body">
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+                                Comprehensive security analysis to detect XSS vulnerabilities, insecure configurations, exposed credentials, and other security issues.
+                            </p>
+
+                            <!-- Security Scan Options -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">SCAN OPTIONS</div>
+                                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                            <input type="checkbox" id="secCheckXSS" checked style="width: 18px; height: 18px; accent-color: var(--danger);">
+                                            <span style="font-size: 0.9rem;">XSS Vulnerabilities</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                            <input type="checkbox" id="secCheckCSRF" checked style="width: 18px; height: 18px; accent-color: var(--danger);">
+                                            <span style="font-size: 0.9rem;">CSRF Protection</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                            <input type="checkbox" id="secCheckCredentials" checked style="width: 18px; height: 18px; accent-color: var(--danger);">
+                                            <span style="font-size: 0.9rem;">Exposed Credentials</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                            <input type="checkbox" id="secCheckInsecure" checked style="width: 18px; height: 18px; accent-color: var(--danger);">
+                                            <span style="font-size: 0.9rem;">Insecure Configurations</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                            <input type="checkbox" id="secCheckDependencies" checked style="width: 18px; height: 18px; accent-color: var(--danger);">
+                                            <span style="font-size: 0.9rem;">Dependency Vulnerabilities</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                            <input type="checkbox" id="secCheckHeaders" checked style="width: 18px; height: 18px; accent-color: var(--danger);">
+                                            <span style="font-size: 0.9rem;">Security Headers</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                            <input type="checkbox" id="secCheckStorage" checked style="width: 18px; height: 18px; accent-color: var(--danger);">
+                                            <span style="font-size: 0.9rem;">Sensitive Data in Storage</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border: 1px solid var(--border);">
+                                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">SCAN SUMMARY</div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--danger);" id="secCriticalCount">0</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">Critical</div>
+                                        </div>
+                                        <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="secHighCount">0</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">High</div>
+                                        </div>
+                                        <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                            <div style="font-size: 1.5rem; font-weight: 700; color: #FBBF24;" id="secMediumCount">0</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">Medium</div>
+                                        </div>
+                                        <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--info);" id="secLowCount">0</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">Low</div>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 12px;">
+                                        <button class="btn btn-primary" onclick="runSecurityScan()" id="runSecurityScanBtn" style="width: 100%;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                            </svg>
+                                            Run Security Scan
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security Score -->
+                            <div style="padding: 20px; background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary)); border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border);">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                                    <div>
+                                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">SECURITY SCORE</div>
+                                        <div style="display: flex; align-items: baseline; gap: 8px;">
+                                            <span style="font-size: 3rem; font-weight: 700;" id="securityScore">--</span>
+                                            <span style="font-size: 1.2rem; color: var(--text-muted);">/ 100</span>
+                                        </div>
+                                        <div style="font-size: 0.85rem; color: var(--text-muted);" id="securityGrade">Run scan to calculate</div>
+                                    </div>
+                                    <div style="width: 120px; height: 120px; position: relative;">
+                                        <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--bg-secondary)" stroke-width="3"/>
+                                            <path id="securityScoreArc" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--text-muted)" stroke-width="3" stroke-dasharray="0, 100"/>
+                                        </svg>
+                                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 24px;">🛡️</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vulnerability List -->
+                            <div style="margin-bottom: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div style="font-size: 0.8rem; color: var(--text-muted);">DETECTED VULNERABILITIES</div>
+                                    <button class="btn btn-secondary" onclick="exportSecurityReport()" style="font-size: 0.75rem; padding: 6px 12px;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                            <polyline points="7 10 12 15 17 10"/>
+                                            <line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                        Export Report
+                                    </button>
+                                </div>
+                                <div id="securityVulnList" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto;">
+                                    <div style="text-align: center; color: var(--text-muted); padding: 40px; background: var(--bg-tertiary); border-radius: 12px;">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.5; margin-bottom: 12px;">
+                                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                        </svg>
+                                        <div style="font-size: 0.9rem;">Run a security scan to detect vulnerabilities</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Security Recommendations -->
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 12px; border-left: 4px solid var(--info);">
+                                <div style="font-size: 0.8rem; color: var(--info); font-weight: 600; margin-bottom: 8px;">💡 SECURITY BEST PRACTICES</div>
+                                <ul style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
+                                    <li>Use Content Security Policy (CSP) headers to prevent XSS attacks</li>
+                                    <li>Implement proper input validation and output encoding</li>
+                                    <li>Never store sensitive data in localStorage without encryption</li>
+                                    <li>Keep all dependencies updated to latest secure versions</li>
+                                    <li>Use HTTPS and secure cookies for all sensitive operations</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Admin Architecture Map -->
                 <div class="card" style="margin-bottom: 20px;">
                     <div class="card-header" style="cursor: pointer;" onclick="toggleSiteSection('adminArchitecture')">
@@ -9133,6 +9724,93 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Admin Activity Log Section -->
+                <div class="card" style="margin-top: 20px; border: 2px solid var(--info);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.05));">
+                        <h3 class="card-title">📝 Admin Activity Log</h3>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <select id="activityLogFilter" onchange="filterActivityLog(this.value)" style="padding: 4px 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 0.75rem;">
+                                <option value="all">All Activities</option>
+                                <option value="user">User Actions</option>
+                                <option value="file">File Operations</option>
+                                <option value="event">Calendar Events</option>
+                                <option value="config">Configuration</option>
+                                <option value="sync">AWS Sync</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="refreshActivityLog()" style="font-size: 0.7rem; padding: 4px 8px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6M1 20v-6h6"/>
+                                    <path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/>
+                                </svg>
+                                Refresh
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportActivityLog()" style="font-size: 0.7rem; padding: 4px 8px;">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                Export
+                            </button>
+                            <button class="btn btn-secondary" onclick="clearActivityLog()" style="font-size: 0.7rem; padding: 4px 8px;">Clear</button>
+                            <span class="status-badge" id="activityLogSyncStatus" style="font-size: 0.7rem; background: var(--success);">Synced</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Activity Stats -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px;">
+                            <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--info);" id="activityStatTotal">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Total Actions</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="activityStatUsers">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">User Actions</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--purple);" id="activityStatFiles">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">File Saves</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="activityStatEvents">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Events</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px; text-align: center; border: 1px solid var(--border);">
+                                <div style="font-size: 1.5rem; font-weight: 700; color: var(--danger);" id="activityStatToday">0</div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Today</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Activity Log List -->
+                        <div id="adminActivityLog" class="admin-activity-log" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-tertiary);">
+                            <div class="activity-log-empty" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.5;">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6"/>
+                                    <path d="M16 13H8M16 17H8M10 9H8"/>
+                                </svg>
+                                <div style="font-size: 0.9rem; margin-bottom: 4px;">No activity logged yet</div>
+                                <div style="font-size: 0.75rem;">Admin actions will appear here automatically</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Logged-in Admin Info -->
+                        <div style="margin-top: 12px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, var(--info), var(--purple)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.8rem;" id="activityLogAdminAvatar">A</div>
+                                <div>
+                                    <div style="font-size: 0.85rem; font-weight: 600;" id="activityLogAdminName">Admin User</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);" id="activityLogAdminEmail">admin@oith.app</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.7rem; color: var(--text-muted);">Session Started</div>
+                                <div style="font-size: 0.8rem; font-weight: 500;" id="activityLogSessionStart">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Database Schema Section -->
@@ -9508,6 +10186,125 @@
         // GLOBAL CONSTANTS
         // ==========================================
         const AWS_API_URL = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+        const LOCAL_API_URL = 'http://localhost:3001/api';
+        
+        // ==========================================
+        // AUTHENTICATION FUNCTIONS
+        // ==========================================
+        
+        function getAdminToken() {
+            return localStorage.getItem('oith_admin_token') || sessionStorage.getItem('oith_admin_token');
+        }
+        
+        function getAdminUser() {
+            const userStr = localStorage.getItem('oith_admin_user') || sessionStorage.getItem('oith_admin_user');
+            try {
+                return userStr ? JSON.parse(userStr) : null;
+            } catch {
+                return null;
+            }
+        }
+        
+        async function checkAdminAuth() {
+            const token = getAdminToken();
+            if (!token) return false;
+            
+            try {
+                // Try local server first, then AWS
+                let response;
+                try {
+                    response = await fetch(`${LOCAL_API_URL}/auth/validate`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                } catch {
+                    response = await fetch(`${AWS_API_URL}/auth/validate`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                }
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.valid === true;
+                }
+                return false;
+            } catch (e) {
+                // If server is unavailable, validate token locally (check expiration)
+                try {
+                    const payload = JSON.parse(atob(token));
+                    // Token expires after 24 hours
+                    if (Date.now() - payload.timestamp > 24 * 60 * 60 * 1000) {
+                        logoutAdmin();
+                        return false;
+                    }
+                    return true;
+                } catch {
+                    return false;
+                }
+            }
+        }
+        
+        function logoutAdmin() {
+            localStorage.removeItem('oith_admin_token');
+            localStorage.removeItem('oith_admin_user');
+            sessionStorage.removeItem('oith_admin_token');
+            sessionStorage.removeItem('oith_admin_user');
+            window.location.href = 'login.html';
+        }
+        
+        function showAdminProfile() {
+            const user = getAdminUser();
+            if (!user) return;
+            
+            // Create profile modal
+            const modal = document.createElement('div');
+            modal.className = 'modal dynamic-modal';
+            modal.style.display = 'flex';
+            modal.id = 'adminProfileModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">👤</div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.1rem;">Admin Profile</h3>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Account Settings</p>
+                            </div>
+                        </div>
+                        <button onclick="document.getElementById('adminProfileModal').remove()" style="background: var(--bg-tertiary); border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 8px;">&times;</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 10px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">NAME</div>
+                                <div style="font-weight: 600;">${user.name || 'Admin User'}</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 10px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">EMAIL</div>
+                                <div style="font-weight: 600;">${user.email || 'admin@oith.com'}</div>
+                            </div>
+                            <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 10px;">
+                                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">ROLE</div>
+                                <div style="font-weight: 600; text-transform: capitalize;">${user.role || 'Admin'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="document.getElementById('adminProfileModal').remove()" style="flex: 1;">Close</button>
+                        <button class="btn btn-primary" onclick="logoutAdmin()" style="flex: 1; background: var(--danger);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
         
         // ==========================================
         // SYSTEM HIERARCHY FUNCTIONS
@@ -11434,6 +12231,22 @@
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('🚀 OITH Manager initializing...');
             
+            // Check authentication before loading admin
+            const isAuthenticated = await checkAdminAuth();
+            if (!isAuthenticated) {
+                console.log('🔒 Not authenticated, redirecting to login...');
+                window.location.href = 'login.html';
+                return;
+            }
+            const adminUser = getAdminUser();
+            console.log('✅ Authenticated as:', adminUser?.name || adminUser?.email);
+            
+            // Update header with admin info
+            const adminNameEl = document.getElementById('adminNameHeader');
+            if (adminNameEl && adminUser) {
+                adminNameEl.textContent = adminUser.name?.split(' ')[0] || adminUser.email?.split('@')[0] || 'Admin';
+            }
+            
             // Initialize app configs in localStorage (fixes "Missing config" warnings)
             if (!localStorage.getItem('oith_admin_config')) {
                 localStorage.setItem('oith_admin_config', JSON.stringify({
@@ -11471,6 +12284,11 @@
             await loadAllData();
             platformData = calculatePlatformStats();
             updateBadgeCounts();
+            
+            // Initialize file storage badge
+            if (typeof loadFileList === 'function') {
+                loadFileList().catch(e => console.log('File storage init:', e.message));
+            }
             
             // Fetch DynamoDB schema stats for stat boxes
             console.log('📊 Fetching DynamoDB schema stats...');
@@ -16971,6 +17789,411 @@
             
             appendSiteDiagnosticsLog('📄 Report exported', 'success');
         }
+
+        // ============================================
+        // ADMIN ACTIVITY LOG SYSTEM
+        // ============================================
+        
+        // Activity log storage
+        let adminActivityLog = [];
+        const ACTIVITY_LOG_STORAGE_KEY = 'oith_admin_activity_log';
+        const ACTIVITY_LOG_MAX_ENTRIES = 500;
+        let activityLogCurrentFilter = 'all';
+        let activityLogSessionStart = new Date().toISOString();
+        
+        // Activity types and their icons
+        const ACTIVITY_TYPES = {
+            user: { icon: '👤', label: 'User Action' },
+            file: { icon: '📁', label: 'File Operation' },
+            event: { icon: '📅', label: 'Calendar Event' },
+            config: { icon: '⚙️', label: 'Configuration' },
+            sync: { icon: '☁️', label: 'AWS Sync' },
+            delete: { icon: '🗑️', label: 'Deletion' },
+            create: { icon: '✨', label: 'Creation' }
+        };
+        
+        // Initialize activity log on page load
+        function initializeActivityLog() {
+            // Load from localStorage
+            const saved = localStorage.getItem(ACTIVITY_LOG_STORAGE_KEY);
+            if (saved) {
+                try {
+                    adminActivityLog = JSON.parse(saved);
+                } catch (e) {
+                    console.warn('Failed to parse activity log:', e);
+                    adminActivityLog = [];
+                }
+            }
+            
+            // Update UI
+            updateActivityLogUI();
+            updateActivityLogStats();
+            
+            // Set session start time
+            const sessionEl = document.getElementById('activityLogSessionStart');
+            if (sessionEl) {
+                sessionEl.textContent = new Date(activityLogSessionStart).toLocaleTimeString();
+            }
+            
+            // Update admin info
+            updateActivityLogAdminInfo();
+            
+            // Sync from AWS on init
+            syncActivityLogFromAWS();
+        }
+        
+        // Log an activity
+        function logAdminActivity(type, action, target, details = {}) {
+            const entry = {
+                id: `act_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                type: type,
+                action: action,
+                target: target,
+                details: details,
+                timestamp: new Date().toISOString(),
+                user: getCurrentAdminUser(),
+                synced: false
+            };
+            
+            // Add to beginning of array (newest first)
+            adminActivityLog.unshift(entry);
+            
+            // Trim if exceeds max
+            if (adminActivityLog.length > ACTIVITY_LOG_MAX_ENTRIES) {
+                adminActivityLog = adminActivityLog.slice(0, ACTIVITY_LOG_MAX_ENTRIES);
+            }
+            
+            // Save locally
+            saveActivityLogLocally();
+            
+            // Update UI
+            updateActivityLogUI();
+            updateActivityLogStats();
+            
+            // Sync to AWS
+            syncActivityToAWS(entry);
+            
+            return entry;
+        }
+        
+        // Get current admin user info
+        function getCurrentAdminUser() {
+            // Try to get from stored session or default
+            const storedAdmin = localStorage.getItem('oith_admin_user');
+            if (storedAdmin) {
+                try {
+                    return JSON.parse(storedAdmin);
+                } catch (e) {}
+            }
+            return {
+                name: 'Admin User',
+                email: 'admin@oith.app',
+                id: 'admin_default'
+            };
+        }
+        
+        // Update admin info display
+        function updateActivityLogAdminInfo() {
+            const admin = getCurrentAdminUser();
+            const avatarEl = document.getElementById('activityLogAdminAvatar');
+            const nameEl = document.getElementById('activityLogAdminName');
+            const emailEl = document.getElementById('activityLogAdminEmail');
+            
+            if (avatarEl) avatarEl.textContent = admin.name.charAt(0).toUpperCase();
+            if (nameEl) nameEl.textContent = admin.name;
+            if (emailEl) emailEl.textContent = admin.email;
+        }
+        
+        // Save activity log to localStorage
+        function saveActivityLogLocally() {
+            try {
+                localStorage.setItem(ACTIVITY_LOG_STORAGE_KEY, JSON.stringify(adminActivityLog));
+            } catch (e) {
+                console.warn('Failed to save activity log:', e);
+            }
+        }
+        
+        // Sync activity to AWS
+        async function syncActivityToAWS(entry) {
+            const statusEl = document.getElementById('activityLogSyncStatus');
+            
+            try {
+                if (statusEl) {
+                    statusEl.textContent = 'Syncing...';
+                    statusEl.style.background = 'var(--warning)';
+                }
+                
+                // Use the existing API endpoint pattern
+                const apiUrl = window.API_BASE_URL || 'https://api.oith.app';
+                
+                const response = await fetch(`${apiUrl}/admin/activity-log`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(entry)
+                });
+                
+                if (response.ok) {
+                    entry.synced = true;
+                    saveActivityLogLocally();
+                    
+                    if (statusEl) {
+                        statusEl.textContent = 'Synced';
+                        statusEl.style.background = 'var(--success)';
+                    }
+                    
+                    // Update AWS sync indicators
+                    updateAWSSyncTime('send');
+                } else {
+                    throw new Error('Sync failed');
+                }
+            } catch (e) {
+                // Mark as pending sync
+                entry.synced = false;
+                saveActivityLogLocally();
+                
+                if (statusEl) {
+                    statusEl.textContent = 'Pending';
+                    statusEl.style.background = 'var(--warning)';
+                }
+                
+                console.warn('Activity sync failed:', e);
+            }
+            
+            updateActivityLogUI();
+        }
+        
+        // Sync activity log from AWS
+        async function syncActivityLogFromAWS() {
+            const statusEl = document.getElementById('activityLogSyncStatus');
+            
+            try {
+                if (statusEl) {
+                    statusEl.textContent = 'Loading...';
+                    statusEl.style.background = 'var(--info)';
+                }
+                
+                const apiUrl = window.API_BASE_URL || 'https://api.oith.app';
+                
+                const response = await fetch(`${apiUrl}/admin/activity-log?limit=100`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.activities && Array.isArray(data.activities)) {
+                        // Merge with local, avoiding duplicates
+                        const existingIds = new Set(adminActivityLog.map(a => a.id));
+                        const newActivities = data.activities.filter(a => !existingIds.has(a.id));
+                        
+                        adminActivityLog = [...adminActivityLog, ...newActivities]
+                            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                            .slice(0, ACTIVITY_LOG_MAX_ENTRIES);
+                        
+                        // Mark all as synced
+                        adminActivityLog.forEach(a => a.synced = true);
+                        
+                        saveActivityLogLocally();
+                        updateActivityLogUI();
+                        updateActivityLogStats();
+                    }
+                    
+                    if (statusEl) {
+                        statusEl.textContent = 'Synced';
+                        statusEl.style.background = 'var(--success)';
+                    }
+                    
+                    updateAWSSyncTime('receive');
+                }
+            } catch (e) {
+                console.warn('Failed to sync activity log from AWS:', e);
+                if (statusEl) {
+                    statusEl.textContent = 'Offline';
+                    statusEl.style.background = 'var(--text-muted)';
+                }
+            }
+        }
+        
+        // Update AWS sync time indicator
+        function updateAWSSyncTime(type) {
+            const now = new Date().toLocaleTimeString();
+            if (type === 'send') {
+                const el = document.getElementById('awsLastSend');
+                if (el) {
+                    el.textContent = now;
+                    el.className = 'aws-status success';
+                }
+            } else if (type === 'receive') {
+                const el = document.getElementById('awsLastReceive');
+                if (el) {
+                    el.textContent = now;
+                    el.className = 'aws-status success';
+                }
+            }
+        }
+        
+        // Update activity log UI
+        function updateActivityLogUI() {
+            const container = document.getElementById('adminActivityLog');
+            if (!container) return;
+            
+            // Filter activities
+            const filteredActivities = activityLogCurrentFilter === 'all' 
+                ? adminActivityLog 
+                : adminActivityLog.filter(a => a.type === activityLogCurrentFilter);
+            
+            if (filteredActivities.length === 0) {
+                container.innerHTML = `
+                    <div class="activity-log-empty" style="padding: 40px; text-align: center; color: var(--text-muted);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.5;">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <path d="M14 2v6h6"/>
+                            <path d="M16 13H8M16 17H8M10 9H8"/>
+                        </svg>
+                        <div style="font-size: 0.9rem; margin-bottom: 4px;">No activity logged yet</div>
+                        <div style="font-size: 0.75rem;">Admin actions will appear here automatically</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = filteredActivities.map(activity => {
+                const typeInfo = ACTIVITY_TYPES[activity.type] || ACTIVITY_TYPES.config;
+                const timestamp = new Date(activity.timestamp);
+                const timeStr = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateStr = timestamp.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                const syncClass = activity.synced ? '' : 'pending';
+                const syncText = activity.synced ? '✓ Synced' : '⏳ Pending';
+                
+                return `
+                    <div class="admin-activity-entry" data-activity-id="${activity.id}">
+                        <div class="admin-activity-type-icon ${activity.type}">
+                            ${typeInfo.icon}
+                        </div>
+                        <div class="admin-activity-details">
+                            <div class="admin-activity-action">${escapeHtml(activity.action)}</div>
+                            <div class="admin-activity-target">${escapeHtml(activity.target)}</div>
+                        </div>
+                        <div class="admin-activity-meta">
+                            <div class="admin-activity-timestamp">${timeStr}</div>
+                            <div style="font-size: 0.65rem;">${dateStr}</div>
+                            <div class="admin-activity-user">
+                                <span>${escapeHtml(activity.user?.name || 'Admin')}</span>
+                            </div>
+                            <span class="admin-activity-sync-badge ${syncClass}">${syncText}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Escape HTML helper
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Update activity stats
+        function updateActivityLogStats() {
+            const today = new Date().toDateString();
+            
+            const stats = {
+                total: adminActivityLog.length,
+                users: adminActivityLog.filter(a => a.type === 'user' || a.type === 'create').length,
+                files: adminActivityLog.filter(a => a.type === 'file').length,
+                events: adminActivityLog.filter(a => a.type === 'event').length,
+                today: adminActivityLog.filter(a => new Date(a.timestamp).toDateString() === today).length
+            };
+            
+            const el = (id, val) => {
+                const elem = document.getElementById(id);
+                if (elem) elem.textContent = val;
+            };
+            
+            el('activityStatTotal', stats.total);
+            el('activityStatUsers', stats.users);
+            el('activityStatFiles', stats.files);
+            el('activityStatEvents', stats.events);
+            el('activityStatToday', stats.today);
+        }
+        
+        // Filter activity log
+        function filterActivityLog(filter) {
+            activityLogCurrentFilter = filter;
+            updateActivityLogUI();
+        }
+        
+        // Refresh activity log
+        function refreshActivityLog() {
+            syncActivityLogFromAWS();
+        }
+        
+        // Export activity log
+        function exportActivityLog() {
+            const data = {
+                exportedAt: new Date().toISOString(),
+                totalEntries: adminActivityLog.length,
+                activities: adminActivityLog
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `admin-activity-log-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            logAdminActivity('file', 'Exported activity log', `${adminActivityLog.length} entries exported`);
+        }
+        
+        // Clear activity log
+        function clearActivityLog() {
+            if (confirm('Are you sure you want to clear the activity log? This cannot be undone.')) {
+                adminActivityLog = [];
+                saveActivityLogLocally();
+                updateActivityLogUI();
+                updateActivityLogStats();
+                
+                // Also clear on AWS
+                clearActivityLogOnAWS();
+            }
+        }
+        
+        // Clear activity log on AWS
+        async function clearActivityLogOnAWS() {
+            try {
+                const apiUrl = window.API_BASE_URL || 'https://api.oith.app';
+                await fetch(`${apiUrl}/admin/activity-log`, {
+                    method: 'DELETE'
+                });
+            } catch (e) {
+                console.warn('Failed to clear activity log on AWS:', e);
+            }
+        }
+        
+        // Retry pending syncs
+        async function retryPendingSyncs() {
+            const pendingActivities = adminActivityLog.filter(a => !a.synced);
+            
+            for (const activity of pendingActivities) {
+                await syncActivityToAWS(activity);
+            }
+        }
+        
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeActivityLog();
+            
+            // Retry pending syncs periodically
+            setInterval(retryPendingSyncs, 60000); // Every minute
+        });
+        
+        // ============================================
+        // END ADMIN ACTIVITY LOG SYSTEM
+        // ============================================
 
         // Console Error Monitoring
         let capturedConsoleErrors = [];
@@ -32085,6 +33308,245 @@
         </div>
     </div>
 
+    <!-- File Storage Modal -->
+    <div class="file-storage-modal" id="fileStorageModal">
+        <div class="file-storage-container">
+            <div class="file-storage-header">
+                <div class="file-storage-title-area">
+                    <div class="file-storage-icon-large">📁</div>
+                    <div class="file-storage-title">
+                        <h2>File Storage</h2>
+                        <p id="fileStorageStatus">AWS S3 Connected • Admin Files</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <button class="btn btn-primary" onclick="openUploadModal()" style="font-size: 0.8rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Upload File
+                    </button>
+                    <button class="btn btn-secondary" onclick="refreshFileList()" style="font-size: 0.8rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 4v6h-6M1 20v-6h6"/>
+                            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                        </svg>
+                        Refresh
+                    </button>
+                    <button class="calendar-close-btn" onclick="closeFileStorage()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/>
+                            <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="file-storage-body">
+                <div class="file-storage-sidebar">
+                    <div class="file-folder active" onclick="selectFileCategory('all')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        All Files
+                        <span class="file-folder-count" id="allFilesCount">0</span>
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('general')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                        </svg>
+                        General
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('reports')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        Reports
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('compliance')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        Compliance
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('patents')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="7"/>
+                            <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+                        </svg>
+                        Patents
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('contracts')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <path d="M14 2v6h6"/>
+                            <path d="M9 15v-2h6v2"/>
+                        </svg>
+                        Contracts
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('marketing')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        Marketing
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('financial')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"/>
+                            <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                        </svg>
+                        Financial
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('hr')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                        HR
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('technical')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                        Technical
+                    </div>
+                    <div class="file-folder" onclick="selectFileCategory('archives')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="21 8 21 21 3 21 3 8"/>
+                            <rect x="1" y="3" width="22" height="5"/>
+                            <line x1="10" y1="12" x2="14" y2="12"/>
+                        </svg>
+                        Archives
+                    </div>
+                    <div style="margin-top: 20px; padding: 16px; background: var(--bg-tertiary); border-radius: 12px;">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">STORAGE USED</div>
+                        <div style="font-size: 1.2rem; font-weight: 700; color: var(--success);" id="storageUsed">0 MB</div>
+                        <div style="margin-top: 8px; background: var(--bg-secondary); border-radius: 4px; height: 4px; overflow: hidden;">
+                            <div id="storageBar" style="background: var(--success); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;"><span id="fileCountSidebar">0</span> files</div>
+                    </div>
+                </div>
+                <div class="file-list" id="fileList">
+                    <div class="file-list-header">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span id="fileListTitle">All Files</span>
+                            <input type="text" id="fileSearchInput" placeholder="Search files..." onkeyup="searchFiles(this.value)" style="padding: 8px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-size: 0.85rem; width: 200px;">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="fileSortBy" onchange="sortFiles()" style="padding: 6px 10px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 0.8rem;">
+                                <option value="uploadedAt">Date</option>
+                                <option value="fileName">Name</option>
+                                <option value="fileSize">Size</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="fileListItems" style="flex: 1; overflow-y: auto;">
+                        <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity: 0.3; margin-bottom: 16px;">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            <div style="font-size: 0.95rem; margin-bottom: 8px;">No files yet</div>
+                            <div style="font-size: 0.85rem;">Upload files or save from other sections</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="file-preview" id="filePreview">
+                    <div class="file-preview-empty" id="filePreviewEmpty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width: 64px; height: 64px; opacity: 0.3; margin-bottom: 16px;">
+                            <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                        </svg>
+                        <p>Select a file to preview</p>
+                    </div>
+                    <div id="filePreviewContent" style="display: none;">
+                        <!-- Selected file preview will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Upload Modal -->
+    <div class="modal" id="fileUploadModal" style="z-index: 2200;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--success) 0%, #059669 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📤</div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.1rem;">Upload File</h3>
+                        <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Upload to AWS S3</p>
+                    </div>
+                </div>
+                <button onclick="closeUploadModal()" style="background: var(--bg-tertiary); border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+            <form id="fileUploadForm" onsubmit="handleFileUpload(event)">
+                <div id="dropZone" style="padding: 40px; border: 2px dashed var(--border); border-radius: 16px; text-align: center; margin-bottom: 20px; cursor: pointer; transition: all 0.2s;" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color: var(--text-muted); margin-bottom: 12px;">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <div style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;" id="dropZoneText">Drag & drop files here</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted);">or click to browse</div>
+                    <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+                <div id="selectedFileInfo" style="display: none; padding: 16px; background: var(--bg-tertiary); border-radius: 12px; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div id="fileTypeIcon" style="width: 40px; height: 40px; background: var(--bg-secondary); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📄</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="selectedFileName">-</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);" id="selectedFileSize">-</div>
+                        </div>
+                        <button type="button" onclick="clearSelectedFile()" style="background: var(--danger); border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer;">×</button>
+                    </div>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Category</label>
+                    <select id="uploadCategory" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                        <option value="general">📄 General</option>
+                        <option value="reports">📊 Reports</option>
+                        <option value="compliance">🛡️ Compliance</option>
+                        <option value="patents">🏆 Patents</option>
+                        <option value="contracts">📝 Contracts</option>
+                        <option value="marketing">⭐ Marketing</option>
+                        <option value="financial">💰 Financial</option>
+                        <option value="hr">👥 HR</option>
+                        <option value="technical">💻 Technical</option>
+                        <option value="archives">📦 Archives</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Description (Optional)</label>
+                    <textarea id="uploadDescription" rows="2" placeholder="Add a description..." style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); resize: none;"></textarea>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Tags (comma separated)</label>
+                    <input type="text" id="uploadTags" placeholder="e.g., important, 2024, draft" style="width: 100%; padding: 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary);">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeUploadModal()" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="uploadBtn" style="flex: 1;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Add Event Modal -->
     <div class="modal" id="addEventModal" style="z-index: 2100;">
         <div class="modal-content" style="max-width: 520px;">
@@ -36763,6 +38225,1003 @@
         
         function closeMailClient() {
             document.getElementById('mailClientModal').classList.remove('active');
+        }
+        
+        // ==========================================
+        // FILE STORAGE FUNCTIONS
+        // ==========================================
+        
+        let fileStorageData = {
+            files: [],
+            categories: [],
+            currentCategory: 'all',
+            selectedFile: null
+        };
+        
+        async function openFileStorage() {
+            document.getElementById('fileStorageModal').classList.add('active');
+            await loadFileList();
+            updateFileStorageStats();
+        }
+        
+        function closeFileStorage() {
+            document.getElementById('fileStorageModal').classList.remove('active');
+        }
+        
+        async function loadFileList() {
+            try {
+                const response = await fetch(`${AWS_API_URL}/files`);
+                if (response.ok) {
+                    const data = await response.json();
+                    fileStorageData.files = data.files || [];
+                    fileStorageData.categories = data.categories || [];
+                } else {
+                    // Local fallback
+                    fileStorageData.files = JSON.parse(localStorage.getItem('oith_admin_files') || '[]');
+                }
+            } catch (e) {
+                console.log('Using local file storage');
+                fileStorageData.files = JSON.parse(localStorage.getItem('oith_admin_files') || '[]');
+            }
+            renderFileList();
+            updateFileBadge();
+        }
+        
+        async function refreshFileList() {
+            showToast('Refreshing file list...');
+            await loadFileList();
+            updateFileStorageStats();
+            showToast('File list refreshed');
+        }
+        
+        function renderFileList() {
+            const container = document.getElementById('fileListItems');
+            let files = fileStorageData.files;
+            
+            // Filter by category
+            if (fileStorageData.currentCategory !== 'all') {
+                files = files.filter(f => f.category === fileStorageData.currentCategory);
+            }
+            
+            // Search filter
+            const searchTerm = document.getElementById('fileSearchInput')?.value?.toLowerCase();
+            if (searchTerm) {
+                files = files.filter(f => 
+                    f.originalName?.toLowerCase().includes(searchTerm) ||
+                    f.fileName?.toLowerCase().includes(searchTerm) ||
+                    f.description?.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Sort
+            const sortBy = document.getElementById('fileSortBy')?.value || 'uploadedAt';
+            files.sort((a, b) => {
+                if (sortBy === 'fileSize') return (b.fileSize || 0) - (a.fileSize || 0);
+                if (sortBy === 'fileName') return (a.originalName || '').localeCompare(b.originalName || '');
+                return new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0);
+            });
+            
+            if (files.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="opacity: 0.3; margin-bottom: 16px;">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <div style="font-size: 0.95rem; margin-bottom: 8px;">No files found</div>
+                        <div style="font-size: 0.85rem;">Upload files or save from other sections</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = files.map(file => `
+                <div class="file-item ${fileStorageData.selectedFile?.id === file.id ? 'active' : ''}" onclick="selectFile('${file.id}')">
+                    <div class="file-item-icon" style="background: ${getFileColor(file.fileType)};">
+                        ${getFileIcon(file.fileType)}
+                    </div>
+                    <div class="file-item-info">
+                        <div class="file-item-name">${file.originalName || file.fileName}</div>
+                        <div class="file-item-meta">
+                            <span>${formatFileSize(file.fileSize)}</span>
+                            <span>•</span>
+                            <span>${formatRelativeTime(file.uploadedAt)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectFile(fileId) {
+            const file = fileStorageData.files.find(f => f.id === fileId);
+            if (!file) return;
+            
+            fileStorageData.selectedFile = file;
+            renderFileList();
+            renderFilePreview(file);
+        }
+        
+        function renderFilePreview(file) {
+            const emptyState = document.getElementById('filePreviewEmpty');
+            const content = document.getElementById('filePreviewContent');
+            
+            emptyState.style.display = 'none';
+            content.style.display = 'block';
+            
+            content.innerHTML = `
+                <div class="file-preview-header">
+                    <div class="file-preview-icon" style="background: ${getFileColor(file.fileType)};">
+                        ${getFileIcon(file.fileType)}
+                    </div>
+                    <div class="file-preview-name">${file.originalName || file.fileName}</div>
+                    <div class="file-preview-details">
+                        ${formatFileSize(file.fileSize)} • ${file.fileType || 'Unknown'}
+                    </div>
+                    <div class="file-preview-actions">
+                        <button class="btn btn-primary" onclick="downloadFile('${file.id}')" style="font-size: 0.8rem; flex: 1;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Download
+                        </button>
+                        <button class="btn btn-secondary" onclick="deleteFile('${file.id}')" style="font-size: 0.8rem; color: var(--danger);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="file-preview-section">
+                    <div class="file-preview-section-title">Details</div>
+                    <div style="display: grid; gap: 8px; font-size: 0.85rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-muted);">Category:</span>
+                            <span style="color: var(--text-primary); text-transform: capitalize;">${file.category || 'General'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-muted);">Uploaded:</span>
+                            <span style="color: var(--text-primary);">${new Date(file.uploadedAt).toLocaleDateString()}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-muted);">Source:</span>
+                            <span style="color: var(--text-primary);">${file.source || 'Manual Upload'}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                ${file.description ? `
+                <div class="file-preview-section">
+                    <div class="file-preview-section-title">Description</div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">${file.description}</p>
+                </div>
+                ` : ''}
+                
+                ${file.tags && file.tags.length > 0 ? `
+                <div class="file-preview-section">
+                    <div class="file-preview-section-title">Tags</div>
+                    <div>${file.tags.map(t => `<span class="file-tag">${t}</span>`).join('')}</div>
+                </div>
+                ` : ''}
+            `;
+        }
+        
+        function selectFileCategory(category) {
+            fileStorageData.currentCategory = category;
+            
+            // Update active state
+            document.querySelectorAll('.file-folder').forEach(el => el.classList.remove('active'));
+            event.target.closest('.file-folder').classList.add('active');
+            
+            // Update title
+            document.getElementById('fileListTitle').textContent = 
+                category === 'all' ? 'All Files' : category.charAt(0).toUpperCase() + category.slice(1);
+            
+            renderFileList();
+        }
+        
+        function searchFiles(term) {
+            renderFileList();
+        }
+        
+        function sortFiles() {
+            renderFileList();
+        }
+        
+        function updateFileStorageStats() {
+            const files = fileStorageData.files;
+            const totalSize = files.reduce((sum, f) => sum + (f.fileSize || 0), 0);
+            
+            document.getElementById('storageUsed').textContent = formatFileSize(totalSize);
+            document.getElementById('fileCountSidebar').textContent = files.length;
+            document.getElementById('allFilesCount').textContent = files.length;
+            
+            // Update storage bar (assuming 1GB limit)
+            const maxStorage = 1024 * 1024 * 1024; // 1GB
+            const percentage = Math.min((totalSize / maxStorage) * 100, 100);
+            document.getElementById('storageBar').style.width = percentage + '%';
+        }
+        
+        function updateFileBadge() {
+            const count = fileStorageData.files.length;
+            const badge = document.getElementById('fileCount');
+            if (badge) {
+                badge.textContent = count;
+                badge.setAttribute('data-count', count);
+            }
+        }
+        
+        async function downloadFile(fileId) {
+            try {
+                const response = await fetch(`${AWS_API_URL}/files/${fileId}/download`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const a = document.createElement('a');
+                    a.href = data.url;
+                    a.download = data.fileName;
+                    a.target = '_blank';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showToast('Download started');
+                } else {
+                    throw new Error('Download failed');
+                }
+            } catch (e) {
+                // Local fallback
+                const file = fileStorageData.files.find(f => f.id === fileId);
+                if (file && file.data) {
+                    const a = document.createElement('a');
+                    a.href = file.data;
+                    a.download = file.originalName || file.fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    showToast('Download started');
+                } else {
+                    showToast('Download failed', 'error');
+                }
+            }
+        }
+        
+        async function deleteFile(fileId) {
+            if (!confirm('Are you sure you want to delete this file?')) return;
+            
+            try {
+                const response = await fetch(`${AWS_API_URL}/files/${fileId}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showToast('File deleted');
+                } else {
+                    throw new Error('Delete failed');
+                }
+            } catch (e) {
+                // Local fallback
+                const localFiles = JSON.parse(localStorage.getItem('oith_admin_files') || '[]');
+                const updated = localFiles.filter(f => f.id !== fileId);
+                localStorage.setItem('oith_admin_files', JSON.stringify(updated));
+                showToast('File deleted (local)');
+            }
+            
+            fileStorageData.selectedFile = null;
+            document.getElementById('filePreviewEmpty').style.display = 'flex';
+            document.getElementById('filePreviewContent').style.display = 'none';
+            await loadFileList();
+            updateFileStorageStats();
+        }
+        
+        function openUploadModal() {
+            document.getElementById('fileUploadModal').style.display = 'flex';
+        }
+        
+        function closeUploadModal() {
+            document.getElementById('fileUploadModal').style.display = 'none';
+            clearSelectedFile();
+        }
+        
+        let selectedUploadFile = null;
+        
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.style.borderColor = 'var(--success)';
+            event.currentTarget.style.background = 'rgba(16, 185, 129, 0.1)';
+        }
+        
+        function handleDragLeave(event) {
+            event.currentTarget.style.borderColor = 'var(--border)';
+            event.currentTarget.style.background = 'transparent';
+        }
+        
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.style.borderColor = 'var(--border)';
+            event.currentTarget.style.background = 'transparent';
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                selectUploadFile(files[0]);
+            }
+        }
+        
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                selectUploadFile(files[0]);
+            }
+        }
+        
+        function selectUploadFile(file) {
+            selectedUploadFile = file;
+            document.getElementById('selectedFileInfo').style.display = 'block';
+            document.getElementById('selectedFileName').textContent = file.name;
+            document.getElementById('selectedFileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileTypeIcon').textContent = getFileIcon(file.type);
+            document.getElementById('dropZoneText').textContent = 'File selected';
+        }
+        
+        function clearSelectedFile() {
+            selectedUploadFile = null;
+            document.getElementById('selectedFileInfo').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('dropZoneText').textContent = 'Drag & drop files here';
+        }
+        
+        async function handleFileUpload(event) {
+            event.preventDefault();
+            
+            if (!selectedUploadFile) {
+                showToast('Please select a file', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('uploadBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span> Uploading...';
+            
+            const category = document.getElementById('uploadCategory').value;
+            const description = document.getElementById('uploadDescription').value;
+            const tags = document.getElementById('uploadTags').value;
+            
+            try {
+                // Read file as base64
+                const base64 = await readFileAsBase64(selectedUploadFile);
+                
+                const response = await fetch(`${AWS_API_URL}/files/base64`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fileName: selectedUploadFile.name,
+                        fileType: selectedUploadFile.type,
+                        fileSize: selectedUploadFile.size,
+                        data: base64,
+                        category,
+                        description,
+                        tags,
+                        source: 'manual',
+                        sourceSection: 'File Storage'
+                    })
+                });
+                
+                if (response.ok) {
+                    showToast('File uploaded successfully');
+                } else {
+                    throw new Error('Upload failed');
+                }
+            } catch (e) {
+                // Local fallback
+                const base64 = await readFileAsBase64(selectedUploadFile);
+                const localFiles = JSON.parse(localStorage.getItem('oith_admin_files') || '[]');
+                localFiles.push({
+                    id: 'local_' + Date.now(),
+                    fileName: selectedUploadFile.name,
+                    originalName: selectedUploadFile.name,
+                    fileType: selectedUploadFile.type,
+                    fileSize: selectedUploadFile.size,
+                    data: base64,
+                    category,
+                    description,
+                    tags: tags ? tags.split(',').map(t => t.trim()) : [],
+                    uploadedAt: new Date().toISOString(),
+                    source: 'manual'
+                });
+                localStorage.setItem('oith_admin_files', JSON.stringify(localFiles));
+                showToast('File saved locally');
+            }
+            
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload';
+            
+            closeUploadModal();
+            await loadFileList();
+            updateFileStorageStats();
+        }
+        
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function getFileIcon(mimeType) {
+            if (!mimeType) return '📄';
+            if (mimeType.includes('pdf')) return '📕';
+            if (mimeType.includes('word') || mimeType.includes('document')) return '📘';
+            if (mimeType.includes('sheet') || mimeType.includes('excel')) return '📗';
+            if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return '📙';
+            if (mimeType.includes('image')) return '🖼️';
+            if (mimeType.includes('video')) return '🎬';
+            if (mimeType.includes('audio')) return '🎵';
+            if (mimeType.includes('zip') || mimeType.includes('archive')) return '📦';
+            if (mimeType.includes('text')) return '📝';
+            if (mimeType.includes('json')) return '📋';
+            return '📄';
+        }
+        
+        function getFileColor(mimeType) {
+            if (!mimeType) return 'rgba(107, 114, 128, 0.2)';
+            if (mimeType.includes('pdf')) return 'rgba(239, 68, 68, 0.2)';
+            if (mimeType.includes('word') || mimeType.includes('document')) return 'rgba(59, 130, 246, 0.2)';
+            if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'rgba(16, 185, 129, 0.2)';
+            if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'rgba(245, 158, 11, 0.2)';
+            if (mimeType.includes('image')) return 'rgba(168, 85, 247, 0.2)';
+            if (mimeType.includes('video')) return 'rgba(236, 72, 153, 0.2)';
+            return 'rgba(107, 114, 128, 0.2)';
+        }
+        
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+        
+        function formatRelativeTime(dateStr) {
+            if (!dateStr) return 'Unknown';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            
+            if (days === 0) return 'Today';
+            if (days === 1) return 'Yesterday';
+            if (days < 7) return days + ' days ago';
+            if (days < 30) return Math.floor(days / 7) + ' weeks ago';
+            if (days < 365) return Math.floor(days / 30) + ' months ago';
+            return Math.floor(days / 365) + ' years ago';
+        }
+        
+        // Save file from other sections
+        async function saveToFileStorage(fileData) {
+            try {
+                const response = await fetch(`${AWS_API_URL}/files/base64`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fileData)
+                });
+                
+                if (response.ok) {
+                    showToast('File saved to storage');
+                    await loadFileList();
+                    updateFileStorageStats();
+                    return true;
+                }
+            } catch (e) {
+                // Local fallback
+                const localFiles = JSON.parse(localStorage.getItem('oith_admin_files') || '[]');
+                localFiles.push({
+                    ...fileData,
+                    id: 'local_' + Date.now(),
+                    uploadedAt: new Date().toISOString()
+                });
+                localStorage.setItem('oith_admin_files', JSON.stringify(localFiles));
+                showToast('File saved locally');
+                await loadFileList();
+                updateFileStorageStats();
+                return true;
+            }
+            return false;
+        }
+        
+        // ==========================================
+        // SECURITY VULNERABILITY SCANNER
+        // ==========================================
+        
+        let securityScanResults = {
+            critical: [],
+            high: [],
+            medium: [],
+            low: [],
+            score: 0
+        };
+        
+        let securityScanRunning = false;
+        
+        async function runSecurityScan() {
+            if (securityScanRunning) {
+                showToast('Scan already in progress', 'warning');
+                return;
+            }
+            
+            securityScanRunning = true;
+            const btn = document.getElementById('runSecurityScanBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loader"></span> Scanning...';
+            
+            // Reset results
+            securityScanResults = { critical: [], high: [], medium: [], low: [], score: 100 };
+            
+            const statusEl = document.getElementById('securityScanStatus');
+            statusEl.textContent = 'Scanning...';
+            statusEl.className = 'status-badge';
+            statusEl.style.background = 'var(--info)';
+            
+            appendSiteDiagnosticsLog('');
+            appendSiteDiagnosticsLog('🛡️ Starting Security Vulnerability Scan...');
+            
+            try {
+                // 1. XSS Vulnerability Check
+                if (document.getElementById('secCheckXSS')?.checked) {
+                    await scanForXSS();
+                }
+                
+                // 2. CSRF Protection Check
+                if (document.getElementById('secCheckCSRF')?.checked) {
+                    await checkCSRFProtection();
+                }
+                
+                // 3. Exposed Credentials Check
+                if (document.getElementById('secCheckCredentials')?.checked) {
+                    await scanForExposedCredentials();
+                }
+                
+                // 4. Insecure Configuration Check
+                if (document.getElementById('secCheckInsecure')?.checked) {
+                    await checkInsecureConfigurations();
+                }
+                
+                // 5. Dependency Vulnerability Check
+                if (document.getElementById('secCheckDependencies')?.checked) {
+                    await checkDependencyVulnerabilities();
+                }
+                
+                // 6. Security Headers Check
+                if (document.getElementById('secCheckHeaders')?.checked) {
+                    await checkSecurityHeaders();
+                }
+                
+                // 7. Sensitive Data in Storage Check
+                if (document.getElementById('secCheckStorage')?.checked) {
+                    await scanStorageForSensitiveData();
+                }
+                
+                // Calculate score
+                calculateSecurityScore();
+                
+                // Update UI
+                renderSecurityResults();
+                
+                appendSiteDiagnosticsLog(`✅ Security scan complete. Score: ${securityScanResults.score}/100`);
+                
+                statusEl.textContent = securityScanResults.score >= 80 ? 'Secure' : securityScanResults.score >= 50 ? 'Needs Attention' : 'Critical Issues';
+                statusEl.style.background = securityScanResults.score >= 80 ? 'var(--success)' : securityScanResults.score >= 50 ? 'var(--warning)' : 'var(--danger)';
+                
+            } catch (error) {
+                appendSiteDiagnosticsLog(`❌ Error during security scan: ${error.message}`, 'error');
+                statusEl.textContent = 'Error';
+                statusEl.style.background = 'var(--danger)';
+            } finally {
+                securityScanRunning = false;
+                btn.disabled = false;
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Run Security Scan';
+            }
+        }
+        
+        async function scanForXSS() {
+            appendSiteDiagnosticsLog('🔍 Scanning for XSS vulnerabilities...');
+            
+            // Check for innerHTML usage with user input
+            const allScripts = document.querySelectorAll('script');
+            let inlineScriptCount = 0;
+            
+            allScripts.forEach(script => {
+                if (!script.src) {
+                    inlineScriptCount++;
+                    // Check for dangerous patterns
+                    const content = script.textContent || '';
+                    
+                    if (content.includes('innerHTML') && content.includes('user')) {
+                        securityScanResults.high.push({
+                            type: 'XSS',
+                            title: 'Potential XSS via innerHTML',
+                            description: 'Found innerHTML usage that may involve user input',
+                            location: 'Inline script',
+                            recommendation: 'Use textContent or sanitize input before innerHTML'
+                        });
+                    }
+                    
+                    if (content.includes('eval(')) {
+                        securityScanResults.critical.push({
+                            type: 'XSS',
+                            title: 'eval() function detected',
+                            description: 'Using eval() can lead to code injection attacks',
+                            location: 'Inline script',
+                            recommendation: 'Avoid using eval(), use safer alternatives'
+                        });
+                    }
+                    
+                    if (content.includes('document.write(')) {
+                        securityScanResults.medium.push({
+                            type: 'XSS',
+                            title: 'document.write() detected',
+                            description: 'document.write() can be exploited for XSS',
+                            location: 'Inline script',
+                            recommendation: 'Use DOM manipulation methods instead'
+                        });
+                    }
+                }
+            });
+            
+            // Check input fields without sanitization
+            const inputFields = document.querySelectorAll('input, textarea');
+            inputFields.forEach(input => {
+                if (!input.getAttribute('pattern') && !input.hasAttribute('maxlength')) {
+                    securityScanResults.low.push({
+                        type: 'XSS',
+                        title: 'Input without validation',
+                        description: `Input field ${input.id || input.name || 'unnamed'} lacks validation`,
+                        location: 'Form input',
+                        recommendation: 'Add pattern and maxlength attributes'
+                    });
+                }
+            });
+            
+            appendSiteDiagnosticsLog(`   Found ${inlineScriptCount} inline scripts`);
+        }
+        
+        async function checkCSRFProtection() {
+            appendSiteDiagnosticsLog('🔍 Checking CSRF protection...');
+            
+            // Check for CSRF tokens in forms
+            const forms = document.querySelectorAll('form');
+            let formsWithoutCSRF = 0;
+            
+            forms.forEach(form => {
+                const hasCSRF = form.querySelector('input[name*="csrf"]') || 
+                               form.querySelector('input[name*="token"]') ||
+                               form.querySelector('input[name="_token"]');
+                if (!hasCSRF && form.method?.toLowerCase() === 'post') {
+                    formsWithoutCSRF++;
+                }
+            });
+            
+            if (formsWithoutCSRF > 0) {
+                securityScanResults.medium.push({
+                    type: 'CSRF',
+                    title: 'Forms without CSRF protection',
+                    description: `${formsWithoutCSRF} POST form(s) without CSRF tokens`,
+                    location: 'HTML Forms',
+                    recommendation: 'Add CSRF tokens to all POST forms'
+                });
+            }
+            
+            // Check for SameSite cookie attribute (via document.cookie analysis)
+            if (document.cookie && !document.cookie.includes('SameSite')) {
+                securityScanResults.low.push({
+                    type: 'CSRF',
+                    title: 'Cookies without SameSite attribute',
+                    description: 'Some cookies may not have SameSite attribute set',
+                    location: 'Cookies',
+                    recommendation: 'Set SameSite=Strict or SameSite=Lax on all cookies'
+                });
+            }
+            
+            appendSiteDiagnosticsLog(`   Checked ${forms.length} forms, ${formsWithoutCSRF} without CSRF`);
+        }
+        
+        async function scanForExposedCredentials() {
+            appendSiteDiagnosticsLog('🔍 Scanning for exposed credentials...');
+            
+            // Check localStorage
+            let exposedCount = 0;
+            const sensitivePatterns = ['password', 'secret', 'key', 'token', 'api_key', 'apikey', 'auth'];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const keyLower = key.toLowerCase();
+                
+                if (sensitivePatterns.some(p => keyLower.includes(p))) {
+                    exposedCount++;
+                    securityScanResults.high.push({
+                        type: 'Credentials',
+                        title: 'Sensitive data in localStorage',
+                        description: `Key "${key}" may contain sensitive information`,
+                        location: 'localStorage',
+                        recommendation: 'Store sensitive data securely, not in localStorage'
+                    });
+                }
+            }
+            
+            // Check for hardcoded credentials in page
+            const pageContent = document.documentElement.innerHTML;
+            const credentialPatterns = [
+                /api[_-]?key\s*[:=]\s*["'][^"']+["']/gi,
+                /secret\s*[:=]\s*["'][^"']+["']/gi,
+                /password\s*[:=]\s*["'][^"']+["']/gi
+            ];
+            
+            credentialPatterns.forEach(pattern => {
+                const matches = pageContent.match(pattern);
+                if (matches && matches.length > 0) {
+                    securityScanResults.critical.push({
+                        type: 'Credentials',
+                        title: 'Hardcoded credentials detected',
+                        description: 'Found potential hardcoded credentials in page source',
+                        location: 'Page source',
+                        recommendation: 'Remove hardcoded credentials, use environment variables'
+                    });
+                }
+            });
+            
+            appendSiteDiagnosticsLog(`   Found ${exposedCount} potentially sensitive localStorage keys`);
+        }
+        
+        async function checkInsecureConfigurations() {
+            appendSiteDiagnosticsLog('🔍 Checking insecure configurations...');
+            
+            // Check for HTTP resources on HTTPS page
+            if (window.location.protocol === 'https:') {
+                const mixedContent = document.querySelectorAll('[src^="http:"], [href^="http:"]');
+                if (mixedContent.length > 0) {
+                    securityScanResults.medium.push({
+                        type: 'Configuration',
+                        title: 'Mixed content detected',
+                        description: `${mixedContent.length} HTTP resource(s) on HTTPS page`,
+                        location: 'External resources',
+                        recommendation: 'Use HTTPS for all external resources'
+                    });
+                }
+            }
+            
+            // Check for autocomplete on sensitive fields
+            const passwordFields = document.querySelectorAll('input[type="password"]');
+            passwordFields.forEach(field => {
+                if (field.getAttribute('autocomplete') !== 'off' && 
+                    field.getAttribute('autocomplete') !== 'new-password') {
+                    securityScanResults.low.push({
+                        type: 'Configuration',
+                        title: 'Password autocomplete enabled',
+                        description: 'Password field allows autocomplete',
+                        location: field.id || field.name || 'Password input',
+                        recommendation: 'Set autocomplete="new-password" for password fields'
+                    });
+                }
+            });
+            
+            // Check for target="_blank" without rel="noopener"
+            const externalLinks = document.querySelectorAll('a[target="_blank"]:not([rel*="noopener"])');
+            if (externalLinks.length > 0) {
+                securityScanResults.low.push({
+                    type: 'Configuration',
+                    title: 'Links without noopener',
+                    description: `${externalLinks.length} link(s) with target="_blank" missing rel="noopener"`,
+                    location: 'External links',
+                    recommendation: 'Add rel="noopener noreferrer" to external links'
+                });
+            }
+        }
+        
+        async function checkDependencyVulnerabilities() {
+            appendSiteDiagnosticsLog('🔍 Checking dependency vulnerabilities...');
+            
+            // Check for known vulnerable libraries by version
+            const vulnerableLibraries = [
+                { name: 'jQuery', pattern: /jquery[.-]?([\d.]+)/i, vulnerable: v => parseFloat(v) < 3.5 },
+                { name: 'Bootstrap', pattern: /bootstrap[.-]?([\d.]+)/i, vulnerable: v => parseFloat(v) < 4.6 },
+                { name: 'Angular', pattern: /angular[.-]?([\d.]+)/i, vulnerable: v => parseFloat(v) < 1.8 }
+            ];
+            
+            const scripts = document.querySelectorAll('script[src]');
+            scripts.forEach(script => {
+                const src = script.src.toLowerCase();
+                vulnerableLibraries.forEach(lib => {
+                    const match = src.match(lib.pattern);
+                    if (match && match[1] && lib.vulnerable(match[1])) {
+                        securityScanResults.high.push({
+                            type: 'Dependency',
+                            title: `Outdated ${lib.name} version`,
+                            description: `${lib.name} version ${match[1]} may have known vulnerabilities`,
+                            location: src,
+                            recommendation: `Update ${lib.name} to the latest version`
+                        });
+                    }
+                });
+            });
+            
+            appendSiteDiagnosticsLog(`   Checked ${scripts.length} external scripts`);
+        }
+        
+        async function checkSecurityHeaders() {
+            appendSiteDiagnosticsLog('🔍 Checking security headers...');
+            
+            // Note: Can't directly check response headers from JavaScript
+            // But can check meta tags and provide recommendations
+            
+            const metaCSP = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+            if (!metaCSP) {
+                securityScanResults.medium.push({
+                    type: 'Headers',
+                    title: 'Missing Content Security Policy',
+                    description: 'No CSP meta tag found',
+                    location: 'Page headers',
+                    recommendation: 'Add Content-Security-Policy header or meta tag'
+                });
+            }
+            
+            const metaXFrame = document.querySelector('meta[http-equiv="X-Frame-Options"]');
+            if (!metaXFrame) {
+                securityScanResults.low.push({
+                    type: 'Headers',
+                    title: 'No X-Frame-Options meta tag',
+                    description: 'Page may be vulnerable to clickjacking',
+                    location: 'Page headers',
+                    recommendation: 'Add X-Frame-Options header to prevent framing'
+                });
+            }
+            
+            appendSiteDiagnosticsLog('   Security headers check complete');
+        }
+        
+        async function scanStorageForSensitiveData() {
+            appendSiteDiagnosticsLog('🔍 Scanning storage for sensitive data...');
+            
+            const sensitiveDataPatterns = [
+                { pattern: /\d{3,4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}/g, type: 'Credit Card' },
+                { pattern: /\d{3}[-\s]?\d{2}[-\s]?\d{4}/g, type: 'SSN' },
+                { pattern: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, type: 'Email' }
+            ];
+            
+            let issuesFound = 0;
+            
+            // Check localStorage
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                
+                sensitiveDataPatterns.forEach(({ pattern, type }) => {
+                    if (type !== 'Email' && value && pattern.test(value)) {
+                        issuesFound++;
+                        securityScanResults.critical.push({
+                            type: 'Data Exposure',
+                            title: `${type} found in storage`,
+                            description: `Potential ${type} data stored in localStorage key: ${key}`,
+                            location: 'localStorage',
+                            recommendation: `Remove sensitive ${type} data from client-side storage`
+                        });
+                    }
+                });
+            }
+            
+            appendSiteDiagnosticsLog(`   Found ${issuesFound} potential sensitive data exposures`);
+        }
+        
+        function calculateSecurityScore() {
+            let score = 100;
+            
+            // Deduct points based on severity
+            score -= securityScanResults.critical.length * 25;
+            score -= securityScanResults.high.length * 15;
+            score -= securityScanResults.medium.length * 8;
+            score -= securityScanResults.low.length * 3;
+            
+            securityScanResults.score = Math.max(0, Math.min(100, score));
+        }
+        
+        function renderSecurityResults() {
+            // Update counts
+            document.getElementById('secCriticalCount').textContent = securityScanResults.critical.length;
+            document.getElementById('secHighCount').textContent = securityScanResults.high.length;
+            document.getElementById('secMediumCount').textContent = securityScanResults.medium.length;
+            document.getElementById('secLowCount').textContent = securityScanResults.low.length;
+            
+            // Update score
+            const score = securityScanResults.score;
+            document.getElementById('securityScore').textContent = score;
+            document.getElementById('securityScore').style.color = 
+                score >= 80 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--danger)';
+            
+            // Update grade
+            let grade = 'Critical Issues Found';
+            if (score >= 90) grade = 'Excellent Security';
+            else if (score >= 80) grade = 'Good Security';
+            else if (score >= 60) grade = 'Needs Improvement';
+            else if (score >= 40) grade = 'Poor Security';
+            document.getElementById('securityGrade').textContent = grade;
+            
+            // Update arc
+            const arc = document.getElementById('securityScoreArc');
+            arc.setAttribute('stroke-dasharray', `${score}, 100`);
+            arc.setAttribute('stroke', score >= 80 ? 'var(--success)' : score >= 50 ? 'var(--warning)' : 'var(--danger)');
+            
+            // Render vulnerability list
+            const container = document.getElementById('securityVulnList');
+            const allVulns = [
+                ...securityScanResults.critical.map(v => ({ ...v, severity: 'critical' })),
+                ...securityScanResults.high.map(v => ({ ...v, severity: 'high' })),
+                ...securityScanResults.medium.map(v => ({ ...v, severity: 'medium' })),
+                ...securityScanResults.low.map(v => ({ ...v, severity: 'low' }))
+            ];
+            
+            if (allVulns.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; background: rgba(16, 185, 129, 0.1); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5" style="margin-bottom: 12px;">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <polyline points="9 12 12 15 22 5" stroke="var(--success)"/>
+                        </svg>
+                        <div style="font-size: 1rem; color: var(--success); font-weight: 600;">No Vulnerabilities Found!</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Your application passed all security checks</div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = allVulns.map(vuln => `
+                    <div style="padding: 14px; background: var(--bg-tertiary); border-radius: 10px; border-left: 4px solid ${getSeverityColor(vuln.severity)};">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                            <div style="font-weight: 600; color: var(--text-primary);">${vuln.title}</div>
+                            <span style="padding: 2px 8px; background: ${getSeverityColor(vuln.severity)}33; color: ${getSeverityColor(vuln.severity)}; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; font-weight: 600;">${vuln.severity}</span>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">${vuln.description}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px;">📍 ${vuln.location}</div>
+                        <div style="font-size: 0.8rem; color: var(--info); display: flex; align-items: flex-start; gap: 6px;">
+                            <span>💡</span>
+                            <span>${vuln.recommendation}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function getSeverityColor(severity) {
+            switch (severity) {
+                case 'critical': return 'var(--danger)';
+                case 'high': return '#f97316';
+                case 'medium': return 'var(--warning)';
+                case 'low': return 'var(--info)';
+                default: return 'var(--text-muted)';
+            }
+        }
+        
+        function exportSecurityReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                score: securityScanResults.score,
+                summary: {
+                    critical: securityScanResults.critical.length,
+                    high: securityScanResults.high.length,
+                    medium: securityScanResults.medium.length,
+                    low: securityScanResults.low.length
+                },
+                vulnerabilities: {
+                    critical: securityScanResults.critical,
+                    high: securityScanResults.high,
+                    medium: securityScanResults.medium,
+                    low: securityScanResults.low
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `security-report-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Security report exported');
         }
         
         async function checkEmailStatus() {

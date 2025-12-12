@@ -17,6 +17,8 @@ const payrollRoutes = require('./routes/payroll');
 const syncRoutes = require('./routes/sync');
 const emailRoutes = require('./routes/email');
 const calendarRoutes = require('./routes/calendar');
+const authRoutes = require('./routes/auth');
+const filesRoutes = require('./routes/files');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -61,6 +63,8 @@ app.use('/api/payroll', payrollRoutes);
 app.use('/api/sync', syncRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/files', filesRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
