@@ -6261,6 +6261,16 @@
                                         <div>Users: <span id="bullUsers" style="color: var(--text-primary);">56K</span></div>
                                         <div>EBITDA: <span id="bullEBITDA" style="color: var(--success);">$500K</span></div>
                                     </div>
+                                    <!-- User Acquisition Requirements -->
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(34, 197, 94, 0.2);">
+                                        <div style="font-size: 0.7rem; color: var(--success); font-weight: 600; margin-bottom: 6px;">📈 REQUIRED METRICS</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                            <div>Signups/mo: <span style="color: var(--text-primary);" id="bullSignups">11,000</span></div>
+                                            <div>Conversion: <span style="color: var(--success);" id="bullConversion">42%</span></div>
+                                            <div>Churn: <span style="color: var(--success);">&lt;4%</span></div>
+                                            <div>CAC: <span style="color: var(--success);">&lt;$8</span></div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, var(--bg-tertiary) 100%); padding: 16px; border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -6272,6 +6282,16 @@
                                     <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
                                         <div>Users: <span id="baseUsers" style="color: var(--text-primary);">20K</span></div>
                                         <div>EBITDA: <span id="baseEBITDA" style="color: var(--info);">$38K</span></div>
+                                    </div>
+                                    <!-- User Acquisition Requirements -->
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(59, 130, 246, 0.2);">
+                                        <div style="font-size: 0.7rem; color: var(--info); font-weight: 600; margin-bottom: 6px;">📈 REQUIRED METRICS</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                            <div>Signups/mo: <span style="color: var(--text-primary);" id="baseSignups">4,500</span></div>
+                                            <div>Conversion: <span style="color: var(--info);" id="baseConversion">37%</span></div>
+                                            <div>Churn: <span style="color: var(--info);">&lt;6%</span></div>
+                                            <div>CAC: <span style="color: var(--info);">&lt;$12</span></div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, var(--bg-tertiary) 100%); padding: 16px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);">
@@ -6285,6 +6305,179 @@
                                         <div>Users: <span id="bearUsers" style="color: var(--text-primary);">8K</span></div>
                                         <div>EBITDA: <span id="bearEBITDA" style="color: var(--danger);">-$120K</span></div>
                                     </div>
+                                    <!-- User Acquisition Requirements -->
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(239, 68, 68, 0.2);">
+                                        <div style="font-size: 0.7rem; color: var(--danger); font-weight: 600; margin-bottom: 6px;">📈 REQUIRED METRICS</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-muted);">
+                                            <div>Signups/mo: <span style="color: var(--text-primary);" id="bearSignups">2,000</span></div>
+                                            <div>Conversion: <span style="color: var(--warning);" id="bearConversion">33%</span></div>
+                                            <div>Churn: <span style="color: var(--danger);">&gt;8%</span></div>
+                                            <div>CAC: <span style="color: var(--danger);">&gt;$15</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- User Acquisition Funnel -->
+                        <div style="margin-bottom: 24px;">
+                            <h4 style="font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                🎯 User Acquisition Funnel
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Conversion rate analysis)</span>
+                            </h4>
+                            <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                    <!-- Ad Impressions -->
+                                    <div style="text-align: center; flex: 1; min-width: 100px;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Ad Impressions</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700;" id="funnelImpressions">500K</div>
+                                        <div style="font-size: 0.65rem; color: var(--text-muted);">100%</div>
+                                    </div>
+                                    <div style="color: var(--text-muted);">→</div>
+                                    <!-- Clicks -->
+                                    <div style="text-align: center; flex: 1; min-width: 100px;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Ad Clicks</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700;" id="funnelClicks">15K</div>
+                                        <div style="font-size: 0.65rem; color: var(--info);" id="funnelCTR">3% CTR</div>
+                                    </div>
+                                    <div style="color: var(--text-muted);">→</div>
+                                    <!-- Signups -->
+                                    <div style="text-align: center; flex: 1; min-width: 100px;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Signups</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700;" id="funnelSignups">4,500</div>
+                                        <div style="font-size: 0.65rem; color: var(--info);" id="funnelSignupRate">30% rate</div>
+                                    </div>
+                                    <div style="color: var(--text-muted);">→</div>
+                                    <!-- Conversions -->
+                                    <div style="text-align: center; flex: 1; min-width: 100px;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Paid Users</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--success);" id="funnelPaidUsers">1,665</div>
+                                        <div style="font-size: 0.65rem; color: var(--success);" id="funnelConversionRate">37% convert</div>
+                                    </div>
+                                    <div style="color: var(--text-muted);">→</div>
+                                    <!-- Revenue -->
+                                    <div style="text-align: center; flex: 1; min-width: 100px;">
+                                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Monthly Revenue</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--success);" id="funnelRevenue">$16,650</div>
+                                        <div style="font-size: 0.65rem; color: var(--success);">$10/user</div>
+                                    </div>
+                                </div>
+                                <!-- Current vs Target -->
+                                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+                                        <div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">Current Conversion</div>
+                                            <div style="font-size: 1rem; font-weight: 600;" id="currentConversionDisplay">--</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">Target (Base Case)</div>
+                                            <div style="font-size: 1rem; font-weight: 600; color: var(--info);">37%</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">Gap to Target</div>
+                                            <div style="font-size: 1rem; font-weight: 600;" id="conversionGap">--</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Advertising Spend Calculator -->
+                        <div style="margin-bottom: 24px;">
+                            <h4 style="font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                                💰 Ad Spend Calculator
+                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Integrated with Advertising data)</span>
+                                <button class="btn btn-small" style="margin-left: auto; font-size: 0.7rem; padding: 4px 8px;" onclick="syncAdDataToForecast()">🔄 Sync from Ads</button>
+                            </h4>
+                            <div style="background: linear-gradient(135deg, var(--bg-tertiary) 0%, rgba(168, 85, 247, 0.05) 100%); padding: 20px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.2);">
+                                <!-- Target Scenario Selector -->
+                                <div style="margin-bottom: 16px;">
+                                    <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 6px;">Target Scenario:</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button id="targetBull" class="btn btn-small" style="flex: 1; background: rgba(34, 197, 94, 0.1); border: 1px solid var(--success); color: var(--success);" onclick="selectTargetScenario('bull')">🚀 Bull</button>
+                                        <button id="targetBase" class="btn btn-small" style="flex: 1; background: rgba(59, 130, 246, 0.2); border: 2px solid var(--info); color: var(--info);" onclick="selectTargetScenario('base')">📈 Base</button>
+                                        <button id="targetBear" class="btn btn-small" style="flex: 1; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger);" onclick="selectTargetScenario('bear')">⚠️ Bear</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Calculator Inputs -->
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Target Users (Y1)</label>
+                                        <input type="number" id="calcTargetUsers" value="20000" style="width: 100%; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 0.9rem;" onchange="recalculateAdSpend()">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Expected Conversion Rate</label>
+                                        <input type="number" id="calcConversionRate" value="37" min="1" max="100" style="width: 100%; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 0.9rem;" onchange="recalculateAdSpend()">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Current CTR (from Ads)</label>
+                                        <input type="number" id="calcCTR" value="3" step="0.1" min="0.1" max="20" style="width: 100%; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 0.9rem;" onchange="recalculateAdSpend()">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Avg CPM (Cost per 1K impressions)</label>
+                                        <input type="number" id="calcCPM" value="8" step="0.5" min="1" style="width: 100%; padding: 8px 12px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; color: var(--text-primary); font-size: 0.9rem;" onchange="recalculateAdSpend()">
+                                    </div>
+                                </div>
+                                
+                                <!-- Results -->
+                                <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; text-align: center;">
+                                        <div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Required Signups</div>
+                                            <div style="font-size: 1.1rem; font-weight: 700;" id="calcRequiredSignups">54,054</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Required Clicks</div>
+                                            <div style="font-size: 1.1rem; font-weight: 700;" id="calcRequiredClicks">180,180</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Required Impressions</div>
+                                            <div style="font-size: 1.1rem; font-weight: 700;" id="calcRequiredImpressions">6M</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px;">Estimated CAC</div>
+                                            <div style="font-size: 1.1rem; font-weight: 700;" id="calcEstimatedCAC">$12.00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Total Ad Spend Required -->
+                                <div style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%); padding: 20px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3);">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; text-align: center;">
+                                        <div>
+                                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">💵 Total Y1 Ad Spend</div>
+                                            <div style="font-size: 1.8rem; font-weight: 700; color: #a855f7;" id="calcTotalAdSpend">$240,000</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">to achieve target</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">📅 Monthly Budget</div>
+                                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--info);" id="calcMonthlyBudget">$20,000</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">per month</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px;">📊 Projected ROI</div>
+                                            <div style="font-size: 1.8rem; font-weight: 700; color: var(--success);" id="calcProjectedROI">236%</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-muted);">return on ad spend</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Recommendations -->
+                                <div style="margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px; border-left: 3px solid var(--info);">
+                                    <div style="font-size: 0.8rem; font-weight: 600; color: var(--info); margin-bottom: 8px;">💡 Recommendations to Improve Conversion</div>
+                                    <div id="conversionRecommendations" style="font-size: 0.75rem; color: var(--text-muted);">
+                                        <div style="margin-bottom: 4px;">• Increase CTR from 3% → 4% would reduce ad spend by <span style="color: var(--success);">$60,000</span></div>
+                                        <div style="margin-bottom: 4px;">• Improve conversion from 37% → 42% would save <span style="color: var(--success);">$28,000</span></div>
+                                        <div>• Optimize CPM from $8 → $6 would save <span style="color: var(--success);">$60,000</span></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Link to Advertising -->
+                                <div style="margin-top: 16px; text-align: center;">
+                                    <button class="btn btn-primary" onclick="showSection('advertising')" style="background: linear-gradient(135deg, #a855f7, #6366f1);">
+                                        📢 Go to Advertising Dashboard →
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -24373,6 +24566,236 @@
                 return `$${value.toFixed(2)}`;
             }
         }
+        
+        // ==========================================
+        // ADVERTISING INTEGRATION FOR FORECASTING
+        // ==========================================
+        
+        let selectedTargetScenario = 'base';
+        
+        const scenarioTargets = {
+            bull: { users: 56000, conversion: 42, signups: 11000, churn: 4, cac: 8 },
+            base: { users: 20000, conversion: 37, signups: 4500, churn: 6, cac: 12 },
+            bear: { users: 8000, conversion: 33, signups: 2000, churn: 8, cac: 15 }
+        };
+        
+        function syncAdDataToForecast() {
+            // Get data from advertising section
+            let ctr = 3;
+            let cpm = 8;
+            let totalSpend = 0;
+            let impressions = 0;
+            let clicks = 0;
+            let conversions = 0;
+            
+            // Try to get from advertisingData global
+            if (typeof advertisingData !== 'undefined' && advertisingData.campaigns) {
+                advertisingData.campaigns.forEach(c => {
+                    impressions += c.impressions || 0;
+                    clicks += c.clicks || 0;
+                    conversions += c.conversions || 0;
+                    totalSpend += c.spent || 0;
+                });
+                
+                if (impressions > 0 && clicks > 0) {
+                    ctr = (clicks / impressions) * 100;
+                }
+                if (impressions > 0 && totalSpend > 0) {
+                    cpm = (totalSpend / impressions) * 1000;
+                }
+            }
+            
+            // Update inputs
+            const ctrInput = document.getElementById('calcCTR');
+            const cpmInput = document.getElementById('calcCPM');
+            
+            if (ctrInput) ctrInput.value = ctr.toFixed(1);
+            if (cpmInput) cpmInput.value = cpm.toFixed(2);
+            
+            // Update funnel with actual data
+            updateFunnelFromAds(impressions, clicks, conversions, totalSpend);
+            
+            // Recalculate
+            recalculateAdSpend();
+            
+            showToast('Synced advertising data to forecast', 'success');
+        }
+        
+        function updateFunnelFromAds(impressions, clicks, conversions, spend) {
+            const funnelImpressions = document.getElementById('funnelImpressions');
+            const funnelClicks = document.getElementById('funnelClicks');
+            const funnelCTR = document.getElementById('funnelCTR');
+            const funnelSignups = document.getElementById('funnelSignups');
+            const funnelSignupRate = document.getElementById('funnelSignupRate');
+            const funnelPaidUsers = document.getElementById('funnelPaidUsers');
+            const funnelConversionRate = document.getElementById('funnelConversionRate');
+            const funnelRevenue = document.getElementById('funnelRevenue');
+            
+            if (impressions > 0) {
+                if (funnelImpressions) funnelImpressions.textContent = formatLargeNumber(impressions);
+                if (funnelClicks) funnelClicks.textContent = formatLargeNumber(clicks);
+                if (funnelCTR) funnelCTR.textContent = `${((clicks / impressions) * 100).toFixed(1)}% CTR`;
+                
+                // Estimate signups (30% of clicks)
+                const signups = Math.round(clicks * 0.3);
+                if (funnelSignups) funnelSignups.textContent = formatLargeNumber(signups);
+                if (funnelSignupRate) funnelSignupRate.textContent = `30% rate`;
+                
+                // Use actual conversions if available, else estimate
+                const paidUsers = conversions > 0 ? conversions : Math.round(signups * 0.37);
+                if (funnelPaidUsers) funnelPaidUsers.textContent = formatLargeNumber(paidUsers);
+                
+                const convRate = signups > 0 ? ((paidUsers / signups) * 100).toFixed(0) : 37;
+                if (funnelConversionRate) funnelConversionRate.textContent = `${convRate}% convert`;
+                
+                const revenue = paidUsers * 10;
+                if (funnelRevenue) funnelRevenue.textContent = formatCurrency(revenue);
+                
+                // Update current conversion display
+                const currentConversionDisplay = document.getElementById('currentConversionDisplay');
+                const conversionGap = document.getElementById('conversionGap');
+                
+                if (currentConversionDisplay) {
+                    currentConversionDisplay.textContent = `${convRate}%`;
+                    currentConversionDisplay.style.color = convRate >= 37 ? 'var(--success)' : convRate >= 30 ? 'var(--warning)' : 'var(--danger)';
+                }
+                
+                if (conversionGap) {
+                    const gap = 37 - parseFloat(convRate);
+                    if (gap <= 0) {
+                        conversionGap.textContent = '✓ On Target';
+                        conversionGap.style.color = 'var(--success)';
+                    } else {
+                        conversionGap.textContent = `+${gap.toFixed(0)}% needed`;
+                        conversionGap.style.color = 'var(--warning)';
+                    }
+                }
+            }
+        }
+        
+        function formatLargeNumber(num) {
+            if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+            if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
+            return num.toString();
+        }
+        
+        function selectTargetScenario(scenario) {
+            selectedTargetScenario = scenario;
+            const target = scenarioTargets[scenario];
+            
+            // Update button styles
+            ['bull', 'base', 'bear'].forEach(s => {
+                const btn = document.getElementById(`target${s.charAt(0).toUpperCase() + s.slice(1)}`);
+                if (btn) {
+                    if (s === scenario) {
+                        btn.style.borderWidth = '2px';
+                        btn.style.background = s === 'bull' ? 'rgba(34, 197, 94, 0.2)' : 
+                                              s === 'base' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+                    } else {
+                        btn.style.borderWidth = '1px';
+                        btn.style.background = s === 'bull' ? 'rgba(34, 197, 94, 0.1)' : 
+                                              s === 'base' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+                    }
+                }
+            });
+            
+            // Update inputs
+            const usersInput = document.getElementById('calcTargetUsers');
+            const conversionInput = document.getElementById('calcConversionRate');
+            
+            if (usersInput) usersInput.value = target.users;
+            if (conversionInput) conversionInput.value = target.conversion;
+            
+            recalculateAdSpend();
+        }
+        
+        function recalculateAdSpend() {
+            const targetUsers = parseFloat(document.getElementById('calcTargetUsers')?.value || 20000);
+            const conversionRate = parseFloat(document.getElementById('calcConversionRate')?.value || 37) / 100;
+            const ctr = parseFloat(document.getElementById('calcCTR')?.value || 3) / 100;
+            const cpm = parseFloat(document.getElementById('calcCPM')?.value || 8);
+            const signupRate = 0.30; // 30% of clicks become signups
+            
+            // Calculate backwards from target users
+            const requiredSignups = Math.ceil(targetUsers / conversionRate);
+            const requiredClicks = Math.ceil(requiredSignups / signupRate);
+            const requiredImpressions = Math.ceil(requiredClicks / ctr);
+            
+            // Calculate costs
+            const totalAdSpend = (requiredImpressions / 1000) * cpm;
+            const monthlyBudget = totalAdSpend / 12;
+            const estimatedCAC = totalAdSpend / targetUsers;
+            
+            // Calculate ROI (assuming $10/month subscription, 12 month LTV)
+            const expectedRevenue = targetUsers * 10 * 12; // $10/month * 12 months
+            const roi = ((expectedRevenue - totalAdSpend) / totalAdSpend) * 100;
+            
+            // Update UI
+            const updateEl = (id, value) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            };
+            
+            updateEl('calcRequiredSignups', formatLargeNumber(requiredSignups));
+            updateEl('calcRequiredClicks', formatLargeNumber(requiredClicks));
+            updateEl('calcRequiredImpressions', formatLargeNumber(requiredImpressions));
+            updateEl('calcEstimatedCAC', `$${estimatedCAC.toFixed(2)}`);
+            updateEl('calcTotalAdSpend', formatCurrency(totalAdSpend));
+            updateEl('calcMonthlyBudget', formatCurrency(monthlyBudget));
+            updateEl('calcProjectedROI', `${roi.toFixed(0)}%`);
+            
+            // Color code ROI
+            const roiEl = document.getElementById('calcProjectedROI');
+            if (roiEl) {
+                roiEl.style.color = roi > 100 ? 'var(--success)' : roi > 0 ? 'var(--warning)' : 'var(--danger)';
+            }
+            
+            // Color code CAC
+            const cacEl = document.getElementById('calcEstimatedCAC');
+            if (cacEl) {
+                cacEl.style.color = estimatedCAC < 10 ? 'var(--success)' : estimatedCAC < 15 ? 'var(--info)' : 'var(--warning)';
+            }
+            
+            // Update recommendations
+            updateConversionRecommendations(targetUsers, conversionRate, ctr, cpm, totalAdSpend);
+        }
+        
+        function updateConversionRecommendations(targetUsers, convRate, ctr, cpm, currentSpend) {
+            const recommendationsEl = document.getElementById('conversionRecommendations');
+            if (!recommendationsEl) return;
+            
+            // Calculate savings for improvements
+            const improvedCTR = ctr * 1.33; // 33% improvement
+            const improvedConv = convRate * 1.135; // 13.5% improvement
+            const improvedCPM = cpm * 0.75; // 25% reduction
+            
+            const signupRate = 0.30;
+            
+            // CTR improvement savings
+            const newClicksNeeded = Math.ceil((targetUsers / convRate) / signupRate);
+            const newImpressionsNeeded = Math.ceil(newClicksNeeded / improvedCTR);
+            const ctrSavings = currentSpend - ((newImpressionsNeeded / 1000) * cpm);
+            
+            // Conversion improvement savings
+            const newSignupsNeeded = Math.ceil(targetUsers / improvedConv);
+            const newClicks2 = Math.ceil(newSignupsNeeded / signupRate);
+            const newImpressions2 = Math.ceil(newClicks2 / ctr);
+            const convSavings = currentSpend - ((newImpressions2 / 1000) * cpm);
+            
+            // CPM improvement savings
+            const cpmSavings = currentSpend - ((currentSpend / cpm) * improvedCPM);
+            
+            recommendationsEl.innerHTML = `
+                <div style="margin-bottom: 4px;">• Increase CTR from ${(ctr * 100).toFixed(1)}% → ${(improvedCTR * 100).toFixed(1)}% would reduce ad spend by <span style="color: var(--success);">${formatCurrency(Math.abs(ctrSavings))}</span></div>
+                <div style="margin-bottom: 4px;">• Improve conversion from ${(convRate * 100).toFixed(0)}% → ${(improvedConv * 100).toFixed(0)}% would save <span style="color: var(--success);">${formatCurrency(Math.abs(convSavings))}</span></div>
+                <div>• Optimize CPM from $${cpm.toFixed(2)} → $${improvedCPM.toFixed(2)} would save <span style="color: var(--success);">${formatCurrency(Math.abs(cpmSavings))}</span></div>
+            `;
+        }
+        
+        // Initialize the ad spend calculator on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(recalculateAdSpend, 500);
+        });
         
         // ==========================================
         // BANK ACCOUNT MANAGEMENT
