@@ -24706,7 +24706,7 @@
                 }
             }
             
-            // Fallback to localStorage if AWS empty or failed
+            // Fallback to localStorage cache if AWS empty or failed
             if (dataSource !== 'aws') {
                 const saved = localStorage.getItem('oith_advertising_data');
                 if (saved) {
@@ -24727,13 +24727,12 @@
                 }
             }
             
-            // Initialize with demo data if still empty
+            // No demo data - show empty state if no campaigns
             if (!advertisingData.campaigns || advertisingData.campaigns.length === 0) {
-                advertisingData = generateDemoAdvertisingData();
-                dataSource = 'demo';
+                dataSource = 'empty';
                 if (sourceEl) {
-                    sourceEl.innerHTML = '🟣 Demo Mode';
-                    sourceEl.style.background = 'var(--purple)';
+                    sourceEl.innerHTML = '⚪ No Campaigns';
+                    sourceEl.style.background = 'var(--text-muted)';
                 }
             }
             
@@ -24812,116 +24811,7 @@
             }
         }
         
-        function generateDemoAdvertisingData() {
-            const now = new Date();
-            const campaigns = [
-                {
-                    id: 'camp_001',
-                    name: 'App Launch Campaign',
-                    platform: 'google',
-                    status: 'active',
-                    budget: 2000,
-                    spent: 1247.50,
-                    impressions: 125000,
-                    clicks: 3125,
-                    conversions: 312,
-                    startDate: new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString(),
-                    endDate: null
-                },
-                {
-                    id: 'camp_002',
-                    name: 'Dating App Users',
-                    platform: 'meta',
-                    status: 'active',
-                    budget: 1500,
-                    spent: 892.30,
-                    impressions: 89000,
-                    clicks: 2670,
-                    conversions: 178,
-                    startDate: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                    endDate: null
-                },
-                {
-                    id: 'camp_003',
-                    name: 'Gen Z Awareness',
-                    platform: 'tiktok',
-                    status: 'active',
-                    budget: 1000,
-                    spent: 456.80,
-                    impressions: 230000,
-                    clicks: 4600,
-                    conversions: 92,
-                    startDate: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    endDate: null
-                },
-                {
-                    id: 'camp_004',
-                    name: 'iOS App Store',
-                    platform: 'apple',
-                    status: 'active',
-                    budget: 800,
-                    spent: 234.20,
-                    impressions: 15000,
-                    clicks: 750,
-                    conversions: 150,
-                    startDate: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                    endDate: null
-                },
-                {
-                    id: 'camp_005',
-                    name: 'Brand Awareness',
-                    platform: 'twitter',
-                    status: 'paused',
-                    budget: 500,
-                    spent: 123.40,
-                    impressions: 45000,
-                    clicks: 450,
-                    conversions: 23,
-                    startDate: new Date(now - 21 * 24 * 60 * 60 * 1000).toISOString(),
-                    endDate: null
-                }
-            ];
-            
-            // Generate daily spend for last 14 days
-            const dailySpend = [];
-            for (let i = 13; i >= 0; i--) {
-                const date = new Date(now - i * 24 * 60 * 60 * 1000);
-                dailySpend.push({
-                    date: date.toISOString().split('T')[0],
-                    amount: Math.round((150 + Math.random() * 150) * 100) / 100
-                });
-            }
-            
-            // Calculate platform spend
-            const platformSpend = { google: 0, meta: 0, tiktok: 0, apple: 0, twitter: 0 };
-            campaigns.forEach(c => {
-                platformSpend[c.platform] = (platformSpend[c.platform] || 0) + c.spent;
-            });
-            
-            const totalSpend = Object.values(platformSpend).reduce((a, b) => a + b, 0);
-            const totalImpressions = campaigns.reduce((a, c) => a + c.impressions, 0);
-            const totalClicks = campaigns.reduce((a, c) => a + c.clicks, 0);
-            const totalConversions = campaigns.reduce((a, c) => a + c.conversions, 0);
-            
-            return {
-                campaigns,
-                budget: { daily: 500, monthly: 10000, alertThreshold: 80 },
-                totalSpend,
-                platformSpend,
-                dailySpend,
-                metrics: { 
-                    impressions: totalImpressions, 
-                    clicks: totalClicks, 
-                    conversions: totalConversions 
-                },
-                audience: {
-                    reach: 504000,
-                    topAgeGroup: '18-24',
-                    topLocation: 'New York',
-                    topDevice: 'iOS'
-                }
-            };
-        }
+        // No demo data - all advertising data comes from AWS only
         
         function updateAdvertisingUI() {
             const data = advertisingData;
@@ -25022,8 +24912,25 @@
             const tbody = document.getElementById('campaignsTableBody');
             if (!tbody) return;
             
-            if (!campaigns.length) {
-                tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 40px;">No campaigns found. Click "New Campaign" to create one.</td></tr>`;
+            if (!campaigns || !campaigns.length) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 60px;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📢</div>
+                            <h3 style="margin: 0 0 8px 0; color: var(--text-primary);">No Active Campaigns</h3>
+                            <p style="color: var(--text-muted); margin: 0 0 20px 0;">Create your first advertising campaign to start reaching users.</p>
+                            <button class="btn btn-primary" onclick="showCreateCampaignModal()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Create Your First Campaign
+                            </button>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 16px;">
+                                Campaigns sync automatically with AWS in real-time
+                            </p>
+                        </td>
+                    </tr>`;
                 return;
             }
             
@@ -25303,7 +25210,7 @@
                 console.warn('⚠️ Could not fetch venues from AWS:', error.message);
             }
             
-            // Fallback to localStorage
+            // Fallback to localStorage cache
             if (!sponsoredVenues.length) {
                 const saved = localStorage.getItem('oith_sponsored_venues');
                 if (saved) {
@@ -25315,11 +25222,7 @@
                 }
             }
             
-            // Demo data if empty
-            if (!sponsoredVenues.length) {
-                sponsoredVenues = generateDemoVenues();
-            }
-            
+            // No demo data - show empty state if no venues
             renderSponsoredVenues();
             updateVenueStats();
             
@@ -25329,95 +25232,7 @@
             document.getElementById('venuePricePremium').value = venuePricing.premium;
         }
         
-        function generateDemoVenues() {
-            return [
-                {
-                    id: 'venue_001',
-                    name: 'The Rooftop Garden',
-                    type: 'restaurant',
-                    tier: 'premium',
-                    address: '123 Main St, New York, NY 10001',
-                    description: 'Romantic rooftop dining with stunning city views. Perfect for special occasions.',
-                    phone: '(212) 555-0123',
-                    website: 'https://rooftopgarden.example.com',
-                    priceRange: '$$$',
-                    cuisineType: 'Contemporary American',
-                    dateIdeas: ['Sunset dinner', 'Anniversary celebration', 'Special occasion'],
-                    photos: ['https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400'],
-                    specialOffer: '15% off for OITH users',
-                    rating: 4.8,
-                    reviews: 342,
-                    views: 1250,
-                    clicks: 89,
-                    bookings: 23,
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 'venue_002',
-                    name: 'Moonlight Jazz Lounge',
-                    type: 'bar',
-                    tier: 'featured',
-                    address: '456 Broadway, New York, NY 10012',
-                    description: 'Intimate jazz bar with craft cocktails. Live music every night.',
-                    phone: '(212) 555-0456',
-                    website: 'https://moonlightjazz.example.com',
-                    priceRange: '$$',
-                    dateIdeas: ['Live music night', 'Cocktail tasting', 'Late night date'],
-                    photos: ['https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400'],
-                    specialOffer: 'Free appetizer with 2 cocktails',
-                    rating: 4.6,
-                    reviews: 189,
-                    views: 890,
-                    clicks: 67,
-                    bookings: 15,
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 'venue_003',
-                    name: 'Central Park Picnic Co.',
-                    type: 'outdoor',
-                    tier: 'featured',
-                    address: 'Central Park, New York, NY',
-                    description: 'Luxury picnic setups in Central Park. We handle everything!',
-                    phone: '(212) 555-0789',
-                    website: 'https://parkpicnic.example.com',
-                    priceRange: '$$',
-                    dateIdeas: ['Picnic in the park', 'Proposal setup', 'Sunset experience'],
-                    photos: ['https://images.unsplash.com/photo-1526976668912-1a811878dd37?w=400'],
-                    specialOffer: 'Champagne upgrade included',
-                    rating: 4.9,
-                    reviews: 256,
-                    views: 2100,
-                    clicks: 156,
-                    bookings: 48,
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 'venue_004',
-                    name: 'Artisan Coffee House',
-                    type: 'cafe',
-                    tier: 'basic',
-                    address: '789 Cafe Lane, Brooklyn, NY 11201',
-                    description: 'Cozy coffee shop with artisan brews and homemade pastries.',
-                    phone: '(718) 555-0321',
-                    website: '',
-                    priceRange: '$',
-                    dateIdeas: ['Coffee date', 'Study date', 'Morning brunch'],
-                    photos: ['https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400'],
-                    specialOffer: '',
-                    rating: 4.5,
-                    reviews: 128,
-                    views: 450,
-                    clicks: 34,
-                    bookings: 8,
-                    status: 'active',
-                    createdAt: new Date().toISOString()
-                }
-            ];
-        }
+        // No demo data - all venue data comes from AWS only
         
         function updateVenueStats() {
             const activeVenues = sponsoredVenues.filter(v => v.status === 'active');
