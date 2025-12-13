@@ -1068,6 +1068,23 @@ export const handler = async (event) => {
             return await updateUserProfile(event);
         }
         
+        // ============ ADMIN ACTIVITY LOG ============
+        
+        // POST /admin/activity-log - Log admin activity
+        if (path.includes('/admin/activity-log') && method === 'POST') {
+            return await logAdminActivity(event);
+        }
+        
+        // GET /admin/activity-log - Get admin activity logs
+        if (path.includes('/admin/activity-log') && method === 'GET') {
+            return await getAdminActivityLogs(event);
+        }
+        
+        // DELETE /admin/activity-log - Clear admin activity logs
+        if (path.includes('/admin/activity-log') && method === 'DELETE') {
+            return await clearAdminActivityLogs(event);
+        }
+        
         return {
             statusCode: 404,
             headers,
@@ -2999,5 +3016,139 @@ async function diagnoseMatch(event) {
         headers,
         body: JSON.stringify(diagnosis, null, 2)
     };
+}
+
+// ==========================================
+// ADMIN ACTIVITY LOG
+// ==========================================
+
+/**
+ * Log admin activity to DynamoDB
+ */
+async function logAdminActivity(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { id, type, action, details, admin, timestamp } = body;
+    
+    if (!type || !action) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'type and action are required' })
+        };
+    }
+    
+    const now = new Date().toISOString();
+    const logId = id || `log_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    try {
+        await docClient.send(new PutCommand({
+            TableName: TABLES.COMPANY,
+            Item: {
+                pk: 'ADMIN_ACTIVITY',
+                sk: `LOG#${now}#${logId}`,
+                id: logId,
+                type,
+                action,
+                details: details || '',
+                admin: admin || { name: 'Unknown', email: 'unknown@oith.app' },
+                timestamp: timestamp || now,
+                createdAt: now
+            }
+        }));
+        
+        console.log(`📝 Admin activity logged: ${type} - ${action}`);
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ success: true, id: logId })
+        };
+    } catch (error) {
+        console.error('❌ Failed to log admin activity:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+}
+
+/**
+ * Get admin activity logs
+ */
+async function getAdminActivityLogs(event) {
+    const queryParams = event.queryStringParameters || {};
+    const limit = parseInt(queryParams.limit) || 100;
+    
+    try {
+        const result = await docClient.send(new QueryCommand({
+            TableName: TABLES.COMPANY,
+            KeyConditionExpression: 'pk = :pk',
+            ExpressionAttributeValues: { ':pk': 'ADMIN_ACTIVITY' },
+            ScanIndexForward: false, // Newest first
+            Limit: limit
+        }));
+        
+        const logs = (result.Items || []).map(item => ({
+            id: item.id,
+            type: item.type,
+            action: item.action,
+            details: item.details,
+            admin: item.admin,
+            timestamp: item.timestamp
+        }));
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ logs, count: logs.length })
+        };
+    } catch (error) {
+        console.error('❌ Failed to get admin activity logs:', error);
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ logs: [], count: 0, error: error.message })
+        };
+    }
+}
+
+/**
+ * Clear admin activity logs
+ */
+async function clearAdminActivityLogs(event) {
+    try {
+        // Get all logs first
+        const result = await docClient.send(new QueryCommand({
+            TableName: TABLES.COMPANY,
+            KeyConditionExpression: 'pk = :pk',
+            ExpressionAttributeValues: { ':pk': 'ADMIN_ACTIVITY' }
+        }));
+        
+        // Delete each log
+        const deletePromises = (result.Items || []).map(item =>
+            docClient.send(new DeleteCommand({
+                TableName: TABLES.COMPANY,
+                Key: { pk: item.pk, sk: item.sk }
+            }))
+        );
+        
+        await Promise.all(deletePromises);
+        
+        console.log(`🗑️ Cleared ${result.Items?.length || 0} admin activity logs`);
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ success: true, deleted: result.Items?.length || 0 })
+        };
+    } catch (error) {
+        console.error('❌ Failed to clear admin activity logs:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
 }
 
