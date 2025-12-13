@@ -969,6 +969,21 @@ export const handler = async (event) => {
     const path = event.path || event.rawPath || '';
     const method = event.httpMethod || event.requestContext?.http?.method;
     
+    // Health check endpoint (works for any method)
+    if (path.includes('/health') || path.includes('/ping')) {
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ 
+                status: 'ok', 
+                timestamp: new Date().toISOString(),
+                path,
+                method,
+                version: '2.0.0'
+            })
+        };
+    }
+    
     try {
         // POST /api/match/next - Get next match
         if (path.includes('/match/next') && method === 'POST') {
