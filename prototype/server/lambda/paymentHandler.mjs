@@ -33,13 +33,17 @@ const SUBSCRIPTION_PLANS = {
     }
 };
 
-// CORS headers
-const headers = {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+// CORS headers - formatted for HTTP API v2 compatibility
+const corsHeaders = {
+    'content-type': 'application/json',
+    'access-control-allow-origin': '*',
+    'access-control-allow-headers': 'content-type, authorization, x-amz-date, x-api-key, x-amz-security-token',
+    'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'access-control-max-age': '86400'
 };
+
+// Wrapper to ensure headers work with both HTTP API v1 and v2
+const headers = corsHeaders;
 
 // Initialize Stripe
 async function getStripe() {
@@ -55,9 +59,19 @@ export const handler = async (event) => {
     const method = event.httpMethod || event.requestContext?.http?.method;
     const path = event.path || event.rawPath || '';
     
-    // Handle CORS preflight
+    // Handle CORS preflight - explicit response for HTTP API v2
     if (method === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
+        return {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+                'Access-Control-Max-Age': '86400',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: 'CORS preflight successful' })
+        };
     }
     
     try {
@@ -219,21 +233,46 @@ export const handler = async (event) => {
                 }
             }
             
-            // Create subscription with incomplete status
+            // Get or create the OITH Premium product
+            let product;
+            const existingProducts = await stripeClient.products.list({ 
+                limit: 1, 
+                active: true 
+            });
+            
+            const oithProduct = existingProducts.data.find(p => p.name === 'OITH Premium Monthly');
+            if (oithProduct) {
+                product = oithProduct;
+            } else {
+                product = await stripeClient.products.create({
+                    name: 'OITH Premium Monthly',
+                    description: planDetails.features.join(' • ')
+                });
+            }
+            
+            // Get or create the price for this product
+            let price;
+            const existingPrices = await stripeClient.prices.list({
+                product: product.id,
+                active: true,
+                limit: 1
+            });
+            
+            if (existingPrices.data.length > 0) {
+                price = existingPrices.data[0];
+            } else {
+                price = await stripeClient.prices.create({
+                    product: product.id,
+                    unit_amount: planDetails.price,
+                    currency: 'usd',
+                    recurring: { interval: planDetails.interval }
+                });
+            }
+            
+            // Create subscription with the price
             const subscription = await stripeClient.subscriptions.create({
                 customer: customer.id,
-                items: [{
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: planDetails.name,
-                        },
-                        unit_amount: planDetails.price,
-                        recurring: {
-                            interval: planDetails.interval
-                        }
-                    }
-                }],
+                items: [{ price: price.id }],
                 payment_behavior: 'default_incomplete',
                 payment_settings: { save_default_payment_method: 'on_subscription' },
                 expand: ['latest_invoice.payment_intent'],
@@ -243,12 +282,30 @@ export const handler = async (event) => {
                 }
             });
             
+            // Get the client secret from the payment intent
+            const paymentIntent = subscription.latest_invoice?.payment_intent;
+            
+            if (!paymentIntent || !paymentIntent.client_secret) {
+                // If no payment intent, the subscription might already be active or needs different handling
+                console.log('Subscription created but no payment intent:', subscription.status);
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        subscriptionId: subscription.id,
+                        status: subscription.status,
+                        customerId: customer.id,
+                        message: 'Subscription created successfully'
+                    })
+                };
+            }
+            
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
                     subscriptionId: subscription.id,
-                    clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+                    clientSecret: paymentIntent.client_secret,
                     customerId: customer.id
                 })
             };
@@ -284,22 +341,50 @@ export const handler = async (event) => {
                 }
             }
             
-            // Create checkout session
+            // Get or create the OITH Premium product
+            let product;
+            const existingProducts = await stripeClient.products.list({ 
+                limit: 10, 
+                active: true 
+            });
+            
+            const oithProduct = existingProducts.data.find(p => p.name === 'OITH Premium Monthly');
+            if (oithProduct) {
+                product = oithProduct;
+            } else {
+                product = await stripeClient.products.create({
+                    name: 'OITH Premium Monthly',
+                    description: planDetails.features.join(' • ')
+                });
+            }
+            
+            // Get or create the price for this product
+            let price;
+            const existingPrices = await stripeClient.prices.list({
+                product: product.id,
+                active: true,
+                limit: 1
+            });
+            
+            if (existingPrices.data.length > 0) {
+                price = existingPrices.data[0];
+            } else {
+                price = await stripeClient.prices.create({
+                    product: product.id,
+                    unit_amount: planDetails.price,
+                    currency: 'usd',
+                    recurring: { interval: planDetails.interval }
+                });
+            }
+            
+            // Create checkout session with the price
             const session = await stripeClient.checkout.sessions.create({
                 payment_method_types: ['card'],
                 mode: 'subscription',
                 customer: customer?.id,
                 customer_email: customer ? undefined : email,
                 line_items: [{
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: planDetails.name,
-                            description: planDetails.features.join(' • '),
-                        },
-                        unit_amount: planDetails.price,
-                        recurring: { interval: planDetails.interval }
-                    },
+                    price: price.id,
                     quantity: 1,
                 }],
                 success_url: `${DOMAIN}/prototype/index.html?payment=success&session_id={CHECKOUT_SESSION_ID}`,
