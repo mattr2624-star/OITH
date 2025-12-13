@@ -1,0 +1,41 @@
+# Jekyll configuration for GitHub Pages
+# Exclude directories and files that shouldn't be processed
+
+exclude:
+  - node_modules
+  - prototype/server/node_modules
+  - prototype/node_modules
+  - vendor
+  - Gemfile
+  - Gemfile.lock
+  - package.json
+  - package-lock.json
+  - "*.log"
+  - .env
+  - .env.example
+  - .gitignore
+  - LICENSE
+  - "*.sh"
+  - prototype/server
+  - prototype/data
+
+# Include only documentation and company files
+include:
+  - _pages
+  - company
+  - assets
+
+# Theme settings
+theme: jekyll-theme-primer
+
+# Markdown settings
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+
+# Plugins
+plugins:
+  - jekyll-seo-tag
+  - jekyll-github-metadata
+
