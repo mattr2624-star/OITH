@@ -33,3 +33,6 @@ build/
 *.tmp
 *.temp
 
+
+prototype/server/lambda/*.zip
+prototype/server/lambda/temp-*/
