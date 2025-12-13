@@ -19196,7 +19196,7 @@
         // Comprehensive AWS endpoint health checker
         async function checkAllAWSEndpoints() {
             const results = [];
-            const apiUrl = window.AWS_API_URL || 'https://api.oith.app';
+            const apiUrl = window.AWS_API_URL || AWS_API_URL || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
             
             // Define all AWS endpoints that admin sections depend on
             const awsEndpoints = [
@@ -20138,7 +20138,7 @@
                 }
                 
                 // Use the existing API endpoint pattern
-                const apiUrl = window.API_BASE_URL || 'https://api.oith.app';
+                const apiUrl = window.API_BASE_URL || AWS_API_URL || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
                 
                 const response = await fetch(`${apiUrl}/admin/activity-log`, {
                     method: 'POST',
@@ -20188,7 +20188,7 @@
                     statusEl.style.background = 'var(--info)';
                 }
                 
-                const apiUrl = window.API_BASE_URL || 'https://api.oith.app';
+                const apiUrl = window.API_BASE_URL || AWS_API_URL || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
                 
                 const response = await fetch(`${apiUrl}/admin/activity-log?limit=100`);
                 
@@ -20379,7 +20379,7 @@
         // Clear activity log on AWS
         async function clearActivityLogOnAWS() {
             try {
-                const apiUrl = window.API_BASE_URL || 'https://api.oith.app';
+                const apiUrl = window.API_BASE_URL || AWS_API_URL || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
                 await fetch(`${apiUrl}/admin/activity-log`, {
                     method: 'DELETE'
                 });
@@ -24069,36 +24069,65 @@
             document.getElementById('deleteUserModal').style.display = 'none';
         }
 
-        function confirmDeleteUser() {
+        async function confirmDeleteUser() {
             const email = document.getElementById('deleteUserEmail').value;
             
-            // Remove from registeredUsers
+            // Close modal first for better UX
+            closeDeleteUserModal();
+            showToast('Deleting user...', 'info');
+            
+            // 1. Delete from AWS
+            const awsApiUrl = localStorage.getItem('oith_aws_api_url') || 'https://emeapbgbui.execute-api.us-east-1.amazonaws.com';
+            let awsSuccess = false;
+            
+            try {
+                const response = await fetch(`${awsApiUrl}/users/${encodeURIComponent(email)}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log(`✅ User deleted from AWS:`, result);
+                    awsSuccess = true;
+                } else {
+                    console.warn(`⚠️ AWS delete failed: ${response.status}`);
+                }
+            } catch (e) {
+                console.warn('⚠️ AWS delete error:', e.message);
+            }
+            
+            // 2. Remove from registeredUsers localStorage
             if (registeredUsers[email]) {
                 delete registeredUsers[email];
                 localStorage.setItem('oith_registered_users', JSON.stringify(registeredUsers));
             }
             
-            // Remove user data (use same key format as app)
+            // 3. Remove user data (use same key format as app)
             const userDataKey = getUserStorageKey(email);
             localStorage.removeItem(userDataKey);
             
-            // Remove from allUserData
+            // 4. Remove from allUserData
             if (allUserData[email]) {
                 delete allUserData[email];
             }
             
-            // Close modal and refresh
-            closeDeleteUserModal();
+            // 5. Refresh UI
             loadAllData();
             renderUsers();
             
-            // Broadcast to app
+            // 6. Broadcast to app
             broadcastAdminSync('user_deleted', { email });
             
-            // Log activity
+            // 7. Log activity
             logAdminActivity('delete', 'Deleted user account', email);
             
-            showToast('User deleted successfully');
+            // 8. Show success message
+            if (awsSuccess) {
+                showToast('User deleted successfully (synced to AWS)', 'success');
+            } else {
+                showToast('User deleted locally (AWS sync may have failed)', 'warning');
+            }
         }
 
         // ==========================================
