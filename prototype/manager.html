@@ -9248,6 +9248,81 @@
                     </div>
                 </div>
 
+                <!-- Document Scanner Panel -->
+                <div class="card" style="margin-bottom: 20px; border: 2px solid var(--success);">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));">
+                        <h3 class="card-title">🔍 Document Scanner</h3>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="storage-badge" id="scannerStorageBadge" style="font-size: 0.7rem; padding: 4px 8px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.3); color: rgb(99, 102, 241); border-radius: 4px; display: none;">💾 Local</span>
+                            <span class="storage-badge" id="scannerAWSBadge" style="font-size: 0.7rem; padding: 4px 8px; background: rgba(255, 153, 0, 0.2); border: 1px solid rgba(255, 153, 0, 0.3); color: #ff9900; border-radius: 4px; display: none;">☁️ AWS</span>
+                            <button class="btn btn-success" onclick="runDocumentScan()" id="scanBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <path d="M21 21l-4.35-4.35"></path>
+                                </svg>
+                                Scan Documents
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="scannerResults" style="display: none;">
+                            <!-- Progress Ring -->
+                            <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 20px;">
+                                <div style="position: relative; width: 100px; height: 100px;">
+                                    <svg width="100" height="100" viewBox="0 0 100 100">
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border)" stroke-width="8"/>
+                                        <circle id="scannerProgressCircle" cx="50" cy="50" r="45" fill="none" stroke="var(--success)" stroke-width="8" 
+                                            stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283" 
+                                            style="transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset 1s ease;"/>
+                                    </svg>
+                                    <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                        <span id="scannerPercentage" style="font-size: 1.5rem; font-weight: 700;">0%</span>
+                                        <span style="font-size: 0.7rem; color: var(--text-muted);">Complete</span>
+                                    </div>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div id="scannerStatusText" style="font-weight: 600; margin-bottom: 8px;">Ready to scan</div>
+                                    <div id="scannerDocsCount" style="font-size: 0.8rem; color: var(--text-muted);">Click "Scan Documents" to analyze company folder</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Category Progress -->
+                            <div id="scannerCategories" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                                <!-- Populated by JS -->
+                            </div>
+                            
+                            <!-- Summary Stats -->
+                            <div id="scannerSummary" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--success);" id="scannerCompleted">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Completed</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning);" id="scannerPartial">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">In Progress</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-muted);" id="scannerMissing">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Missing</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Last Scan Info -->
+                            <div id="scannerLastScan" style="margin-top: 12px; font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+                                <span>Last scan: <span id="lastScanTime">--</span></span>
+                                <button onclick="syncScannerToAWS()" id="syncScannerBtn" class="btn btn-secondary" style="font-size: 0.75rem; padding: 4px 8px; display: none;">🔄 Sync to AWS</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Initial State -->
+                        <div id="scannerInitialState" style="text-align: center; padding: 40px;">
+                            <div style="font-size: 3rem; margin-bottom: 16px;">📂</div>
+                            <div style="font-weight: 600; margin-bottom: 8px;">Ready to scan</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted);">Analyze company documents for task completeness</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Full Calendar View -->
                 <div class="card">
                     <div class="card-header">
@@ -34195,7 +34270,8 @@
         // CALENDAR SECTION - Milestones & Timeline
         // =========================================
         
-        const projectMilestones = [
+        // Use window global so it's accessible across script blocks
+        window.projectMilestones = [
             // ============ PHASE 1: Foundation (Nov 28 - Dec 7) ============
             { date: '2025-11-28', title: '🏁 Company Start Date', phase: 1, type: 'milestone', critical: true },
             { date: '2025-12-02', title: 'Register LLC', phase: 1, type: 'task' },
@@ -36880,6 +36956,153 @@
             
             // Start launch readiness monitoring
             startLaunchReadinessMonitor();
+            
+            // Load last scanner progress
+            loadScannerProgress();
+        }
+        
+        // ==========================================
+        // DOCUMENT SCANNER FUNCTIONS
+        // ==========================================
+        
+        async function loadScannerProgress() {
+            try {
+                const response = await fetch('/api/scanner/progress');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.source !== 'none' && data.progress) {
+                        updateScannerUI(data);
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load scanner progress:', error.message);
+            }
+        }
+        
+        async function runDocumentScan() {
+            const scanBtn = document.getElementById('scanBtn');
+            const initialState = document.getElementById('scannerInitialState');
+            const results = document.getElementById('scannerResults');
+            
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = '<svg class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg> Scanning...';
+            
+            try {
+                const response = await fetch('/api/scanner/scan');
+                const data = await response.json();
+                
+                if (data.progress) {
+                    initialState.style.display = 'none';
+                    results.style.display = 'block';
+                    updateScannerUI(data);
+                    showToast(`Scan complete: ${data.progress.overallPercentage}% completion`, 'success');
+                }
+            } catch (error) {
+                showToast('Scan failed: ' + error.message, 'error');
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg> Scan Documents';
+            }
+        }
+        
+        function updateScannerUI(data) {
+            const { summary, progress, storage } = data;
+            const percentage = progress?.overallPercentage || 0;
+            
+            // Update progress circle
+            const circle = document.getElementById('scannerProgressCircle');
+            const circumference = 2 * Math.PI * 45; // r=45
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            // Update percentage
+            document.getElementById('scannerPercentage').textContent = percentage + '%';
+            
+            // Update status text
+            const statusText = document.getElementById('scannerStatusText');
+            const docsCount = document.getElementById('scannerDocsCount');
+            
+            if (percentage >= 80) {
+                statusText.textContent = '✅ Excellent progress!';
+            } else if (percentage >= 50) {
+                statusText.textContent = '📈 Good progress';
+            } else {
+                statusText.textContent = '⚠️ More work needed';
+            }
+            docsCount.textContent = `${data.documentsFound || 0} documents scanned`;
+            
+            // Update category progress
+            const categoriesContainer = document.getElementById('scannerCategories');
+            if (progress?.byCategory) {
+                categoriesContainer.innerHTML = Object.entries(progress.byCategory).map(([category, cat]) => {
+                    const pct = cat.percentage || 0;
+                    const colorVar = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--warning)' : 'var(--text-muted)';
+                    return `
+                        <div style="padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                                <span style="font-size: 0.8rem;">${category}</span>
+                                <span style="font-size: 0.8rem; font-weight: 600; color: ${colorVar};">${pct}%</span>
+                            </div>
+                            <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${pct}%; height: 100%; background: ${colorVar}; transition: width 0.5s;"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            // Update summary stats
+            document.getElementById('scannerCompleted').textContent = summary?.completed || 0;
+            document.getElementById('scannerPartial').textContent = summary?.partial || 0;
+            document.getElementById('scannerMissing').textContent = summary?.missing || 0;
+            
+            // Update last scan time
+            if (data.timestamp) {
+                document.getElementById('lastScanTime').textContent = new Date(data.timestamp).toLocaleString();
+            }
+            
+            // Update storage badges
+            const localBadge = document.getElementById('scannerStorageBadge');
+            const awsBadge = document.getElementById('scannerAWSBadge');
+            const syncBtn = document.getElementById('syncScannerBtn');
+            
+            if (storage?.local || data.source === 'local') {
+                localBadge.style.display = 'inline-block';
+            }
+            if (storage?.aws || data.source === 'aws' || data.savedToAWS) {
+                awsBadge.style.display = 'inline-block';
+                syncBtn.style.display = 'none';
+            } else if (storage?.local) {
+                syncBtn.style.display = 'inline-block';
+            }
+            
+            // Show results panel
+            document.getElementById('scannerInitialState').style.display = 'none';
+            document.getElementById('scannerResults').style.display = 'block';
+        }
+        
+        async function syncScannerToAWS() {
+            const syncBtn = document.getElementById('syncScannerBtn');
+            syncBtn.disabled = true;
+            syncBtn.textContent = '🔄 Syncing...';
+            
+            try {
+                const response = await fetch('/api/scanner/sync', { method: 'POST' });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('✅ Data synced to AWS!', 'success');
+                    document.getElementById('scannerAWSBadge').style.display = 'inline-block';
+                    syncBtn.style.display = 'none';
+                } else {
+                    showToast('⚠️ Sync failed: ' + result.reason, 'warning');
+                }
+            } catch (error) {
+                showToast('❌ Sync error: ' + error.message, 'error');
+            } finally {
+                syncBtn.disabled = false;
+                syncBtn.textContent = '🔄 Sync to AWS';
+            }
         }
 
         function renderMilestones() {
@@ -37137,9 +37360,9 @@
         }
 
         // Initialize calendar and ML models when section is shown
-        const originalShowSection = showSection;
+        const originalShowSectionCalendar = showSection;
         showSection = function(section) {
-            originalShowSection(section);
+            originalShowSectionCalendar(section);
             if (section === 'calendar') {
                 initCalendarSection();
             }
@@ -38429,8 +38652,9 @@
                 'task': 'calendar'
             };
             
-            // Convert projectMilestones to calendar events
-            calendarEvents = projectMilestones.map(m => ({
+            // Convert projectMilestones to calendar events (use window global)
+            const milestones = window.projectMilestones || [];
+            calendarEvents = milestones.map(m => ({
                 date: new Date(m.date),
                 title: m.title,
                 category: m.category || m.type || 'milestone',

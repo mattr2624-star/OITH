@@ -1,48 +1,97 @@
 /**
  * Calendar API Routes
  * Handles calendar event storage and sync with AWS
+ * Supports local JSON file storage as fallback
  */
 
 const express = require('express');
 const router = express.Router();
+const fs = require('fs').promises;
+const path = require('path');
 const { docClient, TABLES, isAWSConfigured } = require('../aws-config');
 const { PutCommand, QueryCommand, ScanCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+
+// Local storage path for calendar events
+const LOCAL_CALENDAR_PATH = path.resolve(__dirname, '../../data/calendar_events.json');
+
+/**
+ * Load calendar events from local JSON file
+ */
+async function loadLocalCalendar() {
+    try {
+        const data = await fs.readFile(LOCAL_CALENDAR_PATH, 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        return { events: [], lastSync: null };
+    }
+}
+
+/**
+ * Save calendar events to local JSON file
+ */
+async function saveLocalCalendar(events) {
+    try {
+        const dir = path.dirname(LOCAL_CALENDAR_PATH);
+        await fs.mkdir(dir, { recursive: true });
+        
+        const data = {
+            events,
+            lastSync: new Date().toISOString(),
+            count: events.length
+        };
+        
+        await fs.writeFile(LOCAL_CALENDAR_PATH, JSON.stringify(data, null, 2));
+        console.log('📅 Calendar events saved to local file');
+        return true;
+    } catch (error) {
+        console.error('Failed to save local calendar:', error.message);
+        return false;
+    }
+}
 
 // ==========================================
 // GET all calendar events
 // ==========================================
 router.get('/events', async (req, res) => {
     try {
-        if (!isAWSConfigured()) {
-            return res.json({
-                events: [],
-                source: 'none',
-                message: 'AWS not configured'
-            });
+        // Try AWS first if configured
+        if (isAWSConfigured()) {
+            try {
+                const result = await docClient.send(new ScanCommand({
+                    TableName: TABLES.USERS,
+                    FilterExpression: 'begins_with(pk, :pk)',
+                    ExpressionAttributeValues: { ':pk': 'CALENDAR#' }
+                }));
+
+                const events = (result.Items || []).map(item => ({
+                    id: item.sk,
+                    title: item.title,
+                    date: item.date,
+                    category: item.category,
+                    description: item.description,
+                    section: item.section,
+                    custom: item.custom,
+                    zoomMeetingId: item.zoomMeetingId,
+                    zoomLink: item.zoomLink
+                }));
+
+                return res.json({
+                    events,
+                    source: 'aws',
+                    count: events.length
+                });
+            } catch (awsError) {
+                console.error('AWS fetch failed, falling back to local:', awsError.message);
+            }
         }
 
-        const result = await docClient.send(new ScanCommand({
-            TableName: TABLES.USERS,
-            FilterExpression: 'begins_with(pk, :pk)',
-            ExpressionAttributeValues: { ':pk': 'CALENDAR#' }
-        }));
-
-        const events = (result.Items || []).map(item => ({
-            id: item.sk,
-            title: item.title,
-            date: item.date,
-            category: item.category,
-            description: item.description,
-            section: item.section,
-            custom: item.custom,
-            zoomMeetingId: item.zoomMeetingId,
-            zoomLink: item.zoomLink
-        }));
-
-        res.json({
-            events,
-            source: 'aws',
-            count: events.length
+        // Fallback to local storage
+        const localData = await loadLocalCalendar();
+        return res.json({
+            events: localData.events || [],
+            source: 'local',
+            count: (localData.events || []).length,
+            lastSync: localData.lastSync
         });
     } catch (error) {
         console.error('Error fetching calendar events:', error);
@@ -61,41 +110,51 @@ router.post('/sync', async (req, res) => {
             return res.status(400).json({ error: 'Events array required' });
         }
 
-        if (!isAWSConfigured()) {
-            return res.json({
-                success: false,
-                message: 'AWS not configured - events stored locally only'
-            });
-        }
-
+        // Always save to local storage first (backup)
+        const localSaved = await saveLocalCalendar(events);
+        
+        let syncedToAWS = false;
         let syncedCount = 0;
 
-        for (const event of events) {
-            if (!event.id) continue;
+        if (isAWSConfigured()) {
+            try {
+                for (const event of events) {
+                    if (!event.id) continue;
 
-            await docClient.send(new PutCommand({
-                TableName: TABLES.USERS,
-                Item: {
-                    pk: 'CALENDAR#EVENTS',
-                    sk: String(event.id),
-                    title: event.title,
-                    date: event.date,
-                    category: event.category || 'meeting',
-                    description: event.description || '',
-                    section: event.section || 'calendar',
-                    custom: event.custom || false,
-                    zoomMeetingId: event.zoomMeetingId || '',
-                    zoomLink: event.zoomLink || '',
-                    syncedAt: new Date().toISOString()
+                    await docClient.send(new PutCommand({
+                        TableName: TABLES.USERS,
+                        Item: {
+                            pk: 'CALENDAR#EVENTS',
+                            sk: String(event.id),
+                            title: event.title,
+                            date: event.date,
+                            category: event.category || 'meeting',
+                            description: event.description || '',
+                            section: event.section || 'calendar',
+                            custom: event.custom || false,
+                            zoomMeetingId: event.zoomMeetingId || '',
+                            zoomLink: event.zoomLink || '',
+                            syncedAt: new Date().toISOString()
+                        }
+                    }));
+                    syncedCount++;
                 }
-            }));
-            syncedCount++;
+                syncedToAWS = true;
+            } catch (awsError) {
+                console.error('AWS sync failed:', awsError.message);
+            }
         }
 
         res.json({
             success: true,
-            syncedCount,
-            message: `Synced ${syncedCount} calendar events to AWS`
+            syncedCount: events.length,
+            storage: {
+                local: localSaved,
+                aws: syncedToAWS
+            },
+            message: syncedToAWS 
+                ? `Synced ${syncedCount} calendar events to AWS` 
+                : `Saved ${events.length} events to local storage`
         });
     } catch (error) {
         console.error('Error syncing calendar:', error);

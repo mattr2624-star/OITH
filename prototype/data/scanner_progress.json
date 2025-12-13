@@ -1,0 +1,1645 @@
+{
+  "timestamp": "2025-12-13T17:08:07.073Z",
+  "companyPath": "C:\\Users\\mattr\\OneDrive\\Desktop\\Ross, Matt\\Operations\\MBA\\OITH\\company",
+  "documentsFound": 36,
+  "taskResults": {
+    "business-formation": {
+      "category": "Foundation",
+      "phase": 1,
+      "tasks": [
+        {
+          "id": "llc-registration",
+          "name": "LLC Registration",
+          "requiredDocs": [
+            "ARTICLES_OF_ORGANIZATION"
+          ],
+          "foundDocs": [
+            {
+              "name": "ARTICLES_OF_ORGANIZATION",
+              "path": "legal\\ARTICLES_OF_ORGANIZATION.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 128,
+                "wordCount": 434,
+                "hasHeaders": 15,
+                "hasTables": 0,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-11-29T20:33:34.000Z",
+                "qualityScore": 90
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 90,
+          "analysis": {
+            "exists": true,
+            "lineCount": 128,
+            "wordCount": 434,
+            "hasHeaders": 15,
+            "hasTables": 0,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-11-29T20:33:34.000Z",
+            "qualityScore": 90
+          }
+        },
+        {
+          "id": "ein-application",
+          "name": "EIN Application",
+          "requiredDocs": [
+            "EIN_APPLICATION_GUIDE"
+          ],
+          "foundDocs": [
+            {
+              "name": "EIN_APPLICATION_GUIDE",
+              "path": "legal\\EIN_APPLICATION_GUIDE.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 153,
+                "wordCount": 641,
+                "hasHeaders": 27,
+                "hasTables": 14,
+                "hasChecklists": 5,
+                "completedChecks": 0,
+                "pendingChecks": 5,
+                "hasContent": true,
+                "lastModified": "2025-11-29T20:34:41.000Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 153,
+            "wordCount": 641,
+            "hasHeaders": 27,
+            "hasTables": 14,
+            "hasChecklists": 5,
+            "completedChecks": 0,
+            "pendingChecks": 5,
+            "hasContent": true,
+            "lastModified": "2025-11-29T20:34:41.000Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "operating-agreement",
+          "name": "Operating Agreement",
+          "requiredDocs": [
+            "OPERATING_AGREEMENT"
+          ],
+          "foundDocs": [
+            {
+              "name": "OPERATING_AGREEMENT",
+              "path": "legal\\OPERATING_AGREEMENT.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 271,
+                "wordCount": 1198,
+                "hasHeaders": 48,
+                "hasTables": 8,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-11-29T20:34:13.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 271,
+            "wordCount": 1198,
+            "hasHeaders": 48,
+            "hasTables": 8,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-11-29T20:34:13.000Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "org-chart",
+          "name": "Organizational Chart",
+          "requiredDocs": [
+            "ORGANIZATIONAL_CHART"
+          ],
+          "foundDocs": [
+            {
+              "name": "ORGANIZATIONAL_CHART",
+              "path": "governance\\ORGANIZATIONAL_CHART.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 161,
+                "wordCount": 642,
+                "hasHeaders": 13,
+                "hasTables": 29,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-04T22:09:49.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 161,
+            "wordCount": 642,
+            "hasHeaders": 13,
+            "hasTables": 29,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-04T22:09:49.000Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "authority-matrix",
+          "name": "Authority Matrix",
+          "requiredDocs": [
+            "AUTHORITY_MATRIX"
+          ],
+          "foundDocs": [
+            {
+              "name": "AUTHORITY_MATRIX",
+              "path": "governance\\AUTHORITY_MATRIX.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 191,
+                "wordCount": 950,
+                "hasHeaders": 22,
+                "hasTables": 84,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-04T22:09:49.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 191,
+            "wordCount": 950,
+            "hasHeaders": 22,
+            "hasTables": 84,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-04T22:09:49.000Z",
+            "qualityScore": 100
+          }
+        }
+      ]
+    },
+    "legal-foundation": {
+      "category": "Legal",
+      "phase": 2,
+      "tasks": [
+        {
+          "id": "ai-ethics",
+          "name": "AI Ethics Policy",
+          "requiredDocs": [
+            "AI_ETHICS_POLICY"
+          ],
+          "foundDocs": [
+            {
+              "name": "AI_ETHICS_POLICY",
+              "path": "legal\\AI_ETHICS_POLICY.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 486,
+                "wordCount": 2287,
+                "hasHeaders": 65,
+                "hasTables": 70,
+                "hasChecklists": 45,
+                "completedChecks": 0,
+                "pendingChecks": 45,
+                "hasContent": true,
+                "lastModified": "2025-12-04T22:09:49.000Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 486,
+            "wordCount": 2287,
+            "hasHeaders": 65,
+            "hasTables": 70,
+            "hasChecklists": 45,
+            "completedChecks": 0,
+            "pendingChecks": 45,
+            "hasContent": true,
+            "lastModified": "2025-12-04T22:09:49.000Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "app-store-requirements",
+          "name": "App Store Publishing Requirements",
+          "requiredDocs": [
+            "APP_STORE_PUBLISHING_REQUIREMENTS"
+          ],
+          "foundDocs": [
+            {
+              "name": "APP_STORE_PUBLISHING_REQUIREMENTS",
+              "path": "legal\\APP_STORE_PUBLISHING_REQUIREMENTS.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 320,
+                "wordCount": 1550,
+                "hasHeaders": 53,
+                "hasTables": 52,
+                "hasChecklists": 79,
+                "completedChecks": 0,
+                "pendingChecks": 79,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.284Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 320,
+            "wordCount": 1550,
+            "hasHeaders": 53,
+            "hasTables": 52,
+            "hasChecklists": 79,
+            "completedChecks": 0,
+            "pendingChecks": 79,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.284Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "nda-template",
+          "name": "NDA Template",
+          "requiredDocs": [
+            "NDA_TEMPLATE"
+          ],
+          "foundDocs": [
+            {
+              "name": "NDA_TEMPLATE",
+              "path": "templates\\NDA_TEMPLATE.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 170,
+                "wordCount": 738,
+                "hasHeaders": 11,
+                "hasTables": 0,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-11-29T20:44:16.000Z",
+                "qualityScore": 90
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 90,
+          "analysis": {
+            "exists": true,
+            "lineCount": 170,
+            "wordCount": 738,
+            "hasHeaders": 11,
+            "hasTables": 0,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-11-29T20:44:16.000Z",
+            "qualityScore": 90
+          }
+        },
+        {
+          "id": "contractor-agreement",
+          "name": "Contractor Agreement",
+          "requiredDocs": [
+            "CONTRACTOR_AGREEMENT"
+          ],
+          "foundDocs": [
+            {
+              "name": "CONTRACTOR_AGREEMENT",
+              "path": "templates\\CONTRACTOR_AGREEMENT.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 242,
+                "wordCount": 871,
+                "hasHeaders": 22,
+                "hasTables": 10,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-11-29T20:44:45.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 242,
+            "wordCount": 871,
+            "hasHeaders": 22,
+            "hasTables": 10,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-11-29T20:44:45.000Z",
+            "qualityScore": 100
+          }
+        }
+      ]
+    },
+    "compliance": {
+      "category": "Compliance",
+      "phase": 2,
+      "tasks": [
+        {
+          "id": "compliance-overview",
+          "name": "Compliance Overview",
+          "requiredDocs": [
+            "COMPLIANCE_OVERVIEW"
+          ],
+          "foundDocs": [
+            {
+              "name": "COMPLIANCE_OVERVIEW",
+              "path": "legal\\compliance\\COMPLIANCE_OVERVIEW.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 88,
+                "wordCount": 486,
+                "hasHeaders": 10,
+                "hasTables": 24,
+                "hasChecklists": 21,
+                "completedChecks": 0,
+                "pendingChecks": 21,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.284Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 88,
+            "wordCount": 486,
+            "hasHeaders": 10,
+            "hasTables": 24,
+            "hasChecklists": 21,
+            "completedChecks": 0,
+            "pendingChecks": 21,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.284Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "app-store-compliance",
+          "name": "App Store Compliance",
+          "requiredDocs": [
+            "APP_STORE_COMPLIANCE"
+          ],
+          "foundDocs": [
+            {
+              "name": "APP_STORE_COMPLIANCE",
+              "path": "legal\\compliance\\APP_STORE_COMPLIANCE.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 293,
+                "wordCount": 1622,
+                "hasHeaders": 28,
+                "hasTables": 84,
+                "hasChecklists": 48,
+                "completedChecks": 0,
+                "pendingChecks": 48,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.297Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 293,
+            "wordCount": 1622,
+            "hasHeaders": 28,
+            "hasTables": 84,
+            "hasChecklists": 48,
+            "completedChecks": 0,
+            "pendingChecks": 48,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.297Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "business-continuity",
+          "name": "Business Continuity",
+          "requiredDocs": [
+            "BUSINESS_CONTINUITY"
+          ],
+          "foundDocs": [
+            {
+              "name": "BUSINESS_CONTINUITY",
+              "path": "legal\\compliance\\BUSINESS_CONTINUITY.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 391,
+                "wordCount": 1800,
+                "hasHeaders": 37,
+                "hasTables": 99,
+                "hasChecklists": 16,
+                "completedChecks": 0,
+                "pendingChecks": 16,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.294Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 391,
+            "wordCount": 1800,
+            "hasHeaders": 37,
+            "hasTables": 99,
+            "hasChecklists": 16,
+            "completedChecks": 0,
+            "pendingChecks": 16,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.294Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "feature-gap",
+          "name": "Feature Gap Analysis",
+          "requiredDocs": [
+            "FEATURE_GAP_ANALYSIS"
+          ],
+          "foundDocs": [
+            {
+              "name": "FEATURE_GAP_ANALYSIS",
+              "path": "legal\\compliance\\FEATURE_GAP_ANALYSIS.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 523,
+                "wordCount": 1674,
+                "hasHeaders": 46,
+                "hasTables": 19,
+                "hasChecklists": 30,
+                "completedChecks": 0,
+                "pendingChecks": 30,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.284Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 523,
+            "wordCount": 1674,
+            "hasHeaders": 46,
+            "hasTables": 19,
+            "hasChecklists": 30,
+            "completedChecks": 0,
+            "pendingChecks": 30,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.284Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "fraud-prevention",
+          "name": "Fraud Prevention",
+          "requiredDocs": [
+            "FRAUD_PREVENTION"
+          ],
+          "foundDocs": [
+            {
+              "name": "FRAUD_PREVENTION",
+              "path": "legal\\compliance\\FRAUD_PREVENTION.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 289,
+                "wordCount": 1275,
+                "hasHeaders": 27,
+                "hasTables": 61,
+                "hasChecklists": 39,
+                "completedChecks": 0,
+                "pendingChecks": 39,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.297Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 289,
+            "wordCount": 1275,
+            "hasHeaders": 27,
+            "hasTables": 61,
+            "hasChecklists": 39,
+            "completedChecks": 0,
+            "pendingChecks": 39,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.297Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "infrastructure-docs",
+          "name": "Infrastructure Documentation",
+          "requiredDocs": [
+            "INFRASTRUCTURE_DOCUMENTATION"
+          ],
+          "foundDocs": [
+            {
+              "name": "INFRASTRUCTURE_DOCUMENTATION",
+              "path": "legal\\compliance\\INFRASTRUCTURE_DOCUMENTATION.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 324,
+                "wordCount": 1646,
+                "hasHeaders": 32,
+                "hasTables": 91,
+                "hasChecklists": 18,
+                "completedChecks": 0,
+                "pendingChecks": 18,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.284Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 324,
+            "wordCount": 1646,
+            "hasHeaders": 32,
+            "hasTables": 91,
+            "hasChecklists": 18,
+            "completedChecks": 0,
+            "pendingChecks": 18,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.284Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "legal-documents",
+          "name": "Legal Documents Required",
+          "requiredDocs": [
+            "LEGAL_DOCUMENTS_REQUIRED"
+          ],
+          "foundDocs": [
+            {
+              "name": "LEGAL_DOCUMENTS_REQUIRED",
+              "path": "legal\\compliance\\LEGAL_DOCUMENTS_REQUIRED.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 383,
+                "wordCount": 1416,
+                "hasHeaders": 50,
+                "hasTables": 23,
+                "hasChecklists": 76,
+                "completedChecks": 0,
+                "pendingChecks": 76,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.284Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 383,
+            "wordCount": 1416,
+            "hasHeaders": 50,
+            "hasTables": 23,
+            "hasChecklists": 76,
+            "completedChecks": 0,
+            "pendingChecks": 76,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.284Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "operational-compliance",
+          "name": "Operational Compliance",
+          "requiredDocs": [
+            "OPERATIONAL_COMPLIANCE"
+          ],
+          "foundDocs": [
+            {
+              "name": "OPERATIONAL_COMPLIANCE",
+              "path": "legal\\compliance\\OPERATIONAL_COMPLIANCE.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 286,
+                "wordCount": 1392,
+                "hasHeaders": 27,
+                "hasTables": 73,
+                "hasChecklists": 71,
+                "completedChecks": 0,
+                "pendingChecks": 71,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.297Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 286,
+            "wordCount": 1392,
+            "hasHeaders": 27,
+            "hasTables": 73,
+            "hasChecklists": 71,
+            "completedChecks": 0,
+            "pendingChecks": 71,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.297Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "payment-compliance",
+          "name": "Payment Compliance",
+          "requiredDocs": [
+            "PAYMENT_COMPLIANCE"
+          ],
+          "foundDocs": [
+            {
+              "name": "PAYMENT_COMPLIANCE",
+              "path": "legal\\compliance\\PAYMENT_COMPLIANCE.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 334,
+                "wordCount": 1402,
+                "hasHeaders": 35,
+                "hasTables": 47,
+                "hasChecklists": 73,
+                "completedChecks": 0,
+                "pendingChecks": 73,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.293Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 334,
+            "wordCount": 1402,
+            "hasHeaders": 35,
+            "hasTables": 47,
+            "hasChecklists": 73,
+            "completedChecks": 0,
+            "pendingChecks": 73,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.293Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "privacy-data",
+          "name": "Privacy & Data Protection",
+          "requiredDocs": [
+            "PRIVACY_DATA_PROTECTION"
+          ],
+          "foundDocs": [
+            {
+              "name": "PRIVACY_DATA_PROTECTION",
+              "path": "legal\\compliance\\PRIVACY_DATA_PROTECTION.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 192,
+                "wordCount": 948,
+                "hasHeaders": 25,
+                "hasTables": 29,
+                "hasChecklists": 47,
+                "completedChecks": 0,
+                "pendingChecks": 47,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.298Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 192,
+            "wordCount": 948,
+            "hasHeaders": 25,
+            "hasTables": 29,
+            "hasChecklists": 47,
+            "completedChecks": 0,
+            "pendingChecks": 47,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.298Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "security-data",
+          "name": "Security & Data Handling",
+          "requiredDocs": [
+            "SECURITY_DATA_HANDLING"
+          ],
+          "foundDocs": [
+            {
+              "name": "SECURITY_DATA_HANDLING",
+              "path": "legal\\compliance\\SECURITY_DATA_HANDLING.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 238,
+                "wordCount": 1233,
+                "hasHeaders": 29,
+                "hasTables": 52,
+                "hasChecklists": 50,
+                "completedChecks": 0,
+                "pendingChecks": 50,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.297Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 238,
+            "wordCount": 1233,
+            "hasHeaders": 29,
+            "hasTables": 52,
+            "hasChecklists": 50,
+            "completedChecks": 0,
+            "pendingChecks": 50,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.297Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "user-identity",
+          "name": "User Identity & Safety",
+          "requiredDocs": [
+            "USER_IDENTITY_SAFETY"
+          ],
+          "foundDocs": [
+            {
+              "name": "USER_IDENTITY_SAFETY",
+              "path": "legal\\compliance\\USER_IDENTITY_SAFETY.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 341,
+                "wordCount": 1500,
+                "hasHeaders": 33,
+                "hasTables": 45,
+                "hasChecklists": 45,
+                "completedChecks": 0,
+                "pendingChecks": 45,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.294Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 341,
+            "wordCount": 1500,
+            "hasHeaders": 33,
+            "hasTables": 45,
+            "hasChecklists": 45,
+            "completedChecks": 0,
+            "pendingChecks": 45,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.294Z",
+            "qualityScore": 85
+          }
+        }
+      ]
+    },
+    "finance": {
+      "category": "Finance",
+      "phase": 1,
+      "tasks": [
+        {
+          "id": "capital-structure",
+          "name": "Capital Structure",
+          "requiredDocs": [
+            "CAPITAL_STRUCTURE"
+          ],
+          "foundDocs": [
+            {
+              "name": "CAPITAL_STRUCTURE",
+              "path": "finance\\CAPITAL_STRUCTURE.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 201,
+                "wordCount": 901,
+                "hasHeaders": 32,
+                "hasTables": 48,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-04T22:09:49.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 201,
+            "wordCount": 901,
+            "hasHeaders": 32,
+            "hasTables": 48,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-04T22:09:49.000Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "cost-breakdown",
+          "name": "Detailed Cost Breakdown",
+          "requiredDocs": [
+            "DETAILED_COST_BREAKDOWN"
+          ],
+          "foundDocs": [
+            {
+              "name": "DETAILED_COST_BREAKDOWN",
+              "path": "finance\\DETAILED_COST_BREAKDOWN.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 593,
+                "wordCount": 4676,
+                "hasHeaders": 45,
+                "hasTables": 432,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-04T22:09:49.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 593,
+            "wordCount": 4676,
+            "hasHeaders": 45,
+            "hasTables": 432,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-04T22:09:49.000Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "initial-budget",
+          "name": "Initial Budget",
+          "requiredDocs": [
+            "INITIAL_BUDGET"
+          ],
+          "foundDocs": [
+            {
+              "name": "INITIAL_BUDGET",
+              "path": "finance\\INITIAL_BUDGET.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 199,
+                "wordCount": 992,
+                "hasHeaders": 30,
+                "hasTables": 91,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-04T22:09:49.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 199,
+            "wordCount": 992,
+            "hasHeaders": 30,
+            "hasTables": 91,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-04T22:09:49.000Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "revenue-projections",
+          "name": "Revenue Projections",
+          "requiredDocs": [
+            "REVENUE_PROJECTIONS"
+          ],
+          "foundDocs": [
+            {
+              "name": "REVENUE_PROJECTIONS",
+              "path": "finance\\REVENUE_PROJECTIONS.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 1042,
+                "wordCount": 6469,
+                "hasHeaders": 107,
+                "hasTables": 548,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-12T22:45:04.674Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 1042,
+            "wordCount": 6469,
+            "hasHeaders": 107,
+            "hasTables": 548,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-12T22:45:04.674Z",
+            "qualityScore": 100
+          }
+        }
+      ]
+    },
+    "operations": {
+      "category": "Operations",
+      "phase": 3,
+      "tasks": [
+        {
+          "id": "company-policies",
+          "name": "Company Policies",
+          "requiredDocs": [
+            "COMPANY_POLICIES"
+          ],
+          "foundDocs": [
+            {
+              "name": "COMPANY_POLICIES",
+              "path": "operations\\COMPANY_POLICIES.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 266,
+                "wordCount": 1045,
+                "hasHeaders": 48,
+                "hasTables": 3,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-11-29T20:37:31.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 266,
+            "wordCount": 1045,
+            "hasHeaders": 48,
+            "hasTables": 3,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-11-29T20:37:31.000Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "department-missions",
+          "name": "Department Missions",
+          "requiredDocs": [
+            "DEPARTMENT_MISSIONS"
+          ],
+          "foundDocs": [
+            {
+              "name": "DEPARTMENT_MISSIONS",
+              "path": "operations\\DEPARTMENT_MISSIONS.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 539,
+                "wordCount": 3080,
+                "hasHeaders": 86,
+                "hasTables": 290,
+                "hasChecklists": 26,
+                "completedChecks": 2,
+                "pendingChecks": 24,
+                "hasContent": true,
+                "lastModified": "2025-11-29T20:40:36.000Z",
+                "qualityScore": 86
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 86,
+          "analysis": {
+            "exists": true,
+            "lineCount": 539,
+            "wordCount": 3080,
+            "hasHeaders": 86,
+            "hasTables": 290,
+            "hasChecklists": 26,
+            "completedChecks": 2,
+            "pendingChecks": 24,
+            "hasContent": true,
+            "lastModified": "2025-11-29T20:40:36.000Z",
+            "qualityScore": 86
+          }
+        },
+        {
+          "id": "launch-requirements",
+          "name": "Launch Requirements",
+          "requiredDocs": [
+            "LAUNCH_REQUIREMENTS_FEB_2026"
+          ],
+          "foundDocs": [
+            {
+              "name": "LAUNCH_REQUIREMENTS_FEB_2026",
+              "path": "operations\\LAUNCH_REQUIREMENTS_FEB_2026.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 424,
+                "wordCount": 3073,
+                "hasHeaders": 43,
+                "hasTables": 230,
+                "hasChecklists": 60,
+                "completedChecks": 0,
+                "pendingChecks": 60,
+                "hasContent": true,
+                "lastModified": "2025-12-11T01:12:29.297Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 424,
+            "wordCount": 3073,
+            "hasHeaders": 43,
+            "hasTables": 230,
+            "hasChecklists": 60,
+            "completedChecks": 0,
+            "pendingChecks": 60,
+            "hasContent": true,
+            "lastModified": "2025-12-11T01:12:29.297Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "test-plan",
+          "name": "Test Plan",
+          "requiredDocs": [
+            "TEST_PLAN"
+          ],
+          "foundDocs": [
+            {
+              "name": "TEST_PLAN",
+              "path": "operations\\TEST_PLAN.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 771,
+                "wordCount": 3850,
+                "hasHeaders": 67,
+                "hasTables": 226,
+                "hasChecklists": 28,
+                "completedChecks": 0,
+                "pendingChecks": 28,
+                "hasContent": true,
+                "lastModified": "2025-12-11T04:57:27.864Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 771,
+            "wordCount": 3850,
+            "hasHeaders": 67,
+            "hasTables": 226,
+            "hasChecklists": 28,
+            "completedChecks": 0,
+            "pendingChecks": 28,
+            "hasContent": true,
+            "lastModified": "2025-12-11T04:57:27.864Z",
+            "qualityScore": 85
+          }
+        }
+      ]
+    },
+    "marketing": {
+      "category": "Marketing",
+      "phase": 4,
+      "tasks": [
+        {
+          "id": "marketing-overview",
+          "name": "Marketing Overview",
+          "requiredDocs": [
+            "MARKETING_OVERVIEW"
+          ],
+          "foundDocs": [
+            {
+              "name": "MARKETING_OVERVIEW",
+              "path": "operations\\marketing\\MARKETING_OVERVIEW.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 142,
+                "wordCount": 594,
+                "hasHeaders": 24,
+                "hasTables": 30,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-10T20:50:43.545Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 142,
+            "wordCount": 594,
+            "hasHeaders": 24,
+            "hasTables": 30,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-10T20:50:43.545Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "advertising-strategy",
+          "name": "Advertising Strategy",
+          "requiredDocs": [
+            "ADVERTISING_STRATEGY"
+          ],
+          "foundDocs": [
+            {
+              "name": "ADVERTISING_STRATEGY",
+              "path": "operations\\marketing\\advertising\\ADVERTISING_STRATEGY.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 388,
+                "wordCount": 1613,
+                "hasHeaders": 40,
+                "hasTables": 60,
+                "hasChecklists": 17,
+                "completedChecks": 0,
+                "pendingChecks": 17,
+                "hasContent": true,
+                "lastModified": "2025-12-10T20:50:43.545Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 388,
+            "wordCount": 1613,
+            "hasHeaders": 40,
+            "hasTables": 60,
+            "hasChecklists": 17,
+            "completedChecks": 0,
+            "pendingChecks": 17,
+            "hasContent": true,
+            "lastModified": "2025-12-10T20:50:43.545Z",
+            "qualityScore": 85
+          }
+        }
+      ]
+    },
+    "templates": {
+      "category": "Templates",
+      "phase": 5,
+      "tasks": [
+        {
+          "id": "brand-guide",
+          "name": "Brand Guide",
+          "requiredDocs": [
+            "BRAND_GUIDE"
+          ],
+          "foundDocs": [
+            {
+              "name": "BRAND_GUIDE",
+              "path": "templates\\brand-assets\\BRAND_GUIDE.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 256,
+                "wordCount": 1043,
+                "hasHeaders": 38,
+                "hasTables": 26,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-10T20:50:43.546Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 256,
+            "wordCount": 1043,
+            "hasHeaders": 38,
+            "hasTables": 26,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-10T20:50:43.546Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "one-pager",
+          "name": "One Pager",
+          "requiredDocs": [
+            "ONE_PAGER"
+          ],
+          "foundDocs": [
+            {
+              "name": "ONE_PAGER",
+              "path": "templates\\ONE_PAGER.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 113,
+                "wordCount": 430,
+                "hasHeaders": 12,
+                "hasTables": 30,
+                "hasChecklists": 3,
+                "completedChecks": 3,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-11-29T21:06:38.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 113,
+            "wordCount": 430,
+            "hasHeaders": 12,
+            "hasTables": 30,
+            "hasChecklists": 3,
+            "completedChecks": 3,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-11-29T21:06:38.000Z",
+            "qualityScore": 100
+          }
+        },
+        {
+          "id": "pitch-deck",
+          "name": "Pitch Deck Outline",
+          "requiredDocs": [
+            "PITCH_DECK_OUTLINE"
+          ],
+          "foundDocs": [
+            {
+              "name": "PITCH_DECK_OUTLINE",
+              "path": "templates\\PITCH_DECK_OUTLINE.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 394,
+                "wordCount": 1499,
+                "hasHeaders": 19,
+                "hasTables": 58,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-11-29T21:06:27.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 394,
+            "wordCount": 1499,
+            "hasHeaders": 19,
+            "hasTables": 58,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-11-29T21:06:27.000Z",
+            "qualityScore": 100
+          }
+        }
+      ]
+    },
+    "vc-readiness": {
+      "category": "VC Readiness",
+      "phase": 5,
+      "tasks": [
+        {
+          "id": "vc-checklist",
+          "name": "VC Readiness Checklist",
+          "requiredDocs": [
+            "VC_READINESS_CHECKLIST"
+          ],
+          "foundDocs": [
+            {
+              "name": "VC_READINESS_CHECKLIST",
+              "path": "VC_READINESS_CHECKLIST.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 523,
+                "wordCount": 3003,
+                "hasHeaders": 56,
+                "hasTables": 270,
+                "hasChecklists": 20,
+                "completedChecks": 0,
+                "pendingChecks": 20,
+                "hasContent": true,
+                "lastModified": "2025-12-04T22:09:49.000Z",
+                "qualityScore": 85
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 85,
+          "analysis": {
+            "exists": true,
+            "lineCount": 523,
+            "wordCount": 3003,
+            "hasHeaders": 56,
+            "hasTables": 270,
+            "hasChecklists": 20,
+            "completedChecks": 0,
+            "pendingChecks": 20,
+            "hasContent": true,
+            "lastModified": "2025-12-04T22:09:49.000Z",
+            "qualityScore": 85
+          }
+        },
+        {
+          "id": "company-overview",
+          "name": "Company Overview",
+          "requiredDocs": [
+            "COMPANY_OVERVIEW"
+          ],
+          "foundDocs": [
+            {
+              "name": "COMPANY_OVERVIEW",
+              "path": "COMPANY_OVERVIEW.md",
+              "analysis": {
+                "exists": true,
+                "lineCount": 71,
+                "wordCount": 327,
+                "hasHeaders": 10,
+                "hasTables": 6,
+                "hasChecklists": 0,
+                "completedChecks": 0,
+                "pendingChecks": 0,
+                "hasContent": true,
+                "lastModified": "2025-12-04T22:09:49.000Z",
+                "qualityScore": 100
+              }
+            }
+          ],
+          "status": "complete",
+          "score": 100,
+          "analysis": {
+            "exists": true,
+            "lineCount": 71,
+            "wordCount": 327,
+            "hasHeaders": 10,
+            "hasTables": 6,
+            "hasChecklists": 0,
+            "completedChecks": 0,
+            "pendingChecks": 0,
+            "hasContent": true,
+            "lastModified": "2025-12-04T22:09:49.000Z",
+            "qualityScore": 100
+          }
+        }
+      ]
+    }
+  },
+  "progress": {
+    "totalTasks": 36,
+    "completedTasks": 36,
+    "partialTasks": 0,
+    "missingTasks": 0,
+    "overallScore": 3281,
+    "byCategory": {
+      "Foundation": {
+        "total": 5,
+        "completed": 5,
+        "score": 475,
+        "percentage": 100,
+        "avgScore": 95
+      },
+      "Legal": {
+        "total": 4,
+        "completed": 4,
+        "score": 360,
+        "percentage": 100,
+        "avgScore": 90
+      },
+      "Compliance": {
+        "total": 12,
+        "completed": 12,
+        "score": 1020,
+        "percentage": 100,
+        "avgScore": 85
+      },
+      "Finance": {
+        "total": 4,
+        "completed": 4,
+        "score": 400,
+        "percentage": 100,
+        "avgScore": 100
+      },
+      "Operations": {
+        "total": 4,
+        "completed": 4,
+        "score": 356,
+        "percentage": 100,
+        "avgScore": 89
+      },
+      "Marketing": {
+        "total": 2,
+        "completed": 2,
+        "score": 185,
+        "percentage": 100,
+        "avgScore": 93
+      },
+      "Templates": {
+        "total": 3,
+        "completed": 3,
+        "score": 300,
+        "percentage": 100,
+        "avgScore": 100
+      },
+      "VC Readiness": {
+        "total": 2,
+        "completed": 2,
+        "score": 185,
+        "percentage": 100,
+        "avgScore": 93
+      }
+    },
+    "byPhase": {
+      "1": {
+        "total": 9,
+        "completed": 9,
+        "score": 875,
+        "percentage": 100,
+        "avgScore": 97
+      },
+      "2": {
+        "total": 16,
+        "completed": 16,
+        "score": 1380,
+        "percentage": 100,
+        "avgScore": 86
+      },
+      "3": {
+        "total": 4,
+        "completed": 4,
+        "score": 356,
+        "percentage": 100,
+        "avgScore": 89
+      },
+      "4": {
+        "total": 2,
+        "completed": 2,
+        "score": 185,
+        "percentage": 100,
+        "avgScore": 93
+      },
+      "5": {
+        "total": 5,
+        "completed": 5,
+        "score": 485,
+        "percentage": 100,
+        "avgScore": 97
+      }
+    },
+    "overallPercentage": 91
+  },
+  "summary": {
+    "totalTasks": 36,
+    "completed": 36,
+    "partial": 0,
+    "missing": 0,
+    "overallPercentage": 91
+  },
+  "storage": {
+    "local": false,
+    "aws": false
+  }
+}
