@@ -19,6 +19,8 @@ const emailRoutes = require('./routes/email');
 const calendarRoutes = require('./routes/calendar');
 const authRoutes = require('./routes/auth');
 const filesRoutes = require('./routes/files');
+const marketDataRoutes = require('./routes/market-data');
+const scannerRoutes = require('./routes/scanner');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -65,6 +67,8 @@ app.use('/api/email', emailRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/files', filesRoutes);
+app.use('/api/market-data', marketDataRoutes);
+app.use('/api/scanner', scannerRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

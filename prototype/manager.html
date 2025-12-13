@@ -7121,6 +7121,188 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Supply & Demand Estimator -->
+                <div class="card" style="margin-top: 20px; border: 2px solid #06b6d4;">
+                    <div class="card-header" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.05));">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #06b6d4, #3b82f6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;">📈</div>
+                            <div>
+                                <h3 class="card-title" style="margin: 0;">Supply & Demand Estimator</h3>
+                                <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted);">Simulate expected demand based on pricing changes</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary btn-small" onclick="refreshMarketData()" id="refreshMarketBtn">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6M1 20v-6h6"/>
+                                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                                </svg>
+                                Refresh Data
+                            </button>
+                            <span id="marketDataStatus" class="status-badge" style="background: var(--info); display: flex; align-items: center; font-size: 0.75rem; padding: 4px 10px;">
+                                <span class="pulse-dot"></span> Loading...
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Data Source Indicator -->
+                        <div id="demandDataSourceInfo" style="padding: 10px 14px; background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 8px; margin-bottom: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">📊</span>
+                            <span id="demandDataSourceText">Fetching market data from AWS...</span>
+                            <span id="demandDataLastUpdate" style="margin-left: auto; color: var(--text-muted); font-size: 0.75rem;"></span>
+                        </div>
+
+                        <!-- Price Simulator -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                            <div>
+                                <h4 style="margin: 0 0 16px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                    💵 OITH Pricing Simulator
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">(Current: $<span id="currentOITHPrice">9.99</span>/mo)</span>
+                                </h4>
+                                <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px;">
+                                    <div style="margin-bottom: 16px;">
+                                        <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Simulated Monthly Price ($)</label>
+                                        <input type="range" id="priceSlider" min="0" max="30" step="0.5" value="9.99" style="width: 100%;" oninput="updateDemandEstimate()">
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                                            <span>$0 (Free)</span>
+                                            <span style="font-weight: 600; color: var(--accent); font-size: 1rem;">$<span id="simulatedPrice">9.99</span></span>
+                                            <span>$30</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                        <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Estimated Users</div>
+                                            <div id="estimatedUsers" style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">50,000</div>
+                                        </div>
+                                        <div style="padding: 12px; background: var(--bg-secondary); border-radius: 8px; text-align: center;">
+                                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Est. Monthly Revenue</div>
+                                            <div id="estimatedRevenue" style="font-size: 1.5rem; font-weight: 700; color: var(--success);">$499,500</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 style="margin: 0 0 16px; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                    📉 Price Elasticity of Demand
+                                    <span id="elasticityBadge" style="font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; background: var(--warning); color: black;">Loading...</span>
+                                </h4>
+                                <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px;">
+                                    <div id="elasticityChart" style="display: flex; flex-direction: column; gap: 12px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-size: 0.85rem;">OITH</span>
+                                            <div style="flex: 1; margin: 0 12px; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
+                                                <div id="oithElasticityBar" style="height: 100%; background: linear-gradient(90deg, var(--accent), #8b5cf6); width: 50%; transition: width 0.5s;"></div>
+                                            </div>
+                                            <span id="oithElasticity" style="font-weight: 600; min-width: 50px; text-align: right;">-1.2</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-size: 0.85rem;">Hinge</span>
+                                            <div style="flex: 1; margin: 0 12px; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
+                                                <div id="hingeElasticityBar" style="height: 100%; background: #FF6B6B; width: 50%; transition: width 0.5s;"></div>
+                                            </div>
+                                            <span id="hingeElasticity" style="font-weight: 600; min-width: 50px; text-align: right;">-0.8</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-size: 0.85rem;">Bumble</span>
+                                            <div style="flex: 1; margin: 0 12px; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
+                                                <div id="bumbleElasticityBar" style="height: 100%; background: #FFC629; width: 50%; transition: width 0.5s;"></div>
+                                            </div>
+                                            <span id="bumbleElasticity" style="font-weight: 600; min-width: 50px; text-align: right;">-0.9</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-size: 0.85rem;">Tinder</span>
+                                            <div style="flex: 1; margin: 0 12px; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
+                                                <div id="tinderElasticityBar" style="height: 100%; background: #FD5068; width: 50%; transition: width 0.5s;"></div>
+                                            </div>
+                                            <span id="tinderElasticity" style="font-weight: 600; min-width: 50px; text-align: right;">-0.7</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-size: 0.85rem;">Match</span>
+                                            <div style="flex: 1; margin: 0 12px; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden;">
+                                                <div id="matchElasticityBar" style="height: 100%; background: #E44D26; width: 50%; transition: width 0.5s;"></div>
+                                            </div>
+                                            <span id="matchElasticity" style="font-weight: 600; min-width: 50px; text-align: right;">-0.6</span>
+                                        </div>
+                                    </div>
+                                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px; margin-bottom: 0;">
+                                        ℹ️ Values closer to 0 = inelastic (less price-sensitive). Values below -1 = elastic (price-sensitive).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Demand Curve Visualization -->
+                        <div style="margin-bottom: 24px;">
+                            <h4 style="margin: 0 0 16px; font-size: 0.95rem;">📊 Demand Curve Simulation</h4>
+                            <div style="background: var(--bg-tertiary); padding: 20px; border-radius: 12px;">
+                                <div id="demandCurveChart" style="height: 200px; display: flex; align-items: flex-end; justify-content: space-between; gap: 2px; padding: 0 10px;">
+                                    <!-- Populated by JS -->
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding: 0 10px; margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+                                    <span>$0</span>
+                                    <span>$5</span>
+                                    <span>$10</span>
+                                    <span>$15</span>
+                                    <span>$20</span>
+                                    <span>$25</span>
+                                    <span>$30</span>
+                                </div>
+                                <div style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">Price Point →</div>
+                            </div>
+                        </div>
+
+                        <!-- Market Comparison -->
+                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;">
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center; border: 2px solid var(--accent);">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">🐦</div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">OITH</div>
+                                <div id="oithPrice" style="color: var(--accent); font-size: 1.1rem; font-weight: 700; margin-top: 4px;">$9.99</div>
+                                <div id="oithMarketShare" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">Est. 2% share</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">❤️</div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Hinge</div>
+                                <div id="hingePrice" style="color: #FF6B6B; font-size: 1.1rem; font-weight: 700; margin-top: 4px;">$29.99</div>
+                                <div id="hingeMarketShare" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">12% share</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">🐝</div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Bumble</div>
+                                <div id="bumblePrice" style="color: #FFC629; font-size: 1.1rem; font-weight: 700; margin-top: 4px;">$32.99</div>
+                                <div id="bumbleMarketShare" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">15% share</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">🔥</div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Tinder</div>
+                                <div id="tinderPrice" style="color: #FD5068; font-size: 1.1rem; font-weight: 700; margin-top: 4px;">$14.99</div>
+                                <div id="tinderMarketShare" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">28% share</div>
+                            </div>
+                            <div style="padding: 16px; background: var(--bg-tertiary); border-radius: 10px; text-align: center;">
+                                <div style="font-size: 1.5rem; margin-bottom: 8px;">💘</div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Match</div>
+                                <div id="matchPrice" style="color: #E44D26; font-size: 1.1rem; font-weight: 700; margin-top: 4px;">$44.99</div>
+                                <div id="matchMarketShare" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">8% share</div>
+                            </div>
+                        </div>
+
+                        <!-- Optimal Price Recommendation -->
+                        <div id="priceRecommendation" style="margin-top: 20px; padding: 16px 20px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(6, 182, 212, 0.05)); border: 1px solid var(--success); border-radius: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="font-size: 2rem;">💡</div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; margin-bottom: 4px;">Optimal Price Recommendation</div>
+                                    <div id="optimalPriceText" style="font-size: 0.9rem; color: var(--text-secondary);">Based on current market data, the optimal price point is <strong style="color: var(--success);">$9.99/month</strong> which maximizes revenue while maintaining competitive positioning.</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">Projected Revenue</div>
+                                    <div id="optimalRevenue" style="font-size: 1.5rem; font-weight: 700; color: var(--success);">$499,500</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Geographic Section -->
@@ -11399,20 +11581,336 @@
                         </div>
                     </div>
                     
-                    <div style="display: flex; gap: 12px;">
-                        <button class="btn btn-secondary" onclick="document.getElementById('adminProfileModal').remove()" style="flex: 1;">Close</button>
-                        <button class="btn btn-primary" onclick="logoutAdmin()" style="flex: 1; background: var(--danger);">
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <button class="btn btn-secondary" onclick="showChangePasswordModal()" style="width: 100%;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                <path d="M7 11V7a5 5 0 0110 0v4"/>
                             </svg>
-                            Logout
+                            Change Password
                         </button>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-secondary" onclick="document.getElementById('adminProfileModal').remove()" style="flex: 1;">Close</button>
+                            <button class="btn btn-primary" onclick="logoutAdmin()" style="flex: 1; background: var(--danger);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+                                    <polyline points="16 17 21 12 16 7"/>
+                                    <line x1="21" y1="12" x2="9" y2="12"/>
+                                </svg>
+                                Logout
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
+        }
+        
+        // ==========================================
+        // ADMIN CHANGE PASSWORD FUNCTIONS
+        // ==========================================
+        
+        function showChangePasswordModal() {
+            // Close profile modal if open
+            const profileModal = document.getElementById('adminProfileModal');
+            if (profileModal) profileModal.remove();
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal dynamic-modal';
+            modal.style.display = 'flex';
+            modal.id = 'changePasswordModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 420px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--accent) 0%, #8b5cf6 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🔐</div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.1rem;">Change Password</h3>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">Update your admin password</p>
+                            </div>
+                        </div>
+                        <button onclick="document.getElementById('changePasswordModal').remove()" style="background: var(--bg-tertiary); border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; width: 32px; height: 32px; border-radius: 8px;">&times;</button>
+                    </div>
+                    
+                    <div id="changePasswordMessage" style="display: none; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem;"></div>
+                    
+                    <form id="changePasswordForm" onsubmit="handleChangePassword(event)">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Current Password</label>
+                            <div style="position: relative;">
+                                <input type="password" id="cpCurrentPassword" required placeholder="Enter current password" style="width: 100%; padding: 12px 40px 12px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.95rem;">
+                                <button type="button" onclick="toggleCPPasswordVisibility('cpCurrentPassword', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">👁️</button>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">New Password</label>
+                            <div style="position: relative;">
+                                <input type="password" id="cpNewPassword" required placeholder="Enter new password (min 6 chars)" minlength="6" style="width: 100%; padding: 12px 40px 12px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.95rem;" oninput="validateNewPassword()">
+                                <button type="button" onclick="toggleCPPasswordVisibility('cpNewPassword', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">👁️</button>
+                            </div>
+                            <div id="passwordStrength" style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+                                <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+                                    <div id="str1" style="flex: 1; height: 3px; background: var(--bg-secondary); border-radius: 2px;"></div>
+                                    <div id="str2" style="flex: 1; height: 3px; background: var(--bg-secondary); border-radius: 2px;"></div>
+                                    <div id="str3" style="flex: 1; height: 3px; background: var(--bg-secondary); border-radius: 2px;"></div>
+                                    <div id="str4" style="flex: 1; height: 3px; background: var(--bg-secondary); border-radius: 2px;"></div>
+                                </div>
+                                <span id="strengthText">Password strength</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">Confirm New Password</label>
+                            <div style="position: relative;">
+                                <input type="password" id="cpConfirmPassword" required placeholder="Confirm new password" minlength="6" style="width: 100%; padding: 12px 40px 12px 12px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 10px; color: var(--text-primary); font-size: 0.95rem;" oninput="validatePasswordMatch()">
+                                <button type="button" onclick="toggleCPPasswordVisibility('cpConfirmPassword', this)" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px;">👁️</button>
+                            </div>
+                            <div id="passwordMatchIndicator" style="margin-top: 4px; font-size: 0.75rem;"></div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px;">
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('changePasswordModal').remove()" style="flex: 1;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="changePasswordBtn" style="flex: 1;">
+                                <span id="changePasswordBtnText">Update Password</span>
+                                <span id="changePasswordLoader" style="display: none;">
+                                    <span style="display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
+                                    Saving...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function toggleCPPasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        }
+        
+        function validateNewPassword() {
+            const password = document.getElementById('cpNewPassword').value;
+            const str1 = document.getElementById('str1');
+            const str2 = document.getElementById('str2');
+            const str3 = document.getElementById('str3');
+            const str4 = document.getElementById('str4');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            if (password.length >= 6) strength++;
+            if (password.length >= 8) strength++;
+            if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
+            if (/[0-9]/.test(password) || /[^A-Za-z0-9]/.test(password)) strength++;
+            
+            const colors = ['var(--danger)', 'var(--warning)', '#f59e0b', 'var(--success)'];
+            const texts = ['Weak', 'Fair', 'Good', 'Strong'];
+            
+            [str1, str2, str3, str4].forEach((el, i) => {
+                el.style.background = i < strength ? colors[strength - 1] : 'var(--bg-secondary)';
+            });
+            
+            strengthText.textContent = strength > 0 ? texts[strength - 1] : 'Password strength';
+            strengthText.style.color = strength > 0 ? colors[strength - 1] : 'var(--text-muted)';
+            
+            validatePasswordMatch();
+        }
+        
+        function validatePasswordMatch() {
+            const newPass = document.getElementById('cpNewPassword').value;
+            const confirmPass = document.getElementById('cpConfirmPassword').value;
+            const indicator = document.getElementById('passwordMatchIndicator');
+            
+            if (!confirmPass) {
+                indicator.textContent = '';
+                return;
+            }
+            
+            if (newPass === confirmPass) {
+                indicator.textContent = '✓ Passwords match';
+                indicator.style.color = 'var(--success)';
+            } else {
+                indicator.textContent = '✗ Passwords do not match';
+                indicator.style.color = 'var(--danger)';
+            }
+        }
+        
+        async function handleChangePassword(event) {
+            event.preventDefault();
+            
+            const currentPassword = document.getElementById('cpCurrentPassword').value;
+            const newPassword = document.getElementById('cpNewPassword').value;
+            const confirmPassword = document.getElementById('cpConfirmPassword').value;
+            const messageEl = document.getElementById('changePasswordMessage');
+            const btn = document.getElementById('changePasswordBtn');
+            const btnText = document.getElementById('changePasswordBtnText');
+            const loader = document.getElementById('changePasswordLoader');
+            
+            // Validate
+            if (newPassword !== confirmPassword) {
+                messageEl.style.display = 'block';
+                messageEl.style.background = 'rgba(239, 68, 68, 0.1)';
+                messageEl.style.border = '1px solid var(--danger)';
+                messageEl.style.color = 'var(--danger)';
+                messageEl.textContent = 'New passwords do not match';
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                messageEl.style.display = 'block';
+                messageEl.style.background = 'rgba(239, 68, 68, 0.1)';
+                messageEl.style.border = '1px solid var(--danger)';
+                messageEl.style.color = 'var(--danger)';
+                messageEl.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+            
+            // Show loading state
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'inline-flex';
+            messageEl.style.display = 'none';
+            
+            try {
+                const token = localStorage.getItem('oith_admin_token') || sessionStorage.getItem('oith_admin_token');
+                
+                // Try AWS API first
+                const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to change password');
+                }
+                
+                // Success - also update local storage
+                await updateLocalAdminPassword(newPassword);
+                
+                messageEl.style.display = 'block';
+                messageEl.style.background = 'rgba(16, 185, 129, 0.1)';
+                messageEl.style.border = '1px solid var(--success)';
+                messageEl.style.color = 'var(--success)';
+                messageEl.textContent = '✓ Password changed successfully! Saved to AWS.';
+                
+                // Clear form
+                document.getElementById('cpCurrentPassword').value = '';
+                document.getElementById('cpNewPassword').value = '';
+                document.getElementById('cpConfirmPassword').value = '';
+                
+                // Close modal after delay
+                setTimeout(() => {
+                    document.getElementById('changePasswordModal').remove();
+                    showToast('Password updated successfully', 'success');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Change password error:', error);
+                
+                // Try local fallback
+                try {
+                    const success = await changeLocalAdminPassword(currentPassword, newPassword);
+                    if (success) {
+                        messageEl.style.display = 'block';
+                        messageEl.style.background = 'rgba(16, 185, 129, 0.1)';
+                        messageEl.style.border = '1px solid var(--success)';
+                        messageEl.style.color = 'var(--success)';
+                        messageEl.textContent = '✓ Password changed locally. Will sync to AWS when online.';
+                        
+                        // Clear form
+                        document.getElementById('cpCurrentPassword').value = '';
+                        document.getElementById('cpNewPassword').value = '';
+                        document.getElementById('cpConfirmPassword').value = '';
+                        
+                        setTimeout(() => {
+                            document.getElementById('changePasswordModal').remove();
+                            showToast('Password updated (offline mode)', 'success');
+                        }, 2000);
+                        return;
+                    }
+                } catch (localError) {
+                    console.error('Local password change failed:', localError);
+                }
+                
+                messageEl.style.display = 'block';
+                messageEl.style.background = 'rgba(239, 68, 68, 0.1)';
+                messageEl.style.border = '1px solid var(--danger)';
+                messageEl.style.color = 'var(--danger)';
+                messageEl.textContent = error.message || 'Failed to change password';
+            } finally {
+                btn.disabled = false;
+                btnText.style.display = 'inline';
+                loader.style.display = 'none';
+            }
+        }
+        
+        // SHA-256 hash function matching the server's hashPassword
+        async function hashAdminPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password + 'oith_salt_2024');
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        async function updateLocalAdminPassword(newPassword) {
+            const user = getAdminUser();
+            if (!user || !user.email) return;
+            
+            const localUsers = JSON.parse(localStorage.getItem('oith_local_admins') || '{}');
+            const email = user.email.toLowerCase();
+            
+            if (localUsers[email]) {
+                localUsers[email].passwordHash = await hashAdminPassword(newPassword);
+                localUsers[email].passwordUpdatedAt = new Date().toISOString();
+                localStorage.setItem('oith_local_admins', JSON.stringify(localUsers));
+                console.log('✅ Local admin password updated');
+            }
+        }
+        
+        async function changeLocalAdminPassword(currentPassword, newPassword) {
+            const user = getAdminUser();
+            if (!user || !user.email) return false;
+            
+            const localUsers = JSON.parse(localStorage.getItem('oith_local_admins') || '{}');
+            const email = user.email.toLowerCase();
+            
+            if (!localUsers[email]) return false;
+            
+            // Verify current password
+            const currentHash = await hashAdminPassword(currentPassword);
+            if (localUsers[email].passwordHash !== currentHash) {
+                throw new Error('Current password is incorrect');
+            }
+            
+            // Update password
+            localUsers[email].passwordHash = await hashAdminPassword(newPassword);
+            localUsers[email].passwordUpdatedAt = new Date().toISOString();
+            localStorage.setItem('oith_local_admins', JSON.stringify(localUsers));
+            
+            // Queue for AWS sync when online
+            const pendingSync = JSON.parse(localStorage.getItem('oith_pending_password_sync') || '[]');
+            pendingSync.push({
+                email: email,
+                passwordHash: localUsers[email].passwordHash,
+                timestamp: Date.now()
+            });
+            localStorage.setItem('oith_pending_password_sync', JSON.stringify(pendingSync));
+            
+            return true;
         }
         
         // ==========================================
@@ -14639,7 +15137,7 @@
                     case 'matches': renderMatches(); break;
                     case 'funnel': renderFunnel(); break;
                     case 'revenue': renderRevenue(); break;
-                    case 'advertising': renderAdvertising(); break;
+                    case 'advertising': renderAdvertising(); setTimeout(() => initSupplyDemandEstimator(), 100); break;
                     case 'geographic': renderGeographic(); break;
                     case 'safety': renderSafety(); break;
                     case 'feedback': renderFeedback(); break;
@@ -25420,6 +25918,394 @@
             updateAdvertisingUI();
             showNotification('Budget settings saved', 'success');
         }
+        
+        // ==========================================
+        // SUPPLY & DEMAND ESTIMATOR
+        // ==========================================
+        
+        // Market data - will be populated from AWS or fallback to defaults
+        let marketData = {
+            lastUpdated: null,
+            competitors: {
+                oith: { price: 9.99, marketShare: 0.02, elasticity: -1.2, users: 50000 },
+                hinge: { price: 29.99, marketShare: 0.12, elasticity: -0.8, users: 600000 },
+                bumble: { price: 32.99, marketShare: 0.15, elasticity: -0.9, users: 750000 },
+                tinder: { price: 14.99, marketShare: 0.28, elasticity: -0.7, users: 1400000 },
+                match: { price: 44.99, marketShare: 0.08, elasticity: -0.6, users: 400000 }
+            },
+            totalMarket: 5000000, // Total addressable market
+            dataSource: 'local'
+        };
+        
+        async function initSupplyDemandEstimator() {
+            await refreshMarketData();
+            updateDemandEstimate();
+            renderDemandCurve();
+        }
+        
+        async function refreshMarketData() {
+            const statusEl = document.getElementById('marketDataStatus');
+            const sourceTextEl = document.getElementById('demandDataSourceText');
+            const lastUpdateEl = document.getElementById('demandDataLastUpdate');
+            const refreshBtn = document.getElementById('refreshMarketBtn');
+            
+            if (refreshBtn) refreshBtn.disabled = true;
+            if (statusEl) {
+                statusEl.innerHTML = '<span class="pulse-dot"></span> Fetching...';
+                statusEl.style.background = 'var(--info)';
+            }
+            
+            try {
+                // Try fetching from AWS
+                const response = await fetch(`${AWS_API_URL}/market-data`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.competitors) {
+                        marketData = {
+                            ...marketData,
+                            ...data,
+                            lastUpdated: new Date().toISOString(),
+                            dataSource: 'aws'
+                        };
+                        
+                        if (statusEl) {
+                            statusEl.innerHTML = '<span class="pulse-dot" style="background: var(--success);"></span> Live Data';
+                            statusEl.style.background = 'var(--success)';
+                        }
+                        if (sourceTextEl) sourceTextEl.textContent = '✓ Real-time market data from AWS';
+                        if (lastUpdateEl) lastUpdateEl.textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+                        
+                        // Save to local storage as cache
+                        localStorage.setItem('oith_market_data', JSON.stringify(marketData));
+                        
+                        updateMarketDataUI();
+                        updateDemandEstimate();
+                        renderDemandCurve();
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch market data from AWS:', error.message);
+            }
+            
+            // Try local cache
+            try {
+                const cached = localStorage.getItem('oith_market_data');
+                if (cached) {
+                    const cachedData = JSON.parse(cached);
+                    // Use cache if less than 24 hours old
+                    if (cachedData.lastUpdated && Date.now() - new Date(cachedData.lastUpdated).getTime() < 24 * 60 * 60 * 1000) {
+                        marketData = cachedData;
+                        marketData.dataSource = 'cache';
+                        
+                        if (statusEl) {
+                            statusEl.innerHTML = '⚡ Cached';
+                            statusEl.style.background = 'var(--warning)';
+                        }
+                        if (sourceTextEl) sourceTextEl.textContent = '📦 Using cached market data (< 24h old)';
+                        if (lastUpdateEl) lastUpdateEl.textContent = `Cached: ${new Date(cachedData.lastUpdated).toLocaleString()}`;
+                        
+                        updateMarketDataUI();
+                        updateDemandEstimate();
+                        renderDemandCurve();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('Could not load cached market data');
+            }
+            
+            // Fallback: Generate simulated real-time data based on industry benchmarks
+            marketData = generateSimulatedMarketData();
+            marketData.dataSource = 'simulated';
+            marketData.lastUpdated = new Date().toISOString();
+            
+            localStorage.setItem('oith_market_data', JSON.stringify(marketData));
+            
+            if (statusEl) {
+                statusEl.innerHTML = '🔬 Simulated';
+                statusEl.style.background = 'var(--text-muted)';
+            }
+            if (sourceTextEl) sourceTextEl.textContent = '🔬 Using simulated market data based on industry benchmarks';
+            if (lastUpdateEl) lastUpdateEl.textContent = `Generated: ${new Date().toLocaleTimeString()}`;
+            
+            updateMarketDataUI();
+            updateDemandEstimate();
+            renderDemandCurve();
+            
+            if (refreshBtn) refreshBtn.disabled = false;
+        }
+        
+        function generateSimulatedMarketData() {
+            // Generate realistic market data based on industry benchmarks
+            const baseData = {
+                oith: { basePrice: 9.99, baseShare: 0.02, baseElasticity: -1.2 },
+                hinge: { basePrice: 29.99, baseShare: 0.12, baseElasticity: -0.8 },
+                bumble: { basePrice: 32.99, baseShare: 0.15, baseElasticity: -0.9 },
+                tinder: { basePrice: 14.99, baseShare: 0.28, baseElasticity: -0.7 },
+                match: { basePrice: 44.99, baseShare: 0.08, baseElasticity: -0.6 }
+            };
+            
+            // Add some realistic variance (±5%)
+            const variance = () => 1 + (Math.random() - 0.5) * 0.1;
+            
+            const totalMarket = Math.round(5000000 * variance());
+            const competitors = {};
+            
+            Object.entries(baseData).forEach(([key, base]) => {
+                const share = base.baseShare * variance();
+                competitors[key] = {
+                    price: Math.round(base.basePrice * variance() * 100) / 100,
+                    marketShare: Math.round(share * 1000) / 1000,
+                    elasticity: Math.round(base.baseElasticity * variance() * 100) / 100,
+                    users: Math.round(totalMarket * share)
+                };
+            });
+            
+            return {
+                competitors,
+                totalMarket,
+                lastUpdated: new Date().toISOString(),
+                dataSource: 'simulated'
+            };
+        }
+        
+        function updateMarketDataUI() {
+            const comp = marketData.competitors;
+            
+            // Update price displays
+            document.getElementById('currentOITHPrice').textContent = comp.oith.price.toFixed(2);
+            document.getElementById('oithPrice').textContent = '$' + comp.oith.price.toFixed(2);
+            document.getElementById('hingePrice').textContent = '$' + comp.hinge.price.toFixed(2);
+            document.getElementById('bumblePrice').textContent = '$' + comp.bumble.price.toFixed(2);
+            document.getElementById('tinderPrice').textContent = '$' + comp.tinder.price.toFixed(2);
+            document.getElementById('matchPrice').textContent = '$' + comp.match.price.toFixed(2);
+            
+            // Update market share displays
+            document.getElementById('oithMarketShare').textContent = `Est. ${(comp.oith.marketShare * 100).toFixed(1)}% share`;
+            document.getElementById('hingeMarketShare').textContent = `${(comp.hinge.marketShare * 100).toFixed(0)}% share`;
+            document.getElementById('bumbleMarketShare').textContent = `${(comp.bumble.marketShare * 100).toFixed(0)}% share`;
+            document.getElementById('tinderMarketShare').textContent = `${(comp.tinder.marketShare * 100).toFixed(0)}% share`;
+            document.getElementById('matchMarketShare').textContent = `${(comp.match.marketShare * 100).toFixed(0)}% share`;
+            
+            // Update elasticity displays
+            document.getElementById('oithElasticity').textContent = comp.oith.elasticity.toFixed(2);
+            document.getElementById('hingeElasticity').textContent = comp.hinge.elasticity.toFixed(2);
+            document.getElementById('bumbleElasticity').textContent = comp.bumble.elasticity.toFixed(2);
+            document.getElementById('tinderElasticity').textContent = comp.tinder.elasticity.toFixed(2);
+            document.getElementById('matchElasticity').textContent = comp.match.elasticity.toFixed(2);
+            
+            // Update elasticity bars (scale from -2 to 0)
+            const scaleElasticity = (e) => Math.min(100, Math.max(0, ((e + 2) / 2) * 100));
+            document.getElementById('oithElasticityBar').style.width = scaleElasticity(comp.oith.elasticity) + '%';
+            document.getElementById('hingeElasticityBar').style.width = scaleElasticity(comp.hinge.elasticity) + '%';
+            document.getElementById('bumbleElasticityBar').style.width = scaleElasticity(comp.bumble.elasticity) + '%';
+            document.getElementById('tinderElasticityBar').style.width = scaleElasticity(comp.tinder.elasticity) + '%';
+            document.getElementById('matchElasticityBar').style.width = scaleElasticity(comp.match.elasticity) + '%';
+            
+            // Update elasticity badge
+            const badge = document.getElementById('elasticityBadge');
+            const oithE = Math.abs(comp.oith.elasticity);
+            if (oithE > 1.5) {
+                badge.textContent = 'Highly Elastic';
+                badge.style.background = 'var(--danger)';
+                badge.style.color = 'white';
+            } else if (oithE > 1) {
+                badge.textContent = 'Elastic';
+                badge.style.background = 'var(--warning)';
+                badge.style.color = 'black';
+            } else {
+                badge.textContent = 'Inelastic';
+                badge.style.background = 'var(--success)';
+                badge.style.color = 'white';
+            }
+            
+            // Update price slider to current OITH price
+            const slider = document.getElementById('priceSlider');
+            if (slider) slider.value = comp.oith.price;
+        }
+        
+        function updateDemandEstimate() {
+            const slider = document.getElementById('priceSlider');
+            const simulatedPrice = parseFloat(slider.value);
+            
+            document.getElementById('simulatedPrice').textContent = simulatedPrice.toFixed(2);
+            
+            // Calculate demand using price elasticity of demand
+            const comp = marketData.competitors.oith;
+            const basePrice = comp.price;
+            const baseUsers = comp.users;
+            const elasticity = comp.elasticity;
+            
+            // Price elasticity formula: %ΔQ = elasticity × %ΔP
+            const priceChangePercent = (simulatedPrice - basePrice) / basePrice;
+            const demandChangePercent = elasticity * priceChangePercent;
+            
+            let estimatedUsers;
+            if (simulatedPrice === 0) {
+                // Free tier: much higher user acquisition
+                estimatedUsers = baseUsers * 5;
+            } else {
+                estimatedUsers = Math.max(1000, Math.round(baseUsers * (1 + demandChangePercent)));
+            }
+            
+            const estimatedRevenue = estimatedUsers * simulatedPrice;
+            
+            document.getElementById('estimatedUsers').textContent = estimatedUsers.toLocaleString();
+            document.getElementById('estimatedRevenue').textContent = '$' + Math.round(estimatedRevenue).toLocaleString();
+            
+            // Color code based on revenue impact
+            const baseRevenue = baseUsers * basePrice;
+            const revenueEl = document.getElementById('estimatedRevenue');
+            if (estimatedRevenue > baseRevenue * 1.1) {
+                revenueEl.style.color = 'var(--success)';
+            } else if (estimatedRevenue < baseRevenue * 0.9) {
+                revenueEl.style.color = 'var(--danger)';
+            } else {
+                revenueEl.style.color = 'var(--warning)';
+            }
+            
+            // Update optimal price recommendation
+            updateOptimalPriceRecommendation();
+            
+            // Highlight current price point on demand curve
+            highlightDemandCurvePoint(simulatedPrice);
+        }
+        
+        function renderDemandCurve() {
+            const container = document.getElementById('demandCurveChart');
+            if (!container) return;
+            
+            const comp = marketData.competitors.oith;
+            const basePrice = comp.price;
+            const baseUsers = comp.users;
+            const elasticity = comp.elasticity;
+            
+            // Generate demand curve data points
+            const pricePoints = [];
+            for (let p = 0; p <= 30; p += 0.5) {
+                const priceChangePercent = (p - basePrice) / basePrice;
+                const demandChangePercent = elasticity * priceChangePercent;
+                let users = p === 0 ? baseUsers * 5 : Math.max(1000, Math.round(baseUsers * (1 + demandChangePercent)));
+                const revenue = users * p;
+                pricePoints.push({ price: p, users, revenue });
+            }
+            
+            const maxRevenue = Math.max(...pricePoints.map(p => p.revenue));
+            const maxUsers = Math.max(...pricePoints.map(p => p.users));
+            
+            container.innerHTML = pricePoints.map((point, i) => {
+                const height = (point.revenue / maxRevenue) * 180;
+                const isOptimal = point.revenue === maxRevenue;
+                const isCurrent = Math.abs(point.price - basePrice) < 0.5;
+                
+                let bgColor = 'rgba(99, 102, 241, 0.5)';
+                if (isOptimal) bgColor = 'var(--success)';
+                else if (isCurrent) bgColor = 'var(--accent)';
+                
+                return `
+                    <div class="demand-bar" data-price="${point.price}" style="
+                        flex: 1;
+                        height: ${Math.max(2, height)}px;
+                        background: ${bgColor};
+                        border-radius: 2px 2px 0 0;
+                        transition: all 0.3s;
+                        cursor: pointer;
+                        position: relative;
+                    " title="$${point.price.toFixed(2)}: ${point.users.toLocaleString()} users, $${Math.round(point.revenue).toLocaleString()} revenue"
+                    onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'"
+                    onclick="document.getElementById('priceSlider').value=${point.price}; updateDemandEstimate();">
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function highlightDemandCurvePoint(price) {
+            const bars = document.querySelectorAll('.demand-bar');
+            bars.forEach(bar => {
+                const barPrice = parseFloat(bar.dataset.price);
+                if (Math.abs(barPrice - price) < 0.5) {
+                    bar.style.background = 'var(--accent)';
+                    bar.style.boxShadow = '0 0 10px var(--accent)';
+                } else {
+                    bar.style.background = 'rgba(99, 102, 241, 0.5)';
+                    bar.style.boxShadow = 'none';
+                }
+            });
+        }
+        
+        function updateOptimalPriceRecommendation() {
+            const comp = marketData.competitors.oith;
+            const basePrice = comp.price;
+            const baseUsers = comp.users;
+            const elasticity = comp.elasticity;
+            
+            // Find optimal price point that maximizes revenue
+            let optimalPrice = basePrice;
+            let optimalRevenue = baseUsers * basePrice;
+            
+            for (let p = 0.5; p <= 30; p += 0.5) {
+                const priceChangePercent = (p - basePrice) / basePrice;
+                const demandChangePercent = elasticity * priceChangePercent;
+                const users = Math.max(1000, Math.round(baseUsers * (1 + demandChangePercent)));
+                const revenue = users * p;
+                
+                if (revenue > optimalRevenue) {
+                    optimalRevenue = revenue;
+                    optimalPrice = p;
+                }
+            }
+            
+            const textEl = document.getElementById('optimalPriceText');
+            const revenueEl = document.getElementById('optimalRevenue');
+            
+            if (textEl) {
+                textEl.innerHTML = `Based on current market data and price elasticity analysis, the optimal price point is <strong style="color: var(--success);">$${optimalPrice.toFixed(2)}/month</strong> which maximizes revenue while maintaining competitive positioning against ${getClosestCompetitor(optimalPrice)}.`;
+            }
+            
+            if (revenueEl) {
+                revenueEl.textContent = '$' + Math.round(optimalRevenue).toLocaleString();
+            }
+        }
+        
+        function getClosestCompetitor(price) {
+            const competitors = [
+                { name: 'Hinge', price: marketData.competitors.hinge.price },
+                { name: 'Bumble', price: marketData.competitors.bumble.price },
+                { name: 'Tinder', price: marketData.competitors.tinder.price },
+                { name: 'Match', price: marketData.competitors.match.price }
+            ];
+            
+            const closest = competitors.reduce((prev, curr) => 
+                Math.abs(curr.price - price) < Math.abs(prev.price - price) ? curr : prev
+            );
+            
+            return closest.name;
+        }
+        
+        // Initialize when advertising section is shown
+        const originalShowSection = typeof showSection === 'function' ? showSection : null;
+        if (originalShowSection) {
+            const enhancedShowSection = (section) => {
+                originalShowSection(section);
+                if (section === 'advertising') {
+                    setTimeout(() => initSupplyDemandEstimator(), 100);
+                }
+            };
+            // Will be called from nav items
+        }
+        
+        // Also initialize on DOMContentLoaded if advertising is visible
+        document.addEventListener('DOMContentLoaded', () => {
+            const advertisingSection = document.getElementById('advertising-section');
+            if (advertisingSection && advertisingSection.style.display !== 'none') {
+                initSupplyDemandEstimator();
+            }
+        });
         
         async function saveAdvertisingToAWS() {
             // Save to localStorage first
