@@ -812,7 +812,7 @@ function encodeGeohash(lat, lng, precision = 5) {
  * Get neighboring geohashes for a given geohash
  * Used to find matches in adjacent areas
  */
-function getNeighbors(geohash) {
+function getNeighboringGeohashes(geohash) {
     const neighbors = [];
     const precision = geohash.length;
     
@@ -1049,6 +1049,18 @@ export const handler = async (event) => {
         // POST /api/stripe/webhook - Handle Stripe events
         if (path.includes('/stripe/webhook') && method === 'POST') {
             return await handleStripeWebhook(event);
+        }
+        
+        // ============ DIAGNOSTICS ============
+        
+        // POST /api/match/diagnose - Diagnose why two users aren't matching
+        if (path.includes('/match/diagnose') && method === 'POST') {
+            return await diagnoseMatch(event);
+        }
+        
+        // POST /api/match/activate-all - Make all profiles active (admin)
+        if (path.includes('/match/activate-all') && method === 'POST') {
+            return await activateAllProfiles(event);
         }
         
         return {
@@ -2504,5 +2516,360 @@ async function handlePaymentSucceeded(invoice) {
             ':time': new Date().toISOString()
         }
     }));
+}
+
+// ==========================================
+// ADMIN: ACTIVATE ALL PROFILES
+// ==========================================
+
+/**
+ * Make all profiles active (visible and recently seen)
+ * This updates isVisible=true and lastSeen=now for all profiles
+ */
+async function activateAllProfiles(event) {
+    console.log('🔄 Activating all profiles...');
+    
+    const now = new Date().toISOString();
+    let activated = 0;
+    let errors = [];
+    
+    try {
+        // Scan all profiles
+        let lastEvaluatedKey = null;
+        const allProfiles = [];
+        
+        do {
+            const scanParams = {
+                TableName: TABLES.PROFILES,
+                Limit: 100
+            };
+            
+            if (lastEvaluatedKey) {
+                scanParams.ExclusiveStartKey = lastEvaluatedKey;
+            }
+            
+            const scanResult = await docClient.send(new ScanCommand(scanParams));
+            allProfiles.push(...(scanResult.Items || []));
+            lastEvaluatedKey = scanResult.LastEvaluatedKey;
+        } while (lastEvaluatedKey);
+        
+        console.log(`📊 Found ${allProfiles.length} profiles to activate`);
+        
+        // Update each profile
+        for (const profile of allProfiles) {
+            if (!profile.email) continue;
+            
+            try {
+                await docClient.send(new UpdateCommand({
+                    TableName: TABLES.PROFILES,
+                    Key: { email: profile.email },
+                    UpdateExpression: 'SET isVisible = :visible, lastSeen = :now',
+                    ExpressionAttributeValues: {
+                        ':visible': true,
+                        ':now': now
+                    }
+                }));
+                activated++;
+                console.log(`  ✅ Activated: ${profile.firstName || profile.email}`);
+            } catch (err) {
+                errors.push({ email: profile.email, error: err.message });
+                console.log(`  ❌ Failed: ${profile.email} - ${err.message}`);
+            }
+        }
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                success: true,
+                message: `Activated ${activated} profiles`,
+                activated,
+                total: allProfiles.length,
+                errors: errors.length > 0 ? errors : undefined,
+                timestamp: now
+            })
+        };
+        
+    } catch (error) {
+        console.error('❌ Error activating profiles:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
+}
+
+// ==========================================
+// DIAGNOSTIC ENDPOINT
+// ==========================================
+
+/**
+ * Diagnose why two users aren't matching
+ * Takes two user emails and returns detailed explanation
+ */
+async function diagnoseMatch(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { userEmail1, userEmail2 } = body;
+    
+    if (!userEmail1 || !userEmail2) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ 
+                error: 'Both userEmail1 and userEmail2 are required',
+                usage: 'POST /api/match/diagnose { "userEmail1": "user1@example.com", "userEmail2": "user2@example.com" }'
+            })
+        };
+    }
+    
+    console.log(`🔍 Diagnosing match between ${userEmail1} and ${userEmail2}`);
+    
+    const diagnosis = {
+        user1: { email: userEmail1.toLowerCase() },
+        user2: { email: userEmail2.toLowerCase() },
+        issues: [],
+        canMatch: true
+    };
+    
+    // 1. Get both user profiles
+    const [user1Result, user2Result] = await Promise.all([
+        docClient.send(new GetCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email: userEmail1.toLowerCase() }
+        })),
+        docClient.send(new GetCommand({
+            TableName: TABLES.PROFILES,
+            Key: { email: userEmail2.toLowerCase() }
+        }))
+    ]);
+    
+    const user1 = user1Result.Item;
+    const user2 = user2Result.Item;
+    
+    // Check if users exist
+    if (!user1) {
+        diagnosis.issues.push({ type: 'NOT_FOUND', user: 'user1', message: `User ${userEmail1} not found in profiles table` });
+        diagnosis.canMatch = false;
+    }
+    if (!user2) {
+        diagnosis.issues.push({ type: 'NOT_FOUND', user: 'user2', message: `User ${userEmail2} not found in profiles table` });
+        diagnosis.canMatch = false;
+    }
+    
+    if (!user1 || !user2) {
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(diagnosis)
+        };
+    }
+    
+    // Store profile summaries (without photos)
+    diagnosis.user1.profile = {
+        firstName: user1.firstName,
+        gender: user1.gender,
+        age: user1.age,
+        location: user1.location,
+        coordinates: user1.coordinates,
+        isVisible: user1.isVisible,
+        lastSeen: user1.lastSeen,
+        matchPreferences: user1.matchPreferences || user1.preferences || {},
+        drinking: user1.drinking,
+        smoking: user1.smoking,
+        religion: user1.religion,
+        children: user1.children
+    };
+    diagnosis.user2.profile = {
+        firstName: user2.firstName,
+        gender: user2.gender,
+        age: user2.age,
+        location: user2.location,
+        coordinates: user2.coordinates,
+        isVisible: user2.isVisible,
+        lastSeen: user2.lastSeen,
+        matchPreferences: user2.matchPreferences || user2.preferences || {},
+        drinking: user2.drinking,
+        smoking: user2.smoking,
+        religion: user2.religion,
+        children: user2.children
+    };
+    
+    // 2. Check visibility
+    if (user1.isVisible === false) {
+        diagnosis.issues.push({ 
+            type: 'VISIBILITY', 
+            user: 'user1', 
+            message: `${user1.firstName || userEmail1} has isVisible=false (may have an active match)` 
+        });
+        diagnosis.canMatch = false;
+    }
+    if (user2.isVisible === false) {
+        diagnosis.issues.push({ 
+            type: 'VISIBILITY', 
+            user: 'user2', 
+            message: `${user2.firstName || userEmail2} has isVisible=false (may have an active match)` 
+        });
+        diagnosis.canMatch = false;
+    }
+    
+    // 3. Check lastSeen (activity)
+    const activeThreshold = new Date(Date.now() - CONFIG.ACTIVE_USER_DAYS * 24 * 60 * 60 * 1000);
+    if (user1.lastSeen && new Date(user1.lastSeen) < activeThreshold) {
+        diagnosis.issues.push({ 
+            type: 'INACTIVE', 
+            user: 'user1', 
+            message: `${user1.firstName || userEmail1} last seen ${user1.lastSeen} (inactive > ${CONFIG.ACTIVE_USER_DAYS} days)` 
+        });
+        diagnosis.canMatch = false;
+    }
+    if (user2.lastSeen && new Date(user2.lastSeen) < activeThreshold) {
+        diagnosis.issues.push({ 
+            type: 'INACTIVE', 
+            user: 'user2', 
+            message: `${user2.firstName || userEmail2} last seen ${user2.lastSeen} (inactive > ${CONFIG.ACTIVE_USER_DAYS} days)` 
+        });
+        diagnosis.canMatch = false;
+    }
+    
+    // 4. Check match history (passed/blocked)
+    const [history1to2, history2to1, blocks1, blocks2] = await Promise.all([
+        docClient.send(new GetCommand({
+            TableName: TABLES.MATCH_HISTORY,
+            Key: { userEmail: userEmail1.toLowerCase(), matchEmail: userEmail2.toLowerCase() }
+        })).catch(() => ({ Item: null })),
+        docClient.send(new GetCommand({
+            TableName: TABLES.MATCH_HISTORY,
+            Key: { userEmail: userEmail2.toLowerCase(), matchEmail: userEmail1.toLowerCase() }
+        })).catch(() => ({ Item: null })),
+        docClient.send(new GetCommand({
+            TableName: TABLES.BLOCKS,
+            Key: { blockerEmail: userEmail1.toLowerCase(), blockedEmail: userEmail2.toLowerCase() }
+        })).catch(() => ({ Item: null })),
+        docClient.send(new GetCommand({
+            TableName: TABLES.BLOCKS,
+            Key: { blockerEmail: userEmail2.toLowerCase(), blockedEmail: userEmail1.toLowerCase() }
+        })).catch(() => ({ Item: null }))
+    ]);
+    
+    if (history1to2.Item) {
+        diagnosis.issues.push({ 
+            type: 'HISTORY', 
+            user: 'user1', 
+            action: history1to2.Item.action,
+            message: `${user1.firstName || userEmail1} already ${history1to2.Item.action}ed ${user2.firstName || userEmail2}` 
+        });
+        if (history1to2.Item.action === 'pass') diagnosis.canMatch = false;
+    }
+    if (history2to1.Item) {
+        diagnosis.issues.push({ 
+            type: 'HISTORY', 
+            user: 'user2', 
+            action: history2to1.Item.action,
+            message: `${user2.firstName || userEmail2} already ${history2to1.Item.action}ed ${user1.firstName || userEmail1}` 
+        });
+        if (history2to1.Item.action === 'pass') diagnosis.canMatch = false;
+    }
+    if (blocks1.Item) {
+        diagnosis.issues.push({ 
+            type: 'BLOCKED', 
+            user: 'user1', 
+            message: `${user1.firstName || userEmail1} has blocked ${user2.firstName || userEmail2}` 
+        });
+        diagnosis.canMatch = false;
+    }
+    if (blocks2.Item) {
+        diagnosis.issues.push({ 
+            type: 'BLOCKED', 
+            user: 'user2', 
+            message: `${user2.firstName || userEmail2} has blocked ${user1.firstName || userEmail1}` 
+        });
+        diagnosis.canMatch = false;
+    }
+    
+    // 5. Check MUTUAL preference matching
+    const user1Prefs = user1.matchPreferences || user1.preferences || {};
+    const user2Prefs = user2.matchPreferences || user2.preferences || {};
+    
+    const user1Profile = {
+        email: user1.email,
+        gender: user1.gender?.toLowerCase(),
+        age: user1.age,
+        coordinates: user1.coordinates,
+        drinking: user1.drinking,
+        smoking: user1.smoking,
+        religion: user1.religion,
+        children: user1.children
+    };
+    
+    const user2Profile = {
+        email: user2.email,
+        gender: user2.gender?.toLowerCase(),
+        age: user2.age,
+        coordinates: user2.coordinates,
+        drinking: user2.drinking,
+        smoking: user2.smoking,
+        religion: user2.religion,
+        children: user2.children
+    };
+    
+    // Does user2 fit user1's preferences?
+    const user2FitsUser1 = checkPreferenceMatch(user2Profile, user1Prefs, user1Profile);
+    if (!user2FitsUser1.matches) {
+        diagnosis.issues.push({ 
+            type: 'PREFERENCE_MISMATCH', 
+            direction: 'user1 → user2',
+            reason: user2FitsUser1.reason,
+            message: `${user2.firstName || userEmail2} does NOT fit ${user1.firstName || userEmail1}'s preferences: ${user2FitsUser1.reason}`,
+            details: {
+                user1Wants: user1Prefs,
+                user2Has: user2Profile
+            }
+        });
+        diagnosis.canMatch = false;
+    } else {
+        diagnosis.issues.push({ 
+            type: 'PREFERENCE_MATCH', 
+            direction: 'user1 → user2',
+            message: `✓ ${user2.firstName || userEmail2} FITS ${user1.firstName || userEmail1}'s preferences`,
+            distance: user2FitsUser1.distance
+        });
+    }
+    
+    // Does user1 fit user2's preferences?
+    const user1FitsUser2 = checkPreferenceMatch(user1Profile, user2Prefs, user2Profile);
+    if (!user1FitsUser2.matches) {
+        diagnosis.issues.push({ 
+            type: 'PREFERENCE_MISMATCH', 
+            direction: 'user2 → user1',
+            reason: user1FitsUser2.reason,
+            message: `${user1.firstName || userEmail1} does NOT fit ${user2.firstName || userEmail2}'s preferences: ${user1FitsUser2.reason}`,
+            details: {
+                user2Wants: user2Prefs,
+                user1Has: user1Profile
+            }
+        });
+        diagnosis.canMatch = false;
+    } else {
+        diagnosis.issues.push({ 
+            type: 'PREFERENCE_MATCH', 
+            direction: 'user2 → user1',
+            message: `✓ ${user1.firstName || userEmail1} FITS ${user2.firstName || userEmail2}'s preferences`,
+            distance: user1FitsUser2.distance
+        });
+    }
+    
+    // 6. Summary
+    diagnosis.summary = diagnosis.canMatch 
+        ? `✅ These users CAN match - all mutual preferences pass`
+        : `❌ These users CANNOT match - see issues above`;
+    
+    console.log(`📋 Diagnosis complete: ${diagnosis.summary}`);
+    
+    return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(diagnosis, null, 2)
+    };
 }
 
