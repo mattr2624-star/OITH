@@ -374,6 +374,117 @@ export const handler = async (event) => {
             return { statusCode: 200, headers, body: JSON.stringify({ success: true, deleted }) };
         }
         
+        // DELETE /users/{email} - Delete a single user and all their data
+        if (method === 'DELETE' && path.includes('/users/') && !path.includes('/users/clear') && !path.includes('/users/bulk')) {
+            // Extract email from path: /users/email@example.com
+            const pathParts = path.split('/users/');
+            const email = pathParts[1] ? decodeURIComponent(pathParts[1]).toLowerCase() : null;
+            
+            if (!email) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Email required' }) };
+            }
+            
+            console.log(`🗑️ Deleting user: ${email}`);
+            
+            let deleted = 0;
+            
+            // 1. Delete user profile from oith-profiles table
+            try {
+                await docClient.send(new DeleteCommand({
+                    TableName: TABLES.PROFILES,
+                    Key: { email: email }
+                }));
+                deleted++;
+                console.log(`  ✓ Deleted profile from oith-profiles`);
+            } catch (e) {
+                console.log(`  ⚠️ Could not delete from oith-profiles:`, e.message);
+            }
+            
+            // 2. Delete all related data from legacy table (oith-users)
+            // Scan for all items related to this user
+            try {
+                const scanResult = await docClient.send(new ScanCommand({
+                    TableName: TABLE_NAME,
+                    FilterExpression: 'contains(pk, :email) OR contains(sk, :email)',
+                    ExpressionAttributeValues: { ':email': email }
+                }));
+                
+                for (const item of (scanResult.Items || [])) {
+                    await docClient.send(new DeleteCommand({
+                        TableName: TABLE_NAME,
+                        Key: { pk: item.pk, sk: item.sk }
+                    }));
+                    deleted++;
+                }
+                console.log(`  ✓ Deleted ${scanResult.Items?.length || 0} items from oith-users`);
+            } catch (e) {
+                console.log(`  ⚠️ Could not delete from oith-users:`, e.message);
+            }
+            
+            // 3. Delete from oith-matches table
+            try {
+                const matchResult = await docClient.send(new ScanCommand({
+                    TableName: TABLES.MATCHES,
+                    FilterExpression: 'contains(pk, :email) OR contains(sk, :email)',
+                    ExpressionAttributeValues: { ':email': email }
+                }));
+                
+                for (const item of (matchResult.Items || [])) {
+                    await docClient.send(new DeleteCommand({
+                        TableName: TABLES.MATCHES,
+                        Key: { pk: item.pk, sk: item.sk }
+                    }));
+                    deleted++;
+                }
+                console.log(`  ✓ Deleted ${matchResult.Items?.length || 0} matches`);
+            } catch (e) {
+                console.log(`  ⚠️ Could not delete from oith-matches:`, e.message);
+            }
+            
+            // 4. Delete from oith-match-history table
+            try {
+                const historyResult = await docClient.send(new ScanCommand({
+                    TableName: TABLES.MATCH_HISTORY,
+                    FilterExpression: 'contains(pk, :email) OR contains(sk, :email)',
+                    ExpressionAttributeValues: { ':email': email }
+                }));
+                
+                for (const item of (historyResult.Items || [])) {
+                    await docClient.send(new DeleteCommand({
+                        TableName: TABLES.MATCH_HISTORY,
+                        Key: { pk: item.pk, sk: item.sk }
+                    }));
+                    deleted++;
+                }
+                console.log(`  ✓ Deleted ${historyResult.Items?.length || 0} history items`);
+            } catch (e) {
+                console.log(`  ⚠️ Could not delete from oith-match-history:`, e.message);
+            }
+            
+            // 5. Delete from oith-conversations table
+            try {
+                const convResult = await docClient.send(new ScanCommand({
+                    TableName: TABLES.CONVERSATIONS,
+                    FilterExpression: 'contains(pk, :email) OR contains(sk, :email)',
+                    ExpressionAttributeValues: { ':email': email }
+                }));
+                
+                for (const item of (convResult.Items || [])) {
+                    await docClient.send(new DeleteCommand({
+                        TableName: TABLES.CONVERSATIONS,
+                        Key: { pk: item.pk, sk: item.sk }
+                    }));
+                    deleted++;
+                }
+                console.log(`  ✓ Deleted ${convResult.Items?.length || 0} conversations`);
+            } catch (e) {
+                console.log(`  ⚠️ Could not delete from oith-conversations:`, e.message);
+            }
+            
+            console.log(`🗑️ Total deleted: ${deleted} items for user ${email}`);
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, email, deleted }) };
+        }
+        
         // POST /users/bulk - Bulk upload users (replaces all)
         if (method === 'POST' && path.includes('/users/bulk')) {
             const body = JSON.parse(event.body || '{}');
