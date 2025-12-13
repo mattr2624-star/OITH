@@ -23899,7 +23899,7 @@
             document.getElementById('editUserModal').style.display = 'none';
         }
 
-        function saveUserChanges(event) {
+        async function saveUserChanges(event) {
             event.preventDefault();
             
             const email = document.getElementById('editUserEmail').value;
@@ -23914,7 +23914,8 @@
                 education: document.getElementById('editUserEducation').value,
                 occupation: document.getElementById('editUserOccupation').value,
                 subscription: { type: document.getElementById('editUserSubscription').value },
-                status: document.getElementById('editUserStatus').value
+                status: document.getElementById('editUserStatus').value,
+                accountStatus: document.getElementById('editUserStatus').value
             };
             
             console.log('💾 Saving user changes for:', email, 'isTestBot:', isTestBot, updates);
@@ -24009,6 +24010,41 @@
                     updates,
                     fullUserData: userData.user
                 });
+                
+                // ====== SYNC TO AWS ======
+                console.log('☁️ Syncing to AWS...');
+                try {
+                    const awsResponse = await fetch(`${AWS_API_URL}/api/profiles/update`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: email,
+                            updates: {
+                                firstName: updates.firstName,
+                                name: updates.name,
+                                age: updates.age,
+                                gender: updates.gender,
+                                location: updates.location,
+                                education: updates.education,
+                                occupation: updates.occupation,
+                                accountStatus: updates.status,
+                                isVisible: updates.status === 'active'
+                            }
+                        })
+                    });
+                    
+                    if (awsResponse.ok) {
+                        const awsResult = await awsResponse.json();
+                        console.log('✅ AWS sync successful:', awsResult);
+                    } else {
+                        const errorText = await awsResponse.text();
+                        console.error('❌ AWS sync failed:', awsResponse.status, errorText);
+                        showToast('⚠️ Local save OK, but AWS sync failed', 'warning');
+                    }
+                } catch (awsError) {
+                    console.error('❌ AWS sync error:', awsError);
+                    showToast('⚠️ Local save OK, but AWS sync failed: ' + awsError.message, 'warning');
+                }
             }
             
             // Close modal and refresh admin display

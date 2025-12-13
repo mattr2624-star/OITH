@@ -1063,6 +1063,11 @@ export const handler = async (event) => {
             return await activateAllProfiles(event);
         }
         
+        // POST /api/profiles/update - Update a user profile (admin)
+        if (path.includes('/profiles/update') && method === 'POST') {
+            return await updateUserProfile(event);
+        }
+        
         return {
             statusCode: 404,
             headers,
@@ -2516,6 +2521,129 @@ async function handlePaymentSucceeded(invoice) {
             ':time': new Date().toISOString()
         }
     }));
+}
+
+// ==========================================
+// ADMIN: UPDATE USER PROFILE
+// ==========================================
+
+/**
+ * Update a user's profile from admin panel
+ * Updates both oith-profiles (for matching) and oith-users (for admin data)
+ */
+async function updateUserProfile(event) {
+    const body = JSON.parse(event.body || '{}');
+    const { email, updates } = body;
+    
+    if (!email) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'email is required' })
+        };
+    }
+    
+    const lowerEmail = email.toLowerCase();
+    const now = new Date().toISOString();
+    
+    console.log(`📝 Updating profile for: ${lowerEmail}`, updates);
+    
+    try {
+        // Build update expression dynamically based on provided fields
+        const updateFields = [];
+        const expressionAttributeValues = {
+            ':now': now
+        };
+        const expressionAttributeNames = {};
+        
+        // Map of allowed fields
+        const allowedFields = [
+            'firstName', 'name', 'age', 'gender', 'location', 'education',
+            'occupation', 'bio', 'height', 'bodyType', 'drinking', 'smoking',
+            'exercise', 'children', 'religion', 'lookingFor', 'interests',
+            'photos', 'matchPreferences', 'isVisible', 'accountStatus'
+        ];
+        
+        for (const field of allowedFields) {
+            if (updates && updates[field] !== undefined) {
+                // Handle reserved words
+                if (field === 'name' || field === 'location' || field === 'status') {
+                    expressionAttributeNames[`#${field}`] = field;
+                    updateFields.push(`#${field} = :${field}`);
+                } else {
+                    updateFields.push(`${field} = :${field}`);
+                }
+                expressionAttributeValues[`:${field}`] = updates[field];
+            }
+        }
+        
+        // Always update lastSeen and updatedAt
+        updateFields.push('lastSeen = :now');
+        updateFields.push('updatedAt = :now');
+        
+        if (updateFields.length === 0) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'No valid fields to update' })
+            };
+        }
+        
+        const updateExpression = 'SET ' + updateFields.join(', ');
+        
+        // Update oith-profiles table
+        const updateParams = {
+            TableName: TABLES.PROFILES,
+            Key: { email: lowerEmail },
+            UpdateExpression: updateExpression,
+            ExpressionAttributeValues: expressionAttributeValues,
+            ReturnValues: 'ALL_NEW'
+        };
+        
+        if (Object.keys(expressionAttributeNames).length > 0) {
+            updateParams.ExpressionAttributeNames = expressionAttributeNames;
+        }
+        
+        const result = await docClient.send(new UpdateCommand(updateParams));
+        
+        console.log(`✅ Profile updated in oith-profiles: ${lowerEmail}`);
+        
+        // Also update oith-users table for admin reference
+        try {
+            await docClient.send(new UpdateCommand({
+                TableName: TABLES.COMPANY,
+                Key: { 
+                    pk: `USER#${lowerEmail}`,
+                    sk: 'PROFILE'
+                },
+                UpdateExpression: updateExpression,
+                ExpressionAttributeValues: expressionAttributeValues,
+                ExpressionAttributeNames: Object.keys(expressionAttributeNames).length > 0 ? expressionAttributeNames : undefined
+            }));
+            console.log(`✅ Profile updated in oith-users: ${lowerEmail}`);
+        } catch (adminErr) {
+            console.log(`⚠️ Could not update oith-users (may not exist): ${adminErr.message}`);
+        }
+        
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+                success: true,
+                message: `Profile updated for ${lowerEmail}`,
+                updatedFields: Object.keys(updates || {}),
+                profile: result.Attributes
+            })
+        };
+        
+    } catch (error) {
+        console.error(`❌ Error updating profile: ${error.message}`);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: error.message })
+        };
+    }
 }
 
 // ==========================================
