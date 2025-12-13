@@ -2568,8 +2568,110 @@ export const handler = async (event) => {
             }
         }
         
-        // Health check
-        return { statusCode: 200, headers, body: JSON.stringify({ status: 'ok' }) };
+        // ============ FILES ============
+        
+        // GET /files - Get file list
+        if (method === 'GET' && path === '/files') {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'FILES#all' },
+                ScanIndexForward: false
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ files: result.Items || [] }) };
+        }
+        
+        // POST /files - Save file metadata
+        if (method === 'POST' && path === '/files') {
+            const body = JSON.parse(event.body || '{}');
+            const { fileId, name, type, size, url } = body;
+            
+            const id = fileId || `file_${Date.now()}`;
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'FILES#all',
+                    sk: `FILE#${id}`,
+                    fileId: id,
+                    name: name || 'Unnamed',
+                    type: type || 'unknown',
+                    size: size || 0,
+                    url: url || '',
+                    createdAt: new Date().toISOString()
+                }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, fileId: id }) };
+        }
+        
+        // ============ ADMIN ACTIVITY LOG ============
+        
+        // POST /admin/activity-log - Log admin activity
+        if (method === 'POST' && path.includes('/admin/activity-log')) {
+            const body = JSON.parse(event.body || '{}');
+            const { id, type, action, details, admin } = body;
+            
+            const now = new Date().toISOString();
+            const logId = id || `log_${Date.now()}`;
+            
+            await docClient.send(new PutCommand({
+                TableName: TABLE_NAME,
+                Item: {
+                    pk: 'ADMIN_ACTIVITY',
+                    sk: `LOG#${now}#${logId}`,
+                    id: logId,
+                    type: type || 'unknown',
+                    action: action || 'unknown',
+                    details: details || '',
+                    admin: admin || { name: 'Unknown' },
+                    timestamp: now
+                }
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, id: logId }) };
+        }
+        
+        // GET /admin/activity-log - Get admin activity logs
+        if (method === 'GET' && path.includes('/admin/activity-log')) {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'ADMIN_ACTIVITY' },
+                ScanIndexForward: false,
+                Limit: 100
+            }));
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ logs: result.Items || [] }) };
+        }
+        
+        // DELETE /admin/activity-log - Clear admin activity logs
+        if (method === 'DELETE' && path.includes('/admin/activity-log')) {
+            const result = await docClient.send(new QueryCommand({
+                TableName: TABLE_NAME,
+                KeyConditionExpression: 'pk = :pk',
+                ExpressionAttributeValues: { ':pk': 'ADMIN_ACTIVITY' }
+            }));
+            
+            for (const item of (result.Items || [])) {
+                await docClient.send(new DeleteCommand({
+                    TableName: TABLE_NAME,
+                    Key: { pk: item.pk, sk: item.sk }
+                }));
+            }
+            
+            return { statusCode: 200, headers, body: JSON.stringify({ success: true, deleted: result.Items?.length || 0 }) };
+        }
+        
+        // Health check / fallback
+        if (path.includes('/health') || path.includes('/ping')) {
+            return { statusCode: 200, headers, body: JSON.stringify({ status: 'ok', version: '3.0.0', timestamp: new Date().toISOString() }) };
+        }
+        
+        // 404 for unhandled routes
+        console.log(`⚠️ Unhandled route: ${method} ${path}`);
+        return { statusCode: 404, headers, body: JSON.stringify({ error: 'Endpoint not found', path, method }) };
         
     } catch (error) {
         console.error('Error:', error);
