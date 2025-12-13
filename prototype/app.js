@@ -8361,8 +8361,8 @@ const PAYMENT_CONFIG = {
     // Redirect URL after successful payment (your app URL + success screen)
     successRedirectUrl: 'https://main.d3cpep2ztx08x2.amplifyapp.com/prototype/index.html#payment-success',
     
-    // Test mode - set to false when backend is running
-    testMode: false,
+    // Test mode - set to true to bypass API calls when backend is unavailable
+    testMode: true,
     
     plans: {
         monthly: { price: 10.00, interval: 'month', label: '$10.00/month' }
@@ -8498,6 +8498,52 @@ async function initPaymentScreen() {
 
 // Initialize Stripe Payment Element
 async function initStripePaymentElement() {
+    const paymentElementContainer = document.getElementById('payment-element');
+    
+    // Check if test mode is enabled - show simulated payment form
+    if (PAYMENT_CONFIG.testMode) {
+        console.log('💳 Test mode enabled - showing simulated payment form');
+        if (paymentElementContainer) {
+            paymentElementContainer.innerHTML = `
+                <div style="background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%); border-radius: 12px; padding: 24px; border: 1px solid #2d3748;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+                        <span style="background: #22c55e; color: white; font-size: 0.7rem; padding: 4px 8px; border-radius: 4px; font-weight: 600;">TEST MODE</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">No real charges will be made</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; color: #a0aec0; margin-bottom: 8px; font-size: 0.9rem;">Card Number</label>
+                        <input type="text" id="test-card-number" placeholder="4242 4242 4242 4242" maxlength="19" 
+                            style="width: 100%; background: #16213e; border: 1px solid #2d3748; border-radius: 8px; padding: 14px; color: white; font-size: 1rem;"
+                            oninput="formatCardNumber(this)" value="4242 4242 4242 4242">
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <label style="display: block; color: #a0aec0; margin-bottom: 8px; font-size: 0.9rem;">Expiry</label>
+                            <input type="text" id="test-card-expiry" placeholder="MM/YY" maxlength="5"
+                                style="width: 100%; background: #16213e; border: 1px solid #2d3748; border-radius: 8px; padding: 14px; color: white; font-size: 1rem;"
+                                oninput="formatExpiry(this)" value="12/28">
+                        </div>
+                        <div>
+                            <label style="display: block; color: #a0aec0; margin-bottom: 8px; font-size: 0.9rem;">CVC</label>
+                            <input type="text" id="test-card-cvc" placeholder="123" maxlength="4"
+                                style="width: 100%; background: #16213e; border: 1px solid #2d3748; border-radius: 8px; padding: 14px; color: white; font-size: 1rem;"
+                                value="123">
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 12px; margin-top: 16px;">
+                        <p style="color: #22c55e; font-size: 0.85rem; margin: 0;">
+                            ✓ This is a test payment form. Click "Complete Payment" to simulate a successful subscription.
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+        return;
+    }
+    
     if (!stripe) {
         if (window.Stripe) {
             stripe = Stripe(PAYMENT_CONFIG.stripePublishableKey);
@@ -8509,7 +8555,6 @@ async function initStripePaymentElement() {
     }
     
     // Show loading state
-    const paymentElementContainer = document.getElementById('payment-element');
     if (paymentElementContainer) {
         paymentElementContainer.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--text-muted);">Loading payment form...</div>';
     }
@@ -8590,17 +8635,20 @@ async function initStripePaymentElement() {
     } catch (error) {
         console.error('Error initializing Stripe:', error);
         
-        // Show fallback message
+        // Show fallback message with option to enable test mode
         if (paymentElementContainer) {
             paymentElementContainer.innerHTML = `
                 <div style="text-align: center; padding: 20px;">
                     <p style="color: var(--text-muted); margin-bottom: 12px;">
                         Unable to load payment form.
                     </p>
-                    <p style="color: var(--text-muted); font-size: 0.85rem;">
-                        Please ensure the server is running at ${PAYMENT_CONFIG.apiUrl}
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px;">
+                        The payment server is temporarily unavailable.
                     </p>
-                    <button onclick="initStripePaymentElement()" class="btn btn-secondary" style="margin-top: 12px; padding: 8px 16px;">
+                    <button onclick="enableTestModeAndRetry()" class="btn btn-primary" style="margin-right: 8px; padding: 10px 20px;">
+                        Use Test Mode
+                    </button>
+                    <button onclick="initStripePaymentElement()" class="btn btn-secondary" style="padding: 10px 20px;">
                         Retry
                     </button>
                 </div>
@@ -8609,14 +8657,17 @@ async function initStripePaymentElement() {
     }
 }
 
+// Enable test mode and reinitialize payment form
+function enableTestModeAndRetry() {
+    PAYMENT_CONFIG.testMode = true;
+    console.log('💳 Enabling test mode...');
+    showToast('Test mode enabled - no real charges will be made', 'info');
+    initStripePaymentElement();
+}
+
 // Process Stripe payment
 async function processStripePayment(event) {
     if (event) event.preventDefault();
-    
-    if (!stripe || !elements || !clientSecret) {
-        showToast('Payment not ready. Please wait...', 'error');
-        return;
-    }
     
     // Disable button and show loading
     const submitBtn = document.getElementById('stripe-submit-btn');
@@ -8628,6 +8679,55 @@ async function processStripePayment(event) {
     if (btnText) btnText.textContent = 'Processing...';
     if (spinner) spinner.style.display = 'inline-block';
     if (messageEl) messageEl.style.display = 'none';
+    
+    // Handle test mode - simulate successful payment
+    if (PAYMENT_CONFIG.testMode) {
+        console.log('🧪 Processing test payment...');
+        
+        // Simulate processing delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Create test subscription
+        const now = new Date();
+        const expiryDate = new Date(now);
+        expiryDate.setMonth(expiryDate.getMonth() + 1);
+        
+        const testSubscription = {
+            id: 'test_sub_' + Date.now(),
+            status: 'active',
+            type: 'premium',
+            plan: selectedPlan,
+            startDate: now.toISOString(),
+            expiryDate: expiryDate.toISOString(),
+            autoRenew: true,
+            amount: PAYMENT_CONFIG.plans[selectedPlan]?.price || 10.00,
+            currency: 'usd',
+            testMode: true
+        };
+        
+        // Store in localStorage
+        localStorage.setItem('oith_test_subscription', JSON.stringify(testSubscription));
+        
+        console.log('✅ Test payment successful!', testSubscription);
+        showToast('Test payment successful!', 'success');
+        
+        // Re-enable button before navigating
+        if (submitBtn) submitBtn.disabled = false;
+        if (btnText) btnText.textContent = 'Pay $10.00 & Subscribe';
+        if (spinner) spinner.style.display = 'none';
+        
+        handlePaymentSuccess();
+        return;
+    }
+    
+    // Real payment flow
+    if (!stripe || !elements || !clientSecret) {
+        showToast('Payment not ready. Please wait...', 'error');
+        if (submitBtn) submitBtn.disabled = false;
+        if (btnText) btnText.textContent = 'Pay $10.00 & Subscribe';
+        if (spinner) spinner.style.display = 'none';
+        return;
+    }
     
     try {
         // Confirm the payment
