@@ -10682,8 +10682,10 @@ function continueFromPhotoSetup() {
         return;
     }
     
-    // Photos is now Step 4, go to Payment (Step 5)
-    showScreen('payment');
+    // TEMPORARILY DISABLED: Payment screen (2.4) - Skip directly to match
+    // Original: showScreen('payment');
+    // TODO: Re-enable payment screen when Stripe integration is complete
+    completeSignup();
 }
 
 /**
